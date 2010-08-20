@@ -9,13 +9,13 @@
 
 int main(int argc, char *argv[]) {
 
-  if (argc != 4) {
-    std::cout << "usage: " << argv[0] << " <stopwords file> <dictionary file> <keywords output file>\n";
+  if (argc != 5) {
+    std::cout << "usage: " << argv[0] << " <stopwords file> <dictionary file> <username> <keywords output file>\n";
     exit(0);
   }
 
   inagist_trends::KeywordsExtract ke;
-  if (ke.Init("./data/tweets.txt", argv[1], argv[2], NULL, argv[3]) < 0) {
+  if (ke.Init("./data/tweets.txt", argv[1], argv[2], NULL, argv[4]) < 0) {
     std::cerr << "ERROR: couldn't initialize KeywordsExtract class\n";
     return -1; 
   }
@@ -29,7 +29,9 @@ int main(int argc, char *argv[]) {
   std::set<std::string> keywords_set;
   // get top tweets from inagist api
 
-  bool ret_value = curl_request_maker.GetArchievedTweets();
+  std::string url = std::string("http://inagist.com/api/v1/get_archived_tweets?userid=") + std::string(argv[3]);
+  //bool ret_value = curl_request_maker.GetArchievedTweets();
+  bool ret_value = curl_request_maker.GetTweets(url.c_str());
   if (ret_value) {
     curl_request_maker.GetLastWebResponse(reply_message);
     // the response is in json format
@@ -59,7 +61,7 @@ int main(int argc, char *argv[]) {
           ++num_docs;
         }
       }
-      km.CalculateIDF(num_docs, argv[3]);
+      km.CalculateIDF(num_docs, argv[4]);
     }
     delete json_value;
   } else {

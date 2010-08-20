@@ -564,7 +564,10 @@ rT
 Rt
 Retweet
 RETWEET
+followfriday
+FollowFriday
 #ADDING_SOME_COMMON_ENGLISH_WORDS
+soon
 thanks
 Thanks
 thank

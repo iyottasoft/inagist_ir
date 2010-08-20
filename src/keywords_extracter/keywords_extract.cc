@@ -432,7 +432,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 #ifdef DEBUG
           cout << endl << string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) << " :entity by stopword";
 #endif
-          //1 keywords_set.insert(string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)));
+          keywords_set.insert(string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)));
         } else {
           cout << "ERROR: stopwords entity markers are wrong\n";
         }
