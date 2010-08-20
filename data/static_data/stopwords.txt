@@ -565,7 +565,13 @@ Rt
 Retweet
 RETWEET
 #ADDING_SOME_COMMON_ENGLISH_WORDS
+thanks
+Thanks
+thank
+Thank
 new
+maybe
+Maybe
 kinda
 today
 Today

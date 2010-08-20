@@ -13,6 +13,8 @@ namespace inagist_api {
 
 const int DEFAULT_BUFFER_SIZE = 1024;
 const std::string INAGIST_TOP_TWITTER_TWEETS_URL = "http://inagist.com/api/v1/get_top_tweets?userid=jebui&limit=5&ham=24";
+const std::string INAGIST_LIVE_TWITTER_TWEETS_URL = "http://inagist.com/api/v1/get_tweet_stream?userid=jebui";
+const std::string INAGIST_ARCHIEVED_TWITTER_TWEETS_URL = "http://inagist.com/api/v1/get_archived_tweets?userid=worldnewsgist";
 
 
 class CurlRequestMaker {
@@ -24,6 +26,7 @@ class CurlRequestMaker {
   void GetLastWebResponse(std::string& web_response);
   void GetLastCurlError(std::string& curl_error);
   bool GetTopTweets();
+  bool GetArchievedTweets();
   bool GetTweets(const char* url);
 
  private:

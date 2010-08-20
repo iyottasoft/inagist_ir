@@ -38,6 +38,7 @@ class KeywordsManager {
   int PopulateFreqMap(std::set<std::string> &keywords_set);
   void PrintFreqMap();
   int CalculateIDF(unsigned int num_docs);
+  int CalculateIDF(unsigned int num_docs, const char *file_name);
   void PrintEntityIDFs();
   void PrintIdfBuckets();
 

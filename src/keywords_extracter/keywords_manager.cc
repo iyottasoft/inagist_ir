@@ -52,6 +52,23 @@ int KeywordsManager::CalculateIDF(unsigned int num_docs) {
   return 0;
 }
 
+// populates output file with word, freq and idf
+int KeywordsManager::CalculateIDF(unsigned int num_docs, const char *file_name) {
+  if (NULL == file_name)
+    return -1;
+
+  std::ofstream ofs(file_name, std::ofstream::out);
+
+  _entity_freq_map_iter map_iter;
+  for (map_iter = m_entity_freq_map.begin(); map_iter != m_entity_freq_map.end(); map_iter++) {
+    m_entity_idf_map[map_iter->first] = log(num_docs/map_iter->second);
+    ofs << map_iter->first << " = " << m_entity_idf_map[map_iter->first] << "," << map_iter->second << std::endl;
+  }
+  ofs.close();
+
+  return 0;
+}
+
 void KeywordsManager::PrintEntityIDFs() {
   _entity_idf_map_iter map_iter;
   std::ofstream ofs("./data/keyword_idf_pairs.txt", std::ofstream::out);

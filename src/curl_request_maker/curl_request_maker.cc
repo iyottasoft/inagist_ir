@@ -41,6 +41,10 @@ bool CurlRequestMaker::GetTopTweets() {
   return ret_val;
 }
 
+bool CurlRequestMaker::GetArchievedTweets() {
+  return GetTweets(INAGIST_ARCHIEVED_TWITTER_TWEETS_URL.c_str());
+}
+
 bool CurlRequestMaker::GetTweets(const char* url) {
   bool ret_val;
   if (IsCurlInit()) {

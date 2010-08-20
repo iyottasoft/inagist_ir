@@ -8,11 +8,18 @@
 #include "keywords_manager.h"
 
 int main(int argc, char *argv[]) {
+
+  if (argc != 4) {
+    std::cout << "usage: " << argv[0] << " <stopwords file> <dictionary file> <keywords output file>\n";
+    exit(0);
+  }
+
   inagist_trends::KeywordsExtract ke;
-  if (ke.Init("./data/tweets.txt", "./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt", NULL, "./data/static_data/output.txt") < 0) {
-    std::cerr << "ERROR: couldn't initialize\n";
+  if (ke.Init("./data/tweets.txt", argv[1], argv[2], NULL, argv[3]) < 0) {
+    std::cerr << "ERROR: couldn't initialize KeywordsExtract class\n";
     return -1; 
   }
+
   inagist_trends::KeywordsManager km;
   inagist_api::CurlRequestMaker curl_request_maker;
 
@@ -22,12 +29,7 @@ int main(int argc, char *argv[]) {
   std::set<std::string> keywords_set;
   // get top tweets from inagist api
 
-  bool ret_value;
-  if (argc == 2)
-    ret_value = curl_request_maker.GetTweets(argv[1]);
-  else
-    ret_value = curl_request_maker.GetTopTweets();
-
+  bool ret_value = curl_request_maker.GetArchievedTweets();
   if (ret_value) {
     curl_request_maker.GetLastWebResponse(reply_message);
     // the response is in json format
@@ -49,31 +51,19 @@ int main(int argc, char *argv[]) {
 
         // now lets work on the json object thus obtained
         if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
-          std::cout << tweet_object["text"]->AsString().c_str() << std::endl;
-          std::cout.flush();
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
           ke.GetKeywords(buffer, keywords_set);
-          ke.PrintKeywords(keywords_set);
           km.PopulateFreqMap(keywords_set);
           keywords_set.clear();
           memset(buffer, 0, 1024);
           ++num_docs;
         }
-        /*
-        if (tweet_object.find(L"user") != tweet_object.end() && tweet_object[L"user"]->IsObject()) {
-          std::wcout << tweet_object[L"user"]->Stringify().c_str() << std::endl;
-          std::wcout.flush();
-        }
-        */
       }
-      km.PrintFreqMap();
-      std::cout << "Num Tweets: " << num_docs << std::endl;
-      km.CalculateIDF(num_docs);
-      km.PrintEntityIDFs();
+      km.CalculateIDF(num_docs, argv[3]);
     }
     delete json_value;
   } else {
-    std::cout << "ERROR: couldn't get top tweets" << std::endl;
+    std::cout << "ERROR: couldn't get live tweets" << std::endl;
   }
 
   return 0;
