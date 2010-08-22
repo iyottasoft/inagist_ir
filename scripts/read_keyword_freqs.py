@@ -7,8 +7,8 @@ from math import log
 num_docs = 0
 hash_freqs = {}
 latest_hash_freqs = {}
-def get_keyword_freqs(kfile,latest):
-  fp = open(kfile, 'r')
+def get_keyword_freqs(kwfile,latest):
+  fp = open(kwfile, 'r')
   lines = fp.readlines()
   for line in lines:
     line = line.strip()
@@ -35,8 +35,8 @@ def calculate_idf():
     hash_freqs[k].append(log(num_docs/v[1]))
 
 freqs = []
-def calculate_tf_idf(kfile):
-  get_keyword_freqs(kfile, 1)
+def calculate_tf_idf(kwfile):
+  get_keyword_freqs(kwfile, 1)
   for (k, v) in latest_hash_freqs.items():
     freqs.append((v * hash_freqs[k][2], v, k))
   freqs.sort()
@@ -67,7 +67,9 @@ def main():
     num_docs += 1
     get_keyword_freqs(kfile,0)
   calculate_idf()
-  calculate_tf_idf(kfile)
+  if (num_docs != 0):
+    kfile = kfiles[num_docs-1]
+    calculate_tf_idf(kfile)
   #print_freqs()
 
 if __name__ == "__main__":

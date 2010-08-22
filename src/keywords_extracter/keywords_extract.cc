@@ -140,6 +140,83 @@ void KeywordsExtract::PrintKeywords(std::set<std::string> &keywords_set) {
     std::cout << *iter << std::endl;
 }
 
+// this function isn't unicode safe
+// TODO (balaji) for ascii, we can ofcourse use an array lookup to speed up
+bool KeywordsExtract::IsPunct(char *ptr, char *prev, char *next) {
+  if (!ptr || *ptr == ' ' || *ptr == '\0')
+    return true;
+  if (!ispunct(*ptr))
+    return false;
+
+  switch (*ptr) {
+    case '\'':
+      if (prev)
+        if (!IsPunct(prev) &&
+            (!strncmp(ptr, "'s", 2) || !strncmp(ptr, "'t", 2) || !strncmp(ptr, "'ve", 2) ||
+             !strncmp(ptr, "'ll", 2) || !strncmp(ptr, "'re", 2) || !strncmp(ptr, "'m", 2) ||
+             !strncmp(ptr, "'em", 3))
+           )
+          return false;
+      break;
+    case '@':
+      if (prev && !IsPunct(prev))
+        return true;
+      return IsPunct(next);
+      break;
+    case '#':
+      if (!next)
+        return true;
+      if (prev)
+        if (*prev == ' ' || !IsPunct(prev))
+         return false;
+      break;
+    case '-':
+      if (prev && next)
+        if (isalnum(*prev) && (isalnum(*next)))
+          return false;
+      break;
+    case ':':
+    case ',':
+      if (prev && next)
+        if (isdigit(*prev) && isdigit(*next))
+          return false;
+      break;
+    case '.':
+      if (prev && next)
+        if (isdigit(*prev) && isdigit(*next))
+          return false;
+      if (next) {
+        if (*next == ' ')
+          return true;
+        if (!strncmp(ptr, ".com", 4) || !strncmp(ptr, ".org", 4))
+          return false; // not handling .come on or .organization etc
+      }
+      break;
+    case '&':
+      if (next)
+        if (*next == '#' && isdigit(*(next+1)))
+          return false;
+    default:
+      break;
+  }
+
+  return true;
+}
+
+// passing as ptr-to-ptr instead of ref-to-ptr to get it be compiled using gcc
+bool KeywordsExtract::IsIgnore(char **ptr) {
+  if (!(*ptr) || '\0' == **ptr)
+    return false;
+  if ('@' == **ptr || !strncmp(*ptr, "&#", 2) || !strncmp(*ptr, "http://", 7) || !strncmp(*ptr, "www.", 4)) {
+    printf("%s is ignore word\n", *ptr);
+    while (' ' != *(*ptr+1) && '\0' != *(*ptr+1)) {
+      *ptr += 1;
+    }
+    return true;
+  }
+  return false;
+}
+
 int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set) {
   if (!str)
     return -1;
@@ -190,13 +267,8 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 
   // go to the first word, ignoring handles and punctuations
   ptr = str;
-  while (ptr && (' ' == *ptr || (ispunct(*ptr)/* && '\'' != *ptr*/))) {
-    if ('@' == *ptr || !strcmp(ptr, "http://") || !strcmp(ptr, "www.") || !strcmp(ptr, "&#")) {
-      while (' ' != *ptr && '\0' != *ptr)
-        ptr++;
-    } else {
-      ptr++;
-    }
+  while (ptr && '\0' != *ptr && (' ' == *ptr || IsPunct(ptr) || IsIgnore(&ptr))) {
+    ptr++;
   }
 
   if (!ptr || '\0' == *ptr)
@@ -215,8 +287,9 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 #endif
 
   while (ptr && probe && ptr != '\0') {
-    //if (' ' == *probe || '\0' == *probe || (ispunct(*probe) && '\'' != *probe && '#' != *probe && (strcmp(probe, "&#") != 0))) {
-    if (' ' == *probe || '\0' == *probe || (ispunct(*probe) && /*'\'' != *probe &&*/ '#' != *probe && (strcmp(probe, "&#") != 0))) {
+    if (' ' == *probe || '\0' == *probe || IsPunct(probe, probe-1, probe+1)) {
+
+      // TODO (balaji) sanity checks. remove these after stress tests
       if (NULL != stopwords_entity_end)
         std::cout << "ERROR: stopswords entity end is not null. did you not write it before?" << std::endl;
       if (NULL != caps_entity_end)
@@ -266,7 +339,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 
       // stop words
       if ((m_stopwords_dictionary.find(ptr) != m_stopwords_dictionary.end())) {
-        if (!strcmp(ptr, "of")) {
+        if (!strncmp(ptr, "of", 2)) {
           if (prev_word_start == NULL || !prev_word_caps) {
             current_word_stop = true;
             score--;
@@ -323,15 +396,10 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
         }
 
         // find the next position of ptr
-        while (' ' == *ptr || (ispunct(*ptr) && /* '\'' != *ptr &&*/ '#' != *ptr)) {
-          if ('@' == *ptr || !strcmp(ptr, "http://") || !strcmp(ptr, "www.") || !strcmp(ptr, "&#")) {
-            invisible_word_before_next = true;
-            score--;
-            while (' ' != *ptr && '\0' != *ptr)
-              ptr++;
-          } else {
-            ptr++;
-          }
+        // IsIgnore will literally ignore the word by chaging the cursor to next word end
+        // &= is to handle rare case where multiple continous ignore words reset invisible_word_before_next
+        while ('\0' != *ptr && (' ' == *ptr || IsPunct(ptr, ptr-1, ptr+1) || ((invisible_word_before_next &= IsIgnore(&ptr))))) {
+          ptr++;
         }
 
         next_word_start = ptr;
@@ -346,14 +414,18 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
           next_word_caps = false;
           next_word_all_caps = false;
         }
-      }
+      } else {
+        next_word_start = NULL;
+      } 
 
       if (NULL == caps_entity_start) {
-        if (current_word_caps && !current_word_stop &&
+        if ('\0' != current_word_delimiter &&
+            current_word_len > 1 &&
+            current_word_caps &&
+            !current_word_stop &&
             !current_word_dict &&
             '\0' != *next_word_start &&
-            !invisible_word_before_next &&
-            current_word_len > 1) {
+            !invisible_word_before_next) { 
           if (' ' == current_word_delimiter &&
               ((current_word_end + 1) == next_word_start)) {
             caps_entity_start = current_word_start;
@@ -389,7 +461,8 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
       }
 
       if (NULL == stopwords_entity_start) {
-        if (!current_word_stop &&
+        if ('\0' != current_word_delimiter &&
+            !current_word_stop &&
             !current_word_dict &&
             '#' != *current_word_start &&
             '\0' != *next_word_start &&

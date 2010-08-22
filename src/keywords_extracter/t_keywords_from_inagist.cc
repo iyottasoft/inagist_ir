@@ -23,10 +23,12 @@ int main(int argc, char *argv[]) {
   // get top tweets from inagist api
 
   bool ret_value;
-  if (argc == 2)
-    ret_value = curl_request_maker.GetTweets(argv[1]);
-  else
+  if (argc == 2) {
+    std::string url = std::string("http://inagist.com/api/v1/get_archived_tweets?userid=") + std::string(argv[1]);
+    ret_value = curl_request_maker.GetTweets(url.c_str());
+  } else {
     ret_value = curl_request_maker.GetTopTweets();
+  }
 
   if (ret_value) {
     curl_request_maker.GetLastWebResponse(reply_message);
@@ -73,7 +75,7 @@ int main(int argc, char *argv[]) {
     }
     delete json_value;
   } else {
-    std::cout << "ERROR: couldn't get top tweets" << std::endl;
+    std::cout << "ERROR: couldn't get tweets" << std::endl;
   }
 
   return 0;
