@@ -1,4 +1,5 @@
 #include "erl_nif.h"
+#include "ke_test.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -390,13 +391,15 @@ static ERL_NIF_TERM nif_getkeywords(ErlNifEnv *env, ERL_NIF_TERM tweet) {
 
     probe++;
   }
-  if (outptr != output && ',' == *(outptr-1))
-    *(outptr-1) = '\0';
+  //if (outptr != output && ',' == *(outptr-1))
+  //  *(outptr-1) = '\0';
   return enif_make_string(env, output, ERL_NIF_LATIN1);
 }
 
+extern void test_cout();
+
 static ERL_NIF_TERM nif_run(ErlNifEnv *env) {
-  nif_getkeywords(env, enif_make_string(env, "Contigous Caps will be counted. So will be contiguous nonstopwords", ERL_NIF_LATIN1));
+  return nif_getkeywords(env, enif_make_string(env, "Contigous Caps will be counted. So will be contiguous nonstopwords", ERL_NIF_LATIN1));
 }
 
 static ErlNifFunc nif_funcs[] =

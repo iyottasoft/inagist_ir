@@ -3,6 +3,7 @@
 import sys
 import os, glob
 from math import log
+from time import gmtime
 
 num_docs = 0
 hash_freqs = {}
@@ -35,14 +36,49 @@ def calculate_idf():
     hash_freqs[k].append(log(num_docs/v[1]))
 
 freqs = []
-def calculate_tf_idf(kwfile):
+freqs_length = 0
+hash_tf_idf = {}
+def calculate_tf_idf(kwfile, outfile):
   get_keyword_freqs(kwfile, 1)
+  f = open(outfile, 'w')
   for (k, v) in latest_hash_freqs.items():
     freqs.append((v * hash_freqs[k][2], v, k))
   freqs.sort()
-  length = len(freqs)
-  for i in range(length):
-    print freqs[i][0], " ", freqs[i][1], " ", freqs[i][2]
+  freqs_length = len(freqs)
+  for i in range(freqs_length):
+    f.write('%f %d %s\n' % (freqs[i][0], freqs[i][1], freqs[i][2]))
+    hash_tf_idf[freqs[i][2]] = freqs[i][0]
+  f.close()
+
+final_result_bag = []
+def generate_result_bag(outfile):
+  global hash_tf_idf 
+  result_bag = {}
+  for k,v in hash_tf_idf.items():
+    tokens = k.split(" ")
+    # let us consider only trends whose tokens are themselves trends
+    if (len(tokens) > 1):
+      tf_idf_sum = 0.0
+      for token in tokens:
+        if token not in hash_tf_idf:
+          tf_idf_sum = 0.0
+          break
+        tf_idf_sum += hash_tf_idf[token]
+      if (tf_idf_sum > 0):
+        result_bag[k] = tf_idf_sum / len(tokens)
+
+  for k,v in result_bag.items():
+    final_result_bag.append((v,k))
+  final_result_bag.sort()
+  length = len(final_result_bag)
+  if (len > 0):
+    f = open(outfile + '.json', 'w')
+    f.write('{ "trends": {')
+    f.write(' "trend0": {"%s":%.4f}' % (final_result_bag[0][1], final_result_bag[0][0]))
+    for i in range(1, length):
+      f.write(', "trend%d": {"%s":%.4f}' % (i, final_result_bag[i][1], final_result_bag[i][0]))
+    f.write('} }')
+    f.close()
 
 def print_freqs():
   for (k,v) in hash_freqs.items():
@@ -69,7 +105,10 @@ def main():
   calculate_idf()
   if (num_docs != 0):
     kfile = kfiles[num_docs-1]
-    calculate_tf_idf(kfile)
+    filename = kfile.split('keywords.')
+    outfile = path + 'trends.' + filename[1]
+    calculate_tf_idf(kfile, outfile)
+    generate_result_bag(outfile)
   #print_freqs()
 
 if __name__ == "__main__":

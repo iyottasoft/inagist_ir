@@ -12,15 +12,7 @@ int main(int argc, char* argv[]) {
 
   inagist_trends::KeywordsExtract ke;
 
-  //if (ke.Init(NULL) < 0)
-  //  std::cout << "passed empty input test\n";
-
-  if (ke.Init("./data/tweets.txt") < 0)
-    std::cerr << "ERROR: didn't use default parameters\n";
-
-  ke.DeInit();
-
-  if (ke.Init("./data/tweets.txt", "./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt", NULL, "./data/output.txt") < 0) {
+  if (ke.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt", NULL, "./data/tweets.txt", "./data/output.txt") < 0) {
     std::cerr << "ERROR: couldn't initialize\n";
     return -1;
   }

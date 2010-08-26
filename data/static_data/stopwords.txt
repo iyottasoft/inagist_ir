@@ -128,6 +128,16 @@ EVER
 every
 Every
 EVERY
+everyone
+Everyone
+every1
+Every1
+everything
+Everything
+everywhere
+Everywhere
+etc
+Etc
 for
 For
 FOR
@@ -583,6 +593,8 @@ thanks
 Thanks
 thank
 Thank
+thx
+Thx
 new
 maybe
 Maybe

@@ -19,25 +19,20 @@ KeywordsExtract::~KeywordsExtract() {
     std::cerr << "ERROR: DeInit() failed\n";
 }
 
-int KeywordsExtract::Init(const char *input_file,
-    const char *stopwords_file,
+// every input parameter is optional!
+//
+// stopwords, dictionary and stemmer dictionary file paths, if not given will
+// just mean that those dictionaries will not be populated
+// 
+// if input_file or output_file are given, they will be initialized
+// the above are two are typically used by a test program which will
+// subsequently call GetKeywords() and PrintKeywords()
+//
+int KeywordsExtract::Init(const char *stopwords_file,
     const char *dictionary_file,
     const char *stemmer_dictionary_file,
+    const char *input_file,
     const char *output_file) {
-
-  if (NULL == input_file) {
-    std::cerr << "ERROR: invalid input file\n";
-    return -1;
-  }
-
-  m_tweet_stream.open(input_file, std::ifstream::in);
-
-  m_tweet_stream.seekg(0, std::ios::end);
-  unsigned int length = m_tweet_stream.tellg();
-  if (length < 2) {
-    std::cerr << "ERROR: empty file\n";
-    m_tweet_stream.close();
-  }
 
   // load dictionaries
   if (stopwords_file) {
@@ -56,6 +51,17 @@ int KeywordsExtract::Init(const char *input_file,
       return -1;
     }
     //PrintDictionary(m_dictionary);
+  }
+
+  if (input_file) {
+    m_tweet_stream.open(input_file, std::ifstream::in);
+
+    m_tweet_stream.seekg(0, std::ios::end);
+    unsigned int length = m_tweet_stream.tellg();
+    if (length < 2) {
+      std::cerr << "ERROR: empty file\n";
+      m_tweet_stream.close();
+    }
   }
 
   // open output file

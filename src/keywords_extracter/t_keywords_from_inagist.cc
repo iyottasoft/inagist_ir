@@ -9,7 +9,7 @@
 
 int main(int argc, char *argv[]) {
   inagist_trends::KeywordsExtract ke;
-  if (ke.Init("./data/tweets.txt", "./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt", NULL, "./data/static_data/output.txt") < 0) {
+  if (ke.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt", NULL, "./data/tweets.txt", "./data/static_data/output.txt") < 0) {
     std::cerr << "ERROR: couldn't initialize\n";
     return -1; 
   }
@@ -24,7 +24,8 @@ int main(int argc, char *argv[]) {
 
   bool ret_value;
   if (argc == 2) {
-    std::string url = std::string("http://inagist.com/api/v1/get_archived_tweets?userid=") + std::string(argv[1]);
+    //std::string url = std::string("http://inagist.com/api/v1/get_archived_tweets?userid=") + std::string(argv[1]);
+    std::string url = std::string("http://inagist.com/api/v1/get_top_tweets?userid=") + std::string(argv[1]) + std::string("&limit=5&ham=24");
     ret_value = curl_request_maker.GetTweets(url.c_str());
   } else {
     ret_value = curl_request_maker.GetTopTweets();

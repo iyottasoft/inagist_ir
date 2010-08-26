@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
   }
 
   inagist_trends::KeywordsExtract ke;
-  if (ke.Init("./data/tweets.txt", argv[1], argv[2], NULL, argv[4]) < 0) {
+  if (ke.Init(argv[1], argv[2], NULL, "./data/tweets.txt", argv[4]) < 0) {
     std::cerr << "ERROR: couldn't initialize KeywordsExtract class\n";
     return -1; 
   }

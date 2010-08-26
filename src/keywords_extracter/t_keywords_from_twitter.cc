@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     }
     char buffer[1024];
     inagist_trends::KeywordsExtract ke;
-    if (ke.Init("./data/tweets.txt", "./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt", NULL, "./data/output.txt") < 0) {
+    if (ke.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt", NULL, "./data/tweets.txt", "./data/output.txt") < 0) {
       std::cerr << "ERROR: couldn't initialize\n";
       return -1;
     }
