@@ -1,0 +1,89 @@
+#!/bin/tcsh
+
+# this script will create the required folders to install the project and produce a runscript.
+# the idea is to specify all environment variables in runscript and keep other scripts relative to root dir
+# runscript won't be checked into git. it has to be backed up separately or recreated using configure
+
+if ($#argv != 1) then
+  echo "Usage: ./configure root_directory"
+  exit(0)
+endif
+
+set ROOT_DIR=$argv[1]
+set SCRIPT_DIR=$ROOT_DIR/scripts
+set CONFIG_DIR=$ROOT_DIR/configs
+set BIN_DIR=$ROOT_DIR/bin
+set DATA_DIR=$ROOT_DIR/data
+set STATIC_DATA_DIR=$DATA_DIR/static_data
+set LOG_DIR=$ROOT_DIR/log
+
+if (!(-r $ROOT_DIR)) then
+  echo "mkdir -p $ROOT_DIR"
+  mkdir -p $ROOT_DIR
+endif
+
+if (!(-r $SCRIPT_DIR)) then
+  echo "mkdir -p $SCRIPT_DIR"
+  mkdir -p $SCRIPT_DIR
+endif
+
+echo "cp ./scripts/* $SCRIPT_DIR"
+cp ./scripts/* $SCRIPT_DIR
+
+if (!(-r $CONFIG_DIR)) then
+  echo "mkdir -p $CONFIG_DIR"
+  mkdir -p $CONFIG_DIR
+endif
+
+echo "cp ./configs/* $CONFIG_DIR"
+cp ./configs/* $CONFIG_DIR
+
+if (!(-r $BIN_DIR)) then
+  echo "mkdir -p $BIN_DIR"
+  mkdir -p $BIN_DIR
+endif
+
+echo "cp ./bin/* $BIN_DIR"
+cp ./bin/* $BIN_DIR
+
+if (!(-r $DATA_DIR)) then
+  echo "mkdir -p $DATA_DIR"
+  mkdir -p $DATA_DIR
+endif
+
+if (!(-r $STATIC_DATA_DIR)) then
+  echo "mkdir -p $STATIC_DATA_DIR"
+  mkdir -p $STATIC_DATA_DIR
+endif
+
+echo "cp ./data/static_data $STATIC_DATA_DIR"
+cp ./data/static_data/* $STATIC_DATA_DIR
+
+if (!(-r $LOG_DIR)) then
+  echo "mkdir -p $LOG_DIR"
+  mkdir -p $LOG_DIR
+endif
+
+set RUN_SCRIPT = $SCRIPT_DIR/runscript.tcsh
+if (!(-r $RUN_SCRIPT)) then
+  echo '#\!/bin/tcsh' > $RUN_SCRIPT
+  echo "\n" >> $RUN_SCRIPT
+
+  echo "setenv ROOT_DIR $argv[1]" >> $RUN_SCRIPT
+  echo 'setenv SCRIPT_DIR $ROOT_DIR/scripts' >> $RUN_SCRIPT
+  echo 'setenv CONFIG_DIR $ROOT_DIR/configs' >> $RUN_SCRIPT
+  echo 'setenv BIN_DIR $ROOT_DIR/bin' >> $RUN_SCRIPT
+  echo 'setenv DATA_DIR $ROOT_DIR/data' >> $RUN_SCRIPT
+  echo 'setenv STATIC_DATA_DIR $DATA_DIR/static_data' >> $RUN_SCRIPT
+  echo 'setenv LOG_DIR $ROOT_DIR/log' >> $RUN_SCRIPT
+  echo "\n" >> $RUN_SCRIPT
+
+  echo 'set script_file = $1' >> $RUN_SCRIPT
+  echo 'shift' >> $RUN_SCRIPT
+  echo 'tcsh $script_file $argv:q' >> $RUN_SCRIPT 
+
+  echo "chmod +x $RUN_SCRIPT"
+  chmod +x $RUN_SCRIPT
+endif
+
+echo "done!"

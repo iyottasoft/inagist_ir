@@ -71,7 +71,7 @@ def generate_result_bag(outfile):
     final_result_bag.append((v,k))
   final_result_bag.sort()
   length = len(final_result_bag)
-  if (len > 0):
+  if (length > 0):
     f = open(outfile + '.json', 'w')
     f.write('{ "trends": {')
     f.write(' "trend0": {"%s":%.4f}' % (final_result_bag[0][1], final_result_bag[0][0]))
@@ -91,11 +91,12 @@ def print_freqs():
 
 def main():
   global num_docs
-  if (len(sys.argv) == 2):
-    user_name = sys.argv[1]
-  else:
-    user_name = "worldnewsgist"
-  path = '/home/balaji/inagist/ir_cpp/data/' + user_name + '/'
+  if (len(sys.argv) != 3):
+    print "Usage: %s data_dir user_name" % (sys.argv[0])
+    return -1
+  data_dir = sys.argv[1]
+  user_name = sys.argv[2]
+  path = data_dir + '/' + user_name + '/'
   kfiles = glob.glob(os.path.join(path, 'keywords.*'))
   kfiles.sort(key=lambda x: os.path.getmtime(x))
 

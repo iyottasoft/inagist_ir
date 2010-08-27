@@ -20,11 +20,13 @@ BINS = ${BIN_DIR}/t_trends_manager
 OBJS = trends_manager.o 
 
 all: ${LIB} ${BINS} trends
+	cp trends_generater.py ${BIN_DIR}
 	@echo "build done!"
 
 clean:
 	@echo "cleaning libraries ..."
 	@rm *.o ${BINS} ${LIB}
+	@rm ${BIN_DIR}/trends_generater.py
 	@rm trends.beam
 	@rm trends.so
 	@echo "done!"
