@@ -61,10 +61,10 @@ def generate_result_bag(outfile):
       tf_idf_sum = 0.0
       for token in tokens:
         if token not in hash_tf_idf:
-          tf_idf_sum = 0.0
+          tf_idf_sum = -1
           break
         tf_idf_sum += hash_tf_idf[token]
-      if (tf_idf_sum > 0):
+      if (tf_idf_sum > -1):
         result_bag[k] = tf_idf_sum / len(tokens)
 
   for k,v in result_bag.items():
