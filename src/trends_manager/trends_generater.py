@@ -108,12 +108,15 @@ def main():
     return 0
 
   current_hash_freqs = {}
-  for i in [2, 9]: # trend intervals + 1
+  flag = 0
+  for i in [2, 9, 17, 49, 145, 337]: # trend intervals + 1
     for j in range(1, i):
       if (j > num_docs):
         break;
       kfile = kfiles[num_docs-j]
-      filename = kfile.split('keywords.')
+      if (flag == 0):
+        filename = kfile.split('keywords.')
+        flag = 1
       get_keyword_freqs(kfile, current_hash_freqs)
     num_words = len(current_hash_freqs)
     outfile = path + 'trends.' + filename[1] + '.' + str(i-1)
