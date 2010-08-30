@@ -236,6 +236,9 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   //unsigned out_len = 0;
   unsigned int current_word_len = 0;
   int score = 0;
+  int num_mixed_words = 0;
+  //int num_caps_words = 0;
+  int num_words = 0;
 
   char *current_word_start = NULL;
   char *current_word_end = NULL;
@@ -271,8 +274,13 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   char *pch = NULL;
   char ch;
 
-  // go to the first word, ignoring handles and punctuations
   ptr = str;
+
+#ifdef DEBUG
+  cout << endl << "\norginal query: " << std::string(str) << endl;
+#endif
+
+  // go to the first word, ignoring handles and punctuations
   while (ptr && '\0' != *ptr && (' ' == *ptr || IsPunct(ptr) || IsIgnore(&ptr))) {
     ptr++;
   }
@@ -294,7 +302,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 
   while (ptr && probe && ptr != '\0') {
     if (' ' == *probe || '\0' == *probe || IsPunct(probe, probe-1, probe+1)) {
-
+      num_words++;
       // TODO (balaji) sanity checks. remove these after stress tests
       if (NULL != stopwords_entity_end)
         std::cout << "ERROR: stopswords entity end is not null. did you not write it before?" << std::endl;
@@ -573,11 +581,12 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
           break;
       }
       if (isupper(*probe)) {
-        if (!current_word_all_caps) {
+        if (!current_word_all_caps && !ispunct(*current_word_start)) {
           //if ((probe-1) == ptr)
             //second_letter_has_caps = true;
           //else
             current_word_has_mixed_case = true;
+            num_mixed_words++;
         }
       } else {
         if (current_word_caps)
@@ -589,6 +598,14 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
     // a mere cog in a loop wheel, but a giant killer if commented
     probe++;
   }
+
+  if (num_mixed_words > 2) {
+#ifdef DEBUG
+    cout << "non-english tweet. ignoring." << endl;
+#endif
+    keywords_set.clear();
+  }
+
 #ifdef DEBUG
   cout << endl << "\norginal query: " << std::string(str) << endl;
 #endif

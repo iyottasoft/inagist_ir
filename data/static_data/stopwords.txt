@@ -293,6 +293,9 @@ MY
 neither
 Neither
 NEITHER
+never
+Never
+NEVER
 no
 No
 NO
@@ -453,7 +456,9 @@ u'll
 U'll
 U'LL
 us
+Us
 ur
+Ur
 UR
 until
 Until
