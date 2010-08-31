@@ -27,7 +27,7 @@ int Init() {
 #ifdef _cplusplus
 extern "C"
 #endif
-int SubmitTweet(const char* tweet) {
+int SubmitTweet(const char* user_name, const char* tweet) {
   std::set<std::string> keywords_set;
   strcpy(g_buffer, tweet);
   g_keywords_extract.GetKeywords(g_buffer, keywords_set);
@@ -38,8 +38,11 @@ int SubmitTweet(const char* tweet) {
 #ifdef _cplusplus
 extern "C"
 #endif
-int GetTrends() {
-  std::cout << "take thee thy inagist trends\n";
+int GetTrends(const char* user_name, char* trends_buffer) {
+  if (!user_name || !trends_buffer)
+    return -1;
+  //std::cout << "trends for " << std::string(user_name) << std::endl;
+  //strcpy(trends_buffer, "take thee thy inagist trends");
   return 0;
 }
 

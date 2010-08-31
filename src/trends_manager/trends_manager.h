@@ -19,8 +19,8 @@
   extern "C" {
 #endif
     int Init();
-    int GetTrends();
-    int SubmitTweet(const char *tweet);
+    int GetTrends(const char* user_name, char* trends_buffer);
+    int SubmitTweet(const char* user_name, const char* tweet);
 #ifdef _cplusplus
   }
 #endif

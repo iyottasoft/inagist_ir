@@ -7,6 +7,6 @@ extern int GetTrends();
 
 int main() {
   Init();
-  SubmitTweet("Contigous Caps will be counted. So will be contiguous nonstopwords");
+  SubmitTweet("tantricninja", "Contigous Caps will be counted. So will be contiguous nonstopwords");
   return 0;
 }

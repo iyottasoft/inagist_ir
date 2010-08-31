@@ -19,7 +19,8 @@ BINS = ${BIN_DIR}/t_keywords_extract \
        ${BIN_DIR}/t_keywords_manager \
        ${BIN_DIR}/t_keywords_from_twitter \
        ${BIN_DIR}/t_keywords_from_inagist \
-       ${BIN_DIR}/x_keywords_extract
+       ${BIN_DIR}/x_keywords_extract \
+       ${BIN_DIR}/t_keywords_from_stream
 
 OBJS = keywords_extract.o keywords_manager.o
 
@@ -64,6 +65,11 @@ ${BIN_DIR}/t_keywords_from_twitter: t_keywords_from_twitter.o ${LIB}
 ${BIN_DIR}/t_keywords_from_inagist: t_keywords_from_inagist.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keywords_from_inagist
+	@echo "done!"
+
+${BIN_DIR}/t_keywords_from_stream: t_keywords_from_stream.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keywords_from_stream
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

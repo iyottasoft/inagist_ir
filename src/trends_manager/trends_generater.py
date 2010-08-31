@@ -109,7 +109,7 @@ def main():
 
   current_hash_freqs = {}
   flag = 0
-  for i in [2, 9, 17, 49, 145, 337]: # trend intervals + 1
+  for i in [2, 3, 9, 17, 49, 145, 337]: # trend intervals + 1
     for j in range(1, i):
       if (j > num_docs):
         break;
