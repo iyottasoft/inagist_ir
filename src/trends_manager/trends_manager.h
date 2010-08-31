@@ -20,7 +20,7 @@
 #endif
     int Init();
     int GetTrends(const char* user_name, char* trends_buffer);
-    int SubmitTweet(const char* user_name, const char* tweet);
+    int SubmitTweet(const char* user_name, const char* tweet, char *keywords);
 #ifdef _cplusplus
   }
 #endif
