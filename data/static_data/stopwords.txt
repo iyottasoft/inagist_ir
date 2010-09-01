@@ -391,7 +391,9 @@ some
 Some
 SOME
 something
+somethings
 Something
+Somethings
 somehow
 Somehow
 someday
@@ -489,10 +491,14 @@ we've
 We've
 WE'VE
 what
+what's
 What
+What's
 WHAT
 when
+when's
 When
+When's
 WHEN
 whenever
 Whenever
@@ -503,6 +509,8 @@ WHERE
 where's
 Where's
 WHERE'S
+whether
+Whether
 which
 Which
 WHICH

@@ -237,8 +237,10 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   unsigned int current_word_len = 0;
   int score = 0;
   int num_mixed_words = 0;
-  //int num_caps_words = 0;
+  int num_caps_words = 0;
   int num_words = 0;
+  int num_stop_words = 0;
+  int num_numeric_words = 0;
 
   char *current_word_start = NULL;
   char *current_word_end = NULL;
@@ -256,11 +258,14 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   bool current_word_caps = false;
   bool current_word_all_caps = false;
   bool current_word_has_mixed_case = false;
+  bool current_word_starts_num = false;
   bool prev_word_caps = false;
   bool prev_word_all_caps = false;
+  bool prev_word_starts_num = false;
   bool prev_word_has_mixed_case = false;
   bool next_word_caps = false;
   bool next_word_all_caps = false;
+  bool next_word_starts_num = false;
   bool invisible_word_before_next = false;
 
   bool current_word_stop = false;
@@ -291,6 +296,12 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   if (isupper(*ptr)) {
     current_word_caps = true;
     current_word_all_caps = true;
+    current_word_starts_num = false;
+  } else {
+    if (isdigit(*ptr))
+      current_word_starts_num = true; 
+    else
+      current_word_starts_num = false;
   }
 
   current_word_start = ptr;
@@ -320,15 +331,19 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 #endif
 
       current_word_len = current_word_end - current_word_start;
-      if (current_word_len < 2)
+      if ((current_word_len < 2) && !isdigit(*current_word_start))
         score-=5;
 
       if ('#' == *current_word_start) {
         score++;
       }
 
+      if (current_word_starts_num)
+        num_numeric_words++;
+
       if (current_word_all_caps) {
         score--;
+        num_caps_words++;
         if (current_word_len > 1 && current_word_len < 6) {
           score++;
 #ifdef DEBUG
@@ -346,6 +361,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 #endif
       } else if (current_word_caps) {
         score++;
+        num_caps_words++;
 #ifdef DEBUG
         cout << " :starts with caps";
 #endif
@@ -356,6 +372,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
         if (!strncmp(ptr, "of", 2)) {
           if (prev_word_start == NULL || !prev_word_caps) {
             current_word_stop = true;
+            num_stop_words++;
             score--;
 #ifdef DEBUG
             cout << " :stopword";
@@ -363,6 +380,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
           }
         } else {
         current_word_stop = true;
+        num_stop_words++;
         score--;
 #ifdef DEBUG
         cout << " :stopword";
@@ -424,9 +442,14 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
         if (isupper(*next_word_start)) {
           next_word_caps = true;
           next_word_all_caps = true;
+          next_word_starts_num = false;
         } else {
           next_word_caps = false;
           next_word_all_caps = false;
+          if (isdigit(*next_word_start))
+            next_word_starts_num = true;
+          else
+            next_word_starts_num = false;
         }
       } else {
         next_word_start = NULL;
@@ -450,7 +473,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
         if (current_word_stop ||
             !current_word_caps ||
             current_word_dict ||
-            current_word_len < 2) {
+            ((current_word_len < 2) && !isdigit(*current_word_start))) {
           if (caps_entity_start != prev_word_start) {
             caps_entity_end = prev_word_end;
           }
@@ -481,7 +504,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
             '#' != *current_word_start &&
             '\0' != *next_word_start &&
             !invisible_word_before_next &&
-            current_word_len > 1) {
+            ((current_word_len > 1) || isdigit(*current_word_start))) {
           if (' ' == current_word_delimiter &&
               ((current_word_end + 1) == next_word_start)) {
             stopwords_entity_start = current_word_start;
@@ -489,7 +512,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
         }
         stopwords_entity_end = NULL;
       } else {
-        if (current_word_stop || current_word_dict || '#' == *current_word_start || current_word_len < 2) {
+        if (current_word_stop || current_word_dict || '#' == *current_word_start || ((current_word_len < 2) && !isdigit(*current_word_start))) {
           if (stopwords_entity_start != prev_word_start) {
             stopwords_entity_end = prev_word_end;
           }
@@ -519,7 +542,21 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 #ifdef DEBUG
           cout << endl << string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) << " :entity by stopword";
 #endif
-          keywords_set.insert(string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)));
+          if (strncmp(stopwords_entity_end-2, "\'s", 2) == 0) {
+            ch = *(stopwords_entity_end-2);
+            *(stopwords_entity_end-2) = '\0';
+            keywords_set.insert(string(stopwords_entity_start, ((stopwords_entity_end-2) - stopwords_entity_start)));
+            *(stopwords_entity_end-2) = ch;
+          }
+          else if ((pch = strstr(stopwords_entity_start, "\'s")) && (pch < stopwords_entity_end)) {
+            ch = *pch;
+            *pch = '\0';
+            keywords_set.insert(string(stopwords_entity_start, (pch - stopwords_entity_start)));
+            *pch = ch;
+          }
+          else { 
+            keywords_set.insert(string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)));
+          }
         } else {
           cout << "ERROR: stopwords entity markers are wrong\n";
         }
@@ -532,7 +569,21 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 #ifdef DEBUG
           cout << endl << string(caps_entity_start, (caps_entity_end - caps_entity_start)) << " :entity by caps";
 #endif
-          keywords_set.insert(string(caps_entity_start, (caps_entity_end - caps_entity_start)));
+          if (strncmp(caps_entity_end-2, "\'s", 2) == 0) {
+            ch = *(caps_entity_end-2);
+            *(caps_entity_end-2) = '\0';
+            keywords_set.insert(string(caps_entity_start, ((caps_entity_end-2) - caps_entity_start)));
+            *(caps_entity_end-2) = ch;
+          }
+          else if ((pch = strstr(caps_entity_start, "\'s")) && (pch < caps_entity_end)) {
+            ch = *pch;
+            *pch = '\0';
+            keywords_set.insert(string(caps_entity_start, (pch - caps_entity_start)));
+            *pch = ch;
+          }
+          else { 
+            keywords_set.insert(string(caps_entity_start, (caps_entity_end - caps_entity_start)));
+          }
         } else {
           cout << "ERROR: caps entity markers are wrong\n";
         }
@@ -560,12 +611,14 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
       prev_word_all_caps = current_word_all_caps;
       prev_word_stop = current_word_stop;
       prev_word_dict = current_word_dict;
+      prev_word_starts_num = current_word_starts_num;
 
       prev_word_delimiter = current_word_delimiter;
 
       current_word_start = next_word_start;
       current_word_caps = next_word_caps;
       current_word_all_caps = next_word_all_caps;
+      current_word_starts_num = next_word_starts_num;
       current_word_has_mixed_case = false;
 
       invisible_word_before_next = false;
@@ -608,7 +661,15 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 
 #ifdef DEBUG
   cout << endl << "\norginal query: " << std::string(str) << endl;
+  cout << "num words: " << num_words << endl;
+  cout << "num caps words: " << num_caps_words << endl;
+  cout << "num stop words: " << num_stop_words << endl;
+  cout << "num numeric words: " << num_numeric_words << endl;
 #endif
+  if ((num_words == (num_caps_words + num_numeric_words)) ||
+     (num_words == (num_caps_words + num_stop_words)))
+    keywords_set.clear();
+
   return 0;
 }
 
