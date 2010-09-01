@@ -13,7 +13,7 @@ LIB_DIR = ../../lib
 BIN_DIR = ../../bin
 
 
-LIB = ${LIB_DIR}/lib${PROJECT}.a
+LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 #BINS = ${BIN_DIR}/t_twitcurl
 
@@ -38,7 +38,7 @@ ${LIB}: ${OBJS}
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 #${BIN_DIR}/t_twitcurl: t_twitcurl.o ${LIB}
 	#@echo "creating binary:" $@

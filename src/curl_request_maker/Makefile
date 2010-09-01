@@ -1,6 +1,6 @@
 PROJECT = curlrequestmaker
 CXX = g++
-CXXFLAGS = -Wall -g
+CXXFLAGS = -Wall -g -Wno-deprecated
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser
@@ -13,7 +13,7 @@ LIB_DIR = ../../lib
 BIN_DIR = ../../bin
 
 
-LIB = ${LIB_DIR}/lib${PROJECT}.a
+LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_curl_request_maker
 
@@ -38,7 +38,7 @@ ${LIB}: ${OBJS}
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/t_curl_request_maker: t_curl_request_maker.o ${LIB}
 	@echo "creating binary:" $@

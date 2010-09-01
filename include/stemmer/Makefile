@@ -13,7 +13,7 @@ LIB_DIR = ../../lib
 BIN_DIR = ../../bin
 
 
-LIB = ${LIB_DIR}/lib${PROJECT}.a
+LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_porter_stemmer \
        ${BIN_DIR}/t_given_porter_stemmer
@@ -39,7 +39,7 @@ ${LIB}: ${OBJS}
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/t_porter_stemmer: t_porter_stemmer.o ${LIB}
 	@echo "creating binary:" $@

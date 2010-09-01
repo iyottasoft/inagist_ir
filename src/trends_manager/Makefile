@@ -13,7 +13,7 @@ LIB_DIR = ../../lib
 BIN_DIR = ../../bin
 
 
-LIB = ${LIB_DIR}/lib${PROJECT}.a
+LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_trends_manager
 
@@ -39,7 +39,7 @@ ${LIB}: ${OBJS}
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/t_trends_manager: t_trends_manager.o ${LIB}
 	@echo "creating binary:" $@

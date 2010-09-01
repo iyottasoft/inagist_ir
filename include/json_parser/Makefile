@@ -13,7 +13,7 @@ LIB_DIR = ../../lib
 BIN_DIR = ../../bin
 
 
-LIB = ${LIB_DIR}/lib${PROJECT}.a
+LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_json_parser
 
@@ -38,7 +38,7 @@ ${LIB}: ${OBJS}
 
 .cpp.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/t_json_parser: t_json_parser.o ${LIB}
 	@echo "creating binary:" $@

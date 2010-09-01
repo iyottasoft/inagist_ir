@@ -13,14 +13,13 @@ LIB_DIR = ../../lib
 BIN_DIR = ../../bin
 
 
-LIB = ${LIB_DIR}/lib${PROJECT}.a
+LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_keywords_extract \
        ${BIN_DIR}/t_keywords_manager \
        ${BIN_DIR}/t_keywords_from_twitter \
        ${BIN_DIR}/t_keywords_from_inagist \
-       ${BIN_DIR}/x_keywords_extract \
-       ${BIN_DIR}/t_keywords_from_stream
+       ${BIN_DIR}/x_keywords_extract
 
 OBJS = keywords_extract.o keywords_manager.o
 
@@ -40,7 +39,7 @@ ${LIB}: ${OBJS}
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/x_keywords_extract: x_keywords_extract.o ${LIB}
 	@echo "creating binary:" $@
