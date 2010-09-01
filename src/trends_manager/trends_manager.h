@@ -18,9 +18,9 @@
 #ifdef _cplusplus
   extern "C" {
 #endif
-    int Init();
+    int Init(const char* stopwords_file_path);
     int GetTrends(const char* user_name, char* trends_buffer);
-    int SubmitTweet(const char* user_name, const char* tweet, char *keywords);
+    int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *keywords);
 #ifdef _cplusplus
   }
 #endif

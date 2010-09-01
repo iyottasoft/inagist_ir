@@ -1,8 +1,8 @@
 -module(trends).
--export([init/0, init_c/0, submit/0, trends/0, deinit_c/0, getkeywords/2, gettrends/1, test/2]).
+-export([init/0, init_c/1, submit/0, trends/0, deinit_c/0, getkeywords/2, gettrends/1, test/2]).
 init() ->
   erlang:load_nif("./trends", 0).
-init_c() ->
+init_c(_stopwords_file_path) ->
   "NIF library not loaded".
 submit() ->
   "NIF library not loaded".

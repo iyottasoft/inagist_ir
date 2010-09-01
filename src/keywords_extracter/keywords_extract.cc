@@ -214,7 +214,9 @@ bool KeywordsExtract::IsIgnore(char **ptr) {
   if (!(*ptr) || '\0' == **ptr)
     return false;
   if ('@' == **ptr || !strncmp(*ptr, "&#", 2) || !strncmp(*ptr, "http://", 7) || !strncmp(*ptr, "www.", 4)) {
+#ifdef DEBUG
     printf("%s is ignore word\n", *ptr);
+#endif
     while (' ' != *(*ptr+1) && '\0' != *(*ptr+1)) {
       *ptr += 1;
     }
@@ -405,6 +407,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
       if (current_word_caps)
         *ptr = toupper(*ptr);
 
+#ifdef DEBUG
       if (score > 0) {
         if ((pch = strstr(ptr, "\'s"))) {
           ch = *pch;
@@ -415,6 +418,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
           keywords_set.insert(string(ptr));
         }
       }
+#endif
 
       if (prev_word_end)
         *prev_word_end = prev_word_delimiter;
@@ -456,43 +460,56 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
       } 
 
       if (NULL == caps_entity_start) {
-        if ('\0' != current_word_delimiter &&
-            current_word_len > 1 &&
+        if (current_word_len > 1 &&
             current_word_caps &&
             !current_word_stop &&
-            !current_word_dict &&
-            '\0' != *next_word_start &&
-            !invisible_word_before_next) { 
-          if (' ' == current_word_delimiter &&
-              ((current_word_end + 1) == next_word_start)) {
-            caps_entity_start = current_word_start;
+            !current_word_dict) {
+
+          if ('\0' != current_word_delimiter &&
+              '\0' != *next_word_start &&
+              !invisible_word_before_next) { 
+
+            if (' ' == current_word_delimiter &&
+                ((current_word_end + 1) == next_word_start)) {
+              caps_entity_start = current_word_start;
+            }
+            caps_entity_end = NULL;
           }
+
+          if ('\0' == current_word_delimiter ||
+              '\0' == *next_word_start ||
+              invisible_word_before_next) { 
+
+              caps_entity_start = current_word_start;
+              caps_entity_end = current_word_end;
+          }
+        } else {
+          caps_entity_end = NULL;
         }
-        caps_entity_end = NULL;
       } else {
         if (current_word_stop ||
             !current_word_caps ||
             current_word_dict ||
             ((current_word_len < 2) && !isdigit(*current_word_start))) {
-          if (caps_entity_start != prev_word_start) {
+          //if (caps_entity_start != prev_word_start) {
             caps_entity_end = prev_word_end;
-          }
+          /*}
           else {
             caps_entity_start = NULL;
             caps_entity_end = NULL;
-          }
+          }*/
         } else {
           if (' ' != current_word_delimiter ||
               '\0' == *next_word_start ||
               invisible_word_before_next ||
               ((current_word_end + 1) != next_word_start)) {
-            if (caps_entity_start != current_word_start) {
+            //if (caps_entity_start != current_word_start) {
               caps_entity_end = current_word_end;
-            }
+            /*}
             else {
               caps_entity_start = NULL;
               caps_entity_end = NULL;
-            }
+            }*/
           }
         }
       }
@@ -666,9 +683,11 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   cout << "num stop words: " << num_stop_words << endl;
   cout << "num numeric words: " << num_numeric_words << endl;
 #endif
-  if ((num_words == (num_caps_words + num_numeric_words)) ||
-     (num_words == (num_caps_words + num_stop_words)))
-    keywords_set.clear();
+  if (num_stop_words > 0) {
+    if ((num_words == (num_caps_words + num_numeric_words)) ||
+        (num_words <= (num_caps_words + num_stop_words) && num_words > 5))
+      keywords_set.clear();
+  }
 
   return 0;
 }
