@@ -47,6 +47,9 @@ ${BIN_DIR}/t_trends_manager: t_trends_manager.o ${LIB}
 	@echo "done!"
 
 trends:
+	echo "making shared object trends.so ..."
 	gcc -fPIC -shared -o trends.so trends.c -I/usr/local/lib/erlang/usr/include/ -I../keywords_extracter -L../../lib -ltrendsmanager -lkeywordsextracter -lstdc++ -lei -lerl_interface  -I/usr/local/lib/erlang/lib/erl_interface-3.6.5/include -L/usr/local/lib/erlang/lib/erl_interface-3.6.5/lib
+	echo "compiling trends.erl"
+	erlc trends.erl
 
 # DO NOT DELETE THIS LINE
