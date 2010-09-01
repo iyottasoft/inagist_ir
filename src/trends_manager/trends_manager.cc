@@ -20,7 +20,6 @@ int Init(const char* stopwords_file_path) {
   if (!stopwords_file_path)
     return -1;
 
-  std::cout << stopwords_file_path << std::endl;
   g_keywords_extract.Init(stopwords_file_path);
   memset(g_buffer, 0, 1024);
   return 0;
