@@ -54,8 +54,8 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   //memset(user_name_str, 0, 255);
   memset(tweet_str, 0, 1024);
   
-  if (enif_inspect_binary(env, argv[0], &user) &&
-      enif_inspect_binary(env, argv[1], &tweet)) {
+  //if (enif_inspect_binary(env, argv[0], &user) &&
+  if (enif_inspect_binary(env, argv[0], &tweet)) {
     memcpy(tweet_str, tweet.data, tweet.size);
     //memcpy(user_name_str, user.data, user.size);
   } else
@@ -153,7 +153,7 @@ static ErlNifFunc nif_funcs[] =
   {"submit", 0, nif_submit},
   {"trends", 0, nif_trends},
   //{"deinit_c", 0, nif_deinit_c},
-  {"getkeywords", 2, nif_getkeywords},
+  {"getkeywords", 1, nif_getkeywords},
   {"gettrends", 1, nif_trends},
   {"test", 2, nif_test},
 };
