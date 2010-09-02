@@ -96,26 +96,31 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   return return_list;
 }
 
-static ERL_NIF_TERM nif_gettrends(ErlNifEnv *env, ERL_NIF_TERM user_name) {
+ERL_NIF_TERM nif_gettrends(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  ErlNifBinary user_name;
   char user_name_str[255];
   memset(user_name_str, 0, 255);
-  if (my_enif_get_string(env, user_name, user_name_str) < 0) {
-    printf("ERROR: could not convert the user_name from erlang term to const char*\n");
-    return enif_make_string(env, "ERROR", ERL_NIF_LATIN1);
+
+  if (enif_inspect_binary(env, argv[0], &user_name)) {
+    memcpy((char *)user_name_str, user_name.data, user_name.size);
+    enif_release_binary(env, &user_name);
+  } else {
+    printf("ERROR: could not convert the user_name from erlang binary to const char*\n");
+    return enif_make_atom(env, "ERROR");
   }
 
   char trends_str[1024];
   memset(trends_str, 0, 1024);
 
   if (GetTrends((const char *) user_name_str, (char *) trends_str) < 0) {
-    printf("ERROR: could not submit tweet to keyword extracter\n");
-    return enif_make_string(env, "ERROR", ERL_NIF_LATIN1);
+    printf("ERROR: could not get trends\n");
+    return enif_make_atom(env, "ERROR");
   }
 
-  return enif_make_string(env, trends_str, ERL_NIF_LATIN1);
+  return enif_make_atom(env, trends_str);
 }
 
-int nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary file_path;
   char stopwords_file_path[255];
   memset(stopwords_file_path, 0, 255);
@@ -126,13 +131,13 @@ int nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   } else {
     printf("could not file stopwords file path\n");
     enif_release_binary(env, &file_path);
-    return -1;
+    return enif_make_atom(env, "ERROR");
   }
 
   if (Init(stopwords_file_path) < 0)
-    return -1;
+    return enif_make_atom(env, "ERROR");
 
-  return 0;
+  return enif_make_atom(env, "success");
 }
 
 static ErlNifFunc nif_funcs[] =
