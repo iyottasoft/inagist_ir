@@ -1,6 +1,6 @@
 PROJECT = trendsmanager
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -D_cplusplus
+CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../keywords_extracter 
@@ -28,7 +28,6 @@ clean:
 	@rm *.o ${BINS} ${LIB}
 	@rm ${BIN_DIR}/trends_generater.py
 	@rm trends.beam
-	@rm trends.so
 	@echo "done!"
 
 ${LIB}: ${OBJS}
@@ -46,10 +45,12 @@ ${BIN_DIR}/t_trends_manager: t_trends_manager.o ${LIB}
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_trends_manager
 	@echo "done!"
 
+ERL_LIB = ${LIB_DIR}/libtrends.so
 trends:
-	echo "making shared object trends.so ..."
-	gcc -fPIC -shared -o trends.so trends.c -I/usr/local/lib/erlang/usr/include/ -I../keywords_extracter -L../../lib -ltrendsmanager -lkeywordsextracter -lstdc++ -lei -lerl_interface  -I/usr/local/lib/erlang/lib/erl_interface-3.6.5/include -L/usr/local/lib/erlang/lib/erl_interface-3.6.5/lib
-	echo "compiling trends.erl"
-	erlc trends.erl
+	@echo "creating erlang library file ..."
+	@gcc -fPIC -shared -o ${ERL_LIB} trends.c -I/usr/local/lib/erlang/usr/include/ -I../keywords_extracter -L../../lib -ltrendsmanager -lkeywordsextracter -lstdc++ -lei -lerl_interface  -I/usr/local/lib/erlang/lib/erl_interface-3.6.5/include -L/usr/local/lib/erlang/lib/erl_interface-3.6.5/lib
+	@echo ${ERL_LIB}
+	@echo "compiling trends.erl"
+	@erlc trends.erl
 
 # DO NOT DELETE THIS LINE

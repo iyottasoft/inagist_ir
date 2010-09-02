@@ -40,7 +40,7 @@ ERL_NIF_TERM nif_test(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     return enif_make_tuple2(env, enif_make_string(env, tweet_str, ERL_NIF_LATIN1),
                                  enif_make_string(env, tweet_user, ERL_NIF_LATIN1));
   } else 
-    return enif_make_string(env, "ERROR", ERL_NIF_LATIN1);
+    return enif_make_string(env, "error", ERL_NIF_LATIN1);
 }
 
 ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
@@ -65,7 +65,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   char keywords[1024];
   memset(keywords, 0, 1024);
   if (SubmitTweet(/*(const char *) user_name_str,*/ (const char *) tweet_str, (char *) keywords) < 0) {
-    return enif_make_atom(env, "submit_error");
+    return enif_make_atom(env, "error");
   }
 
   ERL_NIF_TERM return_list = enif_make_list(env, 0);
@@ -83,7 +83,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     //return_list = enif_make_list_cell(env, enif_make_string(env, (const char *) start, ERL_NIF_LATIN1), return_list);
     int ret_val = enif_alloc_binary(env, len, &keyword);
     if (ret_val < 0)
-      return enif_make_atom(env, "error allocating binary");
+      return enif_make_atom(env, "error");
     for (i=0; i<len; i++) {
       keyword.data[i] = *(start + i);
     }
@@ -105,16 +105,14 @@ ERL_NIF_TERM nif_gettrends(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) 
     memcpy((char *)user_name_str, user_name.data, user_name.size);
     enif_release_binary(env, &user_name);
   } else {
-    printf("ERROR: could not convert the user_name from erlang binary to const char*\n");
-    return enif_make_atom(env, "ERROR");
+    return enif_make_atom(env, "error");
   }
 
   char trends_str[1024];
   memset(trends_str, 0, 1024);
 
   if (GetTrends((const char *) user_name_str, (char *) trends_str) < 0) {
-    printf("ERROR: could not get trends\n");
-    return enif_make_atom(env, "ERROR");
+    return enif_make_atom(env, "error");
   }
 
   return enif_make_atom(env, trends_str);
@@ -129,15 +127,14 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     memcpy(stopwords_file_path, file_path.data, file_path.size);
     enif_release_binary(env, &file_path);
   } else {
-    printf("could not file stopwords file path\n");
     enif_release_binary(env, &file_path);
-    return enif_make_atom(env, "ERROR");
+    return enif_make_atom(env, "error");
   }
 
   if (Init(stopwords_file_path) < 0)
-    return enif_make_atom(env, "ERROR");
+    return enif_make_atom(env, "error");
 
-  return enif_make_atom(env, "success");
+  return enif_make_atom(env, "ok");
 }
 
 static ErlNifFunc nif_funcs[] =

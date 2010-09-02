@@ -3,7 +3,7 @@
 #ifndef _INAGIST_TRENDS_MANAGER_H_
 #define _INAGIST_TRENDS_MANAGER_H_
 
-#ifdef _cplusplus
+#ifdef _CPLUSPLUS
 #include <string>
 #include "keywords_extract.h"
 #include "keywords_manager.h"
@@ -15,17 +15,17 @@
 // public:
 //  TrendsManager();
 //  ~TrendsManager();
-#ifdef _cplusplus
+#ifdef _CPLUSPLUS
   extern "C" {
 #endif
     int Init(const char* stopwords_file_path);
     int GetTrends(const char* user_name, char* trends_buffer);
     int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *keywords);
-#ifdef _cplusplus
+#ifdef _CPLUSPLUS
   }
 #endif
 // private:
-#ifdef _cplusplus
+#ifdef _CPLUSPLUS
   extern inagist_trends::KeywordsExtract g_keywords_extract;
   extern inagist_trends::KeywordsManager g_keywords_manager;
   extern char g_buffer[1024];
