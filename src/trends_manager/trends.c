@@ -96,10 +96,10 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   return return_list;
 }
 
-static ERL_NIF_TERM nif_gettrends(ErlNifEnv *env, ERL_NIF_TERM user_name) {
+ERL_NIF_TERM nif_gettrends(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   char user_name_str[255];
   memset(user_name_str, 0, 255);
-  if (my_enif_get_string(env, user_name, user_name_str) < 0) {
+  if (my_enif_get_string(env, argv[0], user_name_str) < 0) {
     printf("ERROR: could not convert the user_name from erlang term to const char*\n");
     return enif_make_string(env, "ERROR", ERL_NIF_LATIN1);
   }
@@ -115,24 +115,24 @@ static ERL_NIF_TERM nif_gettrends(ErlNifEnv *env, ERL_NIF_TERM user_name) {
   return enif_make_string(env, trends_str, ERL_NIF_LATIN1);
 }
 
-int nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary file_path;
   char stopwords_file_path[255];
   memset(stopwords_file_path, 0, 255);
 
   if (enif_inspect_binary(env, argv[0], &file_path)) {
-    memcpy((char *)stopwords_file_path, file_path.data, file_path.size);
+    memcpy(stopwords_file_path, file_path.data, file_path.size);
     enif_release_binary(env, &file_path);
   } else {
     printf("could not file stopwords file path\n");
     enif_release_binary(env, &file_path);
-    return -1;
+    return enif_make_int(env, -1);
   }
 
   if (Init(stopwords_file_path) < 0)
-    return -1;
+    return enif_make_int(env, -1);
 
-  return 0;
+  return enif_make_int(env, 0);
 }
 
 static ErlNifFunc nif_funcs[] =
