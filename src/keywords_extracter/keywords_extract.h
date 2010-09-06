@@ -52,7 +52,7 @@ class KeywordsExtract {
   int LoadDictionary(const char* file, string_hash_set &dictionary);
   int PrintDictionary(string_hash_set dictionary);
   bool IsPunct(char *ptr, char *prev=NULL, char *next=NULL);
-  bool IsIgnore(char **ptr);
+  bool IsIgnore(char *&ptr);
 };
 
 } // namespace inagist_trends

@@ -1,6 +1,6 @@
 PROJECT = keywordsextracter
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated
+CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/stemmer/ -I../../include/twitcurl -I../../include/json_parser -I../curl_request_maker
@@ -16,9 +16,9 @@ BIN_DIR = ../../bin
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_keywords_extract \
-       ${BIN_DIR}/t_keywords_manager \
-       ${BIN_DIR}/t_keywords_from_twitter \
-       ${BIN_DIR}/t_keywords_from_inagist \
+#       ${BIN_DIR}/t_keywords_manager \
+#       ${BIN_DIR}/t_keywords_from_twitter \
+#       ${BIN_DIR}/t_keywords_from_inagist \
        ${BIN_DIR}/x_keywords_extract
 
 OBJS = keywords_extract.o keywords_manager.o
@@ -41,34 +41,34 @@ ${LIB}: ${OBJS}
 	@echo "compiling ..." $< "..."
 	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
-${BIN_DIR}/x_keywords_extract: x_keywords_extract.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_keywords_extract
-	@echo "done!"
-
 ${BIN_DIR}/t_keywords_extract: t_keywords_extract.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keywords_extract
 	@echo "done!"
 
-${BIN_DIR}/t_keywords_manager: t_keywords_manager.o ${LIB}
+${BIN_DIR}/x_keywords_extract: x_keywords_extract.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keywords_manager
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_keywords_extract
 	@echo "done!"
 
-${BIN_DIR}/t_keywords_from_twitter: t_keywords_from_twitter.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keywords_from_twitter
-	@echo "done!"
-
-${BIN_DIR}/t_keywords_from_inagist: t_keywords_from_inagist.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keywords_from_inagist
-	@echo "done!"
-
-${BIN_DIR}/t_keywords_from_stream: t_keywords_from_stream.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keywords_from_stream
-	@echo "done!"
+#${BIN_DIR}/t_keywords_manager: t_keywords_manager.o ${LIB}
+#	@echo "creating binary:" $@
+#	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keywords_manager
+#	@echo "done!"
+#
+#${BIN_DIR}/t_keywords_from_twitter: t_keywords_from_twitter.o ${LIB}
+#	@echo "creating binary:" $@
+#	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keywords_from_twitter
+#	@echo "done!"
+#
+#${BIN_DIR}/t_keywords_from_inagist: t_keywords_from_inagist.o ${LIB}
+#	@echo "creating binary:" $@
+#	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keywords_from_inagist
+#	@echo "done!"
+#
+#${BIN_DIR}/t_keywords_from_stream: t_keywords_from_stream.o ${LIB}
+#	@echo "creating binary:" $@
+#	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keywords_from_stream
+#	@echo "done!"
 
 # DO NOT DELETE THIS LINE

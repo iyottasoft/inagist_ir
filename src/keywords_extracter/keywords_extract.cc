@@ -202,6 +202,8 @@ bool KeywordsExtract::IsPunct(char *ptr, char *prev, char *next) {
       if (next)
         if (*next == '#' && isdigit(*(next+1)))
           return false;
+    case '_':
+      return false;
     default:
       break;
   }
@@ -209,16 +211,15 @@ bool KeywordsExtract::IsPunct(char *ptr, char *prev, char *next) {
   return true;
 }
 
-// passing as ptr-to-ptr instead of ref-to-ptr to get it be compiled using gcc
-bool KeywordsExtract::IsIgnore(char **ptr) {
-  if (!(*ptr) || '\0' == **ptr)
+bool KeywordsExtract::IsIgnore(char *&ptr) {
+  if (!ptr || '\0' == *ptr)
     return false;
-  if ('@' == **ptr || !strncmp(*ptr, "&#", 2) || !strncmp(*ptr, "http://", 7) || !strncmp(*ptr, "www.", 4)) {
+  if ('@' == *ptr || !strncmp(ptr, "&#", 2) || !strncmp(ptr, "http://", 7) || !strncmp(ptr, "www.", 4)) {
 #ifdef DEBUG
-    printf("%s is ignore word\n", *ptr);
+    printf("%s is ignore word\n", ptr);
 #endif
-    while (' ' != *(*ptr+1) && '\0' != *(*ptr+1)) {
-      *ptr += 1;
+    while (' ' != *(ptr+1) && '\0' != *(ptr+1)) {
+      ptr++;
     }
     return true;
   }
@@ -233,47 +234,62 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   char *probe = NULL;;
   char current_word_delimiter;
   char prev_word_delimiter;
+  char next_word_delimiter;
 
   //unsigned in_len = 0;
   //unsigned out_len = 0;
   unsigned int current_word_len = 0;
+  unsigned int next_word_len = 0;
   int score = 0;
   int num_mixed_words = 0;
   int num_caps_words = 0;
   int num_words = 0;
   int num_stop_words = 0;
+  int num_dict_words = 0;
   int num_numeric_words = 0;
+  int num_normal_words = 0; // not caps or stop or dict or numeric
 
   char *current_word_start = NULL;
   char *current_word_end = NULL;
   char *prev_word_start = NULL;
   char *prev_word_end = NULL;
   char *next_word_start = NULL;
+  char *next_word_end = NULL;
 
   char *caps_entity_start = NULL;
   char *caps_entity_end = NULL;
   char *stopwords_entity_start = NULL;
   char *stopwords_entity_end = NULL;
+  char *sentence_start = NULL;
 
   // TODO (balaji) use bit map and masks to reduce comparisons
-  //bool sentence_start = true;
   bool current_word_caps = false;
   bool current_word_all_caps = false;
   bool current_word_has_mixed_case = false;
   bool current_word_starts_num = false;
+  bool current_word_precedes_punct = false;
+  bool current_word_precedes_ignore_word = false;
   bool prev_word_caps = false;
   bool prev_word_all_caps = false;
   bool prev_word_starts_num = false;
   bool prev_word_has_mixed_case = false;
+  bool prev_word_precedes_punct = false;
+  bool prev_word_precedes_ignore_word = false;
   bool next_word_caps = false;
   bool next_word_all_caps = false;
   bool next_word_starts_num = false;
-  bool invisible_word_before_next = false;
+  bool next_word_has_mixed_case = false;
+  bool next_word_precedes_punct = false;
+  bool next_word_precedes_ignore_word = false;
 
   bool current_word_stop = false;
   bool current_word_dict = false;
   bool prev_word_stop = false;
   bool prev_word_dict = false;
+  bool next_word_stop = false;
+  bool next_word_dict = false;
+  bool is_ignore_word = false;
+  bool is_punct = false;
 
   //bool second_letter_has_caps = false;
 
@@ -281,58 +297,182 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   char *pch = NULL;
   char ch;
 
+  std::set<std::string> keywords_using_stopwords;
+
+  // the whole thing starts here
   ptr = str;
 
 #ifdef DEBUG
-  cout << endl << "\norginal query: " << std::string(str) << endl;
+  cout << endl << "orginal query: " << std::string(str) << endl << endl;
 #endif
 
   // go to the first word, ignoring handles and punctuations
-  while (ptr && '\0' != *ptr && (' ' == *ptr || IsPunct(ptr) || IsIgnore(&ptr))) {
+  char *prev = NULL;
+  while (ptr && '\0' != *ptr && (' ' == *ptr || IsPunct(ptr, prev, ptr+1) || IsIgnore(ptr))) {
+    prev = ptr;
     ptr++;
   }
 
-  if (!ptr || '\0' == *ptr)
+  if (!ptr || '\0' == *ptr) {
+#ifdef DEBUG
+    cout << "either the input is empty or has ignore words only" << endl;
     return 0;
+#endif
+  }
+
+  current_word_start = ptr;
+  sentence_start = ptr;
+  cout << "sentence start: " << sentence_start << endl;
 
   if (isupper(*ptr)) {
     current_word_caps = true;
     current_word_all_caps = true;
     current_word_starts_num = false;
+    num_caps_words++;
   } else {
-    if (isdigit(*ptr))
+    if (isdigit(*ptr)) {
       current_word_starts_num = true; 
-    else
+      num_numeric_words++;
+    } else {
       current_word_starts_num = false;
+    }
   }
 
-  current_word_start = ptr;
+  // now lets find the end of the current word
+  while (ptr && ' ' != *ptr && '\0' != *ptr && !(is_punct = IsPunct(ptr, ptr-1, ptr+1))) {
+    if (!strcmp(ptr, "&#")) {
+      while (' ' != *ptr && '\0' != *ptr)
+        ptr++;
+      if ('\0' == *ptr)
+        break;
+    }
+    if (isupper(*ptr)) {
+      if (!current_word_all_caps && !ispunct(*ptr)) {
+          current_word_has_mixed_case = true;
+          num_mixed_words++;
+      }
+    } else {
+      if (current_word_caps)
+        current_word_has_mixed_case = false;
+      current_word_all_caps = false;
+    }
+    ptr++;
+  }
+
+  if (!ptr || '\0' == *ptr) {
+#ifdef DEBUG
+    cout << "either the input has only one word or the other words are ignore words" << endl;
+    return 0;
+#endif
+  }
+  current_word_end = ptr;
+  current_word_delimiter = *ptr;
+  current_word_len = current_word_end - current_word_start;
+  *ptr = '\0';
+  if (is_punct)
+    current_word_precedes_punct = true;
+  num_words++;
+
+  // stop words
+  if ((m_stopwords_dictionary.find(current_word_start) != m_stopwords_dictionary.end())) {
+    current_word_stop = true;
+    num_stop_words++;
+#ifdef DEBUG
+    //cout << "current word: " << current_word_start << " :stopword" << endl;
+#endif
+  } else {
+    current_word_stop = false;
+  }
+
+  // dictionary words
+  if ((m_dictionary.find(current_word_start) != m_dictionary.end())) {
+    current_word_dict = true;
+    num_dict_words++;
+#ifdef DEBUG
+    //cout << "current word: " << current_word_start << " :dictionary word" << endl;
+#endif
+  } else {
+    current_word_dict = false;
+  }
+
+  // go to the next word, ignoring punctuation and ignore words.
+  // however passing over ignorewords must be recorded
+  ptr++;
+  is_ignore_word = false;
+  is_punct = false;
+  while ('\0' != *ptr &&
+         (' ' == *ptr || (is_punct = IsPunct(ptr, ptr-1, ptr+1)) || (is_ignore_word = IsIgnore(ptr)))) {
+    current_word_precedes_ignore_word |= is_ignore_word;
+    current_word_precedes_punct |= is_punct;
+    ptr++;
+  }
+
+  if (ptr && '\0' != *ptr) {
+    next_word_start = ptr;
+    num_words++;
+    if (current_word_precedes_ignore_word || current_word_precedes_punct) {
+      sentence_start = next_word_start;
+      cout << "sentence start: " << sentence_start << endl;
+    }
+
+    if (isupper(*next_word_start)) {
+      next_word_caps = true;
+      num_caps_words++;
+      next_word_all_caps = true;
+      next_word_starts_num = false;
+    } else {
+      next_word_caps = false;
+      next_word_all_caps = false;
+      if (isdigit(*next_word_start)) {
+        next_word_starts_num = true;
+        num_numeric_words++;
+      } else {
+        next_word_starts_num = false;
+      }
+    }
+  } else {
+    next_word_start = NULL;
+  }
   probe = ptr + 1;
 
+  while (ptr && probe && ptr != '\0') {
+    // this loop works between second letter to end punctuation for each word
+    if (' ' == *probe || '\0' == *probe || (is_punct = IsPunct(probe, probe-1, probe+1))) {
+
 #ifdef DEBUG
-  cout << endl;
+      if (NULL != stopwords_entity_end)
+        cout << "ERROR: stopswords entity end is not null. did you not write it before?" << endl;
+      if (NULL != caps_entity_end)
+        cout << "ERROR: caps entity end is not null. did you not write it before?" << endl;
 #endif
 
-  while (ptr && probe && ptr != '\0') {
-    if (' ' == *probe || '\0' == *probe || IsPunct(probe, probe-1, probe+1)) {
-      num_words++;
-      // TODO (balaji) sanity checks. remove these after stress tests
-      if (NULL != stopwords_entity_end)
-        std::cout << "ERROR: stopswords entity end is not null. did you not write it before?" << std::endl;
-      if (NULL != caps_entity_end)
-        std::cout << "ERROR: caps entity end is not null. did you not write it before?" << std::endl;
       // word boundary
       score = 0;
 
-      current_word_delimiter = *probe;
-      current_word_end = probe;
-      *probe = '\0';
+      if (next_word_start) {
+        if (is_punct)
+          next_word_precedes_punct = true;
+        next_word_delimiter = *probe;
+        next_word_end = probe;
+        *probe = '\0';
+        next_word_len = next_word_end - next_word_start;
+      }
 
 #ifdef DEBUG
-      cout << current_word_start;
+      cout << endl;
+      cout << "***** loop *****" << endl;
+      if (prev_word_start)
+        cout << "prev word: " << prev_word_start << endl;
+      else
+        cout << "prev word: NULL" << endl;
+      cout << "current word: " << current_word_start << endl;
+      if (next_word_start)
+        cout << "next word: " << next_word_start << endl;
+      else
+        cout << "next word: NULL" << endl;
+      cout << endl;
 #endif
 
-      current_word_len = current_word_end - current_word_start;
       if ((current_word_len < 2) && !isdigit(*current_word_start))
         score-=5;
 
@@ -340,187 +480,180 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
         score++;
       }
 
-      if (current_word_starts_num)
-        num_numeric_words++;
-
+      if (prev_word_caps)
+        cout << "prev word: " << prev_word_start << " :starts with caps" << endl;
       if (current_word_all_caps) {
         score--;
-        num_caps_words++;
         if (current_word_len > 1 && current_word_len < 6) {
           score++;
 #ifdef DEBUG
-          cout << " :all caps";
+          cout << "current word: " << current_word_start << " :all caps" << endl;
 #endif
         } else {
 #ifdef DEBUG
-          cout << " :all caps but bad length";
+          cout << "current word: " << current_word_start << " :all caps but bad length" << endl;
 #endif
         }
       } else if (current_word_has_mixed_case) {
         score++;
 #ifdef DEBUG
-        cout << " :mixed case";
+        cout << "current word: " << current_word_start << " :mixed case" << endl;
 #endif
       } else if (current_word_caps) {
         score++;
-        num_caps_words++;
 #ifdef DEBUG
-        cout << " :starts with caps";
+        cout << "current word: " << current_word_start << " :starts with caps" << endl;
 #endif
       }
+      if (next_word_caps)
+        cout << "next word: " << next_word_start << " :starts with caps" << endl;
 
       // stop words
-      if ((m_stopwords_dictionary.find(ptr) != m_stopwords_dictionary.end())) {
-        if (!strncmp(ptr, "of", 2)) {
-          if (prev_word_start == NULL || !prev_word_caps) {
-            current_word_stop = true;
-            num_stop_words++;
-            score--;
+      if (next_word_start) {
+        if ((m_stopwords_dictionary.find(next_word_start) != m_stopwords_dictionary.end())) {
+          next_word_stop = true;
+          num_stop_words++;
+          score--;
 #ifdef DEBUG
-            cout << " :stopword";
+          cout << "next word: " << next_word_start << " :stopword" << endl;
 #endif
-          }
         } else {
-        current_word_stop = true;
-        num_stop_words++;
-        score--;
-#ifdef DEBUG
-        cout << " :stopword";
-#endif
+          next_word_stop = false;
         }
-      } else {
-        current_word_stop = false;
-      }
 
-      // dictionary words
-      if (current_word_caps)
-        *ptr = tolower(*ptr);
-      if ((m_dictionary.find(ptr) != m_dictionary.end())) {
-        current_word_dict = true;
-        score--;
+        // dictionary words
+        if ((m_dictionary.find(next_word_start) != m_dictionary.end())) {
+          next_word_dict = true;
+          num_dict_words++;
+          score--;
 #ifdef DEBUG
-        cout << " :dictionary word";
+          cout << "next word: " << next_word_start << " :dictionary word" << endl;
 #endif
-      } else {
-        current_word_dict = false;
-      }
-      if (current_word_caps)
-        *ptr = toupper(*ptr);
-
-#ifdef DEBUG
-      if (score > 0) {
-        if ((pch = strstr(ptr, "\'s"))) {
-          ch = *pch;
-          *pch = '\0';
-          keywords_set.insert(string(ptr));
-          *pch = ch;
         } else {
-          keywords_set.insert(string(ptr));
+          next_word_dict = false;
         }
       }
+
+#ifdef DEBUG
+      //if (score > 0) {
+      //  if ((pch = strstr(ptr, "\'s"))) {
+      //    ch = *pch;
+      //    *pch = '\0';
+      //    keywords_set.insert(string(ptr));
+      //    *pch = ch;
+      //  } else {
+      //    keywords_set.insert(string(ptr));
+      //  }
+      //}
 #endif
 
       if (prev_word_end)
         *prev_word_end = prev_word_delimiter;
 
-      // if current word is not the known last word, briefly probe to see if next word exists
-      if ('\0' != current_word_delimiter) {
-        ptr = probe + 1;
-        if (!ptr) {
-          std::cerr << "ERROR: Fatal Exception trying to access unallocated memory space\n";
-          exit(-1);
-        }
-
-        // find the next position of ptr
-        // IsIgnore will literally ignore the word by chaging the cursor to next word end
-        // &= is to handle rare case where multiple continous ignore words reset invisible_word_before_next
-        while ('\0' != *ptr && (' ' == *ptr || IsPunct(ptr, ptr-1, ptr+1) || ((invisible_word_before_next &= IsIgnore(&ptr))))) {
-          ptr++;
-        }
-
-        next_word_start = ptr;
-
-        // after finding the start of next word, probe shud be at the same place as ptr
-        probe = ptr;
-
-        if (isupper(*next_word_start)) {
-          next_word_caps = true;
-          next_word_all_caps = true;
-          next_word_starts_num = false;
-        } else {
-          next_word_caps = false;
-          next_word_all_caps = false;
-          if (isdigit(*next_word_start))
-            next_word_starts_num = true;
-          else
-            next_word_starts_num = false;
-        }
-      } else {
-        next_word_start = NULL;
-      } 
+      if (!current_word_stop && !current_word_dict && !current_word_caps && !current_word_starts_num) {
+        cout << current_word_start << ": normal word" << endl;
+        num_normal_words++;
+      }
 
       if (NULL == caps_entity_start) {
+        caps_entity_end = NULL;
         if (current_word_len > 1 &&
             current_word_caps &&
             !current_word_stop &&
             !current_word_dict) {
 
-          if ('\0' != current_word_delimiter &&
-              '\0' != *next_word_start &&
-              !invisible_word_before_next) { 
-
-            if (' ' == current_word_delimiter &&
-                ((current_word_end + 1) == next_word_start)) {
+          if (' ' == current_word_delimiter &&
+              NULL != next_word_start &&
+              ((current_word_end + 1) == next_word_start)) {
+            if (current_word_start == sentence_start) {
+              if (next_word_caps || next_word_stop)
+                caps_entity_start = current_word_start;
+            } else {
               caps_entity_start = current_word_start;
             }
             caps_entity_end = NULL;
-          }
 
-          if ('\0' == current_word_delimiter ||
-              '\0' == *next_word_start ||
-              invisible_word_before_next) { 
+          } /*else if (prev_word_stop &&
+              ('\0' == current_word_delimiter ||
+              NULL == next_word_start ||
+              current_word_precedes_ignore_word ||
+              current_word_precedes_punct)) { 
 
               caps_entity_start = current_word_start;
               caps_entity_end = current_word_end;
-          }
-        } else {
-          caps_entity_end = NULL;
+          }*/
         }
       } else {
         if (current_word_stop ||
             !current_word_caps ||
             current_word_dict ||
             ((current_word_len < 2) && !isdigit(*current_word_start))) {
-          //if (caps_entity_start != prev_word_start) {
+          if (caps_entity_start != prev_word_start) {
             caps_entity_end = prev_word_end;
-          /*}
+          }
           else {
             caps_entity_start = NULL;
             caps_entity_end = NULL;
-          }*/
+          }
         } else {
           if (' ' != current_word_delimiter ||
-              '\0' == *next_word_start ||
-              invisible_word_before_next ||
+              NULL == next_word_start ||
+              current_word_precedes_ignore_word ||
               ((current_word_end + 1) != next_word_start)) {
-            //if (caps_entity_start != current_word_start) {
+            if (caps_entity_start != current_word_start) {
               caps_entity_end = current_word_end;
-            /*}
+            }
             else {
               caps_entity_start = NULL;
               caps_entity_end = NULL;
-            }*/
+            }
           }
         }
       }
 
       if (NULL == stopwords_entity_start) {
+        if (current_word_stop) {
+          if (strncmp(current_word_start, "of", 2) == 0 && NULL != next_word_start && NULL != prev_word_start) {
+            if ((prev_word_caps && next_word_caps) &&
+                !current_word_precedes_ignore_word &&
+                !prev_word_precedes_ignore_word) {
+              if (caps_entity_start && caps_entity_start < prev_word_start)
+                stopwords_entity_start = caps_entity_start;
+              else
+                stopwords_entity_start = prev_word_start;
+            }
+          }
+        }
+      } else {
+        if (!current_word_caps || current_word_stop || current_word_dict || (current_word_len < 2) || current_word_starts_num) {
+          if (stopwords_entity_start != prev_word_start) {
+            stopwords_entity_end = prev_word_end;
+          }
+          else {
+            stopwords_entity_start = NULL;
+            stopwords_entity_end = NULL;
+          }
+        } else if (NULL == next_word_start ||
+                   current_word_precedes_ignore_word ||
+                   ((current_word_end + 1) != next_word_start)) {
+          if (stopwords_entity_start != current_word_start) {
+            stopwords_entity_end = current_word_end;
+          }
+          else {
+            stopwords_entity_start = NULL;
+            stopwords_entity_end = NULL;
+          }
+        }
+      }
+
+      /*
+      if (NULL == stopwords_entity_start) {
         if ('\0' != current_word_delimiter &&
             !current_word_stop &&
             !current_word_dict &&
             '#' != *current_word_start &&
-            '\0' != *next_word_start &&
-            !invisible_word_before_next &&
+            NULL != next_word_start &&
+            !current_word_precedes_ignore_word &&
             ((current_word_len > 1) || isdigit(*current_word_start))) {
           if (' ' == current_word_delimiter &&
               ((current_word_end + 1) == next_word_start)) {
@@ -539,8 +672,8 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
           }
         } else {
           if (' ' != current_word_delimiter ||
-              '\0' == *next_word_start ||
-              invisible_word_before_next ||
+              NULL == next_word_start ||
+              current_word_precedes_ignore_word ||
               ((current_word_end + 1) != next_word_start)) {
             if (stopwords_entity_start != current_word_start) {
               stopwords_entity_end = current_word_end;
@@ -552,6 +685,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
           }
         }
       }
+      */
 
       // write entities
       if (NULL != stopwords_entity_start && NULL != stopwords_entity_end) {
@@ -570,9 +704,9 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
             *pch = '\0';
             keywords_set.insert(string(stopwords_entity_start, (pch - stopwords_entity_start)));
             *pch = ch;
-          }
-          else { 
             keywords_set.insert(string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)));
+          } else {
+           keywords_set.insert(string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)));
           }
         } else {
           cout << "ERROR: stopwords entity markers are wrong\n";
@@ -597,6 +731,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
             *pch = '\0';
             keywords_set.insert(string(caps_entity_start, (pch - caps_entity_start)));
             *pch = ch;
+            keywords_set.insert(string(caps_entity_start, (caps_entity_end - caps_entity_start)));
           }
           else { 
             keywords_set.insert(string(caps_entity_start, (caps_entity_end - caps_entity_start)));
@@ -609,11 +744,11 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
       }
 
 #ifdef DEBUG
-      cout << endl;
+      //cout << endl;
 #endif
 
       // exit conditions
-      if ('\0' == current_word_delimiter || '\0' == *next_word_start) {
+      if ('\0' == current_word_delimiter || !next_word_start || '\0' == *next_word_start) {
         *current_word_end = current_word_delimiter;
         break;
       }
@@ -629,19 +764,86 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
       prev_word_stop = current_word_stop;
       prev_word_dict = current_word_dict;
       prev_word_starts_num = current_word_starts_num;
-
       prev_word_delimiter = current_word_delimiter;
+      prev_word_precedes_ignore_word = current_word_precedes_ignore_word;
+      prev_word_precedes_punct = current_word_precedes_punct;
 
+      current_word_end = next_word_end;
       current_word_start = next_word_start;
-      current_word_caps = next_word_caps;
-      current_word_all_caps = next_word_all_caps;
-      current_word_starts_num = next_word_starts_num;
-      current_word_has_mixed_case = false;
 
-      invisible_word_before_next = false;
+      current_word_caps = next_word_caps;
+      current_word_has_mixed_case = next_word_has_mixed_case; 
+      current_word_all_caps = next_word_all_caps;
+      current_word_stop = next_word_stop;
+      current_word_dict = next_word_dict;
+      current_word_starts_num = next_word_starts_num;
+      current_word_delimiter = next_word_delimiter;
+      current_word_precedes_ignore_word = next_word_precedes_ignore_word;
+      current_word_precedes_punct = next_word_precedes_punct;
+
       next_word_start = NULL;
+      next_word_end = NULL;
       next_word_caps = false;
+      next_word_has_mixed_case = false;
       next_word_all_caps = false;
+      next_word_stop = false;
+      next_word_dict = false;
+      next_word_starts_num = false;
+      next_word_delimiter = '\0';
+      next_word_precedes_ignore_word = false;
+      next_word_precedes_punct = false;
+
+      // BE CAREFUL ABOUT WHAT IS NEXT WORD OR CURRENT WORD NOW
+
+      // if current word is not the known last word, briefly probe to see if next word exists
+      if ('\0' != current_word_delimiter) {
+        ptr = probe + 1;
+        if (!ptr) {
+          std::cerr << "ERROR: Fatal Exception trying to access unallocated memory space\n";
+          exit(-1);
+        }
+
+        // find the next position of ptr
+        // IsIgnore will literally ignore the word by changing the cursor to next word end
+        is_ignore_word = false;
+        is_punct = false;
+        while ('\0' != *ptr && (' ' == *ptr || (is_punct = IsPunct(ptr, ptr-1, ptr+1)) || (is_ignore_word = IsIgnore(ptr)))) {
+          current_word_precedes_ignore_word |= is_ignore_word;
+          current_word_precedes_punct |= is_punct; 
+          ptr++;
+        }
+        if (ptr && '\0' != *ptr) {
+          next_word_start = ptr;
+          num_words++;
+          if (current_word_precedes_ignore_word || current_word_precedes_punct) {
+            sentence_start = next_word_start;
+            cout << "sentence start: " << sentence_start << endl;
+          }
+
+          // after finding the start of next word, probe shud be at the same place as ptr
+          probe = ptr;
+
+          if (isupper(*next_word_start)) {
+            next_word_caps = true;
+            num_caps_words++;
+            next_word_all_caps = true;
+            next_word_starts_num = false;
+          } else {
+            next_word_caps = false;
+            next_word_all_caps = false;
+            if (isdigit(*next_word_start)) {
+              next_word_starts_num = true;
+              num_numeric_words++;
+            } else {
+              next_word_starts_num = false;
+            }
+          }
+        } else {
+          // placing the probe before '/0' so that loop will make it probe++
+          // loop will terminate in the next cycle
+          probe = ptr-1;
+        }
+      } // check for current word delimiter 
 
     } else {
       if (!strcmp(probe, "&#")) {
@@ -649,19 +851,20 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
           probe++;
         if ('\0' == *probe)
           break;
+        current_word_precedes_ignore_word = true;
       }
       if (isupper(*probe)) {
-        if (!current_word_all_caps && !ispunct(*current_word_start)) {
+        if (!next_word_all_caps && !ispunct(*probe)) {
           //if ((probe-1) == ptr)
             //second_letter_has_caps = true;
           //else
-            current_word_has_mixed_case = true;
+            next_word_has_mixed_case = true;
             num_mixed_words++;
         }
       } else {
-        if (current_word_caps)
-          current_word_has_mixed_case = false;
-        current_word_all_caps = false;
+        if (next_word_caps)
+          next_word_has_mixed_case = false;
+        next_word_all_caps = false;
       }
     }
 
@@ -681,12 +884,17 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   cout << "num words: " << num_words << endl;
   cout << "num caps words: " << num_caps_words << endl;
   cout << "num stop words: " << num_stop_words << endl;
+  cout << "num dict words: " << num_dict_words << endl;
   cout << "num numeric words: " << num_numeric_words << endl;
+  cout << "num normal words: " << num_normal_words << endl;
 #endif
-  if (num_stop_words > 0) {
-    if ((num_words == (num_caps_words + num_numeric_words)) ||
-        (num_words <= (num_caps_words + num_stop_words) && num_words > 5))
-      keywords_set.clear();
+  std::set<std::string>::iterator iter;
+  if (((num_words == (num_caps_words + num_numeric_words)) && (num_dict_words != 0 || num_words > 5)) ||
+      ((num_normal_words == 0) && num_dict_words != 0))
+    keywords_set.clear();
+
+  for (iter = keywords_using_stopwords.begin(); iter != keywords_using_stopwords.end(); iter++) {
+    keywords_set.insert(*iter);
   }
 
   return 0;
