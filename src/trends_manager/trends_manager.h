@@ -18,7 +18,7 @@
 #ifdef _CPLUSPLUS
   extern "C" {
 #endif
-    int Init(const char* stopwords_file_path);
+    int Init(const char* stopwords_file_path, const char* dictionary_file_path);
     int GetTrends(const char* user_name, char* trends_buffer);
     int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *keywords);
 #ifdef _CPLUSPLUS

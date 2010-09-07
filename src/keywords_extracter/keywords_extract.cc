@@ -415,7 +415,9 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
     num_words++;
     if (current_word_precedes_ignore_word || current_word_precedes_punct) {
       sentence_start = next_word_start;
+#ifdef DEBUG
       cout << "sentence start: " << sentence_start << endl;
+#endif
     }
 
     if (isupper(*next_word_start)) {

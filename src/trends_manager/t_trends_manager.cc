@@ -3,13 +3,14 @@
 #include "trends_manager.h"
 
 #define STOPWORDS_FILE "/home/balaji/inagist/ir_cpp/data/static_data/stopwords.txt"
+#define DICTIONARY_FILE "/home/balaji/inagist/ir_cpp/data/static_data/dictionary.txt"
 
-extern int Init();
+extern int Init(const char*, const char*);
 extern int SubmitTweet(const char* str);
 extern int GetTrends();
 
 int main() {
-  Init(STOPWORDS_FILE);
+  Init(STOPWORDS_FILE, DICTIONARY_FILE);
 
   char keywords[1024];
   memset(keywords, 0, 1024);

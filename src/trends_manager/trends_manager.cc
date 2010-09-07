@@ -16,11 +16,11 @@ inagist_trends::KeywordsManager g_keywords_manager;
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int Init(const char* stopwords_file_path) {
-  if (!stopwords_file_path)
+int Init(const char* stopwords_file_path, const char* dictionary_file_path) {
+  if (!stopwords_file_path || !dictionary_file_path)
     return -1;
 
-  if (g_keywords_extract.Init(stopwords_file_path) < 0)
+  if (g_keywords_extract.Init(stopwords_file_path, dictionary_file_path) < 0)
     return -1;
 
   memset(g_buffer, 0, MAX_BUFFER_SIZE);

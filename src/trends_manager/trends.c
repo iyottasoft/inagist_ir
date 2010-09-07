@@ -119,9 +119,14 @@ ERL_NIF_TERM nif_gettrends(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) 
 }
 
 ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+  if (argc != 2)
+    return enif_make_atom(env, "error");
+
   ErlNifBinary file_path;
   char stopwords_file_path[255];
   memset(stopwords_file_path, 0, 255);
+  char dictionary_file_path[255];
+  memset(dictionary_file_path, 0, 255);
 
   if (enif_inspect_binary(env, argv[0], &file_path)) {
     memcpy(stopwords_file_path, file_path.data, file_path.size);
@@ -131,7 +136,15 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     return enif_make_atom(env, "error");
   }
 
-  if (Init(stopwords_file_path) < 0)
+  if (enif_inspect_binary(env, argv[1], &file_path)) {
+    memcpy(dictionary_file_path, file_path.data, file_path.size);
+    enif_release_binary(env, &file_path);
+  } else {
+    enif_release_binary(env, &file_path);
+    return enif_make_atom(env, "error");
+  }
+
+  if (Init(stopwords_file_path, dictionary_file_path) < 0)
     return enif_make_atom(env, "error");
 
   return enif_make_atom(env, "ok");
@@ -139,7 +152,7 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
 static ErlNifFunc nif_funcs[] =
 {
-  {"init_c", 1, nif_init_c},
+  {"init_c", 2, nif_init_c},
   {"getkeywords", 1, nif_getkeywords},
   {"gettrends", 1, nif_gettrends},
   {"test", 2, nif_test},
