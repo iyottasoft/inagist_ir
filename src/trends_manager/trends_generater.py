@@ -49,22 +49,23 @@ def calculate_tf_idf(hash_freqs, num_words, outfile):
 
 def generate_result_bag(outfile):
   global g_hash_tf_idf 
-  result_bag = {}
-  for k,v in g_hash_tf_idf.items():
-    tokens = k.split(" ")
-    # let us consider only trends whose tokens are themselves trends
-    if (len(tokens) > 1):
-      tf_idf_sum = 0.0
-      for token in tokens:
-        if token not in g_hash_tf_idf:
-          tf_idf_sum = -1
-          break
-        tf_idf_sum += g_hash_tf_idf[token]
-      if (tf_idf_sum > -1):
-        result_bag[k] = tf_idf_sum / len(tokens)
+  #result_bag = {}
+  #for k,v in g_hash_tf_idf.items():
+  #  tokens = k.split(" ")
+  #  # let us consider only trends whose tokens are themselves trends
+  #  if (len(tokens) > 1):
+  #    tf_idf_sum = 0.0
+  #    for token in tokens:
+  #      if token not in g_hash_tf_idf:
+  #        tf_idf_sum = -1
+  #        break
+  #      tf_idf_sum += g_hash_tf_idf[token]
+  #    if (tf_idf_sum > -1):
+  #      result_bag[k] = tf_idf_sum / len(tokens)
 
   final_result_bag = []
-  for k,v in result_bag.items():
+  #for k,v in result_bag.items():
+  for k,v in g_hash_tf_idf.items():
     final_result_bag.append((v,k))
   final_result_bag.sort()
   length = len(final_result_bag)

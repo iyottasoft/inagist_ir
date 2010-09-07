@@ -240,7 +240,9 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   //unsigned out_len = 0;
   unsigned int current_word_len = 0;
   unsigned int next_word_len = 0;
+#ifdef DEBUG
   int score = 0;
+#endif
   int num_mixed_words = 0;
   int num_caps_words = 0;
   int num_words = 0;
@@ -322,7 +324,9 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 
   current_word_start = ptr;
   sentence_start = ptr;
+#ifdef DEBUG
   cout << "sentence start: " << sentence_start << endl;
+#endif
 
   if (isupper(*ptr)) {
     current_word_caps = true;
@@ -349,7 +353,6 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
     if (isupper(*ptr)) {
       if (!current_word_all_caps && !ispunct(*ptr)) {
           current_word_has_mixed_case = true;
-          num_mixed_words++;
       }
     } else {
       if (current_word_caps)
@@ -447,7 +450,9 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 #endif
 
       // word boundary
+#ifdef DEBUG
       score = 0;
+#endif
 
       if (next_word_start) {
         if (is_punct)
@@ -473,48 +478,40 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
       cout << endl;
 #endif
 
+#ifdef DEBUG
       if ((current_word_len < 2) && !isdigit(*current_word_start))
         score-=5;
 
       if ('#' == *current_word_start) {
         score++;
       }
+#endif
 
+#ifdef DEBUG
       if (prev_word_caps)
         cout << "prev word: " << prev_word_start << " :starts with caps" << endl;
       if (current_word_all_caps) {
-        score--;
         if (current_word_len > 1 && current_word_len < 6) {
-          score++;
-#ifdef DEBUG
           cout << "current word: " << current_word_start << " :all caps" << endl;
-#endif
         } else {
-#ifdef DEBUG
           cout << "current word: " << current_word_start << " :all caps but bad length" << endl;
-#endif
         }
       } else if (current_word_has_mixed_case) {
-        score++;
-#ifdef DEBUG
         cout << "current word: " << current_word_start << " :mixed case" << endl;
-#endif
       } else if (current_word_caps) {
-        score++;
-#ifdef DEBUG
         cout << "current word: " << current_word_start << " :starts with caps" << endl;
-#endif
       }
       if (next_word_caps)
         cout << "next word: " << next_word_start << " :starts with caps" << endl;
+#endif
 
       // stop words
       if (next_word_start) {
         if ((m_stopwords_dictionary.find(next_word_start) != m_stopwords_dictionary.end())) {
           next_word_stop = true;
           num_stop_words++;
-          score--;
 #ifdef DEBUG
+          score--;
           cout << "next word: " << next_word_start << " :stopword" << endl;
 #endif
         } else {
@@ -525,8 +522,8 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
         if ((m_dictionary.find(next_word_start) != m_dictionary.end())) {
           next_word_dict = true;
           num_dict_words++;
-          score--;
 #ifdef DEBUG
+          score--;
           cout << "next word: " << next_word_start << " :dictionary word" << endl;
 #endif
         } else {
@@ -534,26 +531,17 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
         }
       }
 
-#ifdef DEBUG
-      //if (score > 0) {
-      //  if ((pch = strstr(ptr, "\'s"))) {
-      //    ch = *pch;
-      //    *pch = '\0';
-      //    keywords_set.insert(string(ptr));
-      //    *pch = ch;
-      //  } else {
-      //    keywords_set.insert(string(ptr));
-      //  }
-      //}
-#endif
-
       if (prev_word_end)
         *prev_word_end = prev_word_delimiter;
 
       if (!current_word_stop && !current_word_dict && !current_word_caps && !current_word_starts_num) {
+#ifdef DEBUG
         cout << current_word_start << ": normal word" << endl;
+#endif
         num_normal_words++;
       }
+      if (current_word_has_mixed_case)
+        num_mixed_words++;
 
       if (NULL == caps_entity_start) {
         caps_entity_end = NULL;
@@ -584,6 +572,9 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
           }*/
         }
       } else {
+#ifdef DEBUG
+        cout << "caps entity candidate: " << caps_entity_start << endl;
+#endif
         if (current_word_stop ||
             !current_word_caps ||
             current_word_dict ||
@@ -625,6 +616,9 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
           }
         }
       } else {
+#ifdef DEBUG
+        cout << "stopword entity candidate: " << stopwords_entity_start << endl;
+#endif
         if (!current_word_caps || current_word_stop || current_word_dict || (current_word_len < 2) || current_word_starts_num) {
           if (stopwords_entity_start != prev_word_start) {
             stopwords_entity_end = prev_word_end;
@@ -780,6 +774,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
       current_word_delimiter = next_word_delimiter;
       current_word_precedes_ignore_word = next_word_precedes_ignore_word;
       current_word_precedes_punct = next_word_precedes_punct;
+      current_word_len = next_word_len;
 
       next_word_start = NULL;
       next_word_end = NULL;
@@ -817,7 +812,9 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
           num_words++;
           if (current_word_precedes_ignore_word || current_word_precedes_punct) {
             sentence_start = next_word_start;
+#ifdef DEBUG
             cout << "sentence start: " << sentence_start << endl;
+#endif
           }
 
           // after finding the start of next word, probe shud be at the same place as ptr
@@ -859,7 +856,6 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
             //second_letter_has_caps = true;
           //else
             next_word_has_mixed_case = true;
-            num_mixed_words++;
         }
       } else {
         if (next_word_caps)

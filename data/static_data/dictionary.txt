@@ -161,7 +161,6 @@ haha
 Haha
 HAHA
 hai
-Hai
 has
 Has
 HAS
@@ -619,7 +618,9 @@ Today's
 tomorrow
 Tomorrow
 tmrw
+Tmrw
 again
+Again
 already
 angry
 around
@@ -708,7 +709,6 @@ Need
 news
 News
 NEWS
-no
 normal
 not
 now
@@ -791,9 +791,9 @@ tendency
 thick
 thin
 thing
-this
 thought
 those
+Those
 through
 tight
 till
@@ -11035,8 +11035,6 @@ able
 about
 across
 after
-again
-against
 all
 almost
 among
@@ -11110,7 +11108,6 @@ near
 need
 new
 news
-no
 normal
 not
 now
@@ -11159,9 +11156,7 @@ these
 thick
 thin
 thing
-this
 thought
-those
 through
 tight
 till
