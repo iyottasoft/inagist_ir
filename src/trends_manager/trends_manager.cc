@@ -41,7 +41,7 @@ int SubmitTweet(/*const char* user_name,*/ const char* tweet, char* keywords) {
     if ((ptr - keywords) + len < MAX_BUFFER_SIZE) {
       strcpy(ptr, (*iter).c_str());
       ptr += len;
-      strcpy(ptr, ",");
+      strcpy(ptr, "|");
       ptr++;
     } else {
 #ifdef DEBUG

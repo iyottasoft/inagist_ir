@@ -299,7 +299,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   char *pch = NULL;
   char ch;
 
-  std::set<std::string> keywords_using_stopwords;
+  std::set<std::string> keyphrases_set;
 
   // the whole thing starts here
   ptr = str;
@@ -310,7 +310,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 
   // go to the first word, ignoring handles and punctuations
   char *prev = NULL;
-  while (ptr && '\0' != *ptr && (' ' == *ptr || IsPunct(ptr, prev, ptr+1) || IsIgnore(ptr))) {
+  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && IsPunct(ptr, prev, ptr+1)) || IsIgnore(ptr))) {
     prev = ptr;
     ptr++;
   }
@@ -342,7 +342,8 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
     }
   }
 
-  // now lets find the end of the current word
+  // now lets find the end of the current word - while loop works from the second letter
+  ptr++;
   while (ptr && ' ' != *ptr && '\0' != *ptr && !(is_punct = IsPunct(ptr, ptr-1, ptr+1))) {
     if (!strcmp(ptr, "&#")) {
       while (' ' != *ptr && '\0' != *ptr)
@@ -372,8 +373,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   current_word_delimiter = *ptr;
   current_word_len = current_word_end - current_word_start;
   *ptr = '\0';
-  if (is_punct)
-    current_word_precedes_punct = true;
+  current_word_precedes_punct = is_punct;
   num_words++;
 
   // stop words
@@ -404,7 +404,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   is_ignore_word = false;
   is_punct = false;
   while ('\0' != *ptr &&
-         (' ' == *ptr || (is_punct = IsPunct(ptr, ptr-1, ptr+1)) || (is_ignore_word = IsIgnore(ptr)))) {
+         (' ' == *ptr || (ispunct(*ptr) && (is_punct = IsPunct(ptr, ptr-1, ptr+1))) || (is_ignore_word = IsIgnore(ptr)))) {
     current_word_precedes_ignore_word |= is_ignore_word;
     current_word_precedes_punct |= is_punct;
     ptr++;
@@ -442,7 +442,8 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 
   while (ptr && probe && ptr != '\0') {
     // this loop works between second letter to end punctuation for each word
-    if (' ' == *probe || '\0' == *probe || (is_punct = IsPunct(probe, probe-1, probe+1))) {
+    is_punct = false;
+    if (' ' == *probe || '\0' == *probe || (ispunct(*probe) && (is_punct = IsPunct(probe, probe-1, probe+1)))) {
 
 #ifdef DEBUG
       if (NULL != stopwords_entity_end)
@@ -467,7 +468,6 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 
 #ifdef DEBUG
       cout << endl;
-      cout << "***** loop *****" << endl;
       if (prev_word_start)
         cout << "prev word: " << prev_word_start << endl;
       else
@@ -536,7 +536,9 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
       if (prev_word_end)
         *prev_word_end = prev_word_delimiter;
 
-      if (!current_word_stop && !current_word_dict && !current_word_caps && !current_word_starts_num) {
+      if (!current_word_stop && !current_word_dict && !current_word_caps &&
+          !current_word_starts_num && !current_word_has_mixed_case &&
+          (current_word_len > 1) && '#' != *current_word_start) {
 #ifdef DEBUG
         cout << current_word_start << ": normal word" << endl;
 #endif
@@ -545,18 +547,146 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
       if (current_word_has_mixed_case)
         num_mixed_words++;
 
+      if (NULL == stopwords_entity_start) {
+        if (current_word_stop) {
+          // X of Y case
+          if (strcmp(current_word_start, "of") == 0 && NULL != next_word_start && NULL != prev_word_start) {
+            if ((prev_word_caps && next_word_caps) &&
+                (!prev_word_stop && !next_word_stop) &&
+                (!prev_word_dict && !next_word_dict) &&
+                (!prev_word_dict && !next_word_dict) &&
+                !current_word_precedes_ignore_word &&
+                !prev_word_precedes_ignore_word) {
+              if (caps_entity_start && caps_entity_start < prev_word_start)
+                stopwords_entity_start = caps_entity_start;
+              else
+                stopwords_entity_start = prev_word_start;
+            }
+          }
+        } else if (NULL != prev_word_start && current_word_starts_num &&
+                   (' ' == current_word_delimiter || '\0' == current_word_delimiter)) {
+          // handling numbers that occur with cap entities
+          if (prev_word_caps && !prev_word_stop && !prev_word_dict &&
+              !prev_word_precedes_ignore_word &&
+              !prev_word_precedes_punct) {
+
+            if (caps_entity_start && caps_entity_start < prev_word_start)
+              stopwords_entity_start = caps_entity_start;
+            else
+              stopwords_entity_start = prev_word_start;
+
+            if (!next_word_start || !next_word_caps || next_word_stop || next_word_dict ||
+                current_word_precedes_ignore_word || current_word_precedes_punct) {
+                stopwords_entity_end = current_word_end;
+            }
+          }
+        } else if (!caps_entity_start && prev_word_start && next_word_start) {
+          // Experimental location detection - TODO (balaji) use regex if this experiment succeeds
+          if (current_word_caps &&
+              strcmp(prev_word_start, "in") == 0 && ',' == current_word_delimiter &&
+              next_word_caps && !current_word_dict &&
+              !next_word_stop && !next_word_dict && !current_word_stop
+             ) {
+            stopwords_entity_start = current_word_start;
+            stopwords_entity_end = current_word_end;
+          } else if (next_word_caps &&
+                     ((strcmp(prev_word_start, "place") == 0 && strcmp(current_word_start, "called") == 0 &&
+                       !next_word_stop && (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)) ||
+                      (strcmp(prev_word_start, "town") == 0 &&
+                       (strcmp(current_word_start, "of") == 0 || strcmp(current_word_start, "called") == 0) &&
+                       !next_word_stop && (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)))
+                    ) {
+            stopwords_entity_start = next_word_start;
+            stopwords_entity_end = next_word_end;
+          }
+        } else if (caps_entity_start &&
+                   next_word_start && next_word_caps && !next_word_stop && !next_word_dict) {
+          // Experimental sports event detection - TODO (balaji) use regex if this experiment succeeds
+          if ((strcmp(current_word_start, "vs") == 0) ||
+              (strcmp(current_word_start, "v") == 0) ||
+              (strcmp(current_word_start, "beat ") == 0) ||
+              (strcmp(current_word_start, "defeat ") == 0) ||
+              (strcmp(current_word_start, "beats ") == 0) ||
+              (strcmp(current_word_start, "defeats ") == 0)) {
+            stopwords_entity_start = caps_entity_start;
+          }
+        }
+      } else {
+#ifdef DEBUG
+        cout << "stopword entity candidate: " << stopwords_entity_start << endl;
+#endif
+        if (!current_word_caps || current_word_stop || current_word_dict || current_word_starts_num) {
+          if (stopwords_entity_start != prev_word_start) {
+            stopwords_entity_end = prev_word_end;
+          }
+          else {
+            stopwords_entity_start = NULL;
+            stopwords_entity_end = NULL;
+          }
+        } else if (NULL == next_word_start ||
+                   current_word_precedes_ignore_word ||
+                   ((current_word_end + 1) != next_word_start)) {
+          if (stopwords_entity_start != current_word_start) {
+            stopwords_entity_end = current_word_end;
+          }
+          else {
+            stopwords_entity_start = NULL;
+            stopwords_entity_end = NULL;
+          }
+        }
+      }
+
+      /*
+      if (NULL == stopwords_keyphrase_start) {
+        if ('\0' != current_word_delimiter &&
+            !current_word_stop &&
+            !current_word_dict &&
+            '#' != *current_word_start &&
+            NULL != next_word_start &&
+            !current_word_precedes_ignore_word &&
+            ((current_word_len > 1) || isdigit(*current_word_start))) {
+          if (' ' == current_word_delimiter &&
+              ((current_word_end + 1) == next_word_start)) {
+            stopwords_keyphrase_start = current_word_start;
+          }
+        }
+        stopwords_keyphrase_end = NULL;
+      } else {
+        if (current_word_stop || current_word_dict || '#' == *current_word_start || ((current_word_len < 2) && !isdigit(*current_word_start))) {
+          if (stopwords_keyphrase_start != prev_word_start) {
+            stopwords_keyphrase_end = prev_word_end;
+          }
+          else {
+            stopwords_keyphrase_start = NULL;
+            stopwords_keyphrase_end = NULL;
+          }
+        } else {
+          if (' ' != current_word_delimiter ||
+              NULL == next_word_start ||
+              current_word_precedes_ignore_word ||
+              ((current_word_end + 1) != next_word_start)) {
+            if (stopwords_keyphrase_start != current_word_start) {
+              stopwords_keyphrase_end = current_word_end;
+            }
+            else {
+              stopwords_keyphrase_start = NULL;
+              stopwords_keyphrase_end = NULL;
+            }
+          }
+        }
+      }
+      */
+
       if (NULL == caps_entity_start) {
         caps_entity_end = NULL;
-        if (current_word_len > 1 &&
-            current_word_caps &&
-            !current_word_stop &&
-            !current_word_dict) {
+        if ((current_word_len > 1 && current_word_caps && !current_word_stop && !current_word_dict) && 
+            (!prev_word_start || prev_word_precedes_ignore_word || prev_word_precedes_punct || !prev_word_caps)) {
 
           if (' ' == current_word_delimiter &&
               NULL != next_word_start &&
               ((current_word_end + 1) == next_word_start)) {
             if (current_word_start == sentence_start) {
-              if (next_word_caps || next_word_stop)
+              if (next_word_caps && !next_word_stop && !next_word_dict)
                 caps_entity_start = current_word_start;
             } else {
               caps_entity_start = current_word_start;
@@ -603,122 +733,6 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
           }
         }
       }
-
-      if (NULL == stopwords_entity_start) {
-        if (current_word_stop) {
-          // X of Y case
-          if (strcmp(current_word_start, "of") == 0 && NULL != next_word_start && NULL != prev_word_start) {
-            if ((prev_word_caps && next_word_caps) &&
-                !current_word_precedes_ignore_word &&
-                !prev_word_precedes_ignore_word) {
-              if (caps_entity_start && caps_entity_start < prev_word_start)
-                stopwords_entity_start = caps_entity_start;
-              else
-                stopwords_entity_start = prev_word_start;
-            }
-          }
-        } else if (NULL != prev_word_start && current_word_starts_num && (current_word_len > 1) &&
-                   (' ' == current_word_delimiter || '\0' == current_word_delimiter)) {
-          // handling numbers that occur with cap entities
-          if (prev_word_caps && !prev_word_stop && !prev_word_dict &&
-              !prev_word_precedes_ignore_word &&
-              !prev_word_precedes_punct) {
-
-            if (caps_entity_start && caps_entity_start < prev_word_start)
-              stopwords_entity_start = caps_entity_start;
-            else
-              stopwords_entity_start = prev_word_start;
-
-            if (!next_word_start || !next_word_caps || next_word_stop || next_word_dict ||
-                current_word_precedes_ignore_word || current_word_precedes_punct) {
-                stopwords_entity_end = current_word_end;
-            }
-          }
-        } else if (!caps_entity_start && prev_word_start && next_word_start) {
-          // Experimental location detection
-          if (current_word_caps &&
-              strcmp(prev_word_start, "in") == 0 && ',' == current_word_delimiter &&
-              next_word_caps && !current_word_dict &&
-              !next_word_stop && !next_word_dict && !current_word_stop
-             ) {
-            stopwords_entity_start = current_word_start;
-            stopwords_entity_end = current_word_end;
-          } else if (next_word_caps &&
-                     ((strcmp(prev_word_start, "place") == 0 && strcmp(current_word_start, "called") == 0 &&
-                       !next_word_stop && (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)) ||
-                      (strcmp(prev_word_start, "town") == 0 &&
-                       (strcmp(current_word_start, "of") == 0 || strcmp(current_word_start, "called") == 0) &&
-                       !next_word_stop && (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)))
-                    ) {
-            stopwords_entity_start = next_word_start;
-            stopwords_entity_end = next_word_end;
-          }
-        }
-      } else {
-#ifdef DEBUG
-        cout << "stopword entity candidate: " << stopwords_entity_start << endl;
-#endif
-        if (!current_word_caps || current_word_stop || current_word_dict || (current_word_len < 2) || current_word_starts_num) {
-          if (stopwords_entity_start != prev_word_start) {
-            stopwords_entity_end = prev_word_end;
-          }
-          else {
-            stopwords_entity_start = NULL;
-            stopwords_entity_end = NULL;
-          }
-        } else if (NULL == next_word_start ||
-                   current_word_precedes_ignore_word ||
-                   ((current_word_end + 1) != next_word_start)) {
-          if (stopwords_entity_start != current_word_start) {
-            stopwords_entity_end = current_word_end;
-          }
-          else {
-            stopwords_entity_start = NULL;
-            stopwords_entity_end = NULL;
-          }
-        }
-      }
-
-      /*
-      if (NULL == stopwords_entity_start) {
-        if ('\0' != current_word_delimiter &&
-            !current_word_stop &&
-            !current_word_dict &&
-            '#' != *current_word_start &&
-            NULL != next_word_start &&
-            !current_word_precedes_ignore_word &&
-            ((current_word_len > 1) || isdigit(*current_word_start))) {
-          if (' ' == current_word_delimiter &&
-              ((current_word_end + 1) == next_word_start)) {
-            stopwords_entity_start = current_word_start;
-          }
-        }
-        stopwords_entity_end = NULL;
-      } else {
-        if (current_word_stop || current_word_dict || '#' == *current_word_start || ((current_word_len < 2) && !isdigit(*current_word_start))) {
-          if (stopwords_entity_start != prev_word_start) {
-            stopwords_entity_end = prev_word_end;
-          }
-          else {
-            stopwords_entity_start = NULL;
-            stopwords_entity_end = NULL;
-          }
-        } else {
-          if (' ' != current_word_delimiter ||
-              NULL == next_word_start ||
-              current_word_precedes_ignore_word ||
-              ((current_word_end + 1) != next_word_start)) {
-            if (stopwords_entity_start != current_word_start) {
-              stopwords_entity_end = current_word_end;
-            }
-            else {
-              stopwords_entity_start = NULL;
-              stopwords_entity_end = NULL;
-            }
-          }
-        }
-      }
-      */
 
       // write entities
       if (NULL != stopwords_entity_start && NULL != stopwords_entity_end) {
@@ -845,11 +859,12 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
         // IsIgnore will literally ignore the word by changing the cursor to next word end
         is_ignore_word = false;
         is_punct = false;
-        while ('\0' != *ptr && (' ' == *ptr || (is_punct = IsPunct(ptr, ptr-1, ptr+1)) || (is_ignore_word = IsIgnore(ptr)))) {
+        while ('\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && (is_punct = IsPunct(ptr, ptr-1, ptr+1))) || (is_ignore_word = IsIgnore(ptr)))) {
           current_word_precedes_ignore_word |= is_ignore_word;
           current_word_precedes_punct |= is_punct; 
           ptr++;
         }
+
         if (ptr && '\0' != *ptr) {
           next_word_start = ptr;
           num_words++;
@@ -859,6 +874,7 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
             cout << "sentence start: " << sentence_start << endl;
 #endif
           }
+
           if (current_word_precedes_punct) {
             sentence_start = next_word_start;
 #ifdef DEBUG
@@ -870,86 +886,96 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
                 caps_entity_start = NULL;
                 stopwords_entity_start = NULL;
               }
+            } else {
+              for (pch = current_word_end + 1; (pch != next_word_start); pch++) {
+                if (':' == *pch) {
+                  if (num_normal_words == 0) {
+                    keywords_set.clear();
+                    caps_entity_start = NULL;
+                    stopwords_entity_start = NULL;
+                  }
+                }
+              }
             }
           }
 
-      // after finding the start of next word, probe shud be at the same place as ptr
-      probe = ptr;
+          // after finding the start of next word, probe shud be at the same place as ptr
+          probe = ptr;
 
-      if (isupper(*next_word_start)) {
-        next_word_caps = true;
-        num_caps_words++;
-        next_word_all_caps = true;
-        next_word_starts_num = false;
-      } else {
-        next_word_caps = false;
-        next_word_all_caps = false;
-        if (isdigit(*next_word_start)) {
-          next_word_starts_num = true;
-          num_numeric_words++;
-        } else {
-          next_word_starts_num = false;
-        }
-      }
-    } else {
-      // placing the probe before '/0' so that loop will make it probe++
-      // loop will terminate in the next cycle
-      probe = ptr-1;
-    }
-        } // check for current word delimiter 
-
-      } else {
-        if (!strcmp(probe, "&#")) {
-          while (' ' != *probe && '\0' != *probe)
-            probe++;
-          if ('\0' == *probe)
-            break;
-          current_word_precedes_ignore_word = true;
-        }
-        if (isupper(*probe)) {
-          if (!next_word_all_caps && !ispunct(*probe)) {
-            //if ((probe-1) == ptr)
-              //second_letter_has_caps = true;
-            //else
-            next_word_has_mixed_case = true;
+          if (isupper(*next_word_start)) {
+            next_word_caps = true;
+            num_caps_words++;
+            next_word_all_caps = true;
+            next_word_starts_num = false;
+          } else {
+            next_word_caps = false;
+            next_word_all_caps = false;
+            if (isdigit(*next_word_start)) {
+              next_word_starts_num = true;
+              num_numeric_words++;
+            } else {
+              next_word_starts_num = false;
+            }
           }
         } else {
-          if (next_word_caps)
-            next_word_has_mixed_case = false;
-          next_word_all_caps = false;
+          // placing the probe before '/0' so that loop will make it probe++
+          // loop will terminate in the next cycle
+          probe = ptr-1;
         }
+      } // check for current word delimiter 
+
+    } else {
+      if (!strcmp(probe, "&#")) {
+        while (' ' != *probe && '\0' != *probe)
+          probe++;
+        if ('\0' == *probe)
+          break;
+        current_word_precedes_ignore_word = true;
       }
-
-      // a mere cog in a loop wheel, but a giant killer if commented
-      probe++;
+      // TODO (balaji) - mixed case logic seems twisted
+      if (isupper(*probe)) {
+        if (!next_word_all_caps && !ispunct(*probe)) {
+          //if ((probe-1) == ptr)
+            //second_letter_has_caps = true;
+          //else
+          next_word_has_mixed_case = true;
+        }
+      } else {
+        if (next_word_caps)
+          next_word_has_mixed_case = false;
+        next_word_all_caps = false;
+      }
     }
 
-    if (num_mixed_words > 2) {
-#ifdef DEBUG
-      cout << "non-english tweet. ignoring." << endl;
-#endif
-      keywords_set.clear();
-    }
-
-#ifdef DEBUG
-    cout << endl << "\norginal query: " << std::string(str) << endl;
-    cout << "num words: " << num_words << endl;
-    cout << "num caps words: " << num_caps_words << endl;
-    cout << "num stop words: " << num_stop_words << endl;
-    cout << "num dict words: " << num_dict_words << endl;
-    cout << "num numeric words: " << num_numeric_words << endl;
-    cout << "num normal words: " << num_normal_words << endl;
-#endif
-    std::set<std::string>::iterator iter;
-    if (((num_words == (num_caps_words + num_numeric_words)) && (num_dict_words != 0 || num_words > 5)) ||
-        ((num_normal_words == 0) && num_dict_words != 0))
-      keywords_set.clear();
-
-    for (iter = keywords_using_stopwords.begin(); iter != keywords_using_stopwords.end(); iter++) {
-      keywords_set.insert(*iter);
-    }
-
-    return 0;
+    // a mere cog in a loop wheel, but a giant killer if commented
+    probe++;
   }
+
+  if (num_mixed_words > 2) {
+#ifdef DEBUG
+    cout << "non-english tweet. ignoring." << endl;
+#endif
+    keywords_set.clear();
+  }
+
+#ifdef DEBUG
+  cout << endl << "\norginal query: " << std::string(str) << endl;
+  cout << "num words: " << num_words << endl;
+  cout << "num caps words: " << num_caps_words << endl;
+  cout << "num stop words: " << num_stop_words << endl;
+  cout << "num dict words: " << num_dict_words << endl;
+  cout << "num numeric words: " << num_numeric_words << endl;
+  cout << "num normal words: " << num_normal_words << endl;
+#endif
+  std::set<std::string>::iterator iter;
+  if ((num_normal_words == 0) && (num_dict_words != 0 || num_words > 5))
+    keywords_set.clear();
+
+  //for (iter = keyphrases_set.begin(); iter != keyphrases_set.end(); iter++) {
+    //keywords_set.insert(*iter);
+  //}
+
+  return 0;
+}
 
 } // namespace inagist_trends

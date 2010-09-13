@@ -70,11 +70,11 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
   ERL_NIF_TERM return_list = enif_make_list(env, 0);
   char *start = keywords;
-  char *end = strstr(start, ",");
+  char *end = strstr(start, "|");
   unsigned int len = 0;
   unsigned int i = 0;
   while (start && end && *end != '\0') {
-    end = strstr(start, ",");
+    end = strstr(start, "|");
     if (!end)
       break;
     *end = '\0';
@@ -89,7 +89,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     }
     return_list = enif_make_list_cell(env, enif_make_binary(env, &keyword), return_list);
 
-    *end = ',';
+    *end = '|';
     start = end + 1;
   }
 
