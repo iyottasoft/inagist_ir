@@ -604,10 +604,11 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
           // Experimental sports event detection - TODO (balaji) use regex if this experiment succeeds
           if ((strcmp(current_word_start, "vs") == 0) ||
               (strcmp(current_word_start, "v") == 0) ||
-              (strcmp(current_word_start, "beat ") == 0) ||
-              (strcmp(current_word_start, "defeat ") == 0) ||
-              (strcmp(current_word_start, "beats ") == 0) ||
-              (strcmp(current_word_start, "defeats ") == 0)) {
+              (strcmp(current_word_start, "beat") == 0) ||
+              (strcmp(current_word_start, "def") == 0) ||
+              (strcmp(current_word_start, "defeat") == 0) ||
+              (strcmp(current_word_start, "beats") == 0) ||
+              (strcmp(current_word_start, "defeats") == 0)) {
             stopwords_entity_start = caps_entity_start;
           }
         }
