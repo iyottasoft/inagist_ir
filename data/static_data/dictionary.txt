@@ -347,7 +347,6 @@ SAID
 say
 Say
 SAY
-says
 Says
 SAYS
 saying
@@ -668,6 +667,10 @@ december
 December
 DECEMBER
 Dec
+AM
+PM
+Hours
+Hrs
 #ADDING_SOME_COMMON_ENGLISH_WORDS
 although
 Although
@@ -735,6 +738,8 @@ feeble
 feel
 feeling
 first
+Former
+Fmr
 give
 go
 good

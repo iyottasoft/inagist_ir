@@ -172,9 +172,13 @@ bool KeywordsExtract::IsPunct(char *ptr, char *prev, char *next) {
     case '#':
       if (!next)
         return true;
-      if (prev)
-        if (*prev == ' ' || !IsPunct(prev))
-         return false;
+      else
+        if (*next == ' ' || IsPunct(next))
+          return true;
+      //if (prev)
+      //  if (*prev != ' ' && *prev != '\0' && IsPunct(prev))
+      //   return true;
+      return false;
       break;
     case '-':
       if (prev && next)
@@ -563,12 +567,18 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
                 stopwords_entity_start = prev_word_start;
             }
           }
+          if (caps_entity_start && (strcmp(current_word_start, "and") == 0) &&
+              next_word_start && next_word_caps && !next_word_dict && !next_word_stop &&
+              !prev_word_precedes_ignore_word && !prev_word_precedes_punct &&
+              !current_word_precedes_ignore_word && !current_word_precedes_punct) {
+            stopwords_entity_start = caps_entity_start;
+          }
         } else if (NULL != prev_word_start && current_word_starts_num &&
                    (' ' == current_word_delimiter || '\0' == current_word_delimiter)) {
           // handling numbers that occur with cap entities
           if (prev_word_caps && !prev_word_stop && !prev_word_dict &&
-              !prev_word_precedes_ignore_word &&
-              !prev_word_precedes_punct) {
+              !prev_word_precedes_ignore_word && !prev_word_precedes_punct && 
+              (current_word_len > 1 || prev_word_all_caps)) {
 
             if (caps_entity_start && caps_entity_start < prev_word_start)
               stopwords_entity_start = caps_entity_start;
@@ -580,24 +590,32 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
                 stopwords_entity_end = current_word_end;
             }
           }
-        } else if (!caps_entity_start && prev_word_start && next_word_start) {
-          // Experimental location detection - TODO (balaji) use regex if this experiment succeeds
-          if (current_word_caps &&
-              strcmp(prev_word_start, "in") == 0 && ',' == current_word_delimiter &&
-              next_word_caps && !current_word_dict &&
-              !next_word_stop && !next_word_dict && !current_word_stop
-             ) {
+        } else if (prev_word_stop) {
+          if ((NULL == next_word_start || next_word_start == sentence_start) &&
+              prev_word_start && strncmp(prev_word_start, "at", 2) == 0 && current_word_caps &&
+              !current_word_stop && !current_word_dict) {
+            // TODO (balaji) dangerous! don't use strncmp. instead preserve prev_word_delimiter
             stopwords_entity_start = current_word_start;
             stopwords_entity_end = current_word_end;
-          } else if (next_word_caps &&
-                     ((strcmp(prev_word_start, "place") == 0 && strcmp(current_word_start, "called") == 0 &&
-                       !next_word_stop && (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)) ||
-                      (strcmp(prev_word_start, "town") == 0 &&
-                       (strcmp(current_word_start, "of") == 0 || strcmp(current_word_start, "called") == 0) &&
-                       !next_word_stop && (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)))
-                    ) {
-            stopwords_entity_start = next_word_start;
-            stopwords_entity_end = next_word_end;
+          } else if (!caps_entity_start && prev_word_start && next_word_start) {
+            // Experimental location detection - TODO (balaji) use regex if this experiment succeeds
+            if (current_word_caps &&
+                strcmp(prev_word_start, "in") == 0 && ',' == current_word_delimiter &&
+                next_word_caps && !current_word_dict &&
+                !next_word_stop && !next_word_dict && !current_word_stop
+               ) {
+              stopwords_entity_start = current_word_start;
+              stopwords_entity_end = current_word_end;
+            } else if (next_word_caps &&
+                       ((strcmp(prev_word_start, "place") == 0 && strcmp(current_word_start, "called") == 0 &&
+                         !next_word_stop && (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)) ||
+                        (strcmp(prev_word_start, "town") == 0 &&
+                         (strcmp(current_word_start, "of") == 0 || strcmp(current_word_start, "called") == 0) &&
+                         !next_word_stop && (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)))
+                      ) {
+              stopwords_entity_start = next_word_start;
+              stopwords_entity_end = next_word_end;
+            }
           }
         } else if (caps_entity_start &&
                    next_word_start && next_word_caps && !next_word_stop && !next_word_dict) {
@@ -881,19 +899,23 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 #ifdef DEBUG
             cout << "sentence start: " << sentence_start << endl;
 #endif
-            if (':' == current_word_delimiter) {
+            if (':' == current_word_delimiter || '>' == current_word_delimiter || '-' == current_word_delimiter || '(' == current_word_delimiter) {
               if (num_normal_words == 0) {
                 keywords_set.clear();
                 caps_entity_start = NULL;
+                caps_entity_end = NULL;
                 stopwords_entity_start = NULL;
+                stopwords_entity_end = NULL;
               }
             } else {
               for (pch = current_word_end + 1; (pch != next_word_start); pch++) {
-                if (':' == *pch) {
+                if (':' == *pch || '>' == *pch || '-' == *pch || '(' == *pch) {
                   if (num_normal_words == 0) {
                     keywords_set.clear();
                     caps_entity_start = NULL;
+                    caps_entity_end = NULL;
                     stopwords_entity_start = NULL;
+                    stopwords_entity_end = NULL;
                   }
                 }
               }

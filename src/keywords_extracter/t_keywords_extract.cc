@@ -3,23 +3,35 @@
 #include <string>
 #include <set>
 
+using std::string;
+
 int main(int argc, char* argv[]) {
 
-  if (argc < 2 && argc > 6) {
-    //std::cerr << "Usage: " << argv[0] << " <input_file> [<stopwords_file>] [<dictionary_file>] [<stemmer_dict_file>] [<output_file>]\n";
+  if (argc > 2) {
+    std::cout << "Usage: " << argv[0] << " <text within double quotes>" << std::endl;
     return -1;
   }
 
   inagist_trends::KeywordsExtract ke;
 
-  if (ke.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt", NULL, "./data/tweets.txt", "./data/output.txt") < 0) {
+  string arguments(argv[0]);
+  string::size_type loc = arguments.find("bin", 0);
+  string root_dir;
+  if (loc != string::npos) {
+    loc-=1;
+    root_dir.assign(argv[0], loc);
+  }
+
+  string stopwords_file = root_dir + "/data/static_data/stopwords.txt";
+  string dictionary_file = root_dir + "/data/static_data/dictionary.txt";
+  if (ke.Init(stopwords_file.c_str(), dictionary_file.c_str()) < 0) {
     std::cerr << "ERROR: couldn't initialize\n";
     return -1;
   }
 
   std::set<std::string> keywords_set;
   char str[141];
-  if (argc == 2) {
+  if (argc == 1) {
     std::string s;
     while (getline(std::cin, s)) {
       strcpy(str, s.c_str()); 
@@ -28,17 +40,10 @@ int main(int argc, char* argv[]) {
       keywords_set.clear();
     }
   } else {
-    strcpy(str, "At Pragati, we have started using the new rupee symbol in our digital and print editions. We might be the first Indian magazine to do so.");
-    ke.GetKeywords(str, keywords_set);
+    ke.GetKeywords(argv[1], keywords_set);
     ke.PrintKeywords(keywords_set);
     keywords_set.clear();
   }
-  /*
-  std::vector<std::string> keywords;
-
-  ke.GetKeywords(keywords);
-  ke.PrintKeywords(keywords);
-  */
 
   ke.DeInit();
 
