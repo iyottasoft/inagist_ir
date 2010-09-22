@@ -27,13 +27,15 @@ int Init(const char* stopwords_file_path, const char* dictionary_file_path) {
   return 0;
 }
 
+// keywords and keyphrases are output parameters
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int SubmitTweet(/*const char* user_name,*/ const char* tweet, char* keywords) {
+int SubmitTweet(/*const char* user_name,*/ const char* tweet, char* keywords, char* keyphrases) {
   std::set<std::string> keywords_set;
+  std::set<std::string> keyphrases_set;
   strcpy(g_buffer, tweet);
-  g_keywords_extract.GetKeywords(g_buffer, keywords_set);
+  g_keywords_extract.GetKeywords(g_buffer, keywords_set, keyphrases_set);
   std::set<std::string>::iterator iter;
   char *ptr = keywords;
   for (iter = keywords_set.begin(); iter != keywords_set.end(); iter++) {
@@ -45,11 +47,27 @@ int SubmitTweet(/*const char* user_name,*/ const char* tweet, char* keywords) {
       ptr++;
     } else {
 #ifdef DEBUG
-      std::cout << "Not enuf space in the buffer\n";
+      std::cout << "Not enuf space in the keywords buffer\n";
 #endif
       return -1;
     }
   }
+  ptr = keyphrases;
+  for (iter = keyphrases_set.begin(); iter != keyphrases_set.end(); iter++) {
+    int len = (*iter).length();
+    if ((ptr - keyphrases) + len < MAX_BUFFER_SIZE) {
+      strcpy(ptr, (*iter).c_str());
+      ptr += len;
+      strcpy(ptr, "|");
+      ptr++;
+    } else {
+#ifdef DEBUG
+      std::cout << "Not enuf space in the keyphrase buffer\n";
+      *keyphrases = '\0';
+#endif
+    }
+  }
+
   return 0;
 }
 

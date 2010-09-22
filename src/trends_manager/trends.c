@@ -47,6 +47,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   ErlNifBinary tweet;
   //ErlNifBinary user;
   ErlNifBinary keyword;
+  ErlNifBinary keyphrase;
   char tweet_str[1024];
   //char user_name_str[255];
   //memset(user_name_str, 0, 255);
@@ -64,15 +65,19 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
   char keywords[1024];
   memset(keywords, 0, 1024);
-  if (SubmitTweet(/*(const char *) user_name_str,*/ (const char *) tweet_str, (char *) keywords) < 0) {
+  char keyphrases[1024];
+  memset(keyphrases, 0, 1024);
+  if (SubmitTweet(/*(const char *) user_name_str,*/ (const char *) tweet_str, (char *) keywords, (char *) keyphrases) < 0) {
     return enif_make_atom(env, "error");
   }
 
-  ERL_NIF_TERM return_list = enif_make_list(env, 0);
+  ERL_NIF_TERM keywords_list = enif_make_list(env, 0);
   char *start = keywords;
   char *end = strstr(start, "|");
   unsigned int len = 0;
   unsigned int i = 0;
+  int ret_val = 0;
+
   while (start && end && *end != '\0') {
     end = strstr(start, "|");
     if (!end)
@@ -80,20 +85,43 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     *end = '\0';
     len = end - start;
 
-    //return_list = enif_make_list_cell(env, enif_make_string(env, (const char *) start, ERL_NIF_LATIN1), return_list);
-    int ret_val = enif_alloc_binary(env, len, &keyword);
+    ret_val = enif_alloc_binary(env, len, &keyword);
     if (ret_val < 0)
       return enif_make_atom(env, "error");
     for (i=0; i<len; i++) {
       keyword.data[i] = *(start + i);
     }
-    return_list = enif_make_list_cell(env, enif_make_binary(env, &keyword), return_list);
+    keywords_list = enif_make_list_cell(env, enif_make_binary(env, &keyword), keywords_list);
 
     *end = '|';
     start = end + 1;
   }
 
-  return return_list;
+  ERL_NIF_TERM keyphrases_list = enif_make_list(env, 0);
+  start = keyphrases;
+  end = strstr(start, "|");
+  len = 0;
+  
+  while (start && end && *end != '\0') {
+    end = strstr(start, "|");
+    if (!end)
+      break;
+    *end = '\0';
+    len = end - start;
+
+    ret_val = enif_alloc_binary(env, len, &keyphrase);
+    if (ret_val < 0)
+      return enif_make_atom(env, "error");
+    for (i=0; i<len; i++) {
+      keyphrase.data[i] = *(start + i);
+    }
+    keyphrases_list = enif_make_list_cell(env, enif_make_binary(env, &keyphrase), keyphrases_list);
+
+    *end = '|';
+    start = end + 1;
+  }
+
+  return enif_make_tuple2(env, keywords_list, keyphrases_list);
 }
 
 ERL_NIF_TERM nif_gettrends(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {

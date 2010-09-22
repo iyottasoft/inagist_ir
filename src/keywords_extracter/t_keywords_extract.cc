@@ -30,19 +30,30 @@ int main(int argc, char* argv[]) {
   }
 
   std::set<std::string> keywords_set;
+  std::set<std::string> keyphrases_set;
   char str[141];
   if (argc == 1) {
     std::string s;
     while (getline(std::cin, s)) {
       strcpy(str, s.c_str()); 
-      ke.GetKeywords(str, keywords_set);
+      ke.GetKeywords(str, keywords_set, keyphrases_set);
       ke.PrintKeywords(keywords_set);
       keywords_set.clear();
+      if (keyphrases_set.size() > 0) {
+        std::cout << "Keyphrases:" << std::endl;
+        ke.PrintKeywords(keyphrases_set);
+        keyphrases_set.clear();
+      }
     }
   } else {
-    ke.GetKeywords(argv[1], keywords_set);
+    ke.GetKeywords(argv[1], keywords_set, keyphrases_set);
     ke.PrintKeywords(keywords_set);
     keywords_set.clear();
+    if (keyphrases_set.size() > 0) {
+      std::cout << "Keyphrases:" << std::endl;
+      ke.PrintKeywords(keyphrases_set);
+      keyphrases_set.clear();
+    }
   }
 
   ke.DeInit();

@@ -231,6 +231,11 @@ bool KeywordsExtract::IsIgnore(char *&ptr) {
 }
 
 int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set) {
+  std::set<std::string> keyphrases_set;
+  return GetKeywords(str, keywords_set, keyphrases_set);
+}
+
+int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set, std::set<std::string> &keyphrases_set) {
   if (!str)
     return -1;
 
@@ -266,6 +271,8 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   char *caps_entity_end = NULL;
   char *stopwords_entity_start = NULL;
   char *stopwords_entity_end = NULL;
+  char *stopwords_keyphrase_start = NULL;
+  char *stopwords_keyphrase_end = NULL;
   char *sentence_start = NULL;
 
   // TODO (balaji) use bit map and masks to reduce comparisons
@@ -302,8 +309,6 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   // misc
   char *pch = NULL;
   char ch;
-
-  std::set<std::string> keyphrases_set;
 
   // the whole thing starts here
   ptr = str;
@@ -655,7 +660,6 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
         }
       }
 
-      /*
       if (NULL == stopwords_keyphrase_start) {
         if ('\0' != current_word_delimiter &&
             !current_word_stop &&
@@ -694,12 +698,12 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
           }
         }
       }
-      */
 
       if (NULL == caps_entity_start) {
         caps_entity_end = NULL;
-        if ((current_word_len > 1 && current_word_caps && !current_word_stop && !current_word_dict) && 
-            (!prev_word_start || prev_word_precedes_ignore_word || prev_word_precedes_punct || !prev_word_caps)) {
+        if ((current_word_len > 1 && (current_word_caps || ('#' == *current_word_start && isupper(*(current_word_start+1)))) &&
+            !current_word_stop && !current_word_dict) && 
+            (!prev_word_start || prev_word_precedes_ignore_word || prev_word_precedes_punct || !prev_word_caps || '#' == *current_word_start)) {
 
           if (' ' == current_word_delimiter &&
               NULL != next_word_start &&
@@ -753,9 +757,43 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
         }
       }
 
+      // write keyphrases
+      if (NULL != stopwords_keyphrase_start && NULL != stopwords_keyphrase_end) {
+        if (stopwords_keyphrase_start != caps_entity_start || stopwords_keyphrase_end != caps_entity_end) {
+#ifdef DEBUG
+          cout << endl << string(stopwords_keyphrase_start, (stopwords_keyphrase_end - stopwords_keyphrase_start)) << " :keyphrase";
+#endif
+          if (strncmp(stopwords_keyphrase_end-2, "\'s", 2) == 0) {
+            ch = *(stopwords_keyphrase_end-2);
+            *(stopwords_keyphrase_end-2) = '\0';
+            keyphrases_set.insert(string(stopwords_keyphrase_start, ((stopwords_keyphrase_end-2) - stopwords_keyphrase_start)));
+            *(stopwords_keyphrase_end-2) = ch;
+          }
+          else if ((pch = strstr(stopwords_keyphrase_start, "\'s")) && (pch < stopwords_keyphrase_end)) {
+            ch = *pch;
+            *pch = '\0';
+            // but don't insert the X in X's if X is a single word!
+            if (strstr(stopwords_keyphrase_start, " "))
+              keyphrases_set.insert(string(stopwords_keyphrase_start, (pch - stopwords_keyphrase_start)));
+            *pch = ch;
+            keyphrases_set.insert(string(stopwords_keyphrase_start, (stopwords_keyphrase_end - stopwords_keyphrase_start)));
+          }
+          else { 
+            keyphrases_set.insert(string(stopwords_keyphrase_start, (stopwords_keyphrase_end - stopwords_keyphrase_start)));
+          }
+        } else {
+          if (stopwords_keyphrase_start > stopwords_keyphrase_end)
+            cout << "ERROR: keyphrase markers are wrong\n";
+        }
+        stopwords_keyphrase_start = NULL;
+        stopwords_keyphrase_end = NULL;
+      }
+
       // write entities
       if (NULL != stopwords_entity_start && NULL != stopwords_entity_end) {
         if (stopwords_entity_start < stopwords_entity_end) {
+          if ('#' == *stopwords_entity_start)
+            stopwords_entity_start++;
 #ifdef DEBUG
           cout << endl << string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) << " :entity by stopword";
 #endif
@@ -783,8 +821,11 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
         stopwords_entity_end = NULL;
       }
 
+      //  note, keyphrase code above refers to start of caps_entity_start; any change here, will also affect that
       if (NULL != caps_entity_start && NULL != caps_entity_end) {
         if (caps_entity_start < caps_entity_end) {
+          if ('#' == *caps_entity_start)
+            caps_entity_start++;
 #ifdef DEBUG
           cout << endl << string(caps_entity_start, (caps_entity_end - caps_entity_start)) << " :entity by caps";
 #endif
@@ -993,10 +1034,6 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   std::set<std::string>::iterator iter;
   if ((num_normal_words == 0) && (num_dict_words != 0 || num_words > 5))
     keywords_set.clear();
-
-  //for (iter = keyphrases_set.begin(); iter != keyphrases_set.end(); iter++) {
-    //keywords_set.insert(*iter);
-  //}
 
   return 0;
 }

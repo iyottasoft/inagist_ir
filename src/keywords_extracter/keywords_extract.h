@@ -37,6 +37,7 @@ class KeywordsExtract {
            const char *output_file=NULL);
   int DeInit();
   int GetKeywords(); // not implemented yet, to be used for testing
+  int GetKeywords(char* str, std::set<std::string> &keywords_set, std::set<std::string> &keyphrases_set);
   int GetKeywords(char* str, std::set<std::string> &keywords_set);
   void printKeywords(); // not implemented yet, to be used for testing
   void PrintKeywords(std::set<std::string> &keywords_set);
