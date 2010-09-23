@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
   
   //SubmitTweet(/*"tantricninja",*/ "Contigous Caps will be counted. So will be contiguous nonstopwords", keywords, keyphrases);
   SubmitTweet(/*"tantricninja",*/ argv[1], keywords, keyphrases);
-  std::cout << keywords << std::endl << keyphrases << std::endl;
+  std::cout << "keywords: " << std::endl << keywords << std::endl << "  keyphrases: " << std::endl << keyphrases << std::endl;
 
   return 0;
 }
