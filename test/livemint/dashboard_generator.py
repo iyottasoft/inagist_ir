@@ -74,13 +74,13 @@ def generate_result_bag(outfile):
   final_result_bag.sort()
   length = len(final_result_bag)
   if (length > 0):
-    f = open(outfile + '.json', 'w')
-    f.write('{ "trends": {')
-    f.write(' "trend0": {"%s":%.4f}' % (final_result_bag[0][1], final_result_bag[0][0]))
-    for i in range(1, length):
-      f.write(', "trend%d": {"%s":%.4f}' % (i, final_result_bag[i][1], final_result_bag[i][0]))
-    f.write('} }')
-    f.close()
+    #f = open(outfile + '.json', 'w')
+    #f.write('{ "trends": {')
+    #f.write(' "trend0": {"%s":%.4f}' % (final_result_bag[0][1], final_result_bag[0][0]))
+    #for i in range(1, length):
+    #  f.write(', "trend%d": {"%s":%.4f}' % (i, final_result_bag[i][1], final_result_bag[i][0]))
+    #f.write('} }')
+    #f.close()
 
     for i in range(0, length):
       pf.write('<a href="http://inagist.com/trends/%s">' % (lower(final_result_bag[i][1].replace(' ', '_'))))
@@ -134,13 +134,14 @@ def main():
     filename = kfile.split('keywords_')
     get_keyword_freqs(kfile, current_hash_freqs)
     num_words = len(current_hash_freqs)
-    outfile = path + 'trends.' + filename[1]
+    outfile = path + 'trends_' + filename[1]
     calculate_tf_idf(current_hash_freqs, float(num_words), outfile)
-    if (count == 1 or count > 3):
-      pf.write('<td width="25%" valign="top">\n')
+    if (count == 1 or count > 2):
+      pf.write('<td width="20%" valign="top">\n')
     pf.write('<hr/>\n<h3> trends: %s </h3>\n' % (filename[1]))
+    pf.write('see <a href="%s">tweets</a><br/><br/>' % (path + 'tweets_' + filename[1]))
     generate_result_bag(outfile)
-    if (count > 2):
+    if (count > 1):
       pf.write('</td>')
     #print "current_hash: %d" % len(current_hash_freqs)
     current_hash_freqs.clear()

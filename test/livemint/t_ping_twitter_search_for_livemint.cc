@@ -44,6 +44,9 @@ int main(int argc, char *argv[]) {
   url = std::string("http://search.twitter.com/search.json?q=from:agarwalji+OR+from:livemintuid+OR+from:hootsuite+OR+from:sonyshetty+OR+from:mint_ed+OR+from:_shika+OR+from:pogue+OR+from:mint_lounge+OR+from:sriana+OR+from:medianama+OR+from:yogeshpatel+OR+from:omniprasan+OR+from:davosfeed+OR+from:priyaramani+OR+from:cnbctv18news+OR+from:sidin+OR+from:twitter+OR+from:guykawasaki+OR+from:timoreilly+OR+from:quixotic+OR+from:kamla");
   ret_value = curl_request_maker.GetTweets(url.c_str());
 
+  keywords_set.clear();
+  keyphrases_set.clear();
+  km.Clear();
   if (ret_value) {
     curl_request_maker.GetLastWebResponse(reply_message);
     // the response is in json format
@@ -72,7 +75,7 @@ int main(int argc, char *argv[]) {
           ofs << buffer << std::endl;
           ke.GetKeywords(buffer, keywords_set, keyphrases_set);
           km.PopulateFreqMap(keywords_set);
-          km.PopulateFreqMap(keyphrases_set);
+          //km.PopulateFreqMap(keyphrases_set);
           keywords_set.clear();
           keyphrases_set.clear();
           memset(buffer, 0, 1024);
@@ -92,9 +95,12 @@ int main(int argc, char *argv[]) {
   }
 
   // tweets by livemint
-  url = std::string("http://search.twitter.com/search.json?q=from:livemint");
+  url = std::string("http://search.twitter.com/search.json?q=from:livemint&rpp=100");
   ret_value = curl_request_maker.GetTweets(url.c_str());
 
+  keywords_set.clear();
+  keyphrases_set.clear();
+  km.Clear();
   if (ret_value) {
     curl_request_maker.GetLastWebResponse(reply_message);
     // the response is in json format
@@ -123,7 +129,7 @@ int main(int argc, char *argv[]) {
           ofs << buffer << std::endl;
           ke.GetKeywords(buffer, keywords_set, keyphrases_set);
           km.PopulateFreqMap(keywords_set);
-          km.PopulateFreqMap(keyphrases_set);
+          //km.PopulateFreqMap(keyphrases_set);
           keywords_set.clear();
           keyphrases_set.clear();
           memset(buffer, 0, 1024);
@@ -144,6 +150,9 @@ int main(int argc, char *argv[]) {
   url = std::string("http://search.twitter.com/search.json?q=\%40livemint");
   ret_value = curl_request_maker.GetTweets(url.c_str());
 
+  keywords_set.clear();
+  keyphrases_set.clear();
+  km.Clear();
   if (ret_value) {
     curl_request_maker.GetLastWebResponse(reply_message);
     // the response is in json format
@@ -173,7 +182,7 @@ int main(int argc, char *argv[]) {
           ofs << buffer << std::endl;
           ke.GetKeywords(buffer, keywords_set, keyphrases_set);
           km.PopulateFreqMap(keywords_set);
-          km.PopulateFreqMap(keyphrases_set);
+          //km.PopulateFreqMap(keyphrases_set);
           keywords_set.clear();
           keyphrases_set.clear();
           memset(buffer, 0, 1024);
@@ -198,9 +207,12 @@ int main(int argc, char *argv[]) {
   ofs.open(file_name.c_str());
   std::set<std::string>::iterator commenter_iter;
   for (commenter_iter = commenters.begin(); commenter_iter != commenters.end(); commenter_iter++) {
-    url = std::string("http://search.twitter.com/search.json?q=from\%3A" + *commenter_iter);
+    url = std::string("http://search.twitter.com/search.json?q=from\%3A" + *commenter_iter + "+-\%40livemint");
     ret_value = curl_request_maker.GetTweets(url.c_str());
 
+  keywords_set.clear();
+  keyphrases_set.clear();
+  km.Clear();
   if (ret_value) {
     curl_request_maker.GetLastWebResponse(reply_message);
     // the response is in json format
@@ -243,10 +255,14 @@ int main(int argc, char *argv[]) {
 
   // tweets that refer to livemint
   std::set<std::string> referers;
+  std::string referer;
 
-  url = std::string("http://search.twitter.com/search.json?q=livemint+-from:livemint+-to:livemint+-%40livemint");
+  url = std::string("http://search.twitter.com/search.json?q=livemint+-from\%3Alivemint+-to\%3Alivemint+-\%40livemint");
   ret_value = curl_request_maker.GetTweets(url.c_str());
 
+  keywords_set.clear();
+  keyphrases_set.clear();
+  km.Clear();
   if (ret_value) {
     curl_request_maker.GetLastWebResponse(reply_message);
     // the response is in json format
@@ -261,8 +277,6 @@ int main(int argc, char *argv[]) {
       file_name = root_dir + "/tweets_refer_live_mint.txt";
       ofs.open(file_name.c_str());
       for (unsigned int i=0; i < tweet_array.size(); i++) {
-        // don't know if array element shud again be treated as json value
-        // but, what the heck. lets put it as value and then get the object
         JSONValue *tweet_value = tweet_array[i];
         if (false == tweet_value->IsObject())
           std::cout << "ERROR: tweet_value is not an object" << std::endl;
@@ -270,20 +284,21 @@ int main(int argc, char *argv[]) {
 
         // now lets work on the json object thus obtained
         if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
-          //std::cout << tweet_object["text"]->AsString().c_str() << std::endl;
-          //std::cout.flush();
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
           ke.GetKeywords(buffer, keywords_set, keyphrases_set);
           ofs << buffer << std::endl;
           km.PopulateFreqMap(keywords_set);
-          km.PopulateFreqMap(keyphrases_set);
+          //km.PopulateFreqMap(keyphrases_set);
           keywords_set.clear();
           keyphrases_set.clear();
           memset(buffer, 0, 1024);
           ++num_docs;
         }
         if (tweet_object.find("from_user") != tweet_object.end() && tweet_object["from_user"]->IsString()) {
-          referers.insert(tweet_object["from_user"]->AsString());
+          referer = tweet_object["from_user"]->AsString();
+          commenter_iter = commenters.find(referer);
+          if (commenter_iter == commenters.end())
+            referers.insert(referer);
         }
       }
       ofs.close();
@@ -301,8 +316,11 @@ int main(int argc, char *argv[]) {
   file_name = root_dir + "/tweets_from_referers.txt";
   ofs.open(file_name.c_str());
   std::set<std::string>::iterator referer_iter;
+  keywords_set.clear();
+  keyphrases_set.clear();
+  km.Clear();
   for (referer_iter = referers.begin(); referer_iter != referers.end(); referer_iter++) {
-    url = std::string("http://search.twitter.com/search.json?q=from\%3A" + *referer_iter);
+    url = std::string("http://search.twitter.com/search.json?q=from\%3A" + *referer_iter + "+-livemint+-from\%3Alivemint+-to\%3Alivemint+-\%40livemint");
     ret_value = curl_request_maker.GetTweets(url.c_str());
 
   if (ret_value) {

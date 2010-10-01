@@ -34,6 +34,7 @@ class KeywordsManager {
   ~KeywordsManager();
   int Init(const char *keywords_repo_directory);
   int DeInit();
+  int Clear();
 
   int PopulateFreqMap(std::set<std::string> &keywords_set);
   void PrintFreqMap();

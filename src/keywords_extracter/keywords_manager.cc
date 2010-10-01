@@ -10,16 +10,22 @@ KeywordsManager::KeywordsManager() {
 KeywordsManager::~KeywordsManager() {
   if (DeInit() < 0)
     std::cout << "ERROR: couldn't deinitialize KeywordsManager\n";
-  m_entity_freq_map.clear();
-  m_entity_idf_map.clear();
 };
 
+int KeywordsManager::Clear() {
+  m_entity_freq_map.clear();
+  m_entity_idf_map.clear();
+  return 0;
+}
+
 int KeywordsManager::Init(const char *keywords_repo_directory) {
+  Clear();
   // load the idf buckets
   return 0;
 }
 
 int KeywordsManager::DeInit() {
+  Clear();
   // dump the idf buckets back to files
   return 0;
 }
