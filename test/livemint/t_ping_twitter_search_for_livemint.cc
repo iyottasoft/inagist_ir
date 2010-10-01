@@ -37,6 +37,7 @@ int main(int argc, char *argv[]) {
   std::set<std::string>::iterator iter;
   std::ofstream ofs;
   std::string file_name;
+  unsigned int num_docs = 0;
 
   //tweets followed by livemint
 
@@ -50,7 +51,7 @@ int main(int argc, char *argv[]) {
     if (!json_value) {
       std::cout << "ERROR: JSON::Parse failed\n";
     } else {
-      unsigned int num_docs = 0;
+      num_docs = 0;
       JSONObject tweet_o = json_value->AsObject();
       JSONArray tweet_array = tweet_o["results"]->AsArray();
       file_name = root_dir + "/tweets_for_live_mint.txt";
@@ -101,7 +102,7 @@ int main(int argc, char *argv[]) {
     if (!json_value) {
       std::cout << "ERROR: JSON::Parse failed\n";
     } else {
-      unsigned int num_docs = 0;
+      num_docs = 0;
       JSONObject tweet_o = json_value->AsObject();
       JSONArray tweet_array = tweet_o["results"]->AsArray();
       file_name = root_dir + "/tweets_by_live_mint.txt";
@@ -150,7 +151,7 @@ int main(int argc, char *argv[]) {
     if (!json_value) {
       std::cout << "ERROR: JSON::Parse failed\n";
     } else {
-      unsigned int num_docs = 0;
+      num_docs = 0;
       JSONObject tweet_o = json_value->AsObject();
       JSONArray tweet_array = tweet_o["results"]->AsArray();
 
@@ -193,7 +194,6 @@ int main(int argc, char *argv[]) {
 
   // tweets by people who respond to livemint tweeters
 
-  unsigned int num_docs = 0;
   file_name = root_dir + "/tweets_from_commenters.txt";
   ofs.open(file_name.c_str());
   std::set<std::string>::iterator commenter_iter;
@@ -254,7 +254,7 @@ int main(int argc, char *argv[]) {
     if (!json_value) {
       std::cout << "ERROR: JSON::Parse failed\n";
     } else {
-      unsigned int num_docs = 0;
+      num_docs = 0;
       JSONObject tweet_o = json_value->AsObject();
       JSONArray tweet_array = tweet_o["results"]->AsArray();
 
@@ -297,6 +297,7 @@ int main(int argc, char *argv[]) {
 
   // tweets by people who respond to livemint tweeters
 
+  num_docs = 0;
   file_name = root_dir + "/tweets_from_referers.txt";
   ofs.open(file_name.c_str());
   std::set<std::string>::iterator referer_iter;
@@ -311,7 +312,6 @@ int main(int argc, char *argv[]) {
     if (!json_value) {
       std::cout << "ERROR: JSON::Parse failed\n";
     } else {
-      unsigned int num_docs = 0;
       JSONObject tweet_o = json_value->AsObject();
       JSONArray tweet_array = tweet_o["results"]->AsArray();
 

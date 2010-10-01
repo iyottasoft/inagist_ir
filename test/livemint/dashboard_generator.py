@@ -12,6 +12,8 @@ def get_keyword_freqs(kwfile, hash_freqs):
   for line in lines:
     line = line.strip()
     pair = line.split(" = ")
+    if (len(pair) != 2):
+      break
     word = pair[0]
     freqs = pair[1].split(",")
     if hash_freqs.has_key(word):
