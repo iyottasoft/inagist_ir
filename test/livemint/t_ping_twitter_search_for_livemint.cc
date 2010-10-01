@@ -145,9 +145,9 @@ int main(int argc, char *argv[]) {
 
   file_name = root_dir + "/keywords_from_commenters.txt";
   ofs.open(file_name.c_str());
-  for (iter = commenters.begin(); iter != commenters.end(); iter++) {
-        std::cout << *iter << std::endl;
-    url = std::string("http://search.twitter.com/search.json?q=from\%3A" + *iter);
+  std::set<std::string>::iterator commenter_iter;
+  for (commenter_iter = commenters.begin(); commenter_iter != commenters.end(); commenter_iter++) {
+    url = std::string("http://search.twitter.com/search.json?q=from\%3A" + *commenter_iter);
     ret_value = curl_request_maker.GetTweets(url.c_str());
 
   if (ret_value) {
@@ -172,7 +172,6 @@ int main(int argc, char *argv[]) {
         // now lets work on the json object thus obtained
         if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
           //std::cout << tweet_object["text"]->AsString().c_str() << std::endl;
-          //std::cout.flush();
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
           ke.GetKeywords(buffer, keywords_set, keyphrases_set);
           for (iter=keywords_set.begin(); iter != keywords_set.end(); iter++)
@@ -250,12 +249,13 @@ int main(int argc, char *argv[]) {
 
   file_name = root_dir + "/keywords_from_referers.txt";
   ofs.open(file_name.c_str());
-  for (iter = referers.begin(); iter != referers.end(); iter++) {
-        std::cout << *iter << std::endl;
-    url = std::string("http://search.twitter.com/search.json?q=from\%3A" + *iter);
+  std::set<std::string>::iterator referer_iter;
+  for (referer_iter = referers.begin(); referer_iter != referers.end(); referer_iter++) {
+    url = std::string("http://search.twitter.com/search.json?q=from\%3A" + *referer_iter);
     ret_value = curl_request_maker.GetTweets(url.c_str());
 
   if (ret_value) {
+    std::cout << ret_value << std::endl;
     curl_request_maker.GetLastWebResponse(reply_message);
     // the response is in json format
     JSONValue *json_value = JSON::Parse(reply_message.c_str());
