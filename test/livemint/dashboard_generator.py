@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.6
 
 import sys
+from string import lower
 import os, glob
 from math import log
 from time import gmtime
@@ -80,10 +81,10 @@ def generate_result_bag(outfile):
     f.close()
 
     for i in range(0, length):
-      pf.write('<li>')
+      pf.write('<a href="http://inagist.com/trends/%s">' % (lower(final_result_bag[i][1].replace(' ', '_'))))
       #pf.write('%s : %.4f' % (final_result_bag[i][1], final_result_bag[i][0]))
       pf.write('%s' % (final_result_bag[i][1]))
-      pf.write('</li>\n')
+      pf.write('</a><br/>')
 
 def print_freqs(hash_freqs):
   for (k,v) in hash_freqs.items():
