@@ -1,4 +1,4 @@
-SUBDIRS = nif 
+SUBDIRS = nif utf8 livemint 
 
 subdirs:
 	@ for dir in $(SUBDIRS); do \
