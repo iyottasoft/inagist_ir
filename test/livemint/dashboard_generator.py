@@ -98,7 +98,7 @@ def print_freqs(hash_freqs):
     print freqs[i][0], " ", freqs[i][1]
 
 g_hash_archive_freqs = {}
-pf = open(sys.argv[1] + 'live.html', 'w')
+pf = open(sys.argv[1] + '/../dashboard.html', 'w')
 count = 0
 def main():
   global count
