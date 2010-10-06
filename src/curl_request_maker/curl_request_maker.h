@@ -1,9 +1,11 @@
 #ifndef _INAGIST_API_CURL_REQUEST_MAKER_H_
 #define _INAGIST_API_CURL_REQUEST_MAKER_H_
 
+#ifndef DISALLOW_COPY_AND_ASSIGN
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
     TypeName(const TypeName&);    \
     void operator=(const TypeName)
+#endif
 
 #include <curl/curl.h>
 #include <cstring>

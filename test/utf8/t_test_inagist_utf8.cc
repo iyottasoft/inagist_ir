@@ -6,7 +6,7 @@
 #include "JSON.h"
 #include "utf8.h"
 
-#define MAX_BUFFER_LEN 1024
+#define MAX_BUFFER_LEN 561
 
 int main(int argc, char *argv[]) { 
   char buffer[MAX_BUFFER_LEN];
@@ -48,22 +48,26 @@ int main(int argc, char *argv[]) {
 
         // now lets work on the json object thus obtained
         if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
+          memset(buffer, 0, MAX_BUFFER_LEN);
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
-          std::cout << "Output: " << buffer << std::endl;
+          std::cout << "t_test_inagist_utf8: " << buffer << std::endl;
           int length = strlen(buffer);
+          std::cout << "length: " << length << std::endl;
           int cp = 0;
           char* ptr = buffer;
           char* ptr1 = NULL;
+          buffer[length] = '\0';
           while (ptr && *ptr != '\0') {
             ptr1 = ptr;
-            cp = utf8::next(ptr, buffer + length);
-            if (cp < 0x7F) {
-              std::cout << *ptr1;
-            } else {
-              std::cout << cp;
+            try {
+              cp = utf8::next(ptr, buffer + length);
+              if (cp > 0x7F) {
+              }
+            } catch (...) {
+              std::cout << "some utfcpp exception" << std::endl;
+              ptr++;
             }
           }
-          memset(buffer, 0, 1024);
           ++num_docs;
         }
         std::cout << std::endl;

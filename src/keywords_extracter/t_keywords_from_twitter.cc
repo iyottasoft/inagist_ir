@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
 
   std::string temp_str;
   std::string reply_message;
+  std::string script;
   if (twitterObj.timelinePublicGet()) {
   //if (twitterObj.timelineFriendsGet()) {
     twitterObj.getLastWebResponse(reply_message);
@@ -44,7 +45,8 @@ int main(int argc, char *argv[]) {
       std::cout << temp_str << std::endl;
       memset(buffer, 0, 1024);
       strcpy(buffer, temp_str.c_str());
-      ke.GetKeywords(buffer, keywords_set);
+      ke.GetKeywords(buffer, script, keywords_set);
+      std::cout << script << std::endl;
       ke.PrintKeywords(keywords_set);
       km.PopulateFreqMap(keywords_set);
       keywords_set.clear();

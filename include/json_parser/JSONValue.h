@@ -35,45 +35,45 @@ enum JSONType { JSONType_Null, JSONType_String, JSONType_Bool, JSONType_Number, 
 
 class JSONValue
 {
-	friend class JSON;
-	
-	public:
-		JSONValue(/*NULL*/);
-		JSONValue(const char *m_char_value);
-		JSONValue(std::string m_string_value);
-		JSONValue(bool m_bool_value);
-		JSONValue(double m_number_value);
-		JSONValue(JSONArray m_array_value);
-		JSONValue(JSONObject m_object_value);
-		~JSONValue();
-		
-		bool IsNull();
-		bool IsString();
-		bool IsBool();
-		bool IsNumber();
-		bool IsArray();
-		bool IsObject();
-		
-		std::string AsString();
-		bool AsBool();
-		double AsNumber();
-		JSONArray AsArray();
-		JSONObject AsObject();
-		
-		std::string Stringify();
-		
-	protected:
-		static JSONValue *Parse(const char **data);
-	
-	private:
-		static std::string StringifyString(std::string str);
-	
-		JSONType type;
-		std::string string_value;
-		bool bool_value;
-		double number_value;
-		JSONArray array_value;
-		JSONObject object_value;
+  friend class JSON;
+  
+  public:
+    JSONValue(/*NULL*/);
+    JSONValue(const char *m_char_value);
+    JSONValue(std::string m_string_value);
+    JSONValue(bool m_bool_value);
+    JSONValue(double m_number_value);
+    JSONValue(JSONArray m_array_value);
+    JSONValue(JSONObject m_object_value);
+    ~JSONValue();
+    
+    bool IsNull();
+    bool IsString();
+    bool IsBool();
+    bool IsNumber();
+    bool IsArray();
+    bool IsObject();
+    
+    std::string AsString();
+    bool AsBool();
+    double AsNumber();
+    JSONArray AsArray();
+    JSONObject AsObject();
+    
+    std::string Stringify();
+    
+  protected:
+    static JSONValue *Parse(const char **data);
+  
+  private:
+    static std::string StringifyString(std::string str);
+  
+    JSONType type;
+    std::string string_value;
+    bool bool_value;
+    double number_value;
+    JSONArray array_value;
+    JSONObject object_value;
 };
 
 #endif

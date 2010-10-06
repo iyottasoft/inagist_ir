@@ -37,11 +37,13 @@ class KeywordsExtract {
            const char *output_file=NULL);
   int DeInit();
   int GetKeywords(); // not implemented yet, to be used for testing
-  int GetKeywords(char* str, std::set<std::string> &keywords_set, std::set<std::string> &keyphrases_set);
+  int GetKeywords(char* str, std::string &script, std::set<std::string> &keywords_set, std::set<std::string> &keyphrases_set);
+  int GetKeywords(char* str, std::string &script, std::set<std::string> &keywords_set);
   int GetKeywords(char* str, std::set<std::string> &keywords_set);
   void printKeywords(); // not implemented yet, to be used for testing
   void PrintKeywords(std::set<std::string> &keywords_set);
   int DictionaryLookup(char *word);
+  int DetectScript(int code_point, std::string &script);
 
  private:
   std::ifstream m_tweet_stream;

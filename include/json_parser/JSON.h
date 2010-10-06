@@ -26,9 +26,9 @@
 
 // Win32 incompatibilities
 #ifdef WIN32
-	#define wcsncasecmp _wcsnicmp 
-	static inline bool isnan(double x) { return x != x; }
-	static inline bool isinf(double x) { return !isnan(x) && isnan(x - x); }
+  #define wcsncasecmp _wcsnicmp 
+  static inline bool isnan(double x) { return x != x; }
+  static inline bool isinf(double x) { return !isnan(x) && isnan(x - x); }
 #endif
 
 #include <vector>
@@ -44,18 +44,18 @@ typedef std::map<std::string, JSONValue*> JSONObject;
 
 class JSON
 {
-	friend class JSONValue;
-	
-	public:
-		//static JSONValue* Parse(const char *data);
-		static JSONValue* Parse(const char *data);
-		static std::string Stringify(JSONValue *value);
-	protected:
-		static bool SkipWhitespace(const char **data);
-		static bool ExtractString(const char **data, std::string &str);
-		static int ParseInt(const char **data);
-	private:
-		JSON();
+  friend class JSONValue;
+  
+  public:
+    //static JSONValue* Parse(const char *data);
+    static JSONValue* Parse(const char *data);
+    static std::string Stringify(JSONValue *value);
+  protected:
+    static bool SkipWhitespace(const char **data);
+    static bool ExtractString(const char **data, std::string &str);
+    static int ParseInt(const char **data);
+  private:
+    JSON();
 };
 
 #endif

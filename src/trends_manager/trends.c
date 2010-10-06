@@ -7,6 +7,7 @@
 #include "trends_manager.h"
 
 #define NUM_KEYWORDS 100
+#define MAX_BUFFER_LEN 560
 
 static int my_enif_get_string(ErlNifEnv *env, ERL_NIF_TERM list, char *buf) {
   ERL_NIF_TERM cell, head, tail;
@@ -46,6 +47,7 @@ ERL_NIF_TERM nif_test(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary tweet;
   //ErlNifBinary user;
+  ErlNifBinary script_bin;
   ErlNifBinary keyword;
   ErlNifBinary keyphrase;
   char tweet_str[1024];
@@ -63,20 +65,35 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     return enif_make_atom(env, "error");
   }
 
+  char script[4];
+  memset(script, 0, 4);
   char keywords[1024];
   memset(keywords, 0, 1024);
   char keyphrases[1024];
   memset(keyphrases, 0, 1024);
-  if (SubmitTweet(/*(const char *) user_name_str,*/ (const char *) tweet_str, (char *) keywords, (char *) keyphrases) < 0) {
+  if (SubmitTweet(/*(const char *) user_name_str,*/ (const char *) tweet_str, (char *) script, (char *) keywords, (char *) keyphrases) < 0) {
     return enif_make_atom(env, "error");
+  }
+
+  unsigned int len = 0;
+  unsigned int i = 0;
+  int ret_val = 0;
+ 
+  ERL_NIF_TERM lang; 
+  len = strlen(script);
+  if (len == 2 || len == 3) {
+    ret_val = enif_alloc_binary(env, len, &script_bin);
+    if (ret_val < 0)
+      return enif_make_atom(env, "error");
+    for (i=0; i<len; i++) {
+      script_bin.data[i] = *(script + i);
+    }
+    lang = enif_make_binary(env, &script_bin);
   }
 
   ERL_NIF_TERM keywords_list = enif_make_list(env, 0);
   char *start = keywords;
   char *end = strstr(start, "|");
-  unsigned int len = 0;
-  unsigned int i = 0;
-  int ret_val = 0;
 
   while (start && end && *end != '\0') {
     end = strstr(start, "|");
@@ -121,7 +138,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     start = end + 1;
   }
 
-  return enif_make_tuple2(env, keywords_list, keyphrases_list);
+  return enif_make_tuple3(env, lang, keywords_list, keyphrases_list);
 }
 
 ERL_NIF_TERM nif_gettrends(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {

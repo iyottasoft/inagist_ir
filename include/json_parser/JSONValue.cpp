@@ -47,256 +47,256 @@
  */
 JSONValue *JSONValue::Parse(const char **data)
 {
-	// Is it a string?
-	if (**data == '"')
-	{
-		std::string str;
-		if (!JSON::ExtractString(&(++(*data)), str))
-			return NULL;
-		else
-			return new JSONValue(str);
-	}
-	
-	// Is it a boolean?
-	else if ((strlen(*data) >= 4 && strncasecmp(*data, "true", 4) == 0) || (strlen(*data) >= 5 && strncasecmp(*data, "false", 5) == 0))
-	{
-		bool value = strncasecmp(*data, "true", 4) == 0;
-		(*data) += value ? 4 : 5;
-		return new JSONValue(value);
-	}
-	
-	// Is it a null?
-	else if (strlen(*data) >= 4 && strncasecmp(*data, "null", 4) == 0)
-	{
-		(*data) += 4;
-		return new JSONValue();
-	}
-	
-	// Is it a number?
-	else if (**data == '-' || (**data >= '0' && **data <= '9'))
-	{
-		// Negative?
-		bool neg = **data == '-';
-		if (neg) (*data)++;
+  // Is it a string?
+  if (**data == '"')
+  {
+    std::string str;
+    if (!JSON::ExtractString(&(++(*data)), str))
+      return NULL;
+    else
+      return new JSONValue(str);
+  }
+  
+  // Is it a boolean?
+  else if ((strlen(*data) >= 4 && strncasecmp(*data, "true", 4) == 0) || (strlen(*data) >= 5 && strncasecmp(*data, "false", 5) == 0))
+  {
+    bool value = strncasecmp(*data, "true", 4) == 0;
+    (*data) += value ? 4 : 5;
+    return new JSONValue(value);
+  }
+  
+  // Is it a null?
+  else if (strlen(*data) >= 4 && strncasecmp(*data, "null", 4) == 0)
+  {
+    (*data) += 4;
+    return new JSONValue();
+  }
+  
+  // Is it a number?
+  else if (**data == '-' || (**data >= '0' && **data <= '9'))
+  {
+    // Negative?
+    bool neg = **data == '-';
+    if (neg) (*data)++;
 
-		double number = 0.0;
+    double number = 0.0;
 
-		// Parse the whole part of the number - only if it wasn't 0
-		if (**data == '0')
-			(*data)++;
-		else if (**data >= '1' && **data <= '9')
-			number = (double)JSON::ParseInt(data);
-		else
-			return NULL;
-		
-		// Could be a decimal now...
-		if (**data == '.')
-		{
-			(*data)++;
+    // Parse the whole part of the number - only if it wasn't 0
+    if (**data == '0')
+      (*data)++;
+    else if (**data >= '1' && **data <= '9')
+      number = (double)JSON::ParseInt(data);
+    else
+      return NULL;
+    
+    // Could be a decimal now...
+    if (**data == '.')
+    {
+      (*data)++;
 
-			// Not get any digits?
-			if (!(**data >= '0' && **data <= '9'))
-				return NULL;
-			
-			// Find the decimal and sort the decimal place out
-			double decimal = (double)JSON::ParseInt(data);
-			while((int)decimal > 0) decimal /= 10.0f;
+      // Not get any digits?
+      if (!(**data >= '0' && **data <= '9'))
+        return NULL;
+      
+      // Find the decimal and sort the decimal place out
+      double decimal = (double)JSON::ParseInt(data);
+      while((int)decimal > 0) decimal /= 10.0f;
 
-			// Save the number
-			number += decimal;
-		}
+      // Save the number
+      number += decimal;
+    }
 
-		// Could be an exponent now...
-		if (**data == 'E' || **data == 'e')
-		{
-			(*data)++;
+    // Could be an exponent now...
+    if (**data == 'E' || **data == 'e')
+    {
+      (*data)++;
 
-			// Check signage of expo
-			bool neg_expo = false;
-			if (**data == '-' || **data == '+')
-			{
-				neg_expo = **data == '-';
-				(*data)++;
-			}
-			
-			// Not get any digits?
-			if (!(**data >= '0' && **data <= '9'))
-				return NULL;
+      // Check signage of expo
+      bool neg_expo = false;
+      if (**data == '-' || **data == '+')
+      {
+        neg_expo = **data == '-';
+        (*data)++;
+      }
+      
+      // Not get any digits?
+      if (!(**data >= '0' && **data <= '9'))
+        return NULL;
 
-			// Sort the expo out
-			int expo = JSON::ParseInt(data);
-			for (int i = 0; i < expo; i++)
-				number = neg_expo ? (number / 10.0) : (number * 10);
-		}
+      // Sort the expo out
+      int expo = JSON::ParseInt(data);
+      for (int i = 0; i < expo; i++)
+        number = neg_expo ? (number / 10.0) : (number * 10);
+    }
 
-		// Was it neg?
-		if (neg) number *= -1;
+    // Was it neg?
+    if (neg) number *= -1;
 
-		return new JSONValue(number);
-	}
+    return new JSONValue(number);
+  }
 
-	// An object?
-	else if (**data == '{')
-	{
-		JSONObject object;
-		
-		(*data)++;
-	
-		while (**data != 0)
-		{
-			// Whitespace at the start?
-			if (!JSON::SkipWhitespace(data))
-			{
-				FREE_OBJECT(object);
-				return NULL;
-			}
-			
-			// Special case - empty object
-			if (object.size() == 0 && **data == '}')
-			{
-				(*data)++;
-				return new JSONValue(object);
-			}
-			
-			// We want a string now...
-			std::string name;
-			if (!JSON::ExtractString(&(++(*data)), name))
-			{
-				FREE_OBJECT(object);
-				return NULL;
-			}
-			
-			// More whitespace?
-			if (!JSON::SkipWhitespace(data))
-			{
-				FREE_OBJECT(object);
-				return NULL;
-			}
-			
-			// Need a : now
-			if (*((*data)++) != ':')
-			{
-				FREE_OBJECT(object);
-				return NULL;
-			}
-			
-			// More whitespace?
-			if (!JSON::SkipWhitespace(data))
-			{
-				FREE_OBJECT(object);
-				return NULL;
-			}
-			
-			// The value is here			
-			JSONValue *value = Parse(data);
-			if (value == NULL)
-			{
-				FREE_OBJECT(object);
-				return NULL;
-			}
-			
-			// Add the name:value
-			if (object.find(name) != object.end())
-				delete object[name];
-			object[name] = value;
-			
-			// More whitespace?
-			if (!JSON::SkipWhitespace(data))
-			{
-				FREE_OBJECT(object);
-				return NULL;
-			}
-			
-			// End of object?
-			if (**data == '}')
-			{
-				(*data)++;
-				return new JSONValue(object);
-			}
-			
-			// Want a , now
-			if (**data != ',')
-			{
-				FREE_OBJECT(object);
-				return NULL;
-			}
-			
-			(*data)++;
-		}
-		
-		// Only here if we ran out of data
-		FREE_OBJECT(object);
-		return NULL;
-	}
-	
-	// An array?
-	else if (**data == '[')
-	{
-		JSONArray array;
-		
-		(*data)++;
-		
-		while (**data != 0)
-		{
-			// Whitespace at the start?
-			if (!JSON::SkipWhitespace(data))
-			{
-				FREE_ARRAY(array);
-				return NULL;
-			}
-			
-			// Special case - empty array
-			if (array.size() == 0 && **data == ']')
-			{
-				(*data)++;
-				return new JSONValue(array);
-			}
-			
-			// Get the value
-			JSONValue *value = Parse(data);
-			if (value == NULL)
-			{
-				FREE_ARRAY(array);
-				return NULL;
-			}
-			
-			// Add the value
-			array.push_back(value);
-			
-			// More whitespace?
-			if (!JSON::SkipWhitespace(data))
-			{
-				FREE_ARRAY(array);
-				return NULL;
-			}
-			
-			// End of array?
-			if (**data == ']')
-			{
-				(*data)++;
-				return new JSONValue(array);
-			}
-			
-			// Want a , now
-			if (**data != ',')
-			{
-				FREE_ARRAY(array);
-				return NULL;
-			}
-			
-			(*data)++;
-		}
-		
-		// Only here if we ran out of data
-		FREE_ARRAY(array);
-		return NULL;
-	}
-	
-	// Ran out of possibilites, it's bad!
-	else
-	{
-		return NULL;
-	}
+  // An object?
+  else if (**data == '{')
+  {
+    JSONObject object;
+    
+    (*data)++;
+  
+    while (**data != 0)
+    {
+      // Whitespace at the start?
+      if (!JSON::SkipWhitespace(data))
+      {
+        FREE_OBJECT(object);
+        return NULL;
+      }
+      
+      // Special case - empty object
+      if (object.size() == 0 && **data == '}')
+      {
+        (*data)++;
+        return new JSONValue(object);
+      }
+      
+      // We want a string now...
+      std::string name;
+      if (!JSON::ExtractString(&(++(*data)), name))
+      {
+        FREE_OBJECT(object);
+        return NULL;
+      }
+      
+      // More whitespace?
+      if (!JSON::SkipWhitespace(data))
+      {
+        FREE_OBJECT(object);
+        return NULL;
+      }
+      
+      // Need a : now
+      if (*((*data)++) != ':')
+      {
+        FREE_OBJECT(object);
+        return NULL;
+      }
+      
+      // More whitespace?
+      if (!JSON::SkipWhitespace(data))
+      {
+        FREE_OBJECT(object);
+        return NULL;
+      }
+      
+      // The value is here      
+      JSONValue *value = Parse(data);
+      if (value == NULL)
+      {
+        FREE_OBJECT(object);
+        return NULL;
+      }
+      
+      // Add the name:value
+      if (object.find(name) != object.end())
+        delete object[name];
+      object[name] = value;
+      
+      // More whitespace?
+      if (!JSON::SkipWhitespace(data))
+      {
+        FREE_OBJECT(object);
+        return NULL;
+      }
+      
+      // End of object?
+      if (**data == '}')
+      {
+        (*data)++;
+        return new JSONValue(object);
+      }
+      
+      // Want a , now
+      if (**data != ',')
+      {
+        FREE_OBJECT(object);
+        return NULL;
+      }
+      
+      (*data)++;
+    }
+    
+    // Only here if we ran out of data
+    FREE_OBJECT(object);
+    return NULL;
+  }
+  
+  // An array?
+  else if (**data == '[')
+  {
+    JSONArray array;
+    
+    (*data)++;
+    
+    while (**data != 0)
+    {
+      // Whitespace at the start?
+      if (!JSON::SkipWhitespace(data))
+      {
+        FREE_ARRAY(array);
+        return NULL;
+      }
+      
+      // Special case - empty array
+      if (array.size() == 0 && **data == ']')
+      {
+        (*data)++;
+        return new JSONValue(array);
+      }
+      
+      // Get the value
+      JSONValue *value = Parse(data);
+      if (value == NULL)
+      {
+        FREE_ARRAY(array);
+        return NULL;
+      }
+      
+      // Add the value
+      array.push_back(value);
+      
+      // More whitespace?
+      if (!JSON::SkipWhitespace(data))
+      {
+        FREE_ARRAY(array);
+        return NULL;
+      }
+      
+      // End of array?
+      if (**data == ']')
+      {
+        (*data)++;
+        return new JSONValue(array);
+      }
+      
+      // Want a , now
+      if (**data != ',')
+      {
+        FREE_ARRAY(array);
+        return NULL;
+      }
+      
+      (*data)++;
+    }
+    
+    // Only here if we ran out of data
+    FREE_ARRAY(array);
+    return NULL;
+  }
+  
+  // Ran out of possibilites, it's bad!
+  else
+  {
+    return NULL;
+  }
 }
 
 /** 
@@ -306,7 +306,7 @@ JSONValue *JSONValue::Parse(const char **data)
  */
 JSONValue::JSONValue(/*NULL*/)
 {
-	type = JSONType_Null;
+  type = JSONType_Null;
 }
 
 /** 
@@ -318,8 +318,8 @@ JSONValue::JSONValue(/*NULL*/)
  */
 JSONValue::JSONValue(const char *m_char_value)
 {
-	type = JSONType_String;
-	string_value = std::string(m_char_value);
+  type = JSONType_String;
+  string_value = std::string(m_char_value);
 }
 
 /** 
@@ -331,8 +331,8 @@ JSONValue::JSONValue(const char *m_char_value)
  */
 JSONValue::JSONValue(std::string m_string_value)
 {
-	type = JSONType_String;
-	string_value = m_string_value;
+  type = JSONType_String;
+  string_value = m_string_value;
 }
 
 /** 
@@ -344,8 +344,8 @@ JSONValue::JSONValue(std::string m_string_value)
  */
 JSONValue::JSONValue(bool m_bool_value)
 {
-	type = JSONType_Bool;
-	bool_value = m_bool_value;
+  type = JSONType_Bool;
+  bool_value = m_bool_value;
 }
 
 /** 
@@ -357,8 +357,8 @@ JSONValue::JSONValue(bool m_bool_value)
  */
 JSONValue::JSONValue(double m_number_value)
 {
-	type = JSONType_Number;
-	number_value = m_number_value;
+  type = JSONType_Number;
+  number_value = m_number_value;
 }
 
 /** 
@@ -370,8 +370,8 @@ JSONValue::JSONValue(double m_number_value)
  */
 JSONValue::JSONValue(JSONArray m_array_value)
 {
-	type = JSONType_Array;
-	array_value = m_array_value;
+  type = JSONType_Array;
+  array_value = m_array_value;
 }
 
 /** 
@@ -383,8 +383,8 @@ JSONValue::JSONValue(JSONArray m_array_value)
  */
 JSONValue::JSONValue(JSONObject m_object_value)
 {
-	type = JSONType_Object;
-	object_value = m_object_value;
+  type = JSONType_Object;
+  object_value = m_object_value;
 }
 
 /** 
@@ -395,20 +395,20 @@ JSONValue::JSONValue(JSONObject m_object_value)
  */
 JSONValue::~JSONValue()
 {
-	if (type == JSONType_Array)
-	{
-		JSONArray::iterator iter;
-		for (iter = array_value.begin(); iter != array_value.end(); iter++)
-			delete *iter;
-	}
-	else if (type == JSONType_Object)
-	{
-		JSONObject::iterator iter;
-		for (iter = object_value.begin(); iter != object_value.end(); iter++)
-		{
-			delete (*iter).second;
-		}
-	}
+  if (type == JSONType_Array)
+  {
+    JSONArray::iterator iter;
+    for (iter = array_value.begin(); iter != array_value.end(); iter++)
+      delete *iter;
+  }
+  else if (type == JSONType_Object)
+  {
+    JSONObject::iterator iter;
+    for (iter = object_value.begin(); iter != object_value.end(); iter++)
+    {
+      delete (*iter).second;
+    }
+  }
 }
 
 /** 
@@ -420,7 +420,7 @@ JSONValue::~JSONValue()
  */
 bool JSONValue::IsNull()
 {
-	return type == JSONType_Null;
+  return type == JSONType_Null;
 }
 
 /** 
@@ -432,7 +432,7 @@ bool JSONValue::IsNull()
  */
 bool JSONValue::IsString()
 {
-	return type == JSONType_String;
+  return type == JSONType_String;
 }
 
 /** 
@@ -444,7 +444,7 @@ bool JSONValue::IsString()
  */
 bool JSONValue::IsBool()
 {
-	return type == JSONType_Bool;
+  return type == JSONType_Bool;
 }
 
 /** 
@@ -456,7 +456,7 @@ bool JSONValue::IsBool()
  */
 bool JSONValue::IsNumber()
 {
-	return type == JSONType_Number;
+  return type == JSONType_Number;
 }
 
 /** 
@@ -468,7 +468,7 @@ bool JSONValue::IsNumber()
  */
 bool JSONValue::IsArray()
 {
-	return type == JSONType_Array;
+  return type == JSONType_Array;
 }
 
 /** 
@@ -480,7 +480,7 @@ bool JSONValue::IsArray()
  */
 bool JSONValue::IsObject()
 {
-	return type == JSONType_Object;
+  return type == JSONType_Object;
 }
 
 /** 
@@ -493,7 +493,7 @@ bool JSONValue::IsObject()
  */
 std::string JSONValue::AsString()
 {
-	return string_value;
+  return string_value;
 }
 
 /** 
@@ -506,7 +506,7 @@ std::string JSONValue::AsString()
  */
 bool JSONValue::AsBool()
 {
-	return bool_value;
+  return bool_value;
 }
 
 /** 
@@ -519,7 +519,7 @@ bool JSONValue::AsBool()
  */
 double JSONValue::AsNumber()
 {
-	return number_value;
+  return number_value;
 }
 
 /** 
@@ -532,7 +532,7 @@ double JSONValue::AsNumber()
  */
 JSONArray JSONValue::AsArray()
 {
-	return array_value;
+  return array_value;
 }
 
 /** 
@@ -545,7 +545,7 @@ JSONArray JSONValue::AsArray()
  */
 JSONObject JSONValue::AsObject()
 {
-	return object_value;
+  return object_value;
 }
 
 /** 
@@ -557,71 +557,71 @@ JSONObject JSONValue::AsObject()
  */
 std::string JSONValue::Stringify()
 {
-	std::string ret_string;
-	
-	switch (type)
-	{
-		case JSONType_Null:
-			ret_string = "null";
-			break;
-		
-		case JSONType_String:
-			ret_string = StringifyString(string_value);
-			break;
-		
-		case JSONType_Bool:
-			ret_string = bool_value ? "true" : "false";
-			break;
-		
-		case JSONType_Number:
-		{
-			if (isinf(number_value) || isnan(number_value))
-				ret_string = "null";
-			else
-			{
-				std::stringstream ss;
-				ss << number_value;
-				ret_string = ss.str();
-			}
-			break;
-		}
-		
-		case JSONType_Array:
-		{
-			ret_string = "[";
-			JSONArray::iterator iter = array_value.begin();
-			while (iter != array_value.end())
-			{
-				ret_string += (*iter)->Stringify();
-				
-				// Not at the end - add a separator
-				if (++iter != array_value.end())
-					ret_string += ",";
-			}
-			ret_string += "]";
-			break;
-		}
-		
-		case JSONType_Object:
-		{
-			ret_string = "{";
-			JSONObject::iterator iter = object_value.begin();
-			while (iter != object_value.end())
-			{
-				ret_string += StringifyString((*iter).first);
-				ret_string += ":";
-				ret_string += (*iter).second->Stringify();
-				
-				// Not at the end - add a separator
-				if (++iter != object_value.end())
-					ret_string += ",";
-			}
-			ret_string += "}";
-			break;
-		}
-	}
+  std::string ret_string;
+  
+  switch (type)
+  {
+    case JSONType_Null:
+      ret_string = "null";
+      break;
+    
+    case JSONType_String:
+      ret_string = StringifyString(string_value);
+      break;
+    
+    case JSONType_Bool:
+      ret_string = bool_value ? "true" : "false";
+      break;
+    
+    case JSONType_Number:
+    {
+      if (isinf(number_value) || isnan(number_value))
+        ret_string = "null";
+      else
+      {
+        std::stringstream ss;
+        ss << number_value;
+        ret_string = ss.str();
+      }
+      break;
+    }
+    
+    case JSONType_Array:
+    {
+      ret_string = "[";
+      JSONArray::iterator iter = array_value.begin();
+      while (iter != array_value.end())
+      {
+        ret_string += (*iter)->Stringify();
+        
+        // Not at the end - add a separator
+        if (++iter != array_value.end())
+          ret_string += ",";
+      }
+      ret_string += "]";
+      break;
+    }
+    
+    case JSONType_Object:
+    {
+      ret_string = "{";
+      JSONObject::iterator iter = object_value.begin();
+      while (iter != object_value.end())
+      {
+        ret_string += StringifyString((*iter).first);
+        ret_string += ":";
+        ret_string += (*iter).second->Stringify();
+        
+        // Not at the end - add a separator
+        if (++iter != object_value.end())
+          ret_string += ",";
+      }
+      ret_string += "}";
+      break;
+    }
+  }
 
-	return ret_string;
+  return ret_string;
 }
 
 /** 
@@ -637,62 +637,60 @@ std::string JSONValue::Stringify()
  */
 std::string JSONValue::StringifyString(std::string str)
 {
-	std::string str_out = "\"";
-	
-	std::string::iterator iter = str.begin();
-	while (iter != str.end())
-	{
-		char chr = *iter;
+  std::string str_out = "\"";
+  
+  std::string::iterator iter = str.begin();
+  while (iter != str.end())
+  {
+    char chr = *iter;
 
-		if (chr == '"' || chr == '\\' || chr == '/')
-		{
-			str_out += '\\';
-			str_out += chr;
-		}
-		else if (chr == '\b')
-		{
-			str_out += "\\b";
-		}
-		else if (chr == '\f')
-		{
-			str_out += "\\f";
-		}
-		else if (chr == '\n')
-		{
-			str_out += "\\n";
-		}
-		else if (chr == '\r')
-		{
-			str_out += "\\r";
-		}
-		else if (chr == '\t')
-		{
-			str_out += "\\t";
-		}
-		else if (chr < ' ')
-		{
-			str_out += " ";
-			/*
-			str_out += "\\u";
-			for (int i = 0; i < 4; i++)
-			{
-				int value = (chr >> 12) & 0xf;
-				if (value >= 0 && value <= 9)
-					str_out += (char)('0' + value);
-				else if (value >= 10 && value <= 15)
-					str_out += (char)('A' + (value - 10));
-				chr <<= 4;
-			}
-			*/
-		}
-		else
-		{
-			str_out += chr;
-		}
-		
-		iter++;
-	}
-	
-	str_out += "\"";
-	return str_out;
+    if (chr == '"' || chr == '\\' || chr == '/')
+    {
+      str_out += '\\';
+      str_out += chr;
+    }
+    else if (chr == '\b')
+    {
+      str_out += "\\b";
+    }
+    else if (chr == '\f')
+    {
+      str_out += "\\f";
+    }
+    else if (chr == '\n')
+    {
+      str_out += "\\n";
+    }
+    else if (chr == '\r')
+    {
+      str_out += "\\r";
+    }
+    else if (chr == '\t')
+    {
+      str_out += "\\t";
+    }
+    /*
+    else if (chr < ' ')
+    {
+      str_out += "\\u";
+      for (int i = 0; i < 4; i++)
+      {
+        int value = (chr >> 12) & 0xf;
+        if (value >= 0 && value <= 9)
+          str_out += (char)('0' + value);
+        else if (value >= 10 && value <= 15)
+          str_out += (char)('A' + (value - 10));
+        chr <<= 4;
+      }
+    }*/
+    else
+    {
+      str_out += chr;
+    }
+    
+    iter++;
+  }
+  
+  str_out += "\"";
+  return str_out;
 }

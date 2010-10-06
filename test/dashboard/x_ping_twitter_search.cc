@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
   std::ofstream ofs;
   std::string file_name;
   unsigned int num_docs = 0;
+  std::string script;
 
   //tweets followed by handle 
 /*
@@ -74,7 +75,7 @@ int main(int argc, char *argv[]) {
           //std::cout.flush();
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
           ofs << buffer << std::endl;
-          ke.GetKeywords(buffer, keywords_set, keyphrases_set);
+          ke.GetKeywords(buffer, script, keywords_set, keyphrases_set);
           km.PopulateFreqMap(keywords_set);
           //km.PopulateFreqMap(keyphrases_set);
           keywords_set.clear();
@@ -129,7 +130,7 @@ int main(int argc, char *argv[]) {
           //std::cout.flush();
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
           ofs << buffer << std::endl;
-          ke.GetKeywords(buffer, keywords_set, keyphrases_set);
+          ke.GetKeywords(buffer, script, keywords_set, keyphrases_set);
           km.PopulateFreqMap(keywords_set);
           //km.PopulateFreqMap(keyphrases_set);
           keywords_set.clear();
@@ -182,7 +183,7 @@ int main(int argc, char *argv[]) {
           //std::cout.flush();
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
           ofs << buffer << std::endl;
-          ke.GetKeywords(buffer, keywords_set, keyphrases_set);
+          ke.GetKeywords(buffer, script, keywords_set, keyphrases_set);
           km.PopulateFreqMap(keywords_set);
           //km.PopulateFreqMap(keyphrases_set);
           keywords_set.clear();
@@ -238,7 +239,7 @@ int main(int argc, char *argv[]) {
           //std::cout << tweet_object["text"]->AsString().c_str() << std::endl;
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
           ofs << buffer << std::endl;
-          ke.GetKeywords(buffer, keywords_set);
+          ke.GetKeywords(buffer, script, keywords_set);
           km.PopulateFreqMap(keywords_set);
           keywords_set.clear();
           memset(buffer, 0, 1024);
@@ -287,7 +288,7 @@ int main(int argc, char *argv[]) {
         // now lets work on the json object thus obtained
         if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
-          ke.GetKeywords(buffer, keywords_set, keyphrases_set);
+          ke.GetKeywords(buffer, script, keywords_set, keyphrases_set);
           ofs << buffer << std::endl;
           km.PopulateFreqMap(keywords_set);
           //km.PopulateFreqMap(keyphrases_set);
@@ -348,7 +349,7 @@ int main(int argc, char *argv[]) {
           //std::cout << tweet_object["text"]->AsString().c_str() << std::endl;
           //std::cout.flush();
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
-          ke.GetKeywords(buffer, keywords_set);
+          ke.GetKeywords(buffer, script, keywords_set);
           ofs << buffer << std::endl;
           km.PopulateFreqMap(keywords_set);
           keywords_set.clear();

@@ -31,11 +31,12 @@ int Init(const char* stopwords_file_path, const char* dictionary_file_path) {
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int SubmitTweet(/*const char* user_name,*/ const char* tweet, char* keywords, char* keyphrases) {
+int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *tweet_script, char* keywords, char* keyphrases) {
   std::set<std::string> keywords_set;
   std::set<std::string> keyphrases_set;
+  std::string script;
   strcpy(g_buffer, tweet);
-  g_keywords_extract.GetKeywords(g_buffer, keywords_set, keyphrases_set);
+  g_keywords_extract.GetKeywords(g_buffer, script, keywords_set, keyphrases_set);
   std::set<std::string>::iterator iter;
   char *ptr = keywords;
   for (iter = keywords_set.begin(); iter != keywords_set.end(); iter++) {
@@ -67,6 +68,7 @@ int SubmitTweet(/*const char* user_name,*/ const char* tweet, char* keywords, ch
 #endif
     }
   }
+  strcpy(tweet_script, script.c_str());
 
   return 0;
 }

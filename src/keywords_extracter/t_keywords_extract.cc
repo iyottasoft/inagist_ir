@@ -31,12 +31,15 @@ int main(int argc, char* argv[]) {
 
   std::set<std::string> keywords_set;
   std::set<std::string> keyphrases_set;
+  std::string script;
   char str[141];
   if (argc == 1) {
     std::string s;
     while (getline(std::cin, s)) {
       strcpy(str, s.c_str()); 
-      ke.GetKeywords(str, keywords_set, keyphrases_set);
+      ke.GetKeywords(str, script, keywords_set, keyphrases_set);
+      std::cout << "Script: " << script << std::endl;
+      std::cout << "Keywords:" << std::endl;
       ke.PrintKeywords(keywords_set);
       keywords_set.clear();
       if (keyphrases_set.size() > 0) {
@@ -46,7 +49,8 @@ int main(int argc, char* argv[]) {
       }
     }
   } else {
-    ke.GetKeywords(argv[1], keywords_set, keyphrases_set);
+    ke.GetKeywords(argv[1], script, keywords_set, keyphrases_set);
+    std::cout << script << std::endl;
     ke.PrintKeywords(keywords_set);
     keywords_set.clear();
     if (keyphrases_set.size() > 0) {

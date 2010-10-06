@@ -27,13 +27,15 @@ int main(int argc, char *argv[]) {
 
   Init(stopwords_file.c_str(), dictionary_file.c_str());
 
+  char script[4];
+  memset(script, 0, 4);
   char keywords[1024];
   memset(keywords, 0, 1024);
   char keyphrases[1024];
   memset(keyphrases, 0, 1024);
   
   //SubmitTweet(/*"tantricninja",*/ "Contigous Caps will be counted. So will be contiguous nonstopwords", keywords, keyphrases);
-  SubmitTweet(/*"tantricninja",*/ argv[1], keywords, keyphrases);
+  SubmitTweet(/*"tantricninja",*/ argv[1], script, keywords, keyphrases);
   std::cout << "keywords: " << std::endl << keywords << std::endl << "  keyphrases: " << std::endl << keyphrases << std::endl;
 
   return 0;

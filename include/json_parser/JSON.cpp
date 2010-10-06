@@ -24,6 +24,8 @@
 #include "JSON.h"
 #include <cstring>
 #include <cstdlib>
+#include <iostream>
+#include <sstream>
 
 /** 
  * Blocks off the public constructor
@@ -152,11 +154,13 @@ bool JSON::ExtractString(const char **data, std::string &str)
 {
   size_t str_length = 0;
   str = "";
+  char unicode_string[6];
+  bool unicode = false;
   
   while (**data != 0)
   {
     // Save the char so we can change it if need be
-    char next_char = **data;
+    unsigned char next_char = **data;
     
     // Escaping something?
     if (next_char == '\\')
@@ -182,10 +186,14 @@ bool JSON::ExtractString(const char **data, std::string &str)
         case 't': next_char = ' '; break;
         case 'u':
         {
+          unicode = true;
           // We need 5 chars (4 hex + the 'u') or its not valid
           if (strlen(*data) < 5)
             return false;
-          
+
+          memset(unicode_string, '\0', 6);
+          strncpy(unicode_string, *data+1, 4);
+          //std::cout << "unicode_string: " << unicode_string << std::endl;
           // Deal with the chars
           next_char = 0;
           for (int i = 0; i < 4; i++)
@@ -209,9 +217,56 @@ bool JSON::ExtractString(const char **data, std::string &str)
               return false;
             }
           }
+
+          unsigned int value = 0;
+          std::stringstream ss;
+          ss << std::hex << unicode_string;
+          ss >> value;
+          //std::cout << "unicode_value: " << value << std::endl;
+          int byte_count = 0;
+          unsigned char byte = 0;
+          int r = 0;
+          int total_count = 0;
+          int count = 0;
+          std::string code_point;
+          while (value) {
+            r = value % 2;
+            if (r)
+              byte |= 0x80;
+            byte >>= 1;
+            value/= 2;
+            count++;
+            total_count++;
+            if (count == 6) {
+              count = 0;
+                byte >>= 1;
+                byte |= 0x80;
+                total_count += 2;
+                //std::cout << ((byte & 0xF0) >> 4) << (byte & 0x0F) << std::endl;
+                code_point += byte;
+                byte = 0;
+            }
+          } 
+          byte_count = (total_count / 8) + 1;
+
+          for (int i=(total_count % 8); i < (8-byte_count); i++) {
+            byte >>= 1;
+          }
+          for (int i=0; i < (byte_count-1); i++) {
+            byte |= 0x80;
+            byte >>= 1;
+          }
+          if (byte_count > 1)
+            byte |= 0x80;
+          code_point += byte;
+          //std::cout << ((byte & 0xF0) >> 4) << (byte & 0x0F) << std::endl;
+
+          for (int i=code_point.length()-1; i>=0; i--)
+            str += code_point[i];
+
           break;
         }
-        
+
         // By the spec, only the above cases are allowed
         default:
           return false;
@@ -244,7 +299,8 @@ bool JSON::ExtractString(const char **data, std::string &str)
     }
     
     // Add the next char
-    str += next_char;
+    if (!unicode)
+      str += next_char;
     
     // Move on
     (*data)++;

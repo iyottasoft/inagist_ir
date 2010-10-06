@@ -19,6 +19,7 @@ int main(int argc, char *argv[]) {
   char buffer[1024];
   std::string temp_str;
   std::string reply_message;
+  std::string script;
   std::set<std::string> keywords_set;
   // get top tweets from inagist api
 
@@ -53,10 +54,11 @@ int main(int argc, char *argv[]) {
 
         // now lets work on the json object thus obtained
         if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
-          std::cout << tweet_object["text"]->AsString().c_str() << std::endl;
-          std::cout.flush();
+          //std::cout << tweet_object["text"]->AsString().c_str() << std::endl;
+          //std::cout.flush();
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
-          ke.GetKeywords(buffer, keywords_set);
+          ke.GetKeywords(buffer, script, keywords_set);
+          std::cout << script << std::endl;
           ke.PrintKeywords(keywords_set);
           km.PopulateFreqMap(keywords_set);
           keywords_set.clear();

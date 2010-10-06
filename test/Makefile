@@ -1,4 +1,4 @@
-SUBDIRS = nif utf8 livemint dashboard
+SUBDIRS = nif utf8 dashboard
 
 subdirs:
 	@ for dir in $(SUBDIRS); do \
