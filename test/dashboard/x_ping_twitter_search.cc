@@ -138,6 +138,11 @@ int main(int argc, char *argv[]) {
           memset(buffer, 0, 1024);
           ++num_docs;
         }
+        if (tweet_object.find("id") != tweet_object.end() && tweet_object["id"]->IsString()) {
+         std::string tweet_id = tweet_object["id"]->Stringify().c_str();
+         std::cout << tweet_id << std::endl;
+        }
+    
       }
       ofs.close();
       file_name = root_dir + "/keywords_by_" + handle + ".txt";
@@ -147,6 +152,8 @@ int main(int argc, char *argv[]) {
   } else {
     std::cout << "ERROR: couldn't get tweets" << std::endl;
   }
+
+return 0;
 
   // tweets in response to handle
 

@@ -84,8 +84,8 @@ def generate_result_bag(outfile):
 
     for i in range(0, length):
       pf.write('<a href="http://inagist.com/trends/%s">' % (lower(final_result_bag[i][1].replace(' ', '_'))))
-      #pf.write('%s : %.4f' % (final_result_bag[i][1], final_result_bag[i][0]))
-      pf.write('%s' % (final_result_bag[i][1]))
+      pf.write('%s : %.4f' % (final_result_bag[i][1], final_result_bag[i][0]))
+      #pf.write('%s' % (final_result_bag[i][1]))
       pf.write('</a><br/>')
 
 def print_freqs(hash_freqs):
@@ -136,10 +136,11 @@ def main():
     num_words = len(current_hash_freqs)
     outfile = path + 'trends_' + filename[1]
     calculate_tf_idf(current_hash_freqs, float(num_words), outfile)
-    if (count == 1 or count > 2):
-      pf.write('<td width="20%" valign="top">\n')
+    #if (count == 1 or count > 2):
+    pf.write('<td width="20%" valign="top">\n')
     pf.write('<hr/>\n<h3> trends: %s </h3>\n' % (filename[1]))
-    pf.write('see <a href="%s">tweets</a><br/><br/>' % (path + 'tweets_' + filename[1]))
+    url_path = path.split('/tmp')
+    pf.write('see <a href="%s">tweets</a><br/><br/>' % (url_path[1] + 'tweets_' + filename[1]))
     generate_result_bag(outfile)
     if (count > 1):
       pf.write('</td>')

@@ -31,7 +31,7 @@
 
 class JSON;
 
-enum JSONType { JSONType_Null, JSONType_String, JSONType_Bool, JSONType_Number, JSONType_Array, JSONType_Object };
+enum JSONType { JSONType_Null, JSONType_String, JSONType_Bool, JSONType_Number,/* JSONType_LongLong,*/ JSONType_Array, JSONType_Object };
 
 class JSONValue
 {
@@ -43,6 +43,7 @@ class JSONValue
     JSONValue(std::string m_string_value);
     JSONValue(bool m_bool_value);
     JSONValue(double m_number_value);
+    JSONValue(unsigned long long m_long_value);
     JSONValue(JSONArray m_array_value);
     JSONValue(JSONObject m_object_value);
     ~JSONValue();
@@ -51,12 +52,14 @@ class JSONValue
     bool IsString();
     bool IsBool();
     bool IsNumber();
+    bool IsLongLong();
     bool IsArray();
     bool IsObject();
     
     std::string AsString();
     bool AsBool();
     double AsNumber();
+    unsigned long long AsLongLong();
     JSONArray AsArray();
     JSONObject AsObject();
     
@@ -72,6 +75,7 @@ class JSONValue
     std::string string_value;
     bool bool_value;
     double number_value;
+    unsigned long long long_value;
     JSONArray array_value;
     JSONObject object_value;
 };

@@ -47,6 +47,8 @@
  */
 JSONValue *JSONValue::Parse(const char **data)
 {
+  char *end_marker = NULL;
+  char *pch = NULL;
   // Is it a string?
   if (**data == '"')
   {
@@ -56,7 +58,15 @@ JSONValue *JSONValue::Parse(const char **data)
     else
       return new JSONValue(str);
   }
-  
+
+  else if ((**data >= '0' && **data <= '9') && (end_marker = strstr(*data,"from_user_id")) && (pch = strchr(*data, ',')) && ((pch + 2) == end_marker)) {
+    unsigned int len = pch - *data;
+    std::string str = std::string(*data, len);
+    std::cout << str << std::endl;
+    (*data) += (len);
+    return new JSONValue(str);
+  }
+
   // Is it a boolean?
   else if ((strlen(*data) >= 4 && strncasecmp(*data, "true", 4) == 0) || (strlen(*data) >= 5 && strncasecmp(*data, "false", 5) == 0))
   {
@@ -520,6 +530,10 @@ bool JSONValue::AsBool()
 double JSONValue::AsNumber()
 {
   return number_value;
+}
+
+unsigned long long JSONValue::AsLongLong() {
+  return long_value;
 }
 
 /** 
