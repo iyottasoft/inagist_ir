@@ -20,6 +20,10 @@ BINS = ${BIN_DIR}/x_dashboard_populater \
 OBJS = follow_analyser.o twitter_searcher.o
 
 all: ${LIB} ${BINS}
+	@echo "copying dashboard_generator.py to ${BIN_DIR}"
+	@cp dashboard_generator.py ${BIN_DIR}/
+	@echo "copying dashboard_trends_generator.py to ${BIN_DIR}"
+	@cp dashboard_trends_generator.py ${BIN_DIR}/
 	@echo "build done!"
 
 clean:
@@ -37,8 +41,6 @@ ${LIB}: ${OBJS}
 .cc.o:
 	@echo "compiling ..." $< "..."
 	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
-	@echo "copying dashboard_generator.py to ${BIN_DIR}"
-	@cp dashboard_generator.py ${BIN_DIR}/dashboard_generator.py
 
 ${BIN_DIR}/x_dashboard_populater: x_dashboard_populater.o ${LIB}
 	@echo "creating binary:" $@

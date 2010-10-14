@@ -30,36 +30,41 @@ int main(int argc, char *argv[]) {
   //  std::cout << "Error: followees" << std::endl;
 
   // tweets by handle
+  inagist_dashboard::FollowAnalyser fa;
+  std::set<std::string> followers;
+  fa.Init(root_dir);
+
   tweeters.clear();
-  url = std::string("http://search.twitter.com/search.json?q=from:" +  handle/* + "&rpp=100"*/);
-  if ((ret_value = ts.Search(url, root_dir, handle, time_stamp, tweeters)) < 0) {
+  std::string tweets_file_name = root_dir + "/tweets_by_" + handle + "." + time_stamp + ".txt";
+  std::string keywords_file_name = root_dir + "/keywords_by_" + handle + "." + time_stamp + ".txt";
+  // lets abuse GetKeywordsFromFollowers function to get keywords for handle
+  followers.insert(handle);
+  ret_value = fa.GetKeywordsFromFollowers(&ts, followers, tweets_file_name, keywords_file_name);
+  if (ret_value < 0)
     std::cout << "Error: could not get tweets for " + handle << std::endl;
-    return -1;
-  }
-  std::cout << ret_value << " tweets by " + handle << std::endl;
+  else
+    std::cout << ret_value << " tweets by " + handle << std::endl;
 
   // tweets of the followers
-  inagist_dashboard::FollowAnalyser fa;
-  fa.Init(root_dir);
-  if (fa.GetFollowers(handle, tweeters) < 0) {
+  followers.clear();
+  if (fa.GetFollowers(handle, followers) < 0) {
     std::cout << "Error: could not find " + handle + "'s followers\n";
     return -1;
   }
 
   ret_value = 0;
-  int value = 0;
-  for (tweeter_iter = tweeters.begin(); tweeter_iter != tweeters.end(); tweeter_iter++) {
-    url = std::string("http://search.twitter.com/search.json?q=from:" + *tweeter_iter/* + "&rpp=100"*/);
-    std::set<std::string> followers;
-    if ((value = ts.Search(url, root_dir, handle + "_followers", time_stamp, followers)) < 0)
-      std::cout << "Error: could not get tweets for " + handle + "'s followers" << std::endl;
-    else
-      ret_value += value;
-  }
-  std::cout << ret_value << " tweets by " + handle + "'s followers\n";
+  keywords_file_name = root_dir + "/keywords_by_" + handle + "_followers." + time_stamp + ".txt";
+  tweets_file_name = root_dir + "/tweets_by_" + handle + "_followers." + time_stamp + ".txt";
+  ret_value = fa.GetKeywordsFromFollowers(&ts, followers, tweets_file_name, keywords_file_name);
+  if (ret_value < 0)
+    std::cout << "Error: could not get keywords from " << handle << "'s followers\n";
+  else
+    std::cout << ret_value << " tweets by " + handle + "'s followers\n";
+  followers.clear();
 
+  ts.DeInit();
   return 0;
-
+/*
   // tweets in response to handle
   url = std::string("http://search.twitter.com/search.json?q=\%40" + handle);
   std::cout << "responses" << std::endl;
@@ -103,4 +108,5 @@ int main(int argc, char *argv[]) {
   ts.DeInit();
 
   return 0;
+*/
 }

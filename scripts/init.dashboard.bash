@@ -1,6 +1,6 @@
 #!/bin/bash
 
-home="/home/balaji/prod/"
+home="/home/balaji/prod"
 
 if [ $# -lt 1 -o $# -gt 2 ]
 then
@@ -18,7 +18,7 @@ if [ $# -eq 2 ]
 then
   mkdir -p ${data_dir}/$2
   ${bin_dir}/x_dashboard_populater ${data_dir}/$2 $2 ${time_stamp}
-  ${bin_dir}/trends_generater.py ${data_dir} $2
+  ${bin_dir}/dashboard_trends_generator.py ${data_dir} $2
   echo "$2" >> ${data_dir}/clients.txt
 fi
 
@@ -32,8 +32,8 @@ then
     mkdir -p ${data_dir}/${line}
     echo "${bin_dir}/x_dashboard_populater ${data_dir}/${line} ${line} ${time_stamp}"
     ${bin_dir}/x_dashboard_populater ${data_dir}/${line} ${line} ${time_stamp}
-    echo "${bin_dir}/trends_generater.py ${data_dir} ${line}"
-    ${bin_dir}/trends_generater.py ${data_dir} ${line}
+    echo "${bin_dir}/dasboard_trends_generator.py ${data_dir} ${line}"
+    ${bin_dir}/dash_board_trends_generator.py ${data_dir} ${line}
 
     for ((i=0;i<${#intervals[@]};i++))
     do

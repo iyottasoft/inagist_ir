@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <set>
 #include <vector>
 #include <list>
@@ -32,14 +33,15 @@ class KeywordsManager {
  public:
   KeywordsManager();
   ~KeywordsManager();
-  int Init(const char *keywords_repo_directory);
+  int Init(const char* keywords_repo_directory);
   int DeInit();
   int Clear();
 
-  int PopulateFreqMap(std::set<std::string> &keywords_set);
+  int PopulateFreqMap(std::set<std::string>& keywords_set);
   void PrintFreqMap();
   int CalculateIDF(unsigned int num_docs);
-  int CalculateIDF(unsigned int num_docs, const char *file_name);
+  int CalulateIDF(unsigned int num_docs, std::ofstream& ofs);
+  int CalculateIDF(unsigned int num_docs, const char* file_name);
   void PrintEntityIDFs();
   void PrintIdfBuckets();
 

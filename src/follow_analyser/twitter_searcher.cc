@@ -7,8 +7,6 @@
 #include <set>
 #include "JSON.h"
 #include "curl_request_maker.h"
-#include "keywords_extract.h"
-#include "keywords_manager.h"
 
 namespace inagist_dashboard {
 
@@ -32,6 +30,12 @@ int TwitterSearcher::Init(std::string root_dir) {
     }
   }
   ifs.close();
+
+  if (m_keywords_extract.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt") < 0) {
+    std::cerr << "ERROR: couldn't initialize\n";
+    return -1; 
+  }
+
   return 0;
 }
 
@@ -51,86 +55,62 @@ int TwitterSearcher::DeInit() {
   return 0;
 }
 
-int TwitterSearcher::Search(std::string url, std::string root_dir, std::string label, std::string time_stamp, std::set<std::string> &tweeters) {
+int TwitterSearcher::Search(const std::string& url, std::ofstream &tweets_file_stream,
+                            std::set<std::string> &tweeters_set,
+                            std::set<std::string> &keywords_set) {
 
-  std::string original_url = url;
-  std::string last_search_max_id = m_search_data_map[url];
+  std::string temp_url = url;
+  std::string last_search_max_id = m_search_data_map[temp_url];
   if (last_search_max_id.size() > 0)
-    url += "&since_id=" + last_search_max_id;
-
+    temp_url += "&since_id=" + last_search_max_id;
 
   //std::cout << url << std::endl;
-
-  inagist_trends::KeywordsExtract ke;
-  if (ke.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt") < 0) {
-    std::cerr << "ERROR: couldn't initialize\n";
-    return -1; 
-  }
-  inagist_trends::KeywordsManager km;
-  inagist_api::CurlRequestMaker curl_request_maker;
-
-  char buffer[1024];
-  std::string temp_str;
-  std::string reply_message;
-  std::set<std::string> keywords_set;
-  std::set<std::string> keyphrases_set;
-  std::set<std::string> commenters;
+  int num_docs = 0;
 
   bool ret_value;
-  std::set<std::string>::iterator iter;
-  std::ofstream ofs;
-  std::string file_name;
-  int num_docs = 0;
-  std::string script;
-
-  ret_value = curl_request_maker.GetTweets(url.c_str());
+  ret_value = m_curl_request_maker.GetTweets(temp_url.c_str());
 
   if (ret_value) {
-    reply_message = "";
-    curl_request_maker.GetLastWebResponse(reply_message);
+    std::string reply_message;
+    m_curl_request_maker.GetLastWebResponse(reply_message);
+
     if (reply_message.size() <= 0) {
-      curl_request_maker.GetLastCurlError(reply_message);
+      m_curl_request_maker.GetLastCurlError(reply_message);
     }
+
     if (reply_message.size() > 0) {
       JSONValue *json_value = JSON::Parse(reply_message.c_str());
-      if (!json_value) {
-        std::cout << "ERROR: JSON::Parse failed for query: " << url << std::endl;
+      if (!json_value || (false == json_value->IsObject())) {
+        std::cout << "ERROR: JSON::Parse failed for query: " << temp_url << std::endl;
       } else {
-        keywords_set.clear();
-        keyphrases_set.clear();
-        km.Clear();
-        num_docs = 0;
+        std::string script;
+        std::string tweet;
+        std::set<std::string> unused_keyphrases_set;
         JSONObject tweet_o = json_value->AsObject();
-        JSONArray tweet_array = tweet_o["results"]->AsArray();
-        file_name = root_dir + "/tweets_by_" + label + "." + time_stamp + ".txt";
-        ofs.open(file_name.c_str(), std::ios_base::app);
-        for (unsigned int i=0; i < tweet_array.size(); i++) {
-          // don't know if array element shud again be treated as json value
-          // but, what the heck. lets put it as value and then get the object
-          JSONValue *tweet_value = tweet_array[i];
-          if (false == tweet_value->IsObject())
-            std::cout << "ERROR: tweet_value is not an object" << std::endl;
-          JSONObject tweet_object = tweet_value->AsObject();
-
-          // now lets work on the json object thus obtained
-          if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
-            //std::cout << tweet_object["text"]->AsString().c_str() << std::endl;
-            //std::cout.flush();
-            strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
-            ofs << buffer << std::endl;
-            ke.GetKeywords(buffer, script, keywords_set, keyphrases_set);
-            km.PopulateFreqMap(keywords_set);
-            //km.PopulateFreqMap(keyphrases_set);
-            keywords_set.clear();
-            keyphrases_set.clear();
-            memset(buffer, 0, 1024);
-            ++num_docs;
-          }
-          if (tweet_object.find("from_user") != tweet_object.end() && tweet_object["from_user"]->IsString()) {
-            tweeters.insert(tweet_object["from_user"]->AsString());
+        if (tweet_o.find("results") != tweet_o.end() && tweet_o["results"]->IsArray()) {
+          JSONArray tweet_array = tweet_o["results"]->AsArray();
+          for (unsigned int i=0; i < tweet_array.size(); i++) {
+            JSONValue *tweet_value = tweet_array[i];
+            if (false == tweet_value->IsObject()) {
+              std::cout << "ERROR: tweet_value is not an object" << std::endl;
+            } else {
+              JSONObject tweet_object = tweet_value->AsObject();
+              if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
+                tweet = tweet_object["text"]->AsString(); 
+                tweets_file_stream << tweet << std::endl;
+                tweets_file_stream.flush();
+                strcpy(m_buffer, (char *) tweet.c_str());
+                m_buffer[tweet.size()] = '\0';
+                m_keywords_extract.GetKeywords(m_buffer, script, keywords_set, unused_keyphrases_set);
+                unused_keyphrases_set.clear();
+                ++num_docs;
+              }
+              if (tweet_object.find("from_user") != tweet_object.end() && tweet_object["from_user"]->IsString()) {
+                tweeters_set.insert(tweet_object["from_user"]->AsString());
+              }
+            }
           }
         }
-        ofs.close();
 
         last_search_max_id = "";
         if (tweet_o.find("max_id") != tweet_o.end() && tweet_o["max_id"]->IsString()) {
@@ -140,10 +120,7 @@ int TwitterSearcher::Search(std::string url, std::string root_dir, std::string l
         }
         if (last_search_max_id.size() <= 0)
           std::cout << "max id value is empty\n";
-        m_search_data_map[original_url] = last_search_max_id;
-
-        file_name = root_dir + "/keywords_by_" + label + "." + time_stamp + ".txt";
-        km.CalculateIDF(num_docs, file_name.c_str());
+        m_search_data_map[url] = last_search_max_id;
       }
       delete json_value;
     }
