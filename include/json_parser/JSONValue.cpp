@@ -59,10 +59,16 @@ JSONValue *JSONValue::Parse(const char **data)
       return new JSONValue(str);
   }
 
-  else if ((**data >= '0' && **data <= '9') && (end_marker = strstr(*data,"from_user_id")) && (pch = strchr(*data, ',')) && ((pch + 2) == end_marker)) {
+  else if ((**data >= '0' && **data <= '9') && (end_marker = strstr((char *) *data,"from_user_id")) && (pch = strchr((char *) *data, ',')) && ((pch + 2) == end_marker) && (pch <= (*data + 15))) {
     unsigned int len = pch - *data;
     std::string str = std::string(*data, len);
-    std::cout << str << std::endl;
+    (*data) += (len);
+    return new JSONValue(str);
+  }
+
+  else if ((**data >= '0' && **data <= '9') && (end_marker = strstr((char *) *data,"since_id")) && (pch = strchr((char *) *data, ',')) && ((pch + 2) == end_marker) && (pch <= (*data + 15))) {
+    unsigned int len = pch - *data;
+    std::string str = std::string(*data, len);
     (*data) += (len);
     return new JSONValue(str);
   }

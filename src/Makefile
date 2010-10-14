@@ -1,4 +1,4 @@
-SUBDIRS = curl_request_maker keywords_extracter trends_manager
+SUBDIRS = curl_request_maker keywords_extracter trends_manager follow_analyser
 
 subdirs:
 	@ for dir in $(SUBDIRS); do \

@@ -86,17 +86,22 @@ JSONValue *JSON::Parse(const char *data)
 JSONValue *JSON::Parse(const char *data)
 {
   // Skip any preceding whitespace, end of data = no JSON = fail
-  if (!SkipWhitespace(&data))
+  if (!SkipWhitespace(&data)) {
+    std::cout << "End of data without any JSON value" << std::endl;
     return NULL;
+  }
 
   // We need the start of a value here now...
   JSONValue *value = JSONValue::Parse(&data);
-  if (value == NULL)
+  if (value == NULL) {
+    std::cout << "no JSON value present" << std::endl;
     return NULL;
+  }
   
   // Can be white space now and should be at the end of the string then...
   if (SkipWhitespace(&data))
   {
+    std::cout << "end of string whitespace problem" << std::endl;
     delete value;
     return NULL;
   }

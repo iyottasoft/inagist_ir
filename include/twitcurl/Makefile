@@ -7,7 +7,7 @@ INCLUDE_DIR = -I. -I/usr/include/c++/4.4/
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT}
+LIBS = -l${PROJECT} -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
@@ -15,7 +15,7 @@ BIN_DIR = ../../bin
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
-#BINS = ${BIN_DIR}/t_twitcurl
+BINS = ${BIN_DIR}/t_twitcurl
 
 OBJS = twitcurl.o 
 
@@ -40,9 +40,9 @@ ${LIB}: ${OBJS}
 	@echo "compiling ..." $< "..."
 	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
-#${BIN_DIR}/t_twitcurl: t_twitcurl.o ${LIB}
-	#@echo "creating binary:" $@
-	#@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_twitcurl
-	#@echo "done!"
+${BIN_DIR}/t_twitcurl: t_twitcurl.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_twitcurl
+	@echo "done!"
 
 # DO NOT DELETE THIS LINE

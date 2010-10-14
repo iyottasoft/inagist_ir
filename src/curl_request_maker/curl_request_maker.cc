@@ -68,7 +68,8 @@ void CurlRequestMaker::ClearCurlCallBackBuffers() {
 }
 
 void CurlRequestMaker::PrepareCurlCallBack() {
-  if (!m_curl_call_back_params_set) {
+  curl_easy_reset(m_curl_handle);
+  //if (!m_curl_call_back_params_set) {
     // set buffer to get error
     curl_easy_setopt(m_curl_handle, CURLOPT_ERRORBUFFER, m_error_buffer);
 
@@ -77,7 +78,7 @@ void CurlRequestMaker::PrepareCurlCallBack() {
     curl_easy_setopt(m_curl_handle, CURLOPT_WRITEDATA, this);
 
     m_curl_call_back_params_set = true;
-  }
+  //}
 }
 
 int CurlRequestMaker::CurlCallBack(char *data, size_t size, size_t nmemb, CurlRequestMaker *curl_request_maker) {
