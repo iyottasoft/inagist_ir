@@ -67,6 +67,7 @@ int FollowAnalyser::GetKeywordsFromFollowers(inagist_dashboard::TwitterSearcher*
       keywords_manager.PopulateFreqMap(keywords_set);
       ret_value += num_docs;
     }
+    usleep(100000);
   }
   tweets_file_stream.close();
 
