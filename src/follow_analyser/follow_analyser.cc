@@ -45,7 +45,7 @@ int FollowAnalyser::ReadFollowers(std::string handle, std::set<std::string> &fol
 // writes tweets and idf of keywords to files
 // uses TwitterSearcher class to get the tweets and the keywords
 // uses KeywordsManager class to get the idf of keywords
-int FollowAnalyser::GetKeywordsFromFollowers(inagist_dashboard::TwitterSearcher* twitter_searcher,
+int FollowAnalyser::GetKeywords(inagist_dashboard::TwitterSearcher* twitter_searcher,
                                              const std::set<std::string>& followers,
                                              const std::string& tweets_file_name,
                                              const std::string& keywords_file_name) {
@@ -55,13 +55,15 @@ int FollowAnalyser::GetKeywordsFromFollowers(inagist_dashboard::TwitterSearcher*
   std::set<std::string> keywords_set;
   std::set<std::string> unused_set;
   std::set<std::string>::iterator iter;
+  std::map<std::string, std::string> unused_map_1;
+  std::map<std::string, std::string> unused_map_2;
   inagist_trends::KeywordsManager keywords_manager;
   std::string url;
 
   std::ofstream tweets_file_stream(tweets_file_name.c_str());
   for (iter = followers.begin(); iter != followers.end(); iter++) {
     url = std::string("http://search.twitter.com/search.json?q=from:" + *iter/* + "&rpp=100"*/);
-    if ((num_docs = twitter_searcher->Search(url, tweets_file_stream, unused_set, keywords_set)) < 0) {
+    if ((num_docs = twitter_searcher->Search(url, tweets_file_stream, unused_set, unused_map_1, unused_map_2)) < 0) {
       std::cout << "Error: could not get tweets for " << *iter << std::endl;
     } else {
       keywords_manager.PopulateFreqMap(keywords_set);
@@ -70,6 +72,66 @@ int FollowAnalyser::GetKeywordsFromFollowers(inagist_dashboard::TwitterSearcher*
     usleep(100000);
   }
   tweets_file_stream.close();
+
+  keywords_manager.CalculateIDF(ret_value, keywords_file_name.c_str());
+
+  return ret_value;
+}
+
+// gets a set of followers
+// writes tweets and idf of keywords to files
+// uses TwitterSearcher class to get the tweets and the keywords
+// uses KeywordsManager class to get the idf of keywords
+int FollowAnalyser::GetKeywordsFromFollowers(inagist_dashboard::TwitterSearcher* twitter_searcher,
+                                             const std::set<std::string>& followers,
+                                             const std::string& tweets_file_name,
+                                             const std::string& keywords_file_name,
+                                             const std::string& scripts_tweeters_map_file_name,
+                                             const std::string& keywords_tweeters_map_file_name) {
+
+  int ret_value = 0;
+  int num_docs = 0;
+  std::set<std::string> keywords_set;
+  std::set<std::string> unused_set;
+  std::set<std::string>::iterator iter;
+  std::map<std::string, std::string> scripts_tweeters_map;
+  std::map<std::string, std::string> keywords_tweeters_map;
+  inagist_trends::KeywordsManager keywords_manager;
+  std::string url;
+  std::map<std::string, std::string>::iterator map_iter;
+
+  std::ofstream tweets_file_stream(tweets_file_name.c_str());
+  for (iter = followers.begin(); iter != followers.end(); iter++) {
+    url = std::string("http://search.twitter.com/search.json?q=from:" + *iter/* + "&rpp=100"*/);
+    if ((num_docs = twitter_searcher->Search(url, tweets_file_stream, unused_set, scripts_tweeters_map, keywords_tweeters_map)) < 0) {
+      std::cout << "Error: could not get tweets for " << *iter << std::endl;
+    } else {
+      for (map_iter = keywords_tweeters_map.begin(); map_iter != keywords_tweeters_map.end(); map_iter++) {
+        keywords_set.insert(map_iter->first);
+      }
+      // TODO (balaji) - this whole keywords manager thingy can be implemented here. will save some pain
+      keywords_manager.PopulateFreqMap(keywords_set);
+      ret_value += num_docs;
+    }
+    usleep(100000);
+  }
+  tweets_file_stream.close();
+
+  // write scripts map to file
+  std::ofstream scripts_tweeters_map_file_stream(scripts_tweeters_map_file_name.c_str());
+  for (map_iter = scripts_tweeters_map.begin(); map_iter != scripts_tweeters_map.end(); map_iter++) {
+    scripts_tweeters_map_file_stream << map_iter->first << " = " << map_iter->second << std::endl;
+  }
+  scripts_tweeters_map_file_stream.close();
+  scripts_tweeters_map.clear();
+
+  // write keywords map to file
+  std::ofstream keywords_tweeters_map_file_stream(keywords_tweeters_map_file_name.c_str());
+  for (map_iter = keywords_tweeters_map.begin(); map_iter != keywords_tweeters_map.end(); map_iter++) {
+    keywords_tweeters_map_file_stream << map_iter->first << " = " << map_iter->second << std::endl;
+  }
+  keywords_tweeters_map_file_stream.close();
+  keywords_tweeters_map.clear();
 
   keywords_manager.CalculateIDF(ret_value, keywords_file_name.c_str());
 

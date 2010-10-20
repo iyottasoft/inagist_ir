@@ -3,6 +3,7 @@
 #include "utf8.h"
 
 //#define DEBUG 0
+#define KEYPHRASE_ENABLED 1
 
 namespace inagist_trends {
   // unless otherwise specified functions return 0 or NULL or false as default
@@ -430,12 +431,49 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
   return GetKeywords(str, script, keywords_set, keyphrases_set);
 }
 
+int KeywordsExtract::GetKeywords(char *str,
+                                 std::string &user,
+                                 std::map<std::string, std::string> &script_user_map,
+                                 std::map<std::string, std::string> &keyword_user_map) {
+  std::string script;
+  std::set<std::string> keywords_set;
+  if (GetKeywords(str, script, keywords_set) < 0) {
+    cout << "Error: could not get keywords\n";
+    return -1;
+  }
+
+  std::map<std::string, std::string>::iterator map_iter;
+  if (script != "en") {
+    if ((map_iter = script_user_map.find(script)) != script_user_map.end()) {
+      script_user_map[script]+= ", " + user;
+    } else {
+      script_user_map[script] = user;
+    }
+  }
+  std::set<std::string>::iterator set_iter;
+  for (set_iter = keywords_set.begin(); set_iter != keywords_set.end(); set_iter++) {
+    if ((map_iter = keyword_user_map.find(*set_iter)) != keyword_user_map.end()) {
+      keyword_user_map[*set_iter]+= ", " + user;
+    } else {
+      keyword_user_map[*set_iter] = user;
+    }
+  }
+
+  return 0;
+}
+
+#ifdef KEYPHRASE_ENABLED
 int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::string> &keywords_set) {
   std::set<std::string> keyphrases_set;
   return GetKeywords(str, script, keywords_set, keyphrases_set);
 }
+#endif
 
+#ifdef KEYPHRASE_ENABLED
 int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::string> &keywords_set, std::set<std::string> &keyphrases_set) {
+#else
+int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::string> &keywords_set) {
+#endif
   if (!str)
     return -1;
 
@@ -471,8 +509,10 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
   char *caps_entity_end = NULL;
   char *stopwords_entity_start = NULL;
   char *stopwords_entity_end = NULL;
+#ifdef KEYPHRASE_ENABLED
   char *stopwords_keyphrase_start = NULL;
   char *stopwords_keyphrase_end = NULL;
+#endif
   char *sentence_start = NULL;
 
   // TODO (balaji) use bit map and masks to reduce comparisons
@@ -882,6 +922,7 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
         }
       }
 
+#ifdef KEYPHRASE_ENABLED
       if (NULL == stopwords_keyphrase_start) {
         if ('\0' != current_word_delimiter &&
             !current_word_stop &&
@@ -920,6 +961,7 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
           }
         }
       }
+#endif
 
       if (NULL == caps_entity_start) {
         caps_entity_end = NULL;
@@ -979,6 +1021,7 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
         }
       }
 
+#ifdef KEYPHRASE_ENABLED
       // write keyphrases
       if (NULL != stopwords_keyphrase_start && NULL != stopwords_keyphrase_end) {
         if (stopwords_keyphrase_start != caps_entity_start || stopwords_keyphrase_end != caps_entity_end) {
@@ -1010,6 +1053,7 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
         stopwords_keyphrase_start = NULL;
         stopwords_keyphrase_end = NULL;
       }
+#endif
 
       // write entities
       if (NULL != stopwords_entity_start && NULL != stopwords_entity_end) {

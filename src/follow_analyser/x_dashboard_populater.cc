@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
   std::string keywords_file_name = root_dir + "/keywords_by_" + handle + "." + time_stamp + ".txt";
   // lets abuse GetKeywordsFromFollowers function to get keywords for handle
   followers.insert(handle);
-  ret_value = fa.GetKeywordsFromFollowers(&ts, followers, tweets_file_name, keywords_file_name);
+  ret_value = fa.GetKeywords(&ts, followers, tweets_file_name, keywords_file_name);
   if (ret_value < 0)
     std::cout << "Error: could not get tweets for " + handle << std::endl;
   else
@@ -53,9 +53,15 @@ int main(int argc, char *argv[]) {
   }
 
   ret_value = 0;
-  keywords_file_name = root_dir + "/keywords_by_" + handle + "_followers." + time_stamp + ".txt";
   tweets_file_name = root_dir + "/tweets_by_" + handle + "_followers." + time_stamp + ".txt";
-  ret_value = fa.GetKeywordsFromFollowers(&ts, followers, tweets_file_name, keywords_file_name);
+  keywords_file_name = root_dir + "/keywords_by_" + handle + "_followers." + time_stamp + ".txt";
+  std::string scripts_tweeters_map_file_name = root_dir + "/scripts_tweeters_map_for_" + handle + "." + time_stamp + ".txt";
+  std::string keywords_tweeters_map_file_name = root_dir + "/keywords_tweeters_map_for_" + handle + "." + time_stamp + ".txt";
+  ret_value = fa.GetKeywordsFromFollowers(&ts, followers,
+                                          tweets_file_name,
+                                          keywords_file_name,
+                                          scripts_tweeters_map_file_name,
+                                          keywords_tweeters_map_file_name);
   if (ret_value < 0)
     std::cout << "Error: could not get keywords from " << handle << "'s followers\n";
   else

@@ -10,6 +10,7 @@
 #include <ext/hash_set>
 #include <string>
 #include <set>
+#include <map>
 #include <fstream>
 #include <iostream>
 
@@ -40,6 +41,10 @@ class KeywordsExtract {
   int GetKeywords(char* str, std::string &script, std::set<std::string> &keywords_set, std::set<std::string> &keyphrases_set);
   int GetKeywords(char* str, std::string &script, std::set<std::string> &keywords_set);
   int GetKeywords(char* str, std::set<std::string> &keywords_set);
+  int GetKeywords(char *str,
+                  std::string &user,
+                  std::map<std::string, std::string> &script_user_map,
+                  std::map<std::string, std::string> &keyword_user_map);
   void printKeywords(); // not implemented yet, to be used for testing
   void PrintKeywords(std::set<std::string> &keywords_set);
   int DictionaryLookup(char *word);

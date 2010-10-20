@@ -17,7 +17,9 @@ class TwitterSearcher {
   ~TwitterSearcher();
   int Search(const std::string& url, std::ofstream &tweets_file_stream,
              std::set<std::string> &tweeters_set,
-             std::set<std::string> &keywords_set);
+//             std::set<std::string> &keywords_set);
+             std::map<std::string, std::string> &script_tweeter_map,
+             std::map<std::string, std::string> &keyword_tweeter_map);
   int Init(std::string root_dir);
   int DeInit();
  private:

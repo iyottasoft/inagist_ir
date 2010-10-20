@@ -55,9 +55,12 @@ int TwitterSearcher::DeInit() {
   return 0;
 }
 
-int TwitterSearcher::Search(const std::string& url, std::ofstream &tweets_file_stream,
+int TwitterSearcher::Search(const std::string& url,
+                            std::ofstream &tweets_file_stream,
                             std::set<std::string> &tweeters_set,
-                            std::set<std::string> &keywords_set) {
+//                            std::set<std::string> &keywords_set) {
+                            std::map<std::string, std::string> &script_tweeter_map,
+                            std::map<std::string, std::string> &keyword_tweeter_map) {
 
   std::string temp_url = url;
   std::string last_search_max_id = m_search_data_map[temp_url];
@@ -94,19 +97,21 @@ int TwitterSearcher::Search(const std::string& url, std::ofstream &tweets_file_s
             if (false == tweet_value->IsObject()) {
               std::cout << "ERROR: tweet_value is not an object" << std::endl;
             } else {
+              std::string tweeter = "unknown";
               JSONObject tweet_object = tweet_value->AsObject();
+              if (tweet_object.find("from_user") != tweet_object.end() && tweet_object["from_user"]->IsString()) {
+                tweeter = tweet_object["from_user"]->AsString();
+                tweeters_set.insert(tweeter);
+              }
               if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
                 tweet = tweet_object["text"]->AsString(); 
                 tweets_file_stream << tweet << std::endl;
                 tweets_file_stream.flush();
                 strcpy(m_buffer, (char *) tweet.c_str());
                 m_buffer[tweet.size()] = '\0';
-                m_keywords_extract.GetKeywords(m_buffer, script, keywords_set, unused_keyphrases_set);
+                m_keywords_extract.GetKeywords(m_buffer, tweeter, script_tweeter_map, keyword_tweeter_map);
                 unused_keyphrases_set.clear();
                 ++num_docs;
-              }
-              if (tweet_object.find("from_user") != tweet_object.end() && tweet_object["from_user"]->IsString()) {
-                tweeters_set.insert(tweet_object["from_user"]->AsString());
               }
             }
           }
