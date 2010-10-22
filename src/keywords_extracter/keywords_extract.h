@@ -43,6 +43,7 @@ class KeywordsExtract {
   int GetKeywords(char* str, std::set<std::string> &keywords_set);
   int GetKeywords(char *str,
                   std::string &user,
+                  std::set<std::string> &keywords_set,
                   std::map<std::string, std::string> &script_user_map,
                   std::map<std::string, std::string> &keyword_user_map);
   void printKeywords(); // not implemented yet, to be used for testing

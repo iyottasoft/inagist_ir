@@ -433,10 +433,10 @@ int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set)
 
 int KeywordsExtract::GetKeywords(char *str,
                                  std::string &user,
+                                 std::set<std::string> &keywords_set,
                                  std::map<std::string, std::string> &script_user_map,
                                  std::map<std::string, std::string> &keyword_user_map) {
   std::string script;
-  std::set<std::string> keywords_set;
   if (GetKeywords(str, script, keywords_set) < 0) {
     cout << "Error: could not get keywords\n";
     return -1;

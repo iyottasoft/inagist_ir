@@ -63,7 +63,7 @@ int FollowAnalyser::GetKeywords(inagist_dashboard::TwitterSearcher* twitter_sear
   std::ofstream tweets_file_stream(tweets_file_name.c_str());
   for (iter = followers.begin(); iter != followers.end(); iter++) {
     url = std::string("http://search.twitter.com/search.json?q=from:" + *iter/* + "&rpp=100"*/);
-    if ((num_docs = twitter_searcher->Search(url, tweets_file_stream, unused_set, unused_map_1, unused_map_2)) < 0) {
+    if ((num_docs = twitter_searcher->Search(url, tweets_file_stream, unused_set, keywords_set, unused_map_1, unused_map_2)) < 0) {
       std::cout << "Error: could not get tweets for " << *iter << std::endl;
     } else {
       keywords_manager.PopulateFreqMap(keywords_set);
@@ -103,12 +103,9 @@ int FollowAnalyser::GetKeywordsFromFollowers(inagist_dashboard::TwitterSearcher*
   std::ofstream tweets_file_stream(tweets_file_name.c_str());
   for (iter = followers.begin(); iter != followers.end(); iter++) {
     url = std::string("http://search.twitter.com/search.json?q=from:" + *iter/* + "&rpp=100"*/);
-    if ((num_docs = twitter_searcher->Search(url, tweets_file_stream, unused_set, scripts_tweeters_map, keywords_tweeters_map)) < 0) {
+    if ((num_docs = twitter_searcher->Search(url, tweets_file_stream, unused_set, keywords_set, scripts_tweeters_map, keywords_tweeters_map)) < 0) {
       std::cout << "Error: could not get tweets for " << *iter << std::endl;
     } else {
-      for (map_iter = keywords_tweeters_map.begin(); map_iter != keywords_tweeters_map.end(); map_iter++) {
-        keywords_set.insert(map_iter->first);
-      }
       // TODO (balaji) - this whole keywords manager thingy can be implemented here. will save some pain
       keywords_manager.PopulateFreqMap(keywords_set);
       ret_value += num_docs;

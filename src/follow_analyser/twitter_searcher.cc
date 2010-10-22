@@ -58,9 +58,9 @@ int TwitterSearcher::DeInit() {
 int TwitterSearcher::Search(const std::string& url,
                             std::ofstream &tweets_file_stream,
                             std::set<std::string> &tweeters_set,
-//                            std::set<std::string> &keywords_set) {
-                            std::map<std::string, std::string> &script_tweeter_map,
-                            std::map<std::string, std::string> &keyword_tweeter_map) {
+                            std::set<std::string> &keywords_set,
+                            std::map<std::string, std::string> &scripts_tweeters_map,
+                            std::map<std::string, std::string> &keywords_tweeters_map) {
 
   std::string temp_url = url;
   std::string last_search_max_id = m_search_data_map[temp_url];
@@ -109,7 +109,7 @@ int TwitterSearcher::Search(const std::string& url,
                 tweets_file_stream.flush();
                 strcpy(m_buffer, (char *) tweet.c_str());
                 m_buffer[tweet.size()] = '\0';
-                m_keywords_extract.GetKeywords(m_buffer, tweeter, script_tweeter_map, keyword_tweeter_map);
+                m_keywords_extract.GetKeywords(m_buffer, tweeter, keywords_set, scripts_tweeters_map, keywords_tweeters_map);
                 unused_keyphrases_set.clear();
                 ++num_docs;
               }
