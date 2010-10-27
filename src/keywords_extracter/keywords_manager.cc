@@ -33,8 +33,12 @@ int KeywordsManager::DeInit() {
 int KeywordsManager::PopulateFreqMap(std::set<std::string> &keywords_set) {
   std::set<std::string>::iterator set_iter;
 
-  for (set_iter = keywords_set.begin(); set_iter != keywords_set.end(); set_iter++)
-    ++m_entity_freq_map[*set_iter];
+  for (set_iter = keywords_set.begin(); set_iter != keywords_set.end(); set_iter++) {
+    if (m_entity_freq_map.find(*set_iter) != m_entity_freq_map.end())
+      ++m_entity_freq_map[*set_iter];
+    else
+      m_entity_freq_map[*set_iter] = 1;
+  }
 
   return 0;
 }

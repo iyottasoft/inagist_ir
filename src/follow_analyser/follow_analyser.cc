@@ -108,6 +108,7 @@ int FollowAnalyser::GetKeywordsFromFollowers(inagist_dashboard::TwitterSearcher*
     } else {
       // TODO (balaji) - this whole keywords manager thingy can be implemented here. will save some pain
       keywords_manager.PopulateFreqMap(keywords_set);
+      keywords_set.clear();
       ret_value += num_docs;
     }
     usleep(100000);
