@@ -3,11 +3,11 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated #-DDEBUG
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/stemmer/ -I../../include/json_parser -I../../src/curl_request_maker -I../../src/keywords_extracter
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/stemmer/ -I../../include/json_parser -I../../src/curl_request_maker -I../../src/script_detector -I../../src/keywords_extracter
 
 LINK_DIR = -L../../lib
 
-LIBS = -lstemmer -ljsonparser -lcurlrequestmaker -ltwitcurl -lcurl -lkeywordsextracter
+LIBS = -lstemmer -ljsonparser -lcurlrequestmaker -ltwitcurl -lcurl -lkeywordsextracter -lscriptdetector
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin

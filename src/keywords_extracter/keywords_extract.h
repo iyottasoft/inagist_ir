@@ -13,6 +13,7 @@
 #include <map>
 #include <fstream>
 #include <iostream>
+#include "script_detector.h"
 
 namespace __gnu_cxx
 {
@@ -56,6 +57,7 @@ class KeywordsExtract {
   std::ofstream m_out_stream;
   string_hash_set m_dictionary;
   string_hash_set m_stopwords_dictionary;
+  ScriptDetector m_script_detector;
 
   DISALLOW_COPY_AND_ASSIGN(KeywordsExtract);
   int LoadDictionary(const char* file, string_hash_set &dictionary);

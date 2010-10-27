@@ -3,11 +3,11 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../keywords_extracter 
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../keywords_extracter -I../script_detector
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -lkeywordsextracter -lstemmer -ljsonparser -lcurlrequestmaker -ltwitcurl -lcurl
+LIBS = -l${PROJECT} -lkeywordsextracter -lscriptdetector -lstemmer -ljsonparser -lcurlrequestmaker -ltwitcurl -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
@@ -48,7 +48,7 @@ ${BIN_DIR}/t_trends_manager: t_trends_manager.o ${LIB}
 ERL_LIB = ${LIB_DIR}/libtrends.so
 trends:
 	@echo "creating erlang library file ..."
-	@gcc -fPIC -shared -o ${ERL_LIB} trends.c -I/usr/local/lib/erlang/usr/include/ -I../keywords_extracter -L../../lib -ltrendsmanager -lkeywordsextracter -lstdc++ -lei -lerl_interface  -I/usr/local/lib/erlang/lib/erl_interface-3.6.5/include -L/usr/local/lib/erlang/lib/erl_interface-3.6.5/lib
+	@gcc -fPIC -shared -o ${ERL_LIB} trends.c -I/usr/local/lib/erlang/usr/include/ -I../keywords_extracter -I../script_detector -L../../lib -ltrendsmanager -lkeywordsextracter -lscriptdetector -lstdc++ -lei -lerl_interface  -I/usr/local/lib/erlang/lib/erl_interface-3.6.5/include -L/usr/local/lib/erlang/lib/erl_interface-3.6.5/lib
 	@echo ${ERL_LIB}
 	@echo "compiling trends.erl"
 	@erlc trends.erl
