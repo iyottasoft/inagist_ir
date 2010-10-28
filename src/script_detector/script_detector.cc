@@ -6,9 +6,12 @@
 namespace inagist_trends {
 
 ScriptDetector::ScriptDetector() {
+  memset(m_buffer, '\0', SD_MAX_BUFFER_LEN);
 }
 
 ScriptDetector::~ScriptDetector() {
+  Clear();
+  memset(m_buffer, '\0', SD_MAX_BUFFER_LEN);
 }
 
 int ScriptDetector::Init() {
@@ -18,6 +21,7 @@ int ScriptDetector::Init() {
 
 int ScriptDetector::Clear() {
   m_script_map.clear();
+  m_buffer[0] = '\0';
   return 0;
 }
 
@@ -43,6 +47,8 @@ int ScriptDetector::DetectScript(const std::string& text, std::set<std::string>&
       ptr++;
     }
   }
+  ptr = NULL;
+  end = NULL;
   return 0;
 }
 
@@ -251,6 +257,11 @@ int ScriptDetector::DetectScript(int code_point, std::string &script) {
 int ScriptDetector::GetMaxScript(std::string& script) {
   // currently sending the first script with more than 5 characters
   // not necessarily the max
+  if (m_script_map.empty()) {
+    script = "xx";
+    return -1;
+  }
+
   int ret_value = 0;
   for (m_script_map_iter = m_script_map.begin(); m_script_map_iter != m_script_map.end(); m_script_map_iter++) {
     if ((ret_value = m_script_map_iter->second) > 9) {
@@ -259,9 +270,7 @@ int ScriptDetector::GetMaxScript(std::string& script) {
     }
   }
 
-  if (0 == ret_value)
-    script = "en";
-  else if (ret_value < 0)
+  if (ret_value <= 9)
     script = "xx";
 
   return ret_value;

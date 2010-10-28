@@ -272,7 +272,9 @@ int KeywordsExtract::GetKeywords(char *str,
 #ifdef KEYPHRASE_ENABLED
 int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::string> &keywords_set) {
   std::set<std::string> keyphrases_set;
-  return GetKeywords(str, script, keywords_set, keyphrases_set);
+  int ret_value = GetKeywords(str, script, keywords_set, keyphrases_set);
+  keyphrases_set.clear();
+  return ret_value;
 }
 #endif
 
@@ -364,6 +366,7 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
   string script_temp;
   //std::map<std::string, int> script_map;
   int script_count = 0;
+  int english_count = 0;
 
   // the whole thing starts here
   ptr = str;
@@ -442,6 +445,8 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
             }
           }
         }
+      } else {
+        english_count++;
       }
     } catch (...) {
 #ifdef DEBUG
@@ -1095,7 +1100,7 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
     }
 
     // a mere cog in a loop wheel, but a giant killer if commented
-    if (script_count > 9) {
+    if (script_count > 9 || english_count > 20) {
       probe++;
     } else {
       try {
@@ -1111,6 +1116,8 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
               }
             }
           }
+        } else {
+          english_count++;
         }
       } catch (...) {
 #ifdef DEBUG

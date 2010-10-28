@@ -12,9 +12,7 @@ LIBS = -lstemmer -ljsonparser -lcurlrequestmaker -lcurl -lkeywordsextracter -lsc
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
 
-BINS = ${BIN_DIR}/t_test_inagist_utf8 \
-       ${BIN_DIR}/t_test_twitter_utf8 \
-       ${BIN_DIR}/t_encode
+BINS = ${BIN_DIR}/t_encode
 
 all: ${BINS}
 	@echo "build done!"
@@ -27,16 +25,6 @@ clean:
 .cc.o:
 	@echo "compiling ..." $< "..."
 	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
-
-${BIN_DIR}/t_test_inagist_utf8: t_test_inagist_utf8.o
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_test_inagist_utf8
-	@echo "done!"
-
-${BIN_DIR}/t_test_twitter_utf8: t_test_twitter_utf8.o
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_test_twitter_utf8
-	@echo "done!"
 
 ${BIN_DIR}/t_encode: t_encode.o
 	@echo "creating binary:" $@

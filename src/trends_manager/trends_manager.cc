@@ -12,6 +12,10 @@
 char g_buffer[MAX_BUFFER_SIZE];
 inagist_trends::KeywordsExtract g_keywords_extract;
 inagist_trends::KeywordsManager g_keywords_manager;
+#ifdef _CPLUSPLUS
+std::set<std::string> g_keywords_set;
+std::set<std::string> g_keyphrases_set;
+#endif
 
 #ifdef _CPLUSPLUS
 extern "C"
@@ -32,14 +36,12 @@ int Init(const char* stopwords_file_path, const char* dictionary_file_path) {
 extern "C"
 #endif
 int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *tweet_script, char* keywords, char* keyphrases) {
-  std::set<std::string> keywords_set;
-  std::set<std::string> keyphrases_set;
   std::string script;
   strcpy(g_buffer, tweet);
-  g_keywords_extract.GetKeywords(g_buffer, script, keywords_set, keyphrases_set);
+  g_keywords_extract.GetKeywords(g_buffer, script, g_keywords_set, g_keyphrases_set);
   std::set<std::string>::iterator iter;
   char *ptr = keywords;
-  for (iter = keywords_set.begin(); iter != keywords_set.end(); iter++) {
+  for (iter = g_keywords_set.begin(); iter != g_keywords_set.end(); iter++) {
     int len = (*iter).length();
     if ((ptr - keywords) + len < MAX_BUFFER_SIZE) {
       strcpy(ptr, (*iter).c_str());
@@ -50,11 +52,14 @@ int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *tweet_script
 #ifdef DEBUG
       std::cout << "Not enuf space in the keywords buffer\n";
 #endif
+      g_keyphrases_set.clear();
+      g_keywords_set.clear();
+      g_buffer[0] = '\0';
       return -1;
     }
   }
   ptr = keyphrases;
-  for (iter = keyphrases_set.begin(); iter != keyphrases_set.end(); iter++) {
+  for (iter = g_keyphrases_set.begin(); iter != g_keyphrases_set.end(); iter++) {
     int len = (*iter).length();
     if ((ptr - keyphrases) + len < MAX_BUFFER_SIZE) {
       strcpy(ptr, (*iter).c_str());
@@ -69,6 +74,11 @@ int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *tweet_script
     }
   }
   strcpy(tweet_script, script.c_str());
+
+  g_keyphrases_set.clear();
+  g_keywords_set.clear();
+  g_buffer[0] = '\0';
+  ptr = NULL;
 
   return 0;
 }

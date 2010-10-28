@@ -6,7 +6,7 @@
 #include <map>
 
 #ifndef SD_MAX_BUFFER_LEN
-#define SD_MAX_BUFFER_LEN 540
+#define SD_MAX_BUFFER_LEN 560
 #endif
 
 namespace inagist_trends {
