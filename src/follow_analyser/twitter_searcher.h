@@ -23,6 +23,7 @@ class TwitterSearcher {
              std::map<std::string, std::string> &keyword_tweeter_map);
   int Init(std::string root_dir);
   int DeInit();
+  int GetFollowers(const std::string& handle, std::set<std::string>& followers);
  private:
   std::string m_search_data_dir;
   std::string m_search_data_history_file;

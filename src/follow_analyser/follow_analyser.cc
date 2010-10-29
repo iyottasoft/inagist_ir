@@ -16,11 +16,16 @@ FollowAnalyser::FollowAnalyser() {
 FollowAnalyser::~FollowAnalyser() {
   m_follower_maps_dir.clear();
   m_follower_maps_index_file.clear();
+  m_twitter_searcher.DeInit();
 }
 
 int FollowAnalyser::Init(std::string root_dir) {
   m_follower_maps_dir = root_dir;
   m_follower_maps_index_file = root_dir + "/handle_followers_map.txt";
+  if (m_twitter_searcher.Init(root_dir) < 0) {
+    std::cout << "Error: could not initialize twitter searcher" << std::endl;
+    return -1;
+  }
   return 0;
 }
 
@@ -41,35 +46,28 @@ int FollowAnalyser::ReadFollowers(std::string handle, std::set<std::string> &fol
   return followers.size();
 }
 
-// gets a set of followers
+// gets a set keywords
 // writes tweets and idf of keywords to files
 // uses TwitterSearcher class to get the tweets and the keywords
 // uses KeywordsManager class to get the idf of keywords
-int FollowAnalyser::GetKeywords(inagist_dashboard::TwitterSearcher* twitter_searcher,
-                                             const std::set<std::string>& followers,
-                                             const std::string& tweets_file_name,
-                                             const std::string& keywords_file_name) {
+int FollowAnalyser::GetKeywords(const std::string& handle,
+                                const std::string& tweets_file_name,
+                                const std::string& keywords_file_name) {
 
   int ret_value = 0;
-  int num_docs = 0;
   std::set<std::string> keywords_set;
   std::set<std::string> unused_set;
-  std::set<std::string>::iterator iter;
   std::map<std::string, std::string> unused_map_1;
   std::map<std::string, std::string> unused_map_2;
   inagist_trends::KeywordsManager keywords_manager;
   std::string url;
 
   std::ofstream tweets_file_stream(tweets_file_name.c_str());
-  for (iter = followers.begin(); iter != followers.end(); iter++) {
-    url = std::string("http://search.twitter.com/search.json?q=from:" + *iter/* + "&rpp=100"*/);
-    if ((num_docs = twitter_searcher->Search(url, tweets_file_stream, unused_set, keywords_set, unused_map_1, unused_map_2)) < 0) {
-      std::cout << "Error: could not get tweets for " << *iter << std::endl;
-    } else {
-      keywords_manager.PopulateFreqMap(keywords_set);
-      ret_value += num_docs;
-    }
-    usleep(100000);
+  url = std::string("http://search.twitter.com/search.json?q=from:" + handle/* + "&rpp=100"*/);
+  if ((ret_value = m_twitter_searcher.Search(url, tweets_file_stream, unused_set, keywords_set, unused_map_1, unused_map_2)) < 0) {
+    std::cout << "Error: could not get tweets for " << handle << std::endl;
+  } else {
+    keywords_manager.PopulateFreqMap(keywords_set);
   }
   tweets_file_stream.close();
 
@@ -82,8 +80,7 @@ int FollowAnalyser::GetKeywords(inagist_dashboard::TwitterSearcher* twitter_sear
 // writes tweets and idf of keywords to files
 // uses TwitterSearcher class to get the tweets and the keywords
 // uses KeywordsManager class to get the idf of keywords
-int FollowAnalyser::GetKeywordsFromFollowers(inagist_dashboard::TwitterSearcher* twitter_searcher,
-                                             const std::set<std::string>& followers,
+int FollowAnalyser::GetKeywordsFromFollowers(const std::set<std::string>& followers,
                                              const std::string& tweets_file_name,
                                              const std::string& keywords_file_name,
                                              const std::string& scripts_tweeters_map_file_name,
@@ -93,7 +90,7 @@ int FollowAnalyser::GetKeywordsFromFollowers(inagist_dashboard::TwitterSearcher*
   int num_docs = 0;
   std::set<std::string> keywords_set;
   std::set<std::string> unused_set;
-  std::set<std::string>::iterator iter;
+  std::set<std::string>::iterator set_iter;
   std::map<std::string, std::string> scripts_tweeters_map;
   std::map<std::string, std::string> keywords_tweeters_map;
   inagist_trends::KeywordsManager keywords_manager;
@@ -101,10 +98,10 @@ int FollowAnalyser::GetKeywordsFromFollowers(inagist_dashboard::TwitterSearcher*
   std::map<std::string, std::string>::iterator map_iter;
 
   std::ofstream tweets_file_stream(tweets_file_name.c_str());
-  for (iter = followers.begin(); iter != followers.end(); iter++) {
-    url = std::string("http://search.twitter.com/search.json?q=from:" + *iter/* + "&rpp=100"*/);
-    if ((num_docs = twitter_searcher->Search(url, tweets_file_stream, unused_set, keywords_set, scripts_tweeters_map, keywords_tweeters_map)) < 0) {
-      std::cout << "Error: could not get tweets for " << *iter << std::endl;
+  for (set_iter = followers.begin(); set_iter != followers.end(); set_iter++) {
+    url = std::string("http://search.twitter.com/search.json?q=from:" + *set_iter/* + "&rpp=100"*/);
+    if ((num_docs = m_twitter_searcher.Search(url, tweets_file_stream, unused_set, keywords_set, scripts_tweeters_map, keywords_tweeters_map)) < 0) {
+      std::cout << "Error: could not get tweets for " << *set_iter << std::endl;
     } else {
       // TODO (balaji) - this whole keywords manager thingy can be implemented here. will save some pain
       keywords_manager.PopulateFreqMap(keywords_set);
@@ -136,6 +133,46 @@ int FollowAnalyser::GetKeywordsFromFollowers(inagist_dashboard::TwitterSearcher*
   return ret_value;
 }
 
+int FollowAnalyser::GetKeywordsFromMentions(const std::string& handle,
+                                            std::set<std::string>& mentioners,
+                                            const std::string& tweets_file_name,
+                                            const std::string& keywords_file_name,
+                                            const std::string& keywords_tweeters_map_file_name) {
+
+  int ret_value = 0;
+  int num_docs = 0;
+  std::set<std::string> keywords_set;
+  std::map<std::string, std::string> scripts_tweeters_map;
+  std::map<std::string, std::string> keywords_tweeters_map;
+  inagist_trends::KeywordsManager keywords_manager;
+  std::string url;
+
+  std::ofstream tweets_file_stream(tweets_file_name.c_str());
+  url = std::string("http://search.twitter.com/search.json?q=from\%3A" + handle + "+-\%40" + handle);
+  if ((num_docs = m_twitter_searcher.Search(url, tweets_file_stream, mentioners, keywords_set, scripts_tweeters_map, keywords_tweeters_map)) < 0) {
+    std::cout << "Error: could not get tweets for " << handle << std::endl;
+  } else {
+    // TODO (balaji) - this whole keywords manager thingy can be implemented here. will save some pain
+    keywords_manager.PopulateFreqMap(keywords_set);
+    keywords_set.clear();
+    ret_value += num_docs;
+  }
+  tweets_file_stream.close();
+
+  // write keywords map to file
+  std::map<std::string, std::string>::iterator map_iter;
+  std::ofstream keywords_tweeters_map_file_stream(keywords_tweeters_map_file_name.c_str());
+  for (map_iter = keywords_tweeters_map.begin(); map_iter != keywords_tweeters_map.end(); map_iter++) {
+    keywords_tweeters_map_file_stream << map_iter->first << " = " << map_iter->second << std::endl;
+  }
+  keywords_tweeters_map_file_stream.close();
+  keywords_tweeters_map.clear();
+
+  keywords_manager.CalculateIDF(ret_value, keywords_file_name.c_str());
+
+  return ret_value;
+}
+
 int FollowAnalyser::GetFollowers(std::string handle, std::set<std::string>& followers) {
   bool followers_list_exists = false;
   std::ifstream ifs(m_follower_maps_index_file.c_str());
@@ -154,68 +191,24 @@ int FollowAnalyser::GetFollowers(std::string handle, std::set<std::string>& foll
     return ReadFollowers(handle, followers);
   }
 
-  inagist_api::CurlRequestMaker curl_request_maker;
-
-  std::string temp_str;
-  std::string reply_message;
-  std::string cursor = "-1";
-  int num_followers = 0;
-  std::ofstream ofs;
-
-  bool ret_value = true;
   std::string file_name = m_follower_maps_dir + "/" + handle + "_followers.txt";
+  int num_followers = 0;
+  if ((num_followers = m_twitter_searcher.GetFollowers(handle, followers)) <= 0) {
+    if (num_followers < 0)
+      std::cout << "Error: could not get followers form TwitterSearcher" << std::endl;
+    return -1;
+  }
+
+  std::ofstream ofs;
   ofs.open(file_name.c_str());
   if (!ofs) {
-    std::cout << "Error: could not open " << file_name << std::endl;
-  } else {
-    while (ret_value) {
-      std::string url = "http://twitter.com/statuses/followers/" + handle + ".json?cursor=" + cursor;
-      ret_value = curl_request_maker.GetTweets(url.c_str());
-  
-      if (ret_value) {
-        curl_request_maker.GetLastWebResponse(reply_message);
-        if (reply_message.size() > 0) {
-          // the response is in json format
-          JSONValue *json_value = JSON::Parse(reply_message.c_str());
-          if (!json_value || false == json_value->IsObject()) {
-            std::cout << "Error: curl reply not a json object\n";
-            break;
-          } else {
-            // to be specific, the response is a json array
-            JSONObject t_o = json_value->AsObject(); 
-            if (t_o.find("users") != t_o.end() && t_o["users"]->IsArray()) {
-              JSONArray tweet_array = t_o["users"]->AsArray();
-              JSONObject tweet_object;
-              for (unsigned int i=0; i < tweet_array.size(); i++) {
-                num_followers++;
-                JSONValue *tweet_value = tweet_array[i];
-                if (false == tweet_value->IsObject()) {
-                  std::cout << "ERROR: tweet_value is not an object" << std::endl;
-                } else {
-                  tweet_object = tweet_value->AsObject();
-    
-                  // now lets work on the json object thus obtained
-                  if (tweet_object.find("screen_name") != tweet_object.end() && tweet_object["screen_name"]->IsString()) {
-                    followers.insert(tweet_object["screen_name"]->AsString());
-                    ofs << tweet_object["screen_name"]->AsString() << std::endl;
-                  }
-                }
-              }
-            }
-            if (t_o.find("next_cursor_str") != t_o.end() && t_o["next_cursor_str"]->IsString()) {
-              cursor = t_o["next_cursor_str"]->AsString();
-              if (cursor.compare("0") == 0) {
-                break;
-              }
-            } else {
-              std::cout << "could not find next_cursor_str" << std::endl;
-              break;
-            }
-          }
-          delete json_value;
-        }
-      }
+    std::set<std::string>::iterator set_iter;
+    for (set_iter = followers.begin(); set_iter != followers.end(); set_iter++) {
+      ofs << *set_iter << std::endl;
     }
+    std::cout << "Error: could not open " << file_name << std::endl;
+    return -1;
+  } else {
     ofs.close();
   }
 

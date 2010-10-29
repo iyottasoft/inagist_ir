@@ -25,20 +25,24 @@ class FollowAnalyser {
   ~FollowAnalyser();
   int Init(std::string root_dir);
   int GetFollowers(std::string handle, std::set<std::string> &followers);
-  int GetKeywords(inagist_dashboard::TwitterSearcher* twitter_searcher,
-                               const std::set<std::string>& followers,
-                               const std::string& tweets_file_name,
-                               const std::string& keywords_file_name);
-  int GetKeywordsFromFollowers(inagist_dashboard::TwitterSearcher* twitter_searcher,
-                               const std::set<std::string>& followers,
+  int GetKeywords(const std::string& handle,
+                  const std::string& tweets_file_name,
+                  const std::string& keywords_file_name);
+  int GetKeywordsFromFollowers(const std::set<std::string>& followers,
                                const std::string& tweets_file_name,
                                const std::string& keywords_file_name,
                                const std::string& scripts_tweeters_map_file_name,
+                               const std::string& keywords_tweeters_map_file_name);
+  int GetKeywordsFromMentions(const std::string& handle,
+                               std::set<std::string>& mentioners,
+                               const std::string& tweets_file_name,
+                               const std::string& keywords_file_name,
                                const std::string& keywords_tweeters_map_file_name);
 
  private:
   std::string m_follower_maps_dir;
   std::string m_follower_maps_index_file;
+  inagist_dashboard::TwitterSearcher m_twitter_searcher;
   int ReadFollowers(std::string handle, std::set<std::string> &followers);
 };
 

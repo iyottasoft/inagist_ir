@@ -137,4 +137,64 @@ int TwitterSearcher::Search(const std::string& url,
   return num_docs;
 }
 
+int TwitterSearcher::GetFollowers(const std::string& handle, std::set<std::string>& followers) {
+
+  inagist_api::CurlRequestMaker curl_request_maker;
+
+  std::string temp_str;
+  std::string reply_message;
+  std::string cursor = "-1";
+  int num_followers = 0;
+
+  bool ret_value = true;
+  while (ret_value) {
+    std::string url = "http://twitter.com/statuses/followers/" + handle + ".json?cursor=" + cursor;
+    ret_value = curl_request_maker.GetTweets(url.c_str());
+
+    if (ret_value) {
+      curl_request_maker.GetLastWebResponse(reply_message);
+      if (reply_message.size() > 0) {
+        // the response is in json format
+        JSONValue *json_value = JSON::Parse(reply_message.c_str());
+        if (!json_value || false == json_value->IsObject()) {
+          std::cout << "Error: curl reply not a json object\n";
+          break;
+        } else {
+          // to be specific, the response is a json array
+          JSONObject t_o = json_value->AsObject(); 
+          if (t_o.find("users") != t_o.end() && t_o["users"]->IsArray()) {
+            JSONArray tweet_array = t_o["users"]->AsArray();
+            JSONObject tweet_object;
+            for (unsigned int i=0; i < tweet_array.size(); i++) {
+              num_followers++;
+              JSONValue *tweet_value = tweet_array[i];
+              if (false == tweet_value->IsObject()) {
+                std::cout << "ERROR: tweet_value is not an object" << std::endl;
+              } else {
+                tweet_object = tweet_value->AsObject();
+  
+                // now lets work on the json object thus obtained
+                if (tweet_object.find("screen_name") != tweet_object.end() && tweet_object["screen_name"]->IsString()) {
+                  followers.insert(tweet_object["screen_name"]->AsString());
+                }
+              }
+            }
+          }
+          if (t_o.find("next_cursor_str") != t_o.end() && t_o["next_cursor_str"]->IsString()) {
+            cursor = t_o["next_cursor_str"]->AsString();
+            if (cursor.compare("0") == 0) {
+              break;
+            }
+          } else {
+            std::cout << "could not find next_cursor_str" << std::endl;
+            break;
+          }
+        }
+        delete json_value;
+      }
+    }
+  }
+  return num_followers;
+}
+
 }
