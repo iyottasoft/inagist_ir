@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
   if (ts.Test(url) < 0)
     std::cout << "Error: test for twitter searcher failed\n";
 
-  url = std::string("http://search.twitter.com/search.json?q=from\%3A" + handle + "+-\%40" + handle);
+  url = std::string("http://search.twitter.com/search.json?q=to\%3A" + handle);
   if (ts.Test(url) < 0)
     std::cout << "Error: test for twitter searcher failed\n";
 

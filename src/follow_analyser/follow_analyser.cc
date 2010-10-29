@@ -148,7 +148,7 @@ int FollowAnalyser::GetKeywordsFromMentions(const std::string& handle,
   std::string url;
 
   std::ofstream tweets_file_stream(tweets_file_name.c_str());
-  url = std::string("http://search.twitter.com/search.json?q=from\%3A" + handle + "+-\%40" + handle);
+  url = std::string("http://search.twitter.com/search.json?q=to\%3A" + handle);
   if ((num_docs = m_twitter_searcher.Search(url, tweets_file_stream, mentioners, keywords_set, scripts_tweeters_map, keywords_tweeters_map)) < 0) {
     std::cout << "Error: could not get tweets for " << handle << std::endl;
   } else {
