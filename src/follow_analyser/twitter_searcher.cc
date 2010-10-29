@@ -55,6 +55,67 @@ int TwitterSearcher::DeInit() {
   return 0;
 }
 
+int TwitterSearcher::Test(const std::string& url) {
+
+  std::cout << url << std::endl;
+  int num_docs = 0;
+
+  bool ret_value;
+  ret_value = m_curl_request_maker.GetTweets(url.c_str());
+
+  if (ret_value) {
+    std::string reply_message;
+    m_curl_request_maker.GetLastWebResponse(reply_message);
+
+    if (reply_message.size() <= 0) {
+      m_curl_request_maker.GetLastCurlError(reply_message);
+    }
+
+    if (reply_message.size() > 0) {
+      JSONValue *json_value = JSON::Parse(reply_message.c_str());
+      if (!json_value || (false == json_value->IsObject())) {
+        std::cout << "ERROR: JSON::Parse failed for query: " << url << std::endl;
+      } else {
+        std::string tweet;
+        JSONObject tweet_o = json_value->AsObject();
+        if (tweet_o.find("results") != tweet_o.end() && tweet_o["results"]->IsArray()) {
+          JSONArray tweet_array = tweet_o["results"]->AsArray();
+          for (unsigned int i=0; i < tweet_array.size(); i++) {
+            JSONValue *tweet_value = tweet_array[i];
+            if (false == tweet_value->IsObject()) {
+              std::cout << "ERROR: tweet_value is not an object" << std::endl;
+            } else {
+              std::string tweeter = "unknown";
+              JSONObject tweet_object = tweet_value->AsObject();
+              if (tweet_object.find("from_user") != tweet_object.end() && tweet_object["from_user"]->IsString()) {
+                std::cout << tweet_object["from_user"]->AsString() << ": "; 
+              }
+              if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
+                std::cout << tweet_object["text"]->AsString() << std::endl;
+                ++num_docs;
+              }
+            }
+          }
+        }
+
+        if (tweet_o.find("max_id") != tweet_o.end() && tweet_o["max_id"]->IsString()) {
+          std::string last_search_max_id = tweet_o["max_id"]->AsString();
+          if (last_search_max_id.size() <= 0)
+            std::cout << "max id value is empty\n";
+        } else {
+          std::cout << "max id field not found in twitter response\n";
+        }
+      }
+      delete json_value;
+    }
+  } else {
+    std::cout << "ERROR: couldn't get tweets" << std::endl;
+    return 0;
+  }
+
+  return num_docs;
+}
+
 int TwitterSearcher::Search(const std::string& url,
                             std::ofstream &tweets_file_stream,
                             std::set<std::string> &tweeters_set,

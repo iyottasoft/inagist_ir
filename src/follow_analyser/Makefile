@@ -15,7 +15,8 @@ BIN_DIR = ../../bin
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/x_dashboard_populater \
-       ${BIN_DIR}/t_get_followers
+       ${BIN_DIR}/t_get_followers \
+       ${BIN_DIR}/t_twitter_searcher
 
 OBJS = follow_analyser.o twitter_searcher.o
 
@@ -50,6 +51,11 @@ ${BIN_DIR}/x_dashboard_populater: x_dashboard_populater.o ${LIB}
 ${BIN_DIR}/t_get_followers: t_get_followers.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_get_followers
+	@echo "done!"
+
+${BIN_DIR}/t_twitter_searcher: t_twitter_searcher.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_twitter_searcher
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE
