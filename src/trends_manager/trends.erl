@@ -13,5 +13,5 @@ test_twitter_timeline() ->
 test(_tweet, _user) ->
   "NIF library not loaded".
 test() ->
-  tweets_list = test_twitter_timeline(),
-  [getkeywords(X) || X <- tweets_list].
+  Tweets = test_twitter_timeline(),
+  [getkeywords(X) || X <- Tweets].
