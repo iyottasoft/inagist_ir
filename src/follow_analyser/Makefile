@@ -3,11 +3,11 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated #-DDEBUG
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/stemmer/ -I../../include/json_parser -I../../src/curl_request_maker -I../../src/keywords_extracter -I../../src/script_detector
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../keywords_extracter -I../script_detector
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -lstemmer -ljsonparser -lcurlrequestmaker -ltwitcurl -lcurl -lkeywordsextracter -lscriptdetector
+LIBS = -l${PROJECT} -lkeywordsextracter -lscriptdetector -ltwitterapi -lcurlrequestmaker -ljsonparser -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
@@ -15,10 +15,9 @@ BIN_DIR = ../../bin
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/x_dashboard_populater \
-       ${BIN_DIR}/t_get_followers \
-       ${BIN_DIR}/t_twitter_searcher
+       ${BIN_DIR}/t_get_followers
 
-OBJS = follow_analyser.o twitter_searcher.o
+OBJS = follow_analyser.o
 
 all: ${LIB} ${BINS}
 	@echo "copying dashboard_generator.py to ${BIN_DIR}"
@@ -51,11 +50,6 @@ ${BIN_DIR}/x_dashboard_populater: x_dashboard_populater.o ${LIB}
 ${BIN_DIR}/t_get_followers: t_get_followers.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_get_followers
-	@echo "done!"
-
-${BIN_DIR}/t_twitter_searcher: t_twitter_searcher.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_twitter_searcher
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

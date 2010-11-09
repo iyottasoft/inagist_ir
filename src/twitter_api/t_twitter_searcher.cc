@@ -1,4 +1,5 @@
 #include "twitter_searcher.h"
+#include <iostream>
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
@@ -6,7 +7,7 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  inagist_dashboard::TwitterSearcher ts;
+  inagist_api::TwitterSearcher ts;
   std::string handle = argv[1];
   std::string url = std::string("http://search.twitter.com/search.json?q=from:" + handle/* + "&rpp=100"*/);
   if (ts.Test(url) < 0)

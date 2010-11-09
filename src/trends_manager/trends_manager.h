@@ -21,6 +21,8 @@
     int Init(const char* stopwords_file_path, const char* dictionary_file_path);
     int GetTrends(const char* user_name, char* trends_buffer);
     int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *script, char *keywords, char *keyphrases);
+    // c - cant pass by reference
+    int GetTestTweets(const int in_length, char* tweets_buffer, int* out_length);
 #ifdef _CPLUSPLUS
   }
 #endif

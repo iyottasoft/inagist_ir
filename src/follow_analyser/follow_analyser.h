@@ -11,10 +11,14 @@
 #include <string>
 #include <set>
 #include "twitter_searcher.h"
-#include "curl_request_maker.h"
+#include "keywords_extract.h"
 
 // cc includes
 // curl_request_maker.h
+
+#ifndef MAX_BUFFER_SIZE
+#define MAX_BUFFER_SIZE 540
+#endif
 
 namespace inagist_dashboard {
 
@@ -42,8 +46,10 @@ class FollowAnalyser {
  private:
   std::string m_follower_maps_dir;
   std::string m_follower_maps_index_file;
-  inagist_dashboard::TwitterSearcher m_twitter_searcher;
+  inagist_api::TwitterSearcher m_twitter_searcher;
+  inagist_trends::KeywordsExtract m_keywords_extract;
   int ReadFollowers(std::string handle, std::set<std::string> &followers);
+  char m_buffer[MAX_BUFFER_SIZE];
 };
 
 } // inagist_dashboard

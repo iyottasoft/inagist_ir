@@ -3,7 +3,7 @@
 #include <cstring>
 #include "utf8.h"
 
-namespace inagist_trends {
+namespace inagist_classifiers {
 
 ScriptDetector::ScriptDetector() {
   memset(m_buffer, '\0', SD_MAX_BUFFER_LEN);

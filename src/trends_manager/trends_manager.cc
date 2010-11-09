@@ -1,6 +1,8 @@
 /* trends_manager.cc */
 
 #include "trends_manager.h"
+#include "twitter_api.h"
+
 #ifdef _CPLUSPLUS
 #include <set>
 #include <cstring>
@@ -52,12 +54,15 @@ int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *tweet_script
 #ifdef DEBUG
       std::cout << "Not enuf space in the keywords buffer\n";
 #endif
+      *keywords = '\0';
       g_keyphrases_set.clear();
       g_keywords_set.clear();
       g_buffer[0] = '\0';
       return -1;
     }
   }
+  *ptr = '\0';
+
   ptr = keyphrases;
   for (iter = g_keyphrases_set.begin(); iter != g_keyphrases_set.end(); iter++) {
     int len = (*iter).length();
@@ -69,10 +74,16 @@ int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *tweet_script
     } else {
 #ifdef DEBUG
       std::cout << "Not enuf space in the keyphrase buffer\n";
-      *keyphrases = '\0';
 #endif
+      *keyphrases = '\0';
+      g_keyphrases_set.clear();
+      g_keywords_set.clear();
+      g_buffer[0] = '\0';
+      return -1;
     }
   }
+  *ptr = '\0';
+
   strcpy(tweet_script, script.c_str());
 
   g_keyphrases_set.clear();
@@ -81,6 +92,48 @@ int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *tweet_script
   ptr = NULL;
 
   return 0;
+}
+
+#ifdef _CPLUSPLUS
+extern "C"
+#endif
+int GetTestTweets(const int in_length, char* tweets_buffer, int *out_length) {
+
+  if (!tweets_buffer)
+    return -1;
+
+  int num_docs = 0;
+
+  // get tweets
+  inagist_api::TwitterAPI twitter_api;
+  std::set<std::string> tweets;
+  twitter_api.GetPublicTimeLine(tweets);
+
+  // write them to the output buffer
+  std::set<std::string>::iterator iter;
+  char *ptr = tweets_buffer;
+  int len = 0;
+  for (iter = tweets.begin(); iter != tweets.end(); iter++) {
+    len = (*iter).length();
+    if ((ptr - tweets_buffer) + len < in_length) {
+      strcpy(ptr, (*iter).c_str());
+      ptr += len;
+      strcpy(ptr, "|");
+      ptr++;
+      num_docs++;
+    } else {
+#ifdef DEBUG
+      std::cout << "Not enuf space in the tweets buffer\n";
+#endif
+      break;
+    }
+  }
+  *ptr = '\0';
+  *out_length = ptr - tweets_buffer;
+  tweets.clear();
+  ptr = NULL;
+
+  return num_docs;
 }
 
 #ifdef _CPLUSPLUS

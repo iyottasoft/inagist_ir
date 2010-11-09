@@ -3,6 +3,7 @@
 #include <fstream>
 #include <ostream>
 #include <cstring>
+#include <map>
 #include "JSON.h"
 #include "keywords_manager.h"
 
@@ -11,12 +12,14 @@ namespace inagist_dashboard {
 FollowAnalyser::FollowAnalyser() {
   m_follower_maps_dir.clear();
   m_follower_maps_index_file.clear();
+  memset(m_buffer, '\0', MAX_BUFFER_SIZE);
 }
 
 FollowAnalyser::~FollowAnalyser() {
   m_follower_maps_dir.clear();
   m_follower_maps_index_file.clear();
   m_twitter_searcher.DeInit();
+  memset(m_buffer, '\0', MAX_BUFFER_SIZE);
 }
 
 int FollowAnalyser::Init(std::string root_dir) {
@@ -25,6 +28,10 @@ int FollowAnalyser::Init(std::string root_dir) {
   if (m_twitter_searcher.Init(root_dir) < 0) {
     std::cout << "Error: could not initialize twitter searcher" << std::endl;
     return -1;
+  }
+  if (m_keywords_extract.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt") < 0) {
+    std::cerr << "ERROR: couldn't initialize\n";
+    return -1; 
   }
   return 0;
 }
@@ -56,20 +63,29 @@ int FollowAnalyser::GetKeywords(const std::string& handle,
 
   int ret_value = 0;
   std::set<std::string> keywords_set;
-  std::set<std::string> unused_set;
-  std::map<std::string, std::string> unused_map_1;
-  std::map<std::string, std::string> unused_map_2;
-  inagist_trends::KeywordsManager keywords_manager;
+  std::multimap<std::string, std::string> tweets_map;
   std::string url;
 
   std::ofstream tweets_file_stream(tweets_file_name.c_str());
   url = std::string("http://search.twitter.com/search.json?q=from:" + handle/* + "&rpp=100"*/);
-  if ((ret_value = m_twitter_searcher.Search(url, tweets_file_stream, unused_set, keywords_set, unused_map_1, unused_map_2)) < 0) {
+  if ((ret_value = m_twitter_searcher.Search(url, tweets_file_stream, tweets_map)) < 0) {
     std::cout << "Error: could not get tweets for " << handle << std::endl;
-  } else {
-    keywords_manager.PopulateFreqMap(keywords_set);
+    return ret_value;
   }
   tweets_file_stream.close();
+
+  std::multimap<std::string, std::string>::iterator multimap_iter;
+  std::string script;
+  for (multimap_iter = tweets_map.begin(); multimap_iter != tweets_map.end(); multimap_iter++) {
+    strcpy(m_buffer, (char *) multimap_iter->second.c_str());
+    if (m_keywords_extract.GetKeywords((char *) m_buffer, script, keywords_set) < 0) {
+      std::cout << "Error: could not get keywords for\n" << m_buffer << std::endl;
+    }
+  }
+  tweets_map.clear();
+
+  inagist_trends::KeywordsManager keywords_manager;
+  keywords_manager.PopulateFreqMap(keywords_set);
 
   keywords_manager.CalculateIDF(ret_value, keywords_file_name.c_str());
 
@@ -96,13 +112,22 @@ int FollowAnalyser::GetKeywordsFromFollowers(const std::set<std::string>& follow
   inagist_trends::KeywordsManager keywords_manager;
   std::string url;
   std::map<std::string, std::string>::iterator map_iter;
+  std::multimap<std::string, std::string> tweets_map;
+  std::multimap<std::string, std::string>::iterator multimap_iter;
+  std::string script;
 
   std::ofstream tweets_file_stream(tweets_file_name.c_str());
   for (set_iter = followers.begin(); set_iter != followers.end(); set_iter++) {
     url = std::string("http://search.twitter.com/search.json?q=from:" + *set_iter/* + "&rpp=100"*/);
-    if ((num_docs = m_twitter_searcher.Search(url, tweets_file_stream, unused_set, keywords_set, scripts_tweeters_map, keywords_tweeters_map)) < 0) {
+    if ((num_docs = m_twitter_searcher.Search(url, tweets_file_stream, tweets_map)) < 0) {
       std::cout << "Error: could not get tweets for " << *set_iter << std::endl;
     } else {
+      for (multimap_iter = tweets_map.begin(); multimap_iter != tweets_map.end(); multimap_iter++) {
+        strcpy(m_buffer, multimap_iter->second.c_str());
+        script = multimap_iter->first;
+        m_keywords_extract.GetKeywords((char *) m_buffer, script, keywords_set, scripts_tweeters_map, keywords_tweeters_map);
+      }
+      tweets_map.clear();
       // TODO (balaji) - this whole keywords manager thingy can be implemented here. will save some pain
       keywords_manager.PopulateFreqMap(keywords_set);
       keywords_set.clear();
@@ -141,23 +166,35 @@ int FollowAnalyser::GetKeywordsFromMentions(const std::string& handle,
 
   int ret_value = 0;
   int num_docs = 0;
+  std::multimap<std::string, std::string> tweets_map;
   std::set<std::string> keywords_set;
   std::map<std::string, std::string> scripts_tweeters_map;
   std::map<std::string, std::string> keywords_tweeters_map;
-  inagist_trends::KeywordsManager keywords_manager;
   std::string url;
+  std::string script;
 
   std::ofstream tweets_file_stream(tweets_file_name.c_str());
   url = std::string("http://search.twitter.com/search.json?q=to\%3A" + handle);
-  if ((num_docs = m_twitter_searcher.Search(url, tweets_file_stream, mentioners, keywords_set, scripts_tweeters_map, keywords_tweeters_map)) < 0) {
+  if ((num_docs = m_twitter_searcher.Search(url, tweets_file_stream, tweets_map)) < 0) {
     std::cout << "Error: could not get tweets for " << handle << std::endl;
-  } else {
-    // TODO (balaji) - this whole keywords manager thingy can be implemented here. will save some pain
-    keywords_manager.PopulateFreqMap(keywords_set);
-    keywords_set.clear();
-    ret_value += num_docs;
   }
   tweets_file_stream.close();
+  if (num_docs < 0)
+    return -1;
+  
+  std::multimap<std::string, std::string>::iterator multimap_iter;
+  for (multimap_iter = tweets_map.begin(); multimap_iter != tweets_map.end(); multimap_iter++) {
+    mentioners.insert(multimap_iter->first);
+    strcpy(m_buffer, multimap_iter->second.c_str());
+    script = multimap_iter->first;
+    m_keywords_extract.GetKeywords((char *) m_buffer, script, keywords_set, scripts_tweeters_map, keywords_tweeters_map);
+  }
+  tweets_map.clear();
+
+  // TODO (balaji) - this whole keywords manager thingy can be implemented here. will save some pain
+  inagist_trends::KeywordsManager keywords_manager;
+  keywords_manager.PopulateFreqMap(keywords_set);
+  keywords_set.clear();
 
   // write keywords map to file
   std::map<std::string, std::string>::iterator map_iter;

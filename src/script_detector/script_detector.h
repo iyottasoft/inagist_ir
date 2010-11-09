@@ -1,5 +1,5 @@
-#ifndef _INAGIST_TRENDS_SCRIPT_DETECTOR_
-#define _INAGIST_TRENDS_SCRIPT_DETECTOR_
+#ifndef _INAGIST_CLASSIFIERS_SCRIPT_DETECTOR_
+#define _INAGIST_CLASSIFIERS_SCRIPT_DETECTOR_
 
 #include <string>
 #include <set>
@@ -9,7 +9,7 @@
 #define SD_MAX_BUFFER_LEN 560
 #endif
 
-namespace inagist_trends {
+namespace inagist_classifiers {
 
 class ScriptDetector {
  public:
@@ -29,4 +29,4 @@ class ScriptDetector {
 
 }
 
-#endif // _INAGIST_TRENDS_SCRIPT_DETECTOR_
+#endif // _INAGIST_CLASSIFIERS_SCRIPT_DETECTOR_

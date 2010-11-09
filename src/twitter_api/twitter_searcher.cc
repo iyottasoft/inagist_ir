@@ -3,12 +3,9 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-#include <string>
-#include <set>
 #include "JSON.h"
-#include "curl_request_maker.h"
 
-namespace inagist_dashboard {
+namespace inagist_api {
 
 TwitterSearcher::TwitterSearcher() {
 }
@@ -30,11 +27,6 @@ int TwitterSearcher::Init(std::string root_dir) {
     }
   }
   ifs.close();
-
-  if (m_keywords_extract.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt") < 0) {
-    std::cerr << "ERROR: couldn't initialize\n";
-    return -1; 
-  }
 
   return 0;
 }
@@ -118,10 +110,7 @@ int TwitterSearcher::Test(const std::string& url) {
 
 int TwitterSearcher::Search(const std::string& url,
                             std::ofstream &tweets_file_stream,
-                            std::set<std::string> &tweeters_set,
-                            std::set<std::string> &keywords_set,
-                            std::map<std::string, std::string> &scripts_tweeters_map,
-                            std::map<std::string, std::string> &keywords_tweeters_map) {
+                            std::multimap<std::string, std::string> &tweets_map) {
 
   std::string temp_url = url;
   std::string last_search_max_id = m_search_data_map[temp_url];
@@ -162,16 +151,12 @@ int TwitterSearcher::Search(const std::string& url,
               JSONObject tweet_object = tweet_value->AsObject();
               if (tweet_object.find("from_user") != tweet_object.end() && tweet_object["from_user"]->IsString()) {
                 tweeter = tweet_object["from_user"]->AsString();
-                tweeters_set.insert(tweeter);
               }
               if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
                 tweet = tweet_object["text"]->AsString(); 
+                tweets_map.insert(std::pair<std::string, std::string> (tweeter, tweet));
                 tweets_file_stream << tweet << std::endl;
                 tweets_file_stream.flush();
-                strcpy(m_buffer, (char *) tweet.c_str());
-                m_buffer[tweet.size()] = '\0';
-                m_keywords_extract.GetKeywords(m_buffer, tweeter, keywords_set, scripts_tweeters_map, keywords_tweeters_map);
-                unused_keyphrases_set.clear();
                 ++num_docs;
               }
             }

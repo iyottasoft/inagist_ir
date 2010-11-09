@@ -1,9 +1,11 @@
-SUBDIRS = curl_request_maker script_detector keywords_extracter trends_manager follow_analyser
+SUBDIRS = curl_request_maker twitter_api script_detector sentiment_analyser keywords_extracter trends_manager follow_analyser
 
-subdirs:
-	@ for dir in $(SUBDIRS); do \
-	    $(MAKE) -C $$dir; \
-	  done
+.PHONY: subdirs $(SUBDIRS)
+
+subdirs: $(SUBDIRS)
+
+$(SUBDIRS):
+	$(MAKE) -C $@
 
 clean:
 	@ for dir in $(SUBDIRS); do \
