@@ -20,7 +20,8 @@ class TwitterSearcher {
   int Init(std::string root_dir);
   int DeInit();
   int GetFollowers(const std::string& handle, std::set<std::string>& followers);
-  int Test(const std::string& url);
+  int GetTweetsFromSearchUrl(const std::string& url, std::set<std::string>& tweets);
+  int GetTweetsFromUser(const std::string& user_name, std::set<std::string>& tweets);
  private:
   std::string m_search_data_dir;
   std::string m_search_data_history_file;

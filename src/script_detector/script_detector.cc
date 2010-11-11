@@ -26,7 +26,7 @@ int ScriptDetector::Clear() {
 }
 
 int ScriptDetector::DetectScript(const std::string& text, std::set<std::string>& scripts) {
-  if (text.length() < 1)
+  if (text.length() <= 1)
     return -1;  
 
   strcpy(m_buffer, text.c_str());
@@ -144,47 +144,47 @@ int ScriptDetector::DetectScript(int code_point, std::string &script) {
   } else if (code_point >= 7936 && code_point <= 8191) {
     script = "el"; //Greek
   } else if (code_point >= 8192 && code_point <= 8303) {
-    script = "en"; //General
+    script = "xx"; //General
   } else if (code_point >= 8304 && code_point <= 8351) {
-    script = "en"; //Superscripts
+    script = "xx"; //Superscripts
   } else if (code_point >= 8352 && code_point <= 8399) {
-    script = "en"; //Currency
+    script = "xx"; //Currency
   } else if (code_point >= 8400 && code_point <= 8447) {
-    script = "en"; //Combining
+    script = "xx"; //Combining
   } else if (code_point >= 8448 && code_point <= 8527) {
-    script = "en"; //Letterlike
+    script = "xx"; //Letterlike
   } else if (code_point >= 8528 && code_point <= 8591) {
-    script = "en"; //Number
+    script = "xx"; //Number
   } else if (code_point >= 8592 && code_point <= 8703) {
-    script = "en"; //Arrows
+    script = "xx"; //Arrows
   } else if (code_point >= 8704 && code_point <= 8959) {
-    script = "en"; //Mathematical
+    script = "xx"; //Mathematical
   } else if (code_point >= 8960 && code_point <= 9215) {
-    script = "en"; //Miscellaneous
+    script = "xx"; //Miscellaneous
   } else if (code_point >= 9216 && code_point <= 9279) {
-    script = "en"; //Control
+    script = "xx"; //Control
   } else if (code_point >= 9280 && code_point <= 9311) {
-    script = "en"; //Optical
+    script = "xx"; //Optical
   } else if (code_point >= 9312 && code_point <= 9471) {
-    script = "en"; //Enclosed
+    script = "xx"; //Enclosed
   } else if (code_point >= 9472 && code_point <= 9599) {
-    script = "en"; //Box
+    script = "xx"; //Box
   } else if (code_point >= 9600 && code_point <= 9631) {
-    script = "en"; //Block
+    script = "xx"; //Block
   } else if (code_point >= 9632 && code_point <= 9727) {
-    script = "en"; //Geometric
+    script = "xx"; //Geometric
   } else if (code_point >= 9728 && code_point <= 9983) {
-    script = "en"; //Miscellaneous
+    script = "xx"; //Miscellaneous
   } else if (code_point >= 9984 && code_point <= 10175) {
-    script = "en"; //Dingbats
+    script = "xx"; //Dingbats
   } else if (code_point >= 10240 && code_point <= 10495) {
-    script = "en"; //Braille
+    script = "xx"; //Braille
   } else if (code_point >= 11904 && code_point <= 12031) {
     script = "zh"; //CJK
   } else if (code_point >= 12032 && code_point <= 12255) {
     script = "zh"; //Kangxi
   } else if (code_point >= 12272 && code_point <= 12287) {
-    script = "en"; //Ideographic
+    script = "xx"; //Ideographic
   } else if (code_point >= 12288 && code_point <= 12351) {
     script = "zh"; //CJK
   } else if (code_point >= 12352 && code_point <= 12447) {
@@ -224,7 +224,7 @@ int ScriptDetector::DetectScript(int code_point, std::string &script) {
   } else if (code_point >= 63744 && code_point <= 64255) {
     script = "zh"; //CJK
   } else if (code_point >= 64256 && code_point <= 64335) {
-    script = "en"; //Alphabetic
+    script = "xx"; //Alphabetic
   } else if (code_point >= 64336 && code_point <= 65023) {
     script = "ar"; //Arabic
   } else if (code_point >= 65056 && code_point <= 65071) {
@@ -232,16 +232,17 @@ int ScriptDetector::DetectScript(int code_point, std::string &script) {
   } else if (code_point >= 65072 && code_point <= 65103) {
     script = "zh"; //CJK
   } else if (code_point >= 65104 && code_point <= 65135) {
-    script = "en"; //Small
+    script = "xx"; //Small
   } else if (code_point >= 65136 && code_point <= 65278) {
     script = "ar"; //Arabic
   } else if (code_point >= 65279 && code_point <= 65279) {
-    script = "en"; //Specials
+    script = "xx"; //Specials
   } else if (code_point >= 65280 && code_point <= 65519) {
-    script = "en"; //Halfwidth
+    script = "xx"; //Halfwidth
   } else if (code_point >= 65520 && code_point <= 65533) {
-    script = "en"; //Specials
+    script = "xx"; //Specials
   } else {
+    script = "xx"; //Specials
     return -1;
   }
 

@@ -47,9 +47,21 @@ int TwitterSearcher::DeInit() {
   return 0;
 }
 
-int TwitterSearcher::Test(const std::string& url) {
+int TwitterSearcher::GetTweetsFromUser(const std::string& user_name, std::set<std::string>& tweets) {
+  std::string url = "http://search.twitter.com/search.json?q=from:" + user_name;
+  int ret_value = 0;
+  if ((ret_value = GetTweetsFromSearchUrl(url, tweets)) < 0) {
+    std::cout << "Error: could not get tweets for " << user_name << std::endl;
+  }
 
+  return ret_value;
+}
+
+int TwitterSearcher::GetTweetsFromSearchUrl(const std::string& url, std::set<std::string>& tweets) {
+
+#ifdef DEBUG
   std::cout << url << std::endl;
+#endif
   int num_docs = 0;
 
   bool ret_value;
@@ -79,19 +91,25 @@ int TwitterSearcher::Test(const std::string& url) {
             } else {
               std::string tweeter = "unknown";
               JSONObject tweet_object = tweet_value->AsObject();
+#ifdef DEBUG
               if (tweet_object.find("from_user") != tweet_object.end() && tweet_object["from_user"]->IsString()) {
                 std::cout << tweet_object["from_user"]->AsString() << ": "; 
               }
+#endif
               if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
-                std::cout << tweet_object["text"]->AsString() << std::endl;
+                tweet = tweet_object["text"]->AsString(); 
+                tweets.insert(tweet);
+#ifdef DEBUG
+                std::cout << tweet << std::endl;
+#endif
                 ++num_docs;
               }
             }
           }
         }
 
-        if (tweet_o.find("max_id") != tweet_o.end() && tweet_o["max_id"]->IsString()) {
-          std::string last_search_max_id = tweet_o["max_id"]->AsString();
+        if (tweet_o.find("max_id_str") != tweet_o.end() && tweet_o["max_id_str"]->IsString()) {
+          std::string last_search_max_id = tweet_o["max_id_str"]->AsString();
           if (last_search_max_id.size() <= 0)
             std::cout << "max id value is empty\n";
         } else {
@@ -164,8 +182,8 @@ int TwitterSearcher::Search(const std::string& url,
         }
 
         last_search_max_id = "";
-        if (tweet_o.find("max_id") != tweet_o.end() && tweet_o["max_id"]->IsString()) {
-          last_search_max_id = tweet_o["max_id"]->AsString();
+        if (tweet_o.find("max_id_str") != tweet_o.end() && tweet_o["max_id_str"]->IsString()) {
+          last_search_max_id = tweet_o["max_id_str"]->AsString();
         } else {
           std::cout << "max id field not found in twitter response\n";
         }

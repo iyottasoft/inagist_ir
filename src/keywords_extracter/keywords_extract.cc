@@ -221,9 +221,6 @@ bool KeywordsExtract::IsIgnore(char *&ptr) {
   if (!ptr || '\0' == *ptr)
     return false;
   if ('@' == *ptr || !strncmp(ptr, "&#", 2) || !strncmp(ptr, "http://", 7) || !strncmp(ptr, "www.", 4)) {
-#ifdef DEBUG
-    printf("%s is ignore word\n", ptr);
-#endif
     while (' ' != *(ptr+1) && '\0' != *(ptr+1)) {
       ptr++;
     }
@@ -361,7 +358,7 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
 
   // script detection
   char *end = strchr(str, '\0');
-  script = "en";
+  script = "uu";
   int code_point = 0;
   string script_temp;
   //std::map<std::string, int> script_map;
@@ -446,7 +443,8 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
           }
         }
       } else {
-        english_count++;
+        if (code_point > 0x40 && code_point < 0x7B)
+          english_count++;
       }
     } catch (...) {
 #ifdef DEBUG
@@ -1117,7 +1115,8 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
             }
           }
         } else {
-          english_count++;
+          if (code_point > 0x40 && code_point < 0x7B)
+            english_count++;
         }
       } catch (...) {
 #ifdef DEBUG
@@ -1144,17 +1143,22 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
   cout << "num numeric words: " << num_numeric_words << endl;
   cout << "num normal words: " << num_normal_words << endl;
 #endif
-  std::set<std::string>::iterator iter;
   if ((num_normal_words == 0) && (num_dict_words != 0 || num_words > 5))
     keywords_set.clear();
 
   // deinitialize script detector
   m_script_detector.Clear();
 
-  if (script_count < 11)
+  if (script_count == 0 && english_count > 10) {
     script = "en";
+  } else if (script_count > 0 && (script_count < 11 || script_count < english_count)) {
+    script = "uu";
+  }
 
-  return 0;
+#ifdef DEBUG
+  cout << "returning from keywords extract. keywords: " << keywords_set.size() << " keyphrases: " << keyphrases_set.size() << std::endl;
+#endif
+  return keywords_set.size() + keyphrases_set.size();
 }
 
 } // namespace inagist_trends

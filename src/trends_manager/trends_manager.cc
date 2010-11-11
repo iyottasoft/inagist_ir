@@ -2,6 +2,9 @@
 
 #include "trends_manager.h"
 #include "twitter_api.h"
+#include "twitter_searcher.h"
+
+//#define DEBUG 1
 
 #ifdef _CPLUSPLUS
 #include <set>
@@ -37,36 +40,66 @@ int Init(const char* stopwords_file_path, const char* dictionary_file_path) {
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *tweet_script, char* keywords, char* keyphrases) {
+int SubmitTweet(const char* tweet, const unsigned int tweet_len,
+                char* tweet_script, const unsigned int script_buffer_len,
+                char* keywords, const unsigned int keywords_buffer_len,
+                char* keyphrases, const unsigned int keyphrases_buffer_len) {
   std::string script;
+#ifdef DEBUG
+  std::cout << tweet << std::endl;
+#endif
   strcpy(g_buffer, tweet);
-  g_keywords_extract.GetKeywords(g_buffer, script, g_keywords_set, g_keyphrases_set);
+  int ret_value = 0;
+  if ((ret_value = g_keywords_extract.GetKeywords(g_buffer, script, g_keywords_set, g_keyphrases_set)) <= 0) {
+#ifdef DEBUG
+    if (ret_value < 0)
+      std::cout << "Error: could not get keywords from KeywordsExtract\n";
+#endif
+    if (script.length() < script_buffer_len)
+      strcpy(tweet_script, script.c_str());
+    g_buffer[0] = '\0';
+    g_keyphrases_set.clear();
+    g_keywords_set.clear();
+    *keywords = '\0';
+    *keyphrases = '\0';
+    return ret_value;
+  }
+  g_buffer[0] = '\0';
+
+  if (script.length() < script_buffer_len)
+    strcpy(tweet_script, script.c_str());
+
   std::set<std::string>::iterator iter;
   char *ptr = keywords;
+  unsigned int len = 0;
+  unsigned int total_len = 0;
   for (iter = g_keywords_set.begin(); iter != g_keywords_set.end(); iter++) {
-    int len = (*iter).length();
-    if ((ptr - keywords) + len < MAX_BUFFER_SIZE) {
+    len = (*iter).length();
+    total_len += (len + 1); // 1 for the pipe
+    if (total_len < keywords_buffer_len) {
       strcpy(ptr, (*iter).c_str());
       ptr += len;
       strcpy(ptr, "|");
       ptr++;
     } else {
 #ifdef DEBUG
-      std::cout << "Not enuf space in the keywords buffer\n";
+      std::cout << "Error: Not enuf space in the keywords buffer\n";
 #endif
       *keywords = '\0';
       g_keyphrases_set.clear();
       g_keywords_set.clear();
-      g_buffer[0] = '\0';
       return -1;
     }
   }
   *ptr = '\0';
 
   ptr = keyphrases;
+  len = 0;
+  total_len = 0;
   for (iter = g_keyphrases_set.begin(); iter != g_keyphrases_set.end(); iter++) {
-    int len = (*iter).length();
-    if ((ptr - keyphrases) + len < MAX_BUFFER_SIZE) {
+    len = (*iter).length();
+    total_len += (len + 1); // 1 for the pipe
+    if (total_len < keyphrases_buffer_len) {
       strcpy(ptr, (*iter).c_str());
       ptr += len;
       strcpy(ptr, "|");
@@ -78,17 +111,13 @@ int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *tweet_script
       *keyphrases = '\0';
       g_keyphrases_set.clear();
       g_keywords_set.clear();
-      g_buffer[0] = '\0';
       return -1;
     }
   }
   *ptr = '\0';
 
-  strcpy(tweet_script, script.c_str());
-
   g_keyphrases_set.clear();
   g_keywords_set.clear();
-  g_buffer[0] = '\0';
   ptr = NULL;
 
   return 0;
@@ -97,7 +126,7 @@ int SubmitTweet(/*const char* user_name,*/ const char* tweet, char *tweet_script
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int GetTestTweets(const int in_length, char* tweets_buffer, int *out_length) {
+int GetTestTweets(const char* user_name, const unsigned int in_length, char* tweets_buffer, unsigned int *out_length) {
 
   if (!tweets_buffer)
     return -1;
@@ -105,17 +134,25 @@ int GetTestTweets(const int in_length, char* tweets_buffer, int *out_length) {
   int num_docs = 0;
 
   // get tweets
-  inagist_api::TwitterAPI twitter_api;
   std::set<std::string> tweets;
-  twitter_api.GetPublicTimeLine(tweets);
+
+  if (NULL == user_name) {
+    inagist_api::TwitterAPI twitter_api;
+    twitter_api.GetPublicTimeLine(tweets);
+  } else {
+    inagist_api::TwitterSearcher twitter_searcher;
+    twitter_searcher.GetTweetsFromUser(std::string(user_name), tweets);
+  }
 
   // write them to the output buffer
   std::set<std::string>::iterator iter;
   char *ptr = tweets_buffer;
-  int len = 0;
+  unsigned int len = 0;
+  unsigned int total_len = 0;
   for (iter = tweets.begin(); iter != tweets.end(); iter++) {
     len = (*iter).length();
-    if ((ptr - tweets_buffer) + len < in_length) {
+    total_len += (len + 1); // 1 for the pipe
+    if (total_len < in_length) {
       strcpy(ptr, (*iter).c_str());
       ptr += len;
       strcpy(ptr, "|");
