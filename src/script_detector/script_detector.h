@@ -21,6 +21,7 @@ class ScriptDetector {
   int DetectScript(int code_point, std::string& script);
   int GetMaxScript(std::string& script);
   int GetScripts(std::set<std::string>& scripts);
+  int PrintScripts();
  private:
   std::map<std::string, int> m_script_map;
   std::map<std::string, int>::iterator m_script_map_iter;

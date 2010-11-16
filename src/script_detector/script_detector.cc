@@ -49,7 +49,7 @@ int ScriptDetector::DetectScript(const std::string& text, std::set<std::string>&
   }
   ptr = NULL;
   end = NULL;
-  return 0;
+  return scripts.size();
 }
 
 // this function compares the input the code point ranges and
@@ -280,7 +280,13 @@ int ScriptDetector::GetMaxScript(std::string& script) {
 int ScriptDetector::GetScripts(std::set<std::string>& scripts) {
   for (m_script_map_iter = m_script_map.begin(); m_script_map_iter != m_script_map.end(); m_script_map_iter++)
     scripts.insert(m_script_map_iter->first);
-  return 0;
+  return scripts.size();
+}
+
+int ScriptDetector::PrintScripts() {
+  for (m_script_map_iter = m_script_map.begin(); m_script_map_iter != m_script_map.end(); m_script_map_iter++)
+    std::cout << m_script_map_iter->first << " " << m_script_map_iter->second << std::endl;
+  return m_script_map.size();
 }
 
 }

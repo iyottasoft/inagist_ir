@@ -1,4 +1,4 @@
-#include "erl_nif.h"
+#include "trends_erl_nif.h"
 #include "erl_driver.h"
 
 #include <stdio.h>
@@ -253,14 +253,4 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 
   return tuple3_list;
 }
-
-static ErlNifFunc nif_funcs[] =
-{
-  {"init_c", 2, nif_init_c},
-  {"getkeywords", 1, nif_getkeywords},
-  {"gettrends", 1, nif_gettrends},
-  {"test_twitter_timeline", 0, nif_test_twitter_timeline},
-  {"test_twitter_timeline", 1, nif_test_twitter_timeline},
-};
-ERL_NIF_INIT(trends, nif_funcs, NULL, NULL, NULL, NULL)
 

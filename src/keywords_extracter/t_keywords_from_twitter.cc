@@ -1,70 +1,55 @@
 #include <iostream>
 #include <cstring>
+#include <string>
+#include <set>
 #include "keywords_extract.h"
 #include "keywords_manager.h"
-#include "twitcurl.h"
+#include "twitter_api.h"
+#include "twitter_searcher.h"
 
 int main(int argc, char *argv[]) {
-  twitCurl twitterObj;
 
-  std::string user_name = "worldnewsgist";
-  std::string password = "EspressoAmericano2010";
-
-  if (argc == 2) {
-    std::cout << "Enter twitter username\n";
-    std::cin >> user_name;
-    std::cout << "password?\n";
-    std::cin >> password;
-  } else {
-    twitterObj.setTwitterUsername(user_name);
-    twitterObj.setTwitterPassword(password);
+  if (argc > 2) {
+    std::cout << "Usage: " << argv[0] << " <handle>\n";
+    return -1;
   }
 
-  std::string temp_str;
-  std::string reply_message;
-  std::string script;
-  if (twitterObj.timelinePublicGet()) {
-  //if (twitterObj.timelineFriendsGet()) {
-    twitterObj.getLastWebResponse(reply_message);
-    char *tweet_start = strstr((char *) reply_message.c_str(), "<text>");
-    char *tweet_end = NULL;
-    if (tweet_start) {
-      tweet_start+=6; 
-      tweet_end = strstr(tweet_start, "</text>");
-    }
-    char buffer[1024];
-    inagist_trends::KeywordsExtract ke;
-    if (ke.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt", NULL, "./data/tweets.txt", "./data/output.txt") < 0) {
-      std::cerr << "ERROR: couldn't initialize\n";
+  // get top tweets from twitter api
+  std::set<std::string> tweets;
+  int num_docs = 0;
+  if (argc == 2) {
+    inagist_api::TwitterAPI tapi;
+    if ((num_docs = tapi.GetPublicTimeLine(tweets)) < 0) {
+      std::cout << "Error: could not get trending tweets from inagist\n";
       return -1;
     }
-    inagist_trends::KeywordsManager km;
-    std::set<std::string> keywords_set;
-    while (tweet_start && tweet_end && tweet_start < tweet_end) {
-      temp_str = std::string(tweet_start, tweet_end - tweet_start);
-      std::cout << temp_str << std::endl;
-      memset(buffer, 0, 1024);
-      strcpy(buffer, temp_str.c_str());
-      ke.GetKeywords(buffer, script, keywords_set);
-      std::cout << script << std::endl;
-      ke.PrintKeywords(keywords_set);
-      km.PopulateFreqMap(keywords_set);
-      keywords_set.clear();
-      tweet_start = strstr((char *) tweet_end, "<text>");
-      if (!tweet_start)
-        break;
-      tweet_start+=6; 
-      tweet_end = strstr((char *) tweet_start, "</text>");
-      if (!tweet_end)
-        break;
-    }
-    tweet_start = NULL;
-    tweet_end = NULL;
-    memset(buffer, 0, 1024);
-    km.PrintFreqMap();
-    //std::cout << reply_message << std::endl;
   } else {
-    std::cout << "ERROR: could not connect to twitter" << std::endl;
+    std::cout << "this feature has not been implemented yet\n";
   }
+
+  inagist_trends::KeywordsExtract ke;
+  if (ke.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt", NULL, "./data/tweets.txt", "./data/static_data/output.txt") < 0) {
+    std::cerr << "ERROR: couldn't initialize\n";
+    return -1; 
+  }
+  inagist_trends::KeywordsManager km;
+
+  char buffer[1024];
+  std::string script;
+  std::set<std::string> keywords_set;
+
+  std::set<std::string>::iterator set_iter;
+  for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
+    strcpy(buffer, (char *) (*set_iter).c_str());
+    ke.GetKeywords(buffer, script, keywords_set);
+    std::cout << script << std::endl;
+    ke.PrintKeywords(keywords_set);
+    km.PopulateFreqMap(keywords_set);
+    keywords_set.clear();
+    memset(buffer, 0, 1024);
+  }
+  tweets.clear();
+  std::cout << "Num tweets: " << num_docs << std::endl;
+
   return 0;
 }

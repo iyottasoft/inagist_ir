@@ -2,85 +2,53 @@
 #include <cstring>
 #include <string>
 #include <set>
-#include "JSON.h"
-#include "curl_request_maker.h"
 #include "keywords_extract.h"
 #include "keywords_manager.h"
+#include "inagist_api.h"
 
 int main(int argc, char *argv[]) {
+
+  if (argc > 2) {
+    std::cout << "Usage: " << argv[0] << " <handle>\n";
+    return -1;
+  }
+
+  // get top tweets from inagist api
+  std::set<std::string> tweets;
+  int num_docs = 0;
+  if (argc == 2) {
+    inagist_api::InagistAPI ia;
+    if ((num_docs = ia.GetTrendingTweets(std::string(argv[1]), tweets)) < 0) {
+      std::cout << "Error: could not get trending tweets from inagist\n";
+      return -1;
+    }
+  } else {
+    std::cout << "this feature has not been implemented yet\n";
+  }
+
   inagist_trends::KeywordsExtract ke;
   if (ke.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt", NULL, "./data/tweets.txt", "./data/static_data/output.txt") < 0) {
     std::cerr << "ERROR: couldn't initialize\n";
     return -1; 
   }
   inagist_trends::KeywordsManager km;
-  inagist_api::CurlRequestMaker curl_request_maker;
 
   char buffer[1024];
-  std::string temp_str;
-  std::string reply_message;
   std::string script;
   std::set<std::string> keywords_set;
-  // get top tweets from inagist api
 
-  bool ret_value;
-  if (argc == 2) {
-    //std::string url = std::string("http://inagist.com/api/v1/get_archived_tweets?userid=") + std::string(argv[1]);
-    //std::string url = std::string("http://inagist.com/api/v1/get_top_tweets?userid=") + std::string(argv[1]) + std::string("&limit=5&ham=24");
-    std::string url = std::string("http://inagist.com/api/v1/get_top_tweets?limit=1&userid=") + std::string(argv[1]);
-    ret_value = curl_request_maker.GetTweets(url.c_str());
-  } else {
-    ret_value = curl_request_maker.GetTopTweets();
+  std::set<std::string>::iterator set_iter;
+  for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
+    strcpy(buffer, (char *) (*set_iter).c_str());
+    ke.GetKeywords(buffer, script, keywords_set);
+    std::cout << script << std::endl;
+    ke.PrintKeywords(keywords_set);
+    km.PopulateFreqMap(keywords_set);
+    keywords_set.clear();
+    memset(buffer, 0, 1024);
   }
-
-  if (ret_value) {
-    curl_request_maker.GetLastWebResponse(reply_message);
-    // the response is in json format
-    JSONValue *json_value = JSON::Parse(reply_message.c_str());
-    if (!json_value) {
-      std::cout << "ERROR: JSON::Parse failed\n";
-    } else {
-      unsigned int num_docs = 0;
-      // to be specific, the response is a json array
-      JSONArray tweet_array = json_value->AsArray();
-
-      for (unsigned int i=0; i < tweet_array.size(); i++) {
-        // don't know if array element shud again be treated as json value
-        // but, what the heck. lets put it as value and then get the object
-        JSONValue *tweet_value = tweet_array[i];
-        if (false == tweet_value->IsObject())
-          std::cout << "ERROR: tweet_value is not an object" << std::endl;
-        JSONObject tweet_object = tweet_value->AsObject();
-
-        // now lets work on the json object thus obtained
-        if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
-          //std::cout << tweet_object["text"]->AsString().c_str() << std::endl;
-          //std::cout.flush();
-          strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
-          ke.GetKeywords(buffer, script, keywords_set);
-          std::cout << script << std::endl;
-          ke.PrintKeywords(keywords_set);
-          km.PopulateFreqMap(keywords_set);
-          keywords_set.clear();
-          memset(buffer, 0, 1024);
-          ++num_docs;
-        }
-        /*
-        if (tweet_object.find(L"user") != tweet_object.end() && tweet_object[L"user"]->IsObject()) {
-          std::wcout << tweet_object[L"user"]->Stringify().c_str() << std::endl;
-          std::wcout.flush();
-        }
-        */
-      }
-      km.PrintFreqMap();
-      std::cout << "Num Tweets: " << num_docs << std::endl;
-      km.CalculateIDF(num_docs);
-      km.PrintEntityIDFs();
-    }
-    delete json_value;
-  } else {
-    std::cout << "ERROR: couldn't get tweets" << std::endl;
-  }
+  tweets.clear();
+  std::cout << "Num tweets: " << num_docs << std::endl;
 
   return 0;
 }

@@ -3,11 +3,11 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated #-DDEBUG
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/twitcurl -I../../include/json_parser -I../curl_request_maker -I../../include/utfcpp
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../curl_request_maker -I../twitter_api -I../inagist_api -I../../include/utfcpp
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -ljsonparser -lcurlrequestmaker -ltwitcurl -lcurl
+LIBS = -l${PROJECT} -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
