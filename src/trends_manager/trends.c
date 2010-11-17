@@ -1,4 +1,4 @@
-#include "trends_erl_nif.h"
+#include "erl_nif.h"
 #include "erl_driver.h"
 
 #include <stdio.h>

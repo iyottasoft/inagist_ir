@@ -2,8 +2,7 @@
 #include <cstring>
 #include <string>
 #include <set>
-#include "JSON.h"
-#include "curl_request_maker.h"
+#include "inagist_api.h"
 #include "keywords_extract.h"
 #include "keywords_manager.h"
 
@@ -14,6 +13,25 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
+  std::string stopwords_file = std::string(argv[1]);
+  std::string dictionary_file = std::string(argv[2]);
+  std::string user_name = std::string(argv[3]);
+  std::string keywords_file = std::string(argv[4]);
+
+  // get top and archieved tweets from inagist api
+  std::set<std::string> tweets;
+  int num_docs = 0;
+  inagist_api::InagistAPI ia;
+  if ((num_docs = ia.GetTrendingTweets(user_name, tweets)) < 0) {
+    std::cout << "Error: could not get trending tweets from inagist\n";
+    return -1;
+  }
+  // populate the same keyword set
+  if ((num_docs = ia.GetArchievedTweets(user_name, tweets)) < 0) {
+    std::cout << "Error: could not get archieved tweets from inagist\n";
+    return -1;
+  }
+
   inagist_trends::KeywordsExtract ke;
   if (ke.Init(argv[1], argv[2], NULL, "./data/tweets.txt", argv[4]) < 0) {
     std::cerr << "ERROR: couldn't initialize KeywordsExtract class\n";
@@ -21,91 +39,20 @@ int main(int argc, char *argv[]) {
   }
 
   inagist_trends::KeywordsManager km;
-  inagist_api::CurlRequestMaker curl_request_maker;
 
   char buffer[1024];
-  std::string temp_str;
-  std::string reply_message;
+  std::string script;
   std::set<std::string> keywords_set;
-  unsigned int num_docs = 0;
 
-  // get top tweets from inagist api
-
-  std::string url = std::string("http://inagist.com/api/v1/get_top_tweets?limit=1&userid=") + std::string(argv[3]);
-  //bool ret_value = curl_request_maker.GetArchievedTweets();
-  bool ret_value = curl_request_maker.GetTweets(url.c_str());
-  if (ret_value) {
-    curl_request_maker.GetLastWebResponse(reply_message);
-    // the response is in json format
-    JSONValue *json_value = JSON::Parse(reply_message.c_str());
-    if (!json_value) {
-      std::cout << "ERROR: JSON::Parse failed\n";
-    } else {
-      // to be specific, the response is a json array
-      JSONArray tweet_array = json_value->AsArray();
-
-      for (unsigned int i=0; i < tweet_array.size(); i++) {
-        // don't know if array element shud again be treated as json value
-        // but, what the heck. lets put it as value and then get the object
-        JSONValue *tweet_value = tweet_array[i];
-        if (false == tweet_value->IsObject())
-          std::cout << "ERROR: tweet_value is not an object" << std::endl;
-        JSONObject tweet_object = tweet_value->AsObject();
-
-        // now lets work on the json object thus obtained
-        if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
-          strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
-          ke.GetKeywords(buffer, keywords_set);
-          km.PopulateFreqMap(keywords_set);
-          keywords_set.clear();
-          memset(buffer, 0, 1024);
-          ++num_docs;
-        }
-      }
-      // km.CalculateIDF(num_docs, argv[4]);
-    }
-    delete json_value;
-  } else {
-    std::cout << "ERROR: couldn't get archived tweets" << std::endl;
+  std::set<std::string>::iterator tweets_iter;
+  for (tweets_iter = tweets.begin(); tweets_iter != tweets.end(); tweets_iter++) {
+    strcpy(buffer, (char *) (*tweets_iter).c_str());
+    ke.GetKeywords(buffer, keywords_set);
+    km.PopulateFreqMap(keywords_set);
+    keywords_set.clear();
+    memset(buffer, 0, 1024);
   }
-  // get top tweets from inagist api
-
-  url = std::string("http://inagist.com/api/v1/get_archived_tweets?userid=") + std::string(argv[3]);
-  ret_value = curl_request_maker.GetTweets(url.c_str());
-  if (ret_value) {
-    curl_request_maker.GetLastWebResponse(reply_message);
-    // the response is in json format
-    JSONValue *json_value = JSON::Parse(reply_message.c_str());
-    if (!json_value) {
-      std::cout << "ERROR: JSON::Parse failed\n";
-    } else {
-      // to be specific, the response is a json array
-      JSONArray tweet_array = json_value->AsArray();
-
-      for (unsigned int i=0; i < tweet_array.size(); i++) {
-        // don't know if array element shud again be treated as json value
-        // but, what the heck. lets put it as value and then get the object
-        JSONValue *tweet_value = tweet_array[i];
-        if (false == tweet_value->IsObject())
-          std::cout << "ERROR: tweet_value is not an object" << std::endl;
-        JSONObject tweet_object = tweet_value->AsObject();
-
-        // now lets work on the json object thus obtained
-        if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
-          strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
-          ke.GetKeywords(buffer, keywords_set);
-          km.PopulateFreqMap(keywords_set);
-          keywords_set.clear();
-          memset(buffer, 0, 1024);
-          ++num_docs;
-        }
-      }
-      //km.CalculateIDF(num_docs, argv[4]);
-    }
-    delete json_value;
-  } else {
-    std::cout << "ERROR: couldn't get archived tweets" << std::endl;
-  }
+  tweets.clear();
 
   km.CalculateIDF(num_docs, argv[4]);
 

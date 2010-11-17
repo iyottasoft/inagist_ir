@@ -3,7 +3,7 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated #-DDEBUG
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../inagist_api -I../twitter_api -I../../include/utfcpp -I../script_detector
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../curl_request_maker -I../inagist_api -I../twitter_api -I../../include/utfcpp -I../script_detector
 
 LINK_DIR = -L../../lib
 
