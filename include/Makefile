@@ -1,4 +1,4 @@
-SUBDIRS = json_parser stemmer twitcurl
+SUBDIRS = json_parser porter_stemmer utfcpp
 
 subdirs:
 	@ for dir in $(SUBDIRS); do \

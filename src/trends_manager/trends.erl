@@ -1,5 +1,5 @@
 -module(trends).
--export([init/0, init_c/2, getkeywords/1, gettrends/1, test_twitter_timeline/0, test_twitter_timeline/1, test_init/0, test/0, test/1]).
+-export([init/0, init_c/2, getkeywords/1, gettrends/1, test_twitter_timeline/0, test_twitter_timeline/1, test_init/0, test/0, test/1, stress_test/1]).
 
 init() ->
   erlang:load_nif("../../lib/libtrends", 0).
@@ -36,3 +36,7 @@ test(_user) ->
     false -> false;
     true -> [io:format("~p~n",[X]) || X <- Tuple3_list]
   end.
+
+stress_test([N]) ->
+  Number = list_to_integer(atom_to_list(N)),
+  lists:foreach(fun(X) -> timer:sleep(500), test(), io:format("~p requests done~n",[X]) end, lists:seq(1,Number)).
