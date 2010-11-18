@@ -29,10 +29,10 @@
 
 // Balaji made the following changes to use Martin Porter's code in inagist
 //
-// 1. introduced namespace and compiled the code in c++
+// 1. introduced namespace and compiled the code with g++ compiler
 // 2. moved the definitions to a header file
 
-namespace inagist_stemmer {
+namespace porter_stemmer {
 
 /* stemmer is a structure for a few local bits of data,
 */
@@ -43,18 +43,16 @@ struct _stemmer {
    int j;          /* a general offset into the string */
 };
 
-
 typedef struct _stemmer stemmer;
 
-static stemmer *g_stemmer;
-static char g_word[1024];
-
-int init_stemmer();
 extern stemmer * create_stemmer(void);
 extern void free_stemmer(stemmer * z);
-int free_stemmer();
 
 extern int stem(stemmer * z, char * b, int k);
 extern int stem(char *in_word, int in_len, char *out_word);
+extern int stemfile(char* file_name);
 
-} // namespace inagist_stemmer
+int init_stemmer();
+int free_stemmer();
+
+} // namespace porter_stemmer

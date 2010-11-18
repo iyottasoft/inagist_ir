@@ -1,4 +1,4 @@
-PROJECT = stemmer
+PROJECT = porterstemmer
 CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated
 ARCHIVE = ar -r
@@ -15,8 +15,7 @@ BIN_DIR = ../../bin
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
-BINS = ${BIN_DIR}/t_porter_stemmer \
-       ${BIN_DIR}/t_given_porter_stemmer
+BINS = ${BIN_DIR}/t_porter_stemmer
 
 OBJS = porter_stemmer.o
 
@@ -44,11 +43,6 @@ ${LIB}: ${OBJS}
 ${BIN_DIR}/t_porter_stemmer: t_porter_stemmer.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_porter_stemmer
-	@echo "done!"
-
-${BIN_DIR}/t_given_porter_stemmer: t_given_porter_stemmer.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_given_porter_stemmer
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE
