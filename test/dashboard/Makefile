@@ -1,4 +1,4 @@
-PROJECT = test_livemint
+PROJECT = dashboard
 CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated #-DDEBUG
 ARCHIVE = ar -r
@@ -7,7 +7,7 @@ INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../sr
 
 LINK_DIR = -L../../lib
 
-LIBS = -ljsonparser -lcurlrequestmaker -ltwitcurl -lcurl -lkeywordsextracter -lscriptdetector
+LIBS = -ljsonparser -lcurlrequestmaker -lcurl -lkeywordsextracter -lscriptdetector
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin

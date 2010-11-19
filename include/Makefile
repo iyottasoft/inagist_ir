@@ -1,9 +1,11 @@
 SUBDIRS = json_parser porter_stemmer utfcpp
 
-subdirs:
-	@ for dir in $(SUBDIRS); do \
-	    $(MAKE) -C $$dir; \
-	  done
+.PHONY: subdirs $(SUBDIRS)
+
+subdirs: $(SUBDIRS)
+
+$(SUBDIRS):
+	$(MAKE) -C $@
 
 clean:
 	@ for dir in $(SUBDIRS); do \
