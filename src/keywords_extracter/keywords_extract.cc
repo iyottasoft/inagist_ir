@@ -38,21 +38,19 @@ int KeywordsExtract::Init(const char *stopwords_file,
 
   // load dictionaries
   if (stopwords_file) {
-    int ret = LoadDictionary(stopwords_file, m_stopwords_dictionary);
+    int ret = m_stopwords_dictionary.Load(stopwords_file);
     if (ret < 0) {
       std::cerr << "ERROR: could not load stopwords file into dictionary\n";
       return -1;
     }
-    //PrintDictionary(m_stopwords_dictionary);
   }
 
   if (dictionary_file) {
-    int ret = LoadDictionary(dictionary_file, m_dictionary);
+    int ret = m_stopwords_dictionary.Load(dictionary_file);
     if (ret < 0) {
       std::cerr << "ERROR: could not load dictionary file into dictionary\n";
       return -1;
     }
-    //PrintDictionary(m_dictionary);
   }
 
   if (input_file) {
@@ -78,64 +76,11 @@ int KeywordsExtract::DeInit() {
   if (m_tweet_stream && m_tweet_stream.is_open())
     m_tweet_stream.close();
 
-  //std::cout << "clearing dictionaries\n";
-  m_dictionary.clear();
-  m_stopwords_dictionary.clear();
-
   //std::cout << "closing output stream\n";
   if (m_out_stream && m_out_stream.is_open())
     m_out_stream.close();
 
   //std::cout << "deinit done\n";
-  return 0;
-}
-
-// this function expects the dictionary words in the following format:
-//
-// one word or phrase per line
-// a single newline character at the end of the line
-// lower case expected in most cases
-// upper case or mixed case will be inserted as is
-// no unnecessary blankspace anywhere. word phrases separated by single spaces
-// no empty lines
-
-// the caller MUST ensure that the above conditions are met
-// this function checks nothing of the above. just inserts whatever is given
-//
-int KeywordsExtract::LoadDictionary(const char* file, string_hash_set &dictionary) {
-  if (NULL == file) {
-    std::cerr << "ERROR: invalid dictionary file\n";
-    return -1;
-  }
-
-  std::ifstream ifs(file);
-  if (!ifs) {
-    std::cerr << "ERROR: error opening dictionary file\n";
-    return -1;
-  }
-
-  std::string str;
-  while (getline(ifs, str)) {
-    dictionary.insert(str.c_str());
-  }
-
-  ifs.close();
-
-  return 0;
-}
-
-int KeywordsExtract::DictionaryLookup(char *word) {
-  if (m_stopwords_dictionary.find(word) != m_stopwords_dictionary.end())
-    cout << word << "stopword" << endl;
-  if (m_dictionary.find(word) != m_dictionary.end())
-    cout << word << "dictionary word" << endl;
-  return 0;
-}
-
-int KeywordsExtract::PrintDictionary(string_hash_set dictionary) {
-  string_hash_set::const_iterator iter;
-  for (iter = dictionary.begin(); iter != dictionary.end(); iter++)
-    std::cout << *iter << std::endl;
   return 0;
 }
 
@@ -468,7 +413,7 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
   num_words++;
 
   // stop words
-  if ((m_stopwords_dictionary.find(current_word_start) != m_stopwords_dictionary.end())) {
+  if (m_stopwords_dictionary.Find(current_word_start) == 1) {
     current_word_stop = true;
     num_stop_words++;
 #ifdef DEBUG
@@ -479,7 +424,7 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
   }
 
   // dictionary words
-  if ((m_dictionary.find(current_word_start) != m_dictionary.end())) {
+  if (m_dictionary.Find(current_word_start) == 1) {
     current_word_dict = true;
     num_dict_words++;
 #ifdef DEBUG
@@ -600,7 +545,7 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
 
       // stop words
       if (next_word_start) {
-        if ((m_stopwords_dictionary.find(next_word_start) != m_stopwords_dictionary.end())) {
+        if (m_stopwords_dictionary.Find(next_word_start) == 1) {
           next_word_stop = true;
           num_stop_words++;
 #ifdef DEBUG
@@ -612,7 +557,7 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
         }
 
         // dictionary words
-        if ((m_dictionary.find(next_word_start) != m_dictionary.end())) {
+        if (m_dictionary.Find(next_word_start) == 1) {
           next_word_dict = true;
           num_dict_words++;
 #ifdef DEBUG

@@ -7,26 +7,15 @@
   void operator=(const TypeName&)
 #endif
 
-#include <ext/hash_set>
 #include <string>
 #include <set>
 #include <map>
 #include <fstream>
 #include <iostream>
 #include "script_detector.h"
-
-namespace __gnu_cxx
-{
-  template<> struct hash< std::string > {
-    size_t operator()( const std::string& x ) const {
-      return hash< const char* >()( x.c_str() );
-    }
-  };
-}
+#include "dictionary.h"
 
 namespace inagist_trends {
-
-typedef __gnu_cxx::hash_set<std::string, __gnu_cxx::hash<std::string> > string_hash_set;
 
 class KeywordsExtract {
  public:
@@ -49,19 +38,16 @@ class KeywordsExtract {
                   std::map<std::string, std::string> &keyword_user_map);
   void printKeywords(); // not implemented yet, to be used for testing
   void PrintKeywords(std::set<std::string> &keywords_set);
-  int DictionaryLookup(char *word);
   int DetectScript(int code_point, std::string &script);
 
  private:
   std::ifstream m_tweet_stream;
   std::ofstream m_out_stream;
-  string_hash_set m_dictionary;
-  string_hash_set m_stopwords_dictionary;
+  inagist_utils::Dictionary m_dictionary;
+  inagist_utils::Dictionary m_stopwords_dictionary;
   inagist_classifiers::ScriptDetector m_script_detector;
 
   DISALLOW_COPY_AND_ASSIGN(KeywordsExtract);
-  int LoadDictionary(const char* file, string_hash_set &dictionary);
-  int PrintDictionary(string_hash_set dictionary);
   bool IsPunct(char *ptr, char *prev=NULL, char *next=NULL);
   bool IsIgnore(char *&ptr);
 };

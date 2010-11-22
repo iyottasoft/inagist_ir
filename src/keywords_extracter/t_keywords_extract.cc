@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
   string stopwords_file = root_dir + "/data/static_data/stopwords.txt";
   string dictionary_file = root_dir + "/data/static_data/dictionary.txt";
   if (ke.Init(stopwords_file.c_str(), dictionary_file.c_str()) < 0) {
-    std::cerr << "ERROR: couldn't initialize\n";
+    std::cerr << "ERROR: couldn't initialize KeywordsExtract\n";
     return -1;
   }
 

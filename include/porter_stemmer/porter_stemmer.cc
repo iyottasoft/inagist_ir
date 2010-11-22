@@ -361,11 +361,13 @@ extern int stem(char* in_word, int in_len, char* out_word)
     memcpy(g_word, in_word, in_len);
 
   int len = 0;
+  // NOTE - extremely unintuitive coding here. porter stemmer takes and returns end of string position.
+  // not length. hence the juggelry with lengths below
   len = stem(g_stemmer, g_word, in_len-1);
   if (len != in_len) {
      memcpy(out_word, g_word, len+1);
      out_word[len + 1] = '\0';
-     return len;
+     return len+1;
   }
   
   return 0;
