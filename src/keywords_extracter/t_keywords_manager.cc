@@ -5,6 +5,11 @@
 
 int main(int argc, char *argv[]) {
 
+  if (argc != 2) {
+    std::cout << "Usage: " << argv[0] << " <count>\n";
+    return -1;
+  }
+
   std::string bin_location = std::string(argv[0]);
   std::string::size_type loc = bin_location.find("bin", 0);
   std::string root_dir;

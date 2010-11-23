@@ -3,12 +3,17 @@
 namespace inagist_api {
 
 CurlRequestMaker::CurlRequestMaker() {
+
+  ClearCurlCallBackBuffers();
+
+  // curl_easy_init calls curl_global_init internally
+  // but its recommended that we call curl_global_init ourselves
+  curl_global_init(CURL_GLOBAL_NOTHING);
   m_curl_handle = curl_easy_init();
   if (NULL == m_curl_handle) {
     std::string str;
     GetLastCurlError(str);
   }
-  memset(m_error_buffer, 0, DEFAULT_BUFFER_SIZE);
 }
 
 CurlRequestMaker::~CurlRequestMaker() {
@@ -16,6 +21,7 @@ CurlRequestMaker::~CurlRequestMaker() {
     curl_easy_cleanup(m_curl_handle);
     m_curl_handle = NULL;
   }
+  curl_global_cleanup();
 }
 
 bool CurlRequestMaker::IsCurlInit() {

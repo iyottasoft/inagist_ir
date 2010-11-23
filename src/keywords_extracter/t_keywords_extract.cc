@@ -36,6 +36,8 @@ int main(int argc, char* argv[]) {
   if (argc == 1) {
     std::string s;
     while (getline(std::cin, s)) {
+      if (s.compare("exit") == 0)
+        break;
       strcpy(str, s.c_str()); 
       ke.GetKeywords(str, script, keywords_set, keyphrases_set);
       std::cout << "Script: " << script << std::endl;

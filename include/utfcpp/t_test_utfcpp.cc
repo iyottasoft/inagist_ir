@@ -26,14 +26,14 @@ int main(int argc, char *argv[]) {
   }
 */
 
-  //char twochars[] = "\xe6\x97\xa5\xd1\x88";
-  char twochars[] = "abcde";
+  char twochars[] = "\xe6\x97\xa5\xd1\x88";
+  //char twochars[] = "abcde";
   //char twochars[] = "\x61";
   char* w = twochars;
   int cp = utf8::next(w, twochars + 6);
   std::cout << cp << std::endl;
-  assert (cp == 0x65e5);
-  assert (w == twochars + 3);
+  //assert (cp == 0x65e5);
+  //assert (w == twochars + 3);
   cp = utf8::next(w, twochars + 6);
   std::cout << cp << std::endl;
 

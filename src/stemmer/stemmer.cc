@@ -124,7 +124,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
 
   // go to the first word, ignoring handles and punctuations
   char *prev = NULL;
-  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && m_utils.IsPunct(ptr, prev, ptr+1)) || m_utils.IsIgnore(ptr))) {
+  while (ptr && '\0' != *ptr && (' ' == *ptr || '#' == *ptr || (ispunct(*ptr) && m_utils.IsPunct(ptr, prev, ptr+1)) || m_utils.IsIgnore(ptr))) {
     prev = ptr;
     ptr++;
   }
@@ -153,7 +153,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
   while (ptr && probe && *ptr != '\n' && *ptr != '\0') {
     // this loop works between second letter to end punctuation for each word
     is_punct = false;
-    if (' ' == *probe || '\0' == *probe || (ispunct(*probe) && (is_punct = m_utils.IsPunct(probe, probe-1, probe+1)))) {
+    if (' ' == *probe || '\0' == *probe || '\'' == *probe || (ispunct(*probe) && (is_punct = m_utils.IsPunct(probe, probe-1, probe+1)))) {
 
       current_word_delimiter = *probe;
       current_word_end = probe;
@@ -169,7 +169,9 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
         if (strcmp(current_word_start, m_stemmed_word) != 0) {
           if (m_include_dictionary.Find(m_stemmed_word) == 1) {
             // if the stemmed word is in the stemmer dictionary, insert it
-            stems.insert(std::string(m_stemmed_word));
+            if (m_exclude_dictionary.Find(m_stemmed_word) == 0) {
+              stems.insert(std::string(m_stemmed_word));
+            }
           } else {
             // so what do we do if the stemmed word is not in dictionary?
             // lets first check if the original word was in dictionary. if so don't bother anymore
@@ -212,7 +214,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
         // IsIgnore will literally ignore the word by changing the cursor to next word end
         is_ignore_word = false;
         is_punct = false;
-        while ('\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && (is_punct = m_utils.IsPunct(ptr, ptr-1, ptr+1))) || (is_ignore_word = m_utils.IsIgnore(ptr)))) {
+        while ('\0' != *ptr && (' ' == *ptr || '#' == *ptr || (ispunct(*ptr) && (is_punct = m_utils.IsPunct(ptr, ptr-1, ptr+1))) || (is_ignore_word = m_utils.IsIgnore(ptr)))) {
           ptr++;
         }
 
