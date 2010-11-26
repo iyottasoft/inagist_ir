@@ -26,7 +26,7 @@ int FollowAnalyser::Init(std::string root_dir) {
   m_follower_maps_dir = root_dir;
   m_follower_maps_index_file = root_dir + "/handle_followers_map.txt";
   if (m_twitter_searcher.Init(root_dir) < 0) {
-    std::cout << "Error: could not initialize twitter searcher" << std::endl;
+    std::cout << "ERROR: could not initialize twitter searcher" << std::endl;
     return -1;
   }
   if (m_keywords_extract.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt") < 0) {
@@ -40,7 +40,7 @@ int FollowAnalyser::ReadFollowers(std::string handle, std::set<std::string> &fol
   std::string file_name = m_follower_maps_dir + "/" + handle + "_followers.txt";
   std::ifstream ifs(file_name.c_str());
   if (!ifs) {
-    std::cout << "Error: could not read followers set" << std::endl;
+    std::cout << "ERROR: could not read followers set" << std::endl;
     return -1;
   }
   
@@ -69,7 +69,7 @@ int FollowAnalyser::GetKeywords(const std::string& handle,
   std::ofstream tweets_file_stream(tweets_file_name.c_str());
   url = std::string("http://search.twitter.com/search.json?q=from:" + handle/* + "&rpp=100"*/);
   if ((ret_value = m_twitter_searcher.Search(url, tweets_file_stream, tweets_map)) < 0) {
-    std::cout << "Error: could not get tweets for " << handle << std::endl;
+    std::cout << "ERROR: could not get tweets for " << handle << std::endl;
     return ret_value;
   }
   tweets_file_stream.close();
@@ -79,7 +79,7 @@ int FollowAnalyser::GetKeywords(const std::string& handle,
   for (multimap_iter = tweets_map.begin(); multimap_iter != tweets_map.end(); multimap_iter++) {
     strcpy(m_buffer, (char *) multimap_iter->second.c_str());
     if (m_keywords_extract.GetKeywords((char *) m_buffer, script, keywords_set) < 0) {
-      std::cout << "Error: could not get keywords for\n" << m_buffer << std::endl;
+      std::cout << "ERROR: could not get keywords for\n" << m_buffer << std::endl;
     }
   }
   tweets_map.clear();
@@ -120,7 +120,7 @@ int FollowAnalyser::GetKeywordsFromFollowers(const std::set<std::string>& follow
   for (set_iter = followers.begin(); set_iter != followers.end(); set_iter++) {
     url = std::string("http://search.twitter.com/search.json?q=from:" + *set_iter/* + "&rpp=100"*/);
     if ((num_docs = m_twitter_searcher.Search(url, tweets_file_stream, tweets_map)) < 0) {
-      std::cout << "Error: could not get tweets for " << *set_iter << std::endl;
+      std::cout << "ERROR: could not get tweets for " << *set_iter << std::endl;
     } else {
       for (multimap_iter = tweets_map.begin(); multimap_iter != tweets_map.end(); multimap_iter++) {
         strcpy(m_buffer, multimap_iter->second.c_str());
@@ -176,7 +176,7 @@ int FollowAnalyser::GetKeywordsFromMentions(const std::string& handle,
   std::ofstream tweets_file_stream(tweets_file_name.c_str());
   url = std::string("http://search.twitter.com/search.json?q=to\%3A" + handle);
   if ((num_docs = m_twitter_searcher.Search(url, tweets_file_stream, tweets_map)) < 0) {
-    std::cout << "Error: could not get tweets for " << handle << std::endl;
+    std::cout << "ERROR: could not get tweets for " << handle << std::endl;
   }
   tweets_file_stream.close();
   if (num_docs < 0)
@@ -210,7 +210,8 @@ int FollowAnalyser::GetKeywordsFromMentions(const std::string& handle,
   return ret_value;
 }
 
-int FollowAnalyser::GetFollowers(std::string handle, std::set<std::string>& followers) {
+int FollowAnalyser::GetFollowers(const std::string& handle, std::set<std::string>& followers) {
+
   bool followers_list_exists = false;
   std::ifstream ifs(m_follower_maps_index_file.c_str());
   if (ifs) {
@@ -229,35 +230,50 @@ int FollowAnalyser::GetFollowers(std::string handle, std::set<std::string>& foll
   }
 
   std::string file_name = m_follower_maps_dir + "/" + handle + "_followers.txt";
-  int num_followers = 0;
-  if ((num_followers = m_twitter_searcher.GetFollowers(handle, followers)) <= 0) {
-    if (num_followers < 0)
-      std::cout << "Error: could not get followers form TwitterSearcher" << std::endl;
-    return -1;
-  }
 
-  std::ofstream ofs;
-  ofs.open(file_name.c_str());
-  if (!ofs) {
-    std::set<std::string>::iterator set_iter;
-    for (set_iter = followers.begin(); set_iter != followers.end(); set_iter++) {
-      ofs << *set_iter << std::endl;
-    }
-    std::cout << "Error: could not open " << file_name << std::endl;
-    return -1;
-  } else {
-    ofs.close();
-  }
+  int num_followers = GetFollowers(handle, file_name, followers);
 
   if (num_followers > 0) {
+    std::ofstream ofs;
     ofs.open(m_follower_maps_index_file.c_str(), std::ios::app);
     if (!ofs)
-      std::cout << "Error: could not open " + m_follower_maps_index_file << std::endl;
+      std::cout << "ERROR: could not open " + m_follower_maps_index_file << std::endl;
     ofs << handle << std::endl;
     ofs.close();
   }
   std::cout << num_followers << "  followers found for " + handle << std::endl;
+
   return num_followers;
 }
 
+int FollowAnalyser::GetFollowers(const std::string& handle,
+                                 const std::string& output_file_name,
+                                 std::set<std::string>& followers) {
+
+  int num_followers = 0;
+  if ((num_followers = m_twitter_searcher.GetFollowers(handle, followers)) <= 0) {
+    if (num_followers < 0)
+      std::cout << "ERROR: could not get followers from TwitterSearcher" << std::endl;
+    return -1;
+  }
+
+  if (num_followers == 0)
+    return 0;
+
+  std::ofstream ofs;
+  ofs.open(output_file_name.c_str());
+  if (!ofs) {
+    std::cout << "ERROR: could not open " << output_file_name << std::endl;
+    return -1;
+  } else {
+    std::set<std::string>::iterator set_iter;
+    for (set_iter = followers.begin(); set_iter != followers.end(); set_iter++) {
+      ofs << *set_iter << std::endl;
+    }
+    ofs.close();
+  }
+
+  return num_followers;
 }
+
+} // namespace inagist dashboard

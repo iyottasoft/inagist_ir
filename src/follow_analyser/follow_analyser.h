@@ -28,7 +28,10 @@ class FollowAnalyser {
   FollowAnalyser();
   ~FollowAnalyser();
   int Init(std::string root_dir);
-  int GetFollowers(std::string handle, std::set<std::string> &followers);
+  int GetFollowers(const std::string& handle, std::set<std::string>& followers);
+  int GetFollowers(const std::string& handle,
+                   const std::string& output_file_name,
+                   std::set<std::string>& followers);
   int GetKeywords(const std::string& handle,
                   const std::string& tweets_file_name,
                   const std::string& keywords_file_name);

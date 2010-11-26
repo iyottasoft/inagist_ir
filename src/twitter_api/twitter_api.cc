@@ -33,11 +33,12 @@ int TwitterAPI::GetPublicTimeLine(std::set<std::string>& tweets) {
     } else {
       // to be specific, the response is a json array
       JSONArray tweet_array = json_value->AsArray();
+      JSONValue *tweet_value;
 
       for (unsigned int i=0; i < tweet_array.size(); i++) {
         // don't know if array element shud again be treated as json value
         // but, what the heck. lets put it as value and then get the object
-        JSONValue *tweet_value = tweet_array[i];
+        tweet_value = tweet_array[i];
         if (false == tweet_value->IsObject())
           std::cout << "ERROR: tweet_value is not an object" << std::endl;
         JSONObject tweet_object = tweet_value->AsObject();
@@ -47,6 +48,7 @@ int TwitterAPI::GetPublicTimeLine(std::set<std::string>& tweets) {
           tweets.insert(tweet_object["text"]->AsString());
           num_docs++;
         }
+        delete tweet_value;
       }
     }
     delete json_value;
