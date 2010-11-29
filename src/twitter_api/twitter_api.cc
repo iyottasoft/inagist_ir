@@ -48,7 +48,7 @@ int TwitterAPI::GetPublicTimeLine(std::set<std::string>& tweets) {
           tweets.insert(tweet_object["text"]->AsString());
           num_docs++;
         }
-        delete tweet_value;
+        //delete tweet_value;
       }
     }
     delete json_value;
