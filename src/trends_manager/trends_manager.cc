@@ -173,3 +173,12 @@ int GetTestTweets(const char* user_name, const unsigned int in_length, char* twe
   return num_docs;
 }
 
+#ifdef _CPLUSPLUS
+extern "C"
+#endif
+int GetTrends(const char* user_name, char* trends_buffer) {
+  if (!user_name || !trends_buffer)
+    return -1;
+  return 0;
+}
+
