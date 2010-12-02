@@ -52,11 +52,18 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   keywords[0] = '\0';
   char keyphrases[MAX_BUFFER_LEN];
   keyphrases[0] = '\0';
-  if (SubmitTweet((const char *) tweet_str, tweet_len,
+
+  int ret_value = 0;
+  if ((ret_value = SubmitTweet((const char *) tweet_str, tweet_len,
                   (char *) script, 4,
                   (char *) keywords, MAX_BUFFER_LEN,
-                  (char *) keyphrases, MAX_BUFFER_LEN) < 0) {
+                  (char *) keyphrases, MAX_BUFFER_LEN)) < 0) {
     return enif_make_tuple3(env, enif_make_binary(env, 0), enif_make_list(env, 0), enif_make_list(env, 0));
+    return enif_make_atom(env, "error");
+  }
+  
+  if (ret_value == 0) {
+    return enif_make_atom(env, "ok");
   }
 
   unsigned int len = 0;
@@ -244,7 +251,8 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 
     arg_array[0] = enif_make_binary(env, &tweet);
     tuple3 = nif_getkeywords(env, 1, arg_array);
-    tuple3_list = enif_make_list_cell(env, tuple3, tuple3_list);
+    if (!enif_is_atom(env, tuple3))
+      tuple3_list = enif_make_list_cell(env, tuple3, tuple3_list);
     *tweet_end = '|';
     tweet_start = tweet_end + 1;
   }

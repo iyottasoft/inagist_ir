@@ -36,6 +36,19 @@ class KeywordsExtract {
                   std::set<std::string> &keywords_set,
                   std::map<std::string, std::string> &script_user_map,
                   std::map<std::string, std::string> &keyword_user_map);
+
+  // directly writing to an output buffer instead of a set
+  int GetKeywords(char* buffer, const int& buffer_len,
+                  char* script_buffer, const int& script_buffer_len,
+                  char* keywords_buffer, const int& keywords_buffer_len,
+                  int& keywords_len, int& keywords_count,
+                  char* keyphrases_buffer, const int& keyphrases_buffer_len,
+                  int& keyphrases_len, int& keyphrases_count);
+  int GetKeywords(char* buffer, const int& buffer_len,
+                  char* script_buffer, const int& script_buffer_len,
+                  char* keywords_buffer, const int& keywords_buffer_len,
+                  int& keywords_len, int& keywords_count);
+
   void printKeywords(); // not implemented yet, to be used for testing
   void PrintKeywords(std::set<std::string> &keywords_set);
   int DetectScript(int code_point, std::string &script);

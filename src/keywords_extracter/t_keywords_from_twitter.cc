@@ -58,6 +58,7 @@ int main(int argc, char *argv[]) {
   std::set<std::string>::iterator set_iter;
   for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
     strcpy(buffer, (char *) (*set_iter).c_str());
+    std::cout << buffer << std::endl;
     ke.GetKeywords(buffer, script, keywords_set);
     std::cout << script << std::endl;
     ke.PrintKeywords(keywords_set);
