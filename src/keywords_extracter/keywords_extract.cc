@@ -1273,6 +1273,7 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
   // script detection
   char *end = strchr(buffer, '\0');
   std::string script = "uu";
+  strcpy(script_buffer, "uu");
   int code_point = 0;
   string script_temp;
   //std::map<std::string, int> script_map;

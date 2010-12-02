@@ -81,26 +81,30 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   ERL_NIF_TERM lang_term; 
 
   len = strlen(safe_status);
-  if (len < 10) {
-    ret_val = enif_alloc_binary(env, len, &safe_status_bin);
-    if (ret_val < 0)
-      return enif_make_atom(env, "error");
-    for (i=0; i<len; i++) {
-      safe_status_bin.data[i] = *(safe_status + i);
-    }
-    safe_status_term = enif_make_binary(env, &safe_status_bin);
+  if (len < 4 || len > 6) {
+    strcpy(safe_status, "error");
+    len = 5;
   }
+  ret_val = enif_alloc_binary(env, len, &safe_status_bin);
+  if (ret_val < 0)
+    return enif_make_atom(env, "error");
+  for (i=0; i<len; i++) {
+    safe_status_bin.data[i] = *(safe_status + i);
+  }
+  safe_status_term = enif_make_binary(env, &safe_status_bin);
 
   len = strlen(script);
-  if (len == 2 || len == 3) {
-    ret_val = enif_alloc_binary(env, len, &script_bin);
-    if (ret_val < 0)
-      return enif_make_atom(env, "error");
-    for (i=0; i<len; i++) {
-      script_bin.data[i] = *(script + i);
-    }
-    lang_term = enif_make_binary(env, &script_bin);
+  if (len != 2 && len != 3) {
+    strcpy(script, "00");
+    len = 2;
   }
+  ret_val = enif_alloc_binary(env, len, &script_bin);
+  if (ret_val < 0)
+    return enif_make_atom(env, "error");
+  for (i=0; i<len; i++) {
+    script_bin.data[i] = *(script + i);
+  }
+  lang_term = enif_make_binary(env, &script_bin);
 
   char *start = keywords;
   char *end = strstr(start, "|");
