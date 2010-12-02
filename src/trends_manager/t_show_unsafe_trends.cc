@@ -72,7 +72,6 @@ int main(int argc, char *argv[]) {
   std::string tweet;
   for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
     tweet = *set_iter;
-    std::cout << tweet << std::endl;
     SubmitTweet(tweet.c_str(), tweet.length(),
                 safe_status, 10,
                 script, 4,
@@ -80,10 +79,13 @@ int main(int argc, char *argv[]) {
                 &keywords_len, &keywords_count,
                 keyphrases, T_MAX_BUFFER_LEN,
                 &keyphrases_len, &keyphrases_count);
-    std::cout << "safe status: " << safe_status << std::endl \
-              << "script: " << script << std::endl \
-              << "keywords: " << keywords << std::endl \
-              << "keyphrases: " << keyphrases << std::endl;
+    if (strcmp(safe_status, "unsafe") == 0) {
+      std::cout << tweet << std::endl;
+      std::cout << "safe status: " << safe_status << std::endl \
+                << "script: " << script << std::endl \
+                << "keywords: " << keywords << std::endl \
+                << "keyphrases: " << keyphrases << std::endl;
+    }
     memset(script, 0, 4);
     keywords[0] = '\0';
     keyphrases[0] = '\0';

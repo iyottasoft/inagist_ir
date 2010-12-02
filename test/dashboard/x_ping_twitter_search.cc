@@ -19,7 +19,9 @@ int main(int argc, char *argv[]) {
   std::string handle = argv[2];
 
   inagist_trends::KeywordsExtract ke;
-  if (ke.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt") < 0) {
+  if (ke.Init("./data/static_data/stopwords.txt",
+              "./data/static_data/dictionary.txt",
+              "./data/static_data/unsafe_dictionary.txt") < 0) {
     std::cerr << "ERROR: couldn't initialize\n";
     return -1; 
   }
@@ -39,6 +41,7 @@ int main(int argc, char *argv[]) {
   std::ofstream ofs;
   std::string file_name;
   unsigned int num_docs = 0;
+  std::string safe_status;
   std::string script;
 
   //tweets followed by handle 
@@ -130,7 +133,7 @@ int main(int argc, char *argv[]) {
           //std::cout.flush();
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
           ofs << buffer << std::endl;
-          ke.GetKeywords(buffer, script, keywords_set, keyphrases_set);
+          ke.GetKeywords(buffer, safe_status, script, keywords_set, keyphrases_set);
           km.PopulateFreqMap(keywords_set);
           //km.PopulateFreqMap(keyphrases_set);
           keywords_set.clear();
@@ -190,7 +193,7 @@ return 0;
           //std::cout.flush();
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
           ofs << buffer << std::endl;
-          ke.GetKeywords(buffer, script, keywords_set, keyphrases_set);
+          ke.GetKeywords(buffer, safe_status, script, keywords_set, keyphrases_set);
           km.PopulateFreqMap(keywords_set);
           //km.PopulateFreqMap(keyphrases_set);
           keywords_set.clear();
@@ -295,7 +298,7 @@ return 0;
         // now lets work on the json object thus obtained
         if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
-          ke.GetKeywords(buffer, script, keywords_set, keyphrases_set);
+          ke.GetKeywords(buffer, safe_status, script, keywords_set, keyphrases_set);
           ofs << buffer << std::endl;
           km.PopulateFreqMap(keywords_set);
           //km.PopulateFreqMap(keyphrases_set);

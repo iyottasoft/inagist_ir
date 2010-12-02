@@ -29,7 +29,9 @@ int FollowAnalyser::Init(std::string root_dir) {
     std::cout << "ERROR: could not initialize twitter searcher" << std::endl;
     return -1;
   }
-  if (m_keywords_extract.Init("./data/static_data/stopwords.txt", "./data/static_data/dictionary.txt") < 0) {
+  if (m_keywords_extract.Init("./data/static_data/stopwords.txt",
+                              "./data/static_data/dictionary.txt",
+                              "./data/static_data/unsafe_dictionary.txt") < 0) {
     std::cerr << "ERROR: couldn't initialize\n";
     return -1; 
   }

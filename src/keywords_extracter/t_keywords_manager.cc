@@ -23,11 +23,17 @@ int main(int argc, char *argv[]) {
   std::string data_dir = root_dir + "data/";
   std::string stopwords_file = data_dir + "static_data/stopwords.txt";
   std::string dictionary_file = data_dir + "static_data/dictionary.txt";
+  std::string unsafe_dictionary_file = data_dir + "static_data/unsafe_dictionary.txt";
   std::string input_file = data_dir + "tweets.txt";
   std::string output_file = data_dir + "static_data/output.txt";
 
   inagist_trends::KeywordsExtract ke;
-  if (ke.Init(stopwords_file.c_str(), dictionary_file.c_str(), NULL, input_file.c_str(), output_file.c_str()) < 0) {
+  if (ke.Init(stopwords_file.c_str(),
+              dictionary_file.c_str(),
+              unsafe_dictionary_file.c_str(),
+              NULL,
+              input_file.c_str(),
+              output_file.c_str()) < 0) {
     std::cerr << "ERROR: couldn't initialize KeywordsExtract\n";
     return -1; 
   }

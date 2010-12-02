@@ -20,11 +20,13 @@ inagist_trends::KeywordsManager g_keywords_manager;
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int Init(const char* stopwords_file_path, const char* dictionary_file_path) {
-  if (!stopwords_file_path || !dictionary_file_path)
+int Init(const char* stopwords_file_path,
+         const char* dictionary_file_path,
+         const char* unsafe_dictionary_file_path) {
+  if (!stopwords_file_path || !dictionary_file_path || !unsafe_dictionary_file_path)
     return -1;
 
-  if (g_keywords_extract.Init(stopwords_file_path, dictionary_file_path) < 0)
+  if (g_keywords_extract.Init(stopwords_file_path, dictionary_file_path, unsafe_dictionary_file_path) < 0)
     return -1;
 
   return 0;
@@ -35,9 +37,12 @@ int Init(const char* stopwords_file_path, const char* dictionary_file_path) {
 extern "C"
 #endif
 int SubmitTweet(const char* tweet, const unsigned int tweet_len,
+                char* safe_status_buffer, const unsigned int safe_status_buffer_len,
                 char* script_buffer, const unsigned int script_buffer_len,
                 char* keywords_buffer, const unsigned int keywords_buffer_len,
-                char* keyphrases_buffer, const unsigned int keyphrases_buffer_len) {
+                unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr,
+                char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
+                unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr) {
 
 #ifdef DEBUG
   std::cout << tweet << std::endl;
@@ -52,25 +57,36 @@ int SubmitTweet(const char* tweet, const unsigned int tweet_len,
   }
 
   int ret_value = 0;
-  int keywords_len = 0;
-  int keyphrases_len = 0;
-  int keywords_count = 0;
-  int keyphrases_count = 0;
-  if ((ret_value = g_keywords_extract.GetKeywords(buffer, MAX_BUFFER_SIZE,
-                                                  script_buffer, tweet_len,
+  unsigned int keywords_len = 0;
+  unsigned int keywords_count = 0;
+  unsigned int keyphrases_len = 0;
+  unsigned int keyphrases_count = 0;
+  if ((ret_value = g_keywords_extract.GetKeywords(buffer, tweet_len,
+                                                  safe_status_buffer, safe_status_buffer_len,
+                                                  script_buffer, script_buffer_len,
                                                   keywords_buffer, keywords_buffer_len,
                                                   keywords_len, keywords_count,
                                                   keyphrases_buffer, keyphrases_buffer_len,
                                                   keyphrases_len, keyphrases_count)) <= 0) {
+    if (ret_value < 0 ) {
+      *safe_status_buffer = '\0';
+      *script_buffer = '\0';
 #ifdef DEBUG
-    if (ret_value < 0)
       std::cout << "Error: could not get keywords from KeywordsExtract\n";
 #endif
-    *script_buffer = '\0';
+    }
     *keywords_buffer = '\0';
+    *keywords_len_ptr = 0;
+    *keywords_count_ptr = 0;
     *keyphrases_buffer = '\0';
+    *keyphrases_len_ptr = 0;
+    *keyphrases_count_ptr = 0;
   }
   buffer[0] = '\0';
+  *keywords_len_ptr = keywords_len;
+  *keywords_count_ptr = keywords_count;
+  *keyphrases_len_ptr = keyphrases_len;
+  *keyphrases_count_ptr = keyphrases_count;
 
   return ret_value;
 }

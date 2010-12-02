@@ -21,33 +21,48 @@ class KeywordsExtract {
  public:
   KeywordsExtract();
   ~KeywordsExtract();
-  int Init(const char *stopwords_file=NULL,
-           const char *dictionary_file=NULL,
-           const char *stemmer_dictionary_file=NULL,
-           const char *input_file=NULL,
-           const char *output_file=NULL);
+  int Init(const char* stopwords_file=NULL,
+           const char* dictionary_file=NULL,
+           const char* unsafe_dictionary_file=NULL,
+           const char* stemmer_dictionary_file=NULL,
+           const char* input_file=NULL,
+           const char* output_file=NULL);
   int DeInit();
   int GetKeywords(); // not implemented yet, to be used for testing
-  int GetKeywords(char* str, std::string &script, std::set<std::string> &keywords_set, std::set<std::string> &keyphrases_set);
-  int GetKeywords(char* str, std::string &script, std::set<std::string> &keywords_set);
-  int GetKeywords(char* str, std::set<std::string> &keywords_set);
+  int GetKeywords(char* str,
+                  std::string& safe_status,
+                  std::string& script,
+                  std::set<std::string>& keywords_set,
+                  std::set<std::string>& keyphrases_set);
+  int GetKeywords(char* str,
+                  std::string& script,
+                  std::set<std::string>& keywords_set);
+  int GetKeywords(char* str,
+                  std::string& safe_status,
+                  std::string& script,
+                  std::set<std::string>& keywords_set);
+  int GetKeywords(char* str,
+                  std::set<std::string> &keywords_set);
   int GetKeywords(char *str,
-                  std::string &user,
-                  std::set<std::string> &keywords_set,
-                  std::map<std::string, std::string> &script_user_map,
-                  std::map<std::string, std::string> &keyword_user_map);
+                  std::string& user,
+                  std::set<std::string>& keywords_set,
+                  std::map<std::string, std::string>& script_user_map,
+                  std::map<std::string, std::string>& keyword_user_map);
 
   // directly writing to an output buffer instead of a set
-  int GetKeywords(char* buffer, const int& buffer_len,
-                  char* script_buffer, const int& script_buffer_len,
-                  char* keywords_buffer, const int& keywords_buffer_len,
-                  int& keywords_len, int& keywords_count,
-                  char* keyphrases_buffer, const int& keyphrases_buffer_len,
-                  int& keyphrases_len, int& keyphrases_count);
-  int GetKeywords(char* buffer, const int& buffer_len,
-                  char* script_buffer, const int& script_buffer_len,
-                  char* keywords_buffer, const int& keywords_buffer_len,
-                  int& keywords_len, int& keywords_count);
+  int GetKeywords(char* buffer, const unsigned int& buffer_len,
+                  char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
+                  char* script_buffer, const unsigned int& script_buffer_len,
+                  char* keywords_buffer, const unsigned int& keywords_buffer_len,
+                  unsigned int& keywords_len, unsigned int& keywords_count,
+                  char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
+                  unsigned int& keyphrases_len, unsigned int& keyphrases_count);
+
+  int GetKeywords(char* buffer, const unsigned int& buffer_len,
+                  char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
+                  char* script_buffer, const unsigned int& script_buffer_len,
+                  char* keywords_buffer, const unsigned int& keywords_buffer_len,
+                  unsigned int& keywords_len, unsigned int& keywords_count);
 
   void printKeywords(); // not implemented yet, to be used for testing
   void PrintKeywords(std::set<std::string> &keywords_set);
@@ -58,6 +73,7 @@ class KeywordsExtract {
   std::ofstream m_out_stream;
   inagist_utils::Dictionary m_dictionary;
   inagist_utils::Dictionary m_stopwords_dictionary;
+  inagist_utils::Dictionary m_unsafe_dictionary;
   inagist_classifiers::ScriptDetector m_script_detector;
 
   DISALLOW_COPY_AND_ASSIGN(KeywordsExtract);

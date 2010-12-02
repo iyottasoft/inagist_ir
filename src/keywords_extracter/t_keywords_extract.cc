@@ -24,13 +24,15 @@ int main(int argc, char* argv[]) {
 
   string stopwords_file = root_dir + "/data/static_data/stopwords.txt";
   string dictionary_file = root_dir + "/data/static_data/dictionary.txt";
-  if (ke.Init(stopwords_file.c_str(), dictionary_file.c_str()) < 0) {
+  string unsafe_dictionary_file = root_dir + "/data/static_data/unsafe_dictionary.txt";
+  if (ke.Init(stopwords_file.c_str(), dictionary_file.c_str(), unsafe_dictionary_file.c_str()) < 0) {
     std::cerr << "ERROR: couldn't initialize KeywordsExtract\n";
     return -1;
   }
 
   std::set<std::string> keywords_set;
   std::set<std::string> keyphrases_set;
+  std::string safe_status;
   std::string script;
   char str[141];
   if (argc == 1) {
@@ -39,7 +41,8 @@ int main(int argc, char* argv[]) {
       if (s.compare("exit") == 0)
         break;
       strcpy(str, s.c_str()); 
-      ke.GetKeywords(str, script, keywords_set, keyphrases_set);
+      ke.GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
+      std::cout << "Safe Status: " << script << std::endl;
       std::cout << "Script: " << script << std::endl;
       std::cout << "Keywords:" << std::endl;
       ke.PrintKeywords(keywords_set);
@@ -51,7 +54,7 @@ int main(int argc, char* argv[]) {
       }
     }
   } else {
-    ke.GetKeywords(argv[1], script, keywords_set, keyphrases_set);
+    ke.GetKeywords(argv[1], safe_status, script, keywords_set, keyphrases_set);
     std::cout << script << std::endl;
     ke.PrintKeywords(keywords_set);
     keywords_set.clear();

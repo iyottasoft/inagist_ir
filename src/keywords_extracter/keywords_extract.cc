@@ -32,6 +32,7 @@ KeywordsExtract::~KeywordsExtract() {
 //
 int KeywordsExtract::Init(const char *stopwords_file,
     const char *dictionary_file,
+    const char *unsafe_dictionary_file,
     const char *stemmer_dictionary_file,
     const char *input_file,
     const char *output_file) {
@@ -46,7 +47,15 @@ int KeywordsExtract::Init(const char *stopwords_file,
   }
 
   if (dictionary_file) {
-    int ret = m_stopwords_dictionary.Load(dictionary_file);
+    int ret = m_dictionary.Load(dictionary_file);
+    if (ret < 0) {
+      std::cerr << "ERROR: could not load dictionary file into dictionary\n";
+      return -1;
+    }
+  }
+
+  if (unsafe_dictionary_file) {
+    int ret = m_unsafe_dictionary.Load(unsafe_dictionary_file);
     if (ret < 0) {
       std::cerr << "ERROR: could not load dictionary file into dictionary\n";
       return -1;
@@ -174,19 +183,31 @@ bool KeywordsExtract::IsIgnore(char *&ptr) {
   return false;
 }
 
-int KeywordsExtract::GetKeywords(char *str, std::set<std::string> &keywords_set) {
+int KeywordsExtract::GetKeywords(char* str, std::set<std::string>& keywords_set) {
   std::set<std::string> keyphrases_set;
+  std::string safe_status;
   std::string script;
-  return GetKeywords(str, script, keywords_set, keyphrases_set);
+  return GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
 }
 
-int KeywordsExtract::GetKeywords(char *str,
-                                 std::string &user,
-                                 std::set<std::string> &keywords_set,
-                                 std::map<std::string, std::string> &script_user_map,
-                                 std::map<std::string, std::string> &keyword_user_map) {
+#ifdef KEYPHRASE_ENABLED
+int KeywordsExtract::GetKeywords(char* str,
+                                 std::string& safe_status,
+                                 std::string& script,
+                                 std::set<std::string>& keywords_set) {
+  std::set<std::string> keyphrases_set;
+  return GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
+}
+#endif
+
+int KeywordsExtract::GetKeywords(char* str,
+                                 std::string& user,
+                                 std::set<std::string>& keywords_set,
+                                 std::map<std::string, std::string>& script_user_map,
+                                 std::map<std::string, std::string>& keyword_user_map) {
+  std::string safe_status;
   std::string script;
-  if (GetKeywords(str, script, keywords_set) < 0) {
+  if (GetKeywords(str, safe_status, script, keywords_set) < 0) {
     cout << "Error: could not get keywords\n";
     return -1;
   }
@@ -212,18 +233,28 @@ int KeywordsExtract::GetKeywords(char *str,
 }
 
 #ifdef KEYPHRASE_ENABLED
-int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::string> &keywords_set) {
+int KeywordsExtract::GetKeywords(char* str,
+                                 std::string& script,
+                                 std::set<std::string>& keywords_set) {
   std::set<std::string> keyphrases_set;
-  int ret_value = GetKeywords(str, script, keywords_set, keyphrases_set);
+  std::string safe_status;
+  int ret_value = GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
   keyphrases_set.clear();
   return ret_value;
 }
 #endif
 
 #ifdef KEYPHRASE_ENABLED
-int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::string> &keywords_set, std::set<std::string> &keyphrases_set) {
+int KeywordsExtract::GetKeywords(char* str,
+                                 std::string& safe_status,
+                                 std::string& script,
+                                 std::set<std::string>& keywords_set,
+                                 std::set<std::string>& keyphrases_set) {
 #else
-int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::string> &keywords_set) {
+int KeywordsExtract::GetKeywords(char* str,
+                                 std::string& safe_status,
+                                 std::string& script,
+                                 std::set<std::string>& keywords_set) {
 #endif
   if (!str)
     return -1;
@@ -301,6 +332,9 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
   char *pch = NULL;
   char ch;
 
+  // unsafe
+  bool text_has_unsafe_words = false;
+
   // script detection
   char *end = strchr(str, '\0');
   script = "uu";
@@ -327,8 +361,8 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
   if (!ptr || '\0' == *ptr) {
 #ifdef DEBUG
     cout << "either the input is empty or has ignore words only" << endl;
-    return 0;
 #endif
+    return 0;
   }
 
   current_word_start = ptr;
@@ -402,8 +436,8 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
   if (!ptr || '\0' == *ptr) {
 #ifdef DEBUG
     cout << "either the input has only one word or the other words are ignore words" << endl;
-    return 0;
 #endif
+    return 0;
   }
   current_word_end = ptr;
   current_word_delimiter = *ptr;
@@ -432,6 +466,10 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
 #endif
   } else {
     current_word_dict = false;
+  }
+
+  if (m_unsafe_dictionary.Find(current_word_start) == 1) {
+    text_has_unsafe_words = true;
   }
 
   // go to the next word, ignoring punctuation and ignore words.
@@ -566,6 +604,10 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
 #endif
         } else {
           next_word_dict = false;
+        }
+
+        if (m_unsafe_dictionary.Find(next_word_start) == 1) {
+          text_has_unsafe_words = true;
         }
       }
 
@@ -1100,6 +1142,12 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
     script = "uu";
   }
 
+  // unsafe
+  if (text_has_unsafe_words)
+    safe_status = "unsafe";
+  else
+    safe_status = "safe";
+
 #ifdef DEBUG
   cout << "returning from keywords extract. keywords: " << keywords_set.size() << " keyphrases: " << keyphrases_set.size() << std::endl;
 #endif
@@ -1107,14 +1155,16 @@ int KeywordsExtract::GetKeywords(char *str, std::string &script, std::set<std::s
 }
 
 #ifdef KEYPHRASE_ENABLED
-int KeywordsExtract::GetKeywords(char* buffer, const int& buffer_len,
-                                 char* script_buffer, const int& script_buffer_len,
-                                 char* keywords_buffer, const int& keywords_buffer_len,
-                                 int& keywords_len, int& keywords_count,
-                                 char* keyphrases_buffer, const int& keyphrases_buffer_len,
-                                 int& keyphrases_len, int& keyphrases_count) {
+int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
+                                 char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
+                                 char* script_buffer, const unsigned int& script_buffer_len,
+                                 char* keywords_buffer, const unsigned int& keywords_buffer_len,
+                                 unsigned int& keywords_len, unsigned int& keywords_count,
+                                 char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
+                                 unsigned int& keyphrases_len, unsigned int& keyphrases_count) {
 
   // initialize output parameters
+  *safe_status_buffer = '\0';
   *script_buffer = '\0';
   *keywords_buffer = '\0';
   keywords_len = 0;
@@ -1126,11 +1176,13 @@ int KeywordsExtract::GetKeywords(char* buffer, const int& buffer_len,
   if (!buffer || buffer_len < 1 || !script_buffer || !keywords_buffer || !keyphrases_buffer)
     return -1;
 #else
-int KeywordsExtract::GetKeywords(char* buffer, const int& buffer_len,
-                                 char* script_buffer, const int& script_buffer_len,
-                                 char* keywords_buffer, const int& keywords_buffer_len,
-                                 int& keywords_len, int& keywords_count) {
+int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
+                                 char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
+                                 char* script_buffer, const unsigned int& script_buffer_len,
+                                 char* keywords_buffer, const unsigned int& keywords_buffer_len,
+                                 unsigned int& keywords_len, unsigned int& keywords_count) {
 
+  *safe_status_buffer = '\0';
   *script_buffer = '\0';
   *keywords_buffer = '\0';
   keywords_len = 0;
@@ -1214,6 +1266,10 @@ int KeywordsExtract::GetKeywords(char* buffer, const int& buffer_len,
   char ch;
   int temp_len = 0;
 
+  // unsafe
+  strcpy(safe_status_buffer, "safe");
+  bool text_has_unsafe_words = false;
+
   // script detection
   char *end = strchr(buffer, '\0');
   std::string script = "uu";
@@ -1240,8 +1296,8 @@ int KeywordsExtract::GetKeywords(char* buffer, const int& buffer_len,
   if (!ptr || '\0' == *ptr) {
 #ifdef DEBUG
     cout << "either the input is empty or has ignore words only" << endl;
-    return 0;
 #endif
+    return 0;
   }
 
   current_word_start = ptr;
@@ -1315,8 +1371,8 @@ int KeywordsExtract::GetKeywords(char* buffer, const int& buffer_len,
   if (!ptr || '\0' == *ptr) {
 #ifdef DEBUG
     cout << "either the input has only one word or the other words are ignore words" << endl;
-    return 0;
 #endif
+    return 0;
   }
   current_word_end = ptr;
   current_word_delimiter = *ptr;
@@ -1345,6 +1401,11 @@ int KeywordsExtract::GetKeywords(char* buffer, const int& buffer_len,
 #endif
   } else {
     current_word_dict = false;
+  }
+
+  // unsafe words
+  if (m_unsafe_dictionary.Find(current_word_start) == 1) {
+    text_has_unsafe_words = true;
   }
 
   // go to the next word, ignoring punctuation and ignore words.
@@ -1479,6 +1540,11 @@ int KeywordsExtract::GetKeywords(char* buffer, const int& buffer_len,
 #endif
         } else {
           next_word_dict = false;
+        }
+
+        // dictionary words
+        if (m_unsafe_dictionary.Find(next_word_start) == 1) {
+          text_has_unsafe_words = true;
         }
       }
 
@@ -2105,6 +2171,12 @@ int KeywordsExtract::GetKeywords(char* buffer, const int& buffer_len,
     script = "uu";
   }
   strcpy(script_buffer, script.c_str());
+
+  // safe status
+  if (text_has_unsafe_words)
+    strcpy(safe_status_buffer, "unsafe");
+  else
+    strcpy(safe_status_buffer, "safe");
 
 #ifdef DEBUG
   cout << "returning from keywords extract. keywords: " << keywords_count << " keyphrases: " << keyphrases_count << std::endl;
