@@ -1362,10 +1362,22 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
           english_count++;
       }
     } catch (...) {
-#ifdef DEBUG
-      std::cout << "Exception: " << code_point << " " << ptr << std::endl;
+//#ifdef DEBUG
+      std::cout << "EXCEPTION: utf8 returned exception" << std::endl;
+//#endif
+      memset(script_buffer, '\0', script_buffer_len);
+      strcpy(script_buffer, "00");
+      memset(safe_status_buffer, '\0', safe_status_buffer_len);
+      strcpy(safe_status_buffer, "error");
+      memset(keywords_buffer, '\0', keywords_buffer_len);
+      keywords_len = 0;
+      keywords_count = 0;
+#ifdef KEYPHRASE_ENABLED
+      memset(keyphrases_buffer, '\0', keyphrases_buffer_len);
+      keyphrases_len = 0;
+      keyphrases_count = 0;
 #endif
-      ptr++;
+      return -1;
     }
   }
 
@@ -2133,10 +2145,22 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
             english_count++;
         }
       } catch (...) {
-#ifdef DEBUG
+//#ifdef DEBUG
         std::cout << "Exception: " << code_point << " " << probe << std::endl;
+//#endif
+        memset(script_buffer, '\0', script_buffer_len);
+        strcpy(script_buffer, "00");
+        memset(safe_status_buffer, '\0', safe_status_buffer_len);
+        strcpy(safe_status_buffer, "error");
+        memset(keywords_buffer, '\0', keywords_buffer_len);
+        keywords_len = 0;
+        keywords_count = 0;
+#ifdef KEYPHRASE_ENABLED
+        memset(keyphrases_buffer, '\0', keyphrases_buffer_len);
+        keyphrases_len = 0;
+        keyphrases_count = 0;
 #endif
-        probe++;
+        return -1; 
       }
     }
   }
