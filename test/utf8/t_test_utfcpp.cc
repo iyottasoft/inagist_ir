@@ -1,12 +1,11 @@
 #include "utf8.h"
 #include <iostream>
+#include <set>
 #include <fstream>
 #include <cassert>
-#include <cstdio>
 #include <cstring>
-#include <set>
 #include "twitter_api.h"
-#include "script_detector.h"
+#include "test_utfcpp.h"
 
 using namespace std;
 
@@ -43,35 +42,16 @@ int main(int argc, char *argv[]) {
 
   std::set<std::string>::iterator set_iter;
   std::string tweet;
+  char text[1024];
+  memset(text, '\0', 1024);
+  char script_buffer[4];
+  memset(script_buffer, '\0', 4);
+  std::string script;
   for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
     tweet = *set_iter;
-  
-    char text[1024];
-    memset(text, '\0', 1024);
     strcpy(text, tweet.c_str());
-    
-    char *ptr = text;
-    char *end = strchr(text, '\0');
-    int code_point = 0;
-    std::string script;
-    inagist_classifiers::ScriptDetector sd;
-    while (ptr && *ptr != '\0') {
-      try {
-        code_point = utf8::next(ptr, end);
-        if (code_point > 0x7F) {
-          if (sd.DetectScript(code_point, script) > 0) {
-            std::cout << script << std::endl;
-          }
-        } else {
-          if (code_point > 0x40 && code_point < 0x7B) {
-            std::cout << "en" << std::endl;
-          }
-        }
-      } catch (...) {
-        std::cout << "EXCEPTION: utf8 returned exception" << std::endl;
-      }
-    }
-    sd.Clear();
+    test_detect_script(text, 1024, script_buffer, 4);
+    std::cout << text << std::endl << script_buffer << std::endl;
   }
   tweets.clear();
 
