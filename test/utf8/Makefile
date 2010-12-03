@@ -3,16 +3,17 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../src/curl_request_maker -I../../src/keywords_extracter -I../../src/script_detector -I../../include/utfcpp
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../src/curl_request_maker -I../../include/utfcpp -I../../src/twitter_api -I../../src/script_detector
 
 LINK_DIR = -L../../lib
 
-LIBS = -ljsonparser -lcurlrequestmaker -lcurl -lkeywordsextracter -lscriptdetector
+LIBS = -lscriptdetector -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
 
-BINS = ${BIN_DIR}/t_encode
+BINS = ${BIN_DIR}/t_encode \
+       ${BIN_DIR}/t_test_utfcpp
 
 all: ${BINS}
 	@echo "build done!"
@@ -29,6 +30,11 @@ clean:
 ${BIN_DIR}/t_encode: t_encode.o
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_encode
+	@echo "done!"
+
+${BIN_DIR}/t_test_utfcpp: t_test_utfcpp.o
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_test_utfcpp
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE
