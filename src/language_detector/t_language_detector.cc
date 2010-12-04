@@ -5,13 +5,13 @@
 
 int main(int argc, char* argv[]) {
   if (argc != 2 && argc != 3) {
-    std::cout << "Usage: " << argv[0] << " [training_data_dir]\n";
+    std::cout << "Usage: " << argv[0] << " <config_file> [twitter_handle]\n";
     return -1;
   }
 
-  std::string training_data_dir = std::string(argv[1]);
+  std::string config_file_name = std::string(argv[1]);
   inagist_classifiers::LanguageDetector ld;
-  if (ld.Init(training_data_dir) < 0) {
+  if (ld.Init(config_file_name) < 0) {
     std::cout << "Error: could not initialize language detector\n";
     return -1;
   }
@@ -37,6 +37,8 @@ int main(int argc, char* argv[]) {
     std::cout << tweet << std::endl;
     if (ld.DetectLanguage(tweet, tweet.length(), lang) < 0) {
       std::cout << "Error: could not find language\n";
+    } else {
+      std::cout << lang << std::endl;
     }
     break;
   }
