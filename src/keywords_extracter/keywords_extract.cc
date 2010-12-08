@@ -1365,6 +1365,8 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
 #ifdef DEBUG
       std::cout << "EXCEPTION: utf8 returned exception" << std::endl;
 #endif
+      ptr++;
+      /*
       memset(script_buffer, '\0', script_buffer_len);
       strcpy(script_buffer, "00");
       memset(safe_status_buffer, '\0', safe_status_buffer_len);
@@ -1378,6 +1380,7 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
       keyphrases_count = 0;
 #endif
       return -1;
+      */
     }
   }
 
@@ -2148,6 +2151,8 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
 #ifdef DEBUG
         std::cout << "Exception: " << code_point << " " << probe << std::endl;
 #endif
+        probe++;
+        /*
         memset(script_buffer, '\0', script_buffer_len);
         strcpy(script_buffer, "00");
         memset(safe_status_buffer, '\0', safe_status_buffer_len);
@@ -2160,7 +2165,8 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
         keyphrases_len = 0;
         keyphrases_count = 0;
 #endif
-        return -1; 
+        return -1;
+        */
       }
     }
   }
