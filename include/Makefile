@@ -1,4 +1,4 @@
-SUBDIRS = json_parser porter_stemmer utfcpp
+SUBDIRS = json_parser porter_stemmer
 
 .PHONY: subdirs $(SUBDIRS)
 

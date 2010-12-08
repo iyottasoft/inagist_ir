@@ -29,7 +29,7 @@ class LanguageDetector {
                                   const std::string& tweets_file_name,
                                   const std::string& output_file_name);
   int GetNgramFrequencies(const std::string& input_file_name,
-                          Corpus corpus);
+                          Corpus& corpus);
   int Clear();
   
  private:

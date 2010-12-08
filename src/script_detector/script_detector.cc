@@ -6,12 +6,14 @@
 namespace inagist_classifiers {
 
 ScriptDetector::ScriptDetector() {
-  memset(m_buffer, '\0', SD_MAX_BUFFER_LEN);
+  if (m_buffer)
+    memset(m_buffer, '\0', SD_MAX_BUFFER_LEN);
 }
 
 ScriptDetector::~ScriptDetector() {
   Clear();
-  memset(m_buffer, '\0', SD_MAX_BUFFER_LEN);
+  if (m_buffer)
+    memset(m_buffer, '\0', SD_MAX_BUFFER_LEN);
 }
 
 int ScriptDetector::Init() {
@@ -20,8 +22,10 @@ int ScriptDetector::Init() {
 }
 
 int ScriptDetector::Clear() {
-  m_script_map.clear();
-  m_buffer[0] = '\0';
+  if (!m_script_map.empty())
+    m_script_map.clear();
+  if (m_buffer)
+    m_buffer[0] = '\0';
   return 0;
 }
 

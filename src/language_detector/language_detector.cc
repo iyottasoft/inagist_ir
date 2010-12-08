@@ -50,7 +50,7 @@ int LanguageDetector::DetectLanguage(const std::string& text, const unsigned int
 }
 
 int LanguageDetector::GetNgramFrequencies(const std::string& input_file_name,
-                                          Corpus corpus) {
+                                          Corpus& corpus) {
 
   std::ifstream ifs(input_file_name.c_str());
   if (!ifs) {

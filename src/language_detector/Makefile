@@ -14,7 +14,8 @@ BIN_DIR = ../../bin
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
-BINS = ${BIN_DIR}/t_language_detector
+BINS = ${BIN_DIR}/t_language_detector \
+       ${BIN_DIR}/x_GenerateLangModel
 
 OBJS = language_detector.o
 
@@ -39,6 +40,11 @@ ${LIB}: ${OBJS}
 ${BIN_DIR}/t_language_detector: t_language_detector.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_language_detector
+	@echo "done!"
+
+${BIN_DIR}/x_GenerateLangModel: x_GenerateLangModel.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_GenerateLangModel
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE
