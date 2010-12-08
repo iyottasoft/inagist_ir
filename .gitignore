@@ -9,3 +9,4 @@ include/*/*.o
 test/*/*.o
 test/*/*.so
 test/*/*.beam
+todo.txt
