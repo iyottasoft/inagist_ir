@@ -34,7 +34,8 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
   ErlNifBinary tweet;
   char tweet_str[MAX_BUFFER_LEN];
- 
+  memset(tweet_str, 0, MAX_BUFFER_LEN);
+
   bool success = enif_inspect_binary(env, argv[0], &tweet);
   int tweet_len = tweet.size;
   if (success && tweet_len > 1 && tweet_len < MAX_BUFFER_LEN) {
@@ -167,6 +168,7 @@ ERL_NIF_TERM nif_gettrends(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) 
 
   if (enif_inspect_binary(env, argv[0], &user_name)) {
     memcpy((char *)user_name_str, user_name.data, user_name.size);
+    user_name_str[user_name.size] = '\0';
     enif_release_binary(env, &user_name);
   } else {
     return enif_make_atom(env, "error");
@@ -241,6 +243,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 
     if (enif_inspect_binary(env, argv[0], &user_name)) {
       memcpy(user_name_str, user_name.data, user_name.size);
+      user_name_str[user_name.size] = '\0';
       enif_release_binary(env, &user_name);
     }   else {
       enif_release_binary(env, &user_name);
@@ -269,6 +272,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   ERL_NIF_TERM arg_array[1]; 
   ERL_NIF_TERM tuple4;
   ERL_NIF_TERM tuple4_list = enif_make_list(env, 0);
+  unsigned int error_count = 0;
 
   while (tweet_start && tweet_end && *tweet_end != '\0') {
     tweet_end = strstr(tweet_start, "|");
@@ -288,8 +292,11 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 
     arg_array[0] = enif_make_binary(env, &tweet);
     tuple4 = nif_getkeywords(env, 1, arg_array);
-    if (!enif_is_atom(env, tuple4))
+    if (enif_is_atom(env, tuple4)) {
+      error_count++;
+    } else {
       tuple4_list = enif_make_list_cell(env, tuple4, tuple4_list);
+    }
     *tweet_end = '|';
     tweet_start = tweet_end + 1;
   }
@@ -297,6 +304,15 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   tweet_end = NULL;
 
   return tuple4_list;
+
+  ERL_NIF_TERM tuple2_list = enif_make_list(env, 0);
+  enif_make_list_cell(env, tuple2_list, tuple4_list);
+  char error_str[10];
+  sprintf(error_str, "%d", error_count);
+  ERL_NIF_TERM error_term = enif_make_atom(env, error_str);
+  enif_make_list_cell(env, tuple2_list, error_term);
+  
+  return tuple2_list;
 }
 
 static ErlNifFunc nif_funcs[] =

@@ -50,12 +50,12 @@ class KeywordsExtract {
                   std::map<std::string, std::string>& keyword_user_map);
 
   // directly writing to an output buffer instead of a set
-  int GetKeywords(char* buffer, const unsigned int& buffer_len,
+  int GetKeywords(unsigned char* buffer, const unsigned int& buffer_len,
                   char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
                   char* script_buffer, const unsigned int& script_buffer_len,
-                  char* keywords_buffer, const unsigned int& keywords_buffer_len,
+                  unsigned char* keywords_buffer, const unsigned int& keywords_buffer_len,
                   unsigned int& keywords_len, unsigned int& keywords_count,
-                  char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
+                  unsigned char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
                   unsigned int& keyphrases_len, unsigned int& keyphrases_count);
 
   int GetKeywords(char* buffer, const unsigned int& buffer_len,

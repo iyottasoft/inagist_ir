@@ -36,12 +36,12 @@ int Init(const char* stopwords_file_path,
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int SubmitTweet(const char* tweet, const unsigned int tweet_len,
+int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                 char* safe_status_buffer, const unsigned int safe_status_buffer_len,
                 char* script_buffer, const unsigned int script_buffer_len,
-                char* keywords_buffer, const unsigned int keywords_buffer_len,
+                unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
                 unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr,
-                char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
+                unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
                 unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr) {
 
 #ifdef DEBUG
@@ -49,9 +49,11 @@ int SubmitTweet(const char* tweet, const unsigned int tweet_len,
 #endif
 
   // this can be global. keeping it local for the time being
-  char buffer[MAX_BUFFER_SIZE];
-  if (tweet_len < MAX_BUFFER_SIZE) {
-    strcpy(buffer, tweet);
+  unsigned char buffer[MAX_BUFFER_SIZE];
+  if (tweet_len > 0 && tweet_len < MAX_BUFFER_SIZE) {
+    //strcpy((char *) buffer, (char *) tweet);
+    memcpy((char *) buffer, (char *) tweet, tweet_len);
+    buffer[tweet_len] = '\0';
   } else {
     return -1;
   }
@@ -118,6 +120,9 @@ int GetTestTweets(const char* user_name, const unsigned int in_length, char* twe
   unsigned int len = 0;
   unsigned int total_len = 0;
   for (iter = tweets.begin(); iter != tweets.end(); iter++) {
+#ifdef DEBUG
+    std::cout << *iter << std::endl;
+#endif
     len = (*iter).length();
     total_len += (len + 1); // 1 for the pipe
     if (total_len < in_length) {

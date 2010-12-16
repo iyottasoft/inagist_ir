@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
         break;
       strcpy(str, s.c_str()); 
       ke.GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
-      std::cout << "Safe Status: " << script << std::endl;
+      std::cout << "Safe Status: " << safe_status << std::endl;
       std::cout << "Script: " << script << std::endl;
       std::cout << "Keywords:" << std::endl;
       ke.PrintKeywords(keywords_set);

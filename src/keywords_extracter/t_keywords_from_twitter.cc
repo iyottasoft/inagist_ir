@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
   // get top tweets from twitter api
   std::set<std::string> tweets;
   int num_docs = 0;
-  if (argc == 2) {
+  if (argc == 1) {
     inagist_api::TwitterAPI tapi;
     if ((num_docs = tapi.GetPublicTimeLine(tweets)) < 0) {
       std::cout << "Error: could not get trending tweets from inagist\n";

@@ -7,10 +7,13 @@
 #define T_MAX_BUFFER_LEN 1024 
 
 extern int Init(const char*, const char*);
-extern int SubmitTweet(const char* tweet, const unsigned int tweet_len,
-                        char* tweet_script, const unsigned int script_buffer_len,
-                        char* keywords, const unsigned int keywords_buffer_len,
-                        char* keyphrases, const unsigned int keyphrases_buffer_len);
+extern int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
+                    char* safe_status_buffer, const unsigned int safe_status_buffer_len,
+                    char* script_buffer, const unsigned int script_buffer_len,
+                    unsigned char* keywords, const unsigned int keywords_buffer_len,
+                    unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr,
+                    unsigned char* keyphrases, const unsigned int keyphrases_buffer_len,
+                    unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr);
 extern int GetTrends();
 
 using std::string;
@@ -59,11 +62,11 @@ int main(int argc, char *argv[]) {
   memset(safe_status, 0, 10);
   char script[4];
   memset(script, 0, 4);
-  char keywords[T_MAX_BUFFER_LEN];
+  unsigned char keywords[T_MAX_BUFFER_LEN];
   memset(keywords, 0, T_MAX_BUFFER_LEN);
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
-  char keyphrases[T_MAX_BUFFER_LEN];
+  unsigned char keyphrases[T_MAX_BUFFER_LEN];
   memset(keyphrases, 0, T_MAX_BUFFER_LEN);
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
@@ -72,12 +75,12 @@ int main(int argc, char *argv[]) {
   std::string tweet;
   for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
     tweet = *set_iter;
-    SubmitTweet(tweet.c_str(), tweet.length(),
+    SubmitTweet((const unsigned char*) tweet.c_str(), tweet.length(),
                 safe_status, 10,
                 script, 4,
-                keywords, T_MAX_BUFFER_LEN,
+                (unsigned char*) keywords, T_MAX_BUFFER_LEN,
                 &keywords_len, &keywords_count,
-                keyphrases, T_MAX_BUFFER_LEN,
+                (unsigned char*) keyphrases, T_MAX_BUFFER_LEN,
                 &keyphrases_len, &keyphrases_count);
     if (strcmp(safe_status, "unsafe") == 0) {
       std::cout << tweet << std::endl;

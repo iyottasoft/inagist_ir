@@ -27,7 +27,7 @@ KeywordsExtract::~KeywordsExtract() {
 // just mean that those dictionaries will not be populated
 // 
 // if input_file or output_file are given, they will be initialized
-// the above are two are typically used by a test program which will
+// the above two are typically used by a test program which will
 // subsequently call GetKeywords() and PrintKeywords()
 //
 int KeywordsExtract::Init(const char *stopwords_file,
@@ -259,11 +259,11 @@ int KeywordsExtract::GetKeywords(char* str,
   if (!str)
     return -1;
 
-  char *ptr = NULL;
-  char *probe = NULL;
-  char current_word_delimiter;
-  char prev_word_delimiter;
-  char next_word_delimiter;
+  unsigned char *ptr = NULL;
+  unsigned char *probe = NULL;
+  unsigned char current_word_delimiter;
+  unsigned char prev_word_delimiter;
+  unsigned char next_word_delimiter;
 
   //unsigned in_len = 0;
   //unsigned out_len = 0;
@@ -272,30 +272,30 @@ int KeywordsExtract::GetKeywords(char* str,
 #ifdef DEBUG
   int score = 0;
 #endif
-  int num_mixed_words = 0;
-  int num_caps_words = 0;
-  int num_words = 0;
-  int num_stop_words = 0;
-  int num_dict_words = 0;
-  int num_numeric_words = 0;
-  int num_normal_words = 0; // not caps or stop or dict or numeric
+  unsigned int num_mixed_words = 0;
+  unsigned int num_caps_words = 0;
+  unsigned int num_words = 0;
+  unsigned int num_stop_words = 0;
+  unsigned int num_dict_words = 0;
+  unsigned int num_numeric_words = 0;
+  unsigned int num_normal_words = 0; // not caps or stop or dict or numeric
 
-  char *current_word_start = NULL;
-  char *current_word_end = NULL;
-  char *prev_word_start = NULL;
-  char *prev_word_end = NULL;
-  char *next_word_start = NULL;
-  char *next_word_end = NULL;
+  unsigned char *current_word_start = NULL;
+  unsigned char *current_word_end = NULL;
+  unsigned char *prev_word_start = NULL;
+  unsigned char *prev_word_end = NULL;
+  unsigned char *next_word_start = NULL;
+  unsigned char *next_word_end = NULL;
 
-  char *caps_entity_start = NULL;
-  char *caps_entity_end = NULL;
-  char *stopwords_entity_start = NULL;
-  char *stopwords_entity_end = NULL;
+  unsigned char *caps_entity_start = NULL;
+  unsigned char *caps_entity_end = NULL;
+  unsigned char *stopwords_entity_start = NULL;
+  unsigned char *stopwords_entity_end = NULL;
 #ifdef KEYPHRASE_ENABLED
-  char *stopwords_keyphrase_start = NULL;
-  char *stopwords_keyphrase_end = NULL;
+  unsigned char *stopwords_keyphrase_start = NULL;
+  unsigned char *stopwords_keyphrase_end = NULL;
 #endif
-  char *sentence_start = NULL;
+  unsigned char *sentence_start = NULL;
 
   // TODO (balaji) use bit map and masks to reduce comparisons
   bool current_word_caps = false;
@@ -329,31 +329,31 @@ int KeywordsExtract::GetKeywords(char* str,
   //bool second_letter_has_caps = false;
 
   // misc
-  char *pch = NULL;
-  char ch;
+  unsigned char *pch = NULL;
+  unsigned char ch;
 
   // unsafe
   bool text_has_unsafe_words = false;
 
   // script detection
-  char *end = strchr(str, '\0');
+  unsigned char *end = (unsigned char*) strchr(str, '\0');
   script = "uu";
-  int code_point = 0;
+  unsigned int code_point = 0;
   string script_temp;
   //std::map<std::string, int> script_map;
   int script_count = 0;
   int english_count = 0;
 
   // the whole thing starts here
-  ptr = str;
+  ptr = (unsigned char*) str;
 
 #ifdef DEBUG
   cout << endl << "original query: " << std::string(str) << endl << endl;
 #endif
 
   // go to the first word, ignoring handles and punctuations
-  char *prev = NULL;
-  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && IsPunct(ptr, prev, ptr+1)) || IsIgnore(ptr))) {
+  unsigned char *prev = NULL;
+  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && IsPunct((char *) ptr, (char *) prev, (char *) ptr+1)) || IsIgnore((char *&) ptr))) {
     prev = ptr;
     ptr++;
   }
@@ -389,9 +389,34 @@ int KeywordsExtract::GetKeywords(char* str,
   m_script_detector.Init();
 
   // now lets find the end of the current word - while loop works from the second letter
-  ptr++;
-  while (ptr && ' ' != *ptr && '\0' != *ptr && !(is_punct = IsPunct(ptr, ptr-1, ptr+1))) {
-    if (!strcmp(ptr, "&#")) {
+  //ptr++;
+  try {
+    code_point = utf8::next(ptr, end);
+    if (code_point > 0x7F) {
+      if (m_script_detector.DetectScript(code_point, script_temp) > 0) {
+        if (script_temp != "en") {
+          if (script_temp != script) {
+            script_count = 0;
+            script = script_temp;
+          }
+          else {
+            script_count++;
+          }
+        }
+      }
+    } else {
+      if (code_point > 0x40 && code_point < 0x7B)
+        english_count++;
+    }
+  } catch (...) {
+#ifdef DEBUG
+    std::cout << "Exception: " << code_point << " " << ptr << std::endl;
+#endif
+    ptr++;
+  }
+
+  while (ptr && ' ' != *ptr && '\0' != *ptr && !(is_punct = IsPunct((char *) ptr, (char *) ptr-1, (char *) ptr+1))) {
+    if (!strcmp((char *) ptr, "&#")) {
       while (' ' != *ptr && '\0' != *ptr)
         ptr++;
       if ('\0' == *ptr)
@@ -447,7 +472,7 @@ int KeywordsExtract::GetKeywords(char* str,
   num_words++;
 
   // stop words
-  if (m_stopwords_dictionary.Find(current_word_start) == 1) {
+  if (m_stopwords_dictionary.Find((char *) current_word_start) == 1) {
     current_word_stop = true;
     num_stop_words++;
 #ifdef DEBUG
@@ -458,7 +483,7 @@ int KeywordsExtract::GetKeywords(char* str,
   }
 
   // dictionary words
-  if (m_dictionary.Find(current_word_start) == 1) {
+  if (m_dictionary.Find((char *) current_word_start) == 1) {
     current_word_dict = true;
     num_dict_words++;
 #ifdef DEBUG
@@ -468,17 +493,42 @@ int KeywordsExtract::GetKeywords(char* str,
     current_word_dict = false;
   }
 
-  if (m_unsafe_dictionary.Find(current_word_start) == 1) {
+  if (m_unsafe_dictionary.Find((char *) current_word_start) == 1) {
     text_has_unsafe_words = true;
   }
 
   // go to the next word, ignoring punctuation and ignore words.
   // however passing over ignorewords must be recorded
-  ptr++;
+  //ptr++;
+  try {
+    code_point = utf8::next(ptr, end);
+    if (code_point > 0x7F) {
+      if (m_script_detector.DetectScript(code_point, script_temp) > 0) {
+        if (script_temp != "en") {
+          if (script_temp != script) {
+            script_count = 0;
+            script = script_temp;
+          }
+          else {
+            script_count++;
+          }
+        }
+      }
+    } else {
+      if (code_point > 0x40 && code_point < 0x7B)
+        english_count++;
+    }
+  } catch (...) {
+#ifdef DEBUG
+    std::cout << "Exception: " << code_point << " " << ptr << std::endl;
+#endif
+    ptr++;
+  }
+
   is_ignore_word = false;
   is_punct = false;
   while ('\0' != *ptr &&
-         (' ' == *ptr || (ispunct(*ptr) && (is_punct = IsPunct(ptr, ptr-1, ptr+1))) || (is_ignore_word = IsIgnore(ptr)))) {
+         (' ' == *ptr || (ispunct(*ptr) && (is_punct = IsPunct((char *) ptr, (char *) ptr-1, (char *) ptr+1))) || (is_ignore_word = IsIgnore((char *&) ptr)))) {
     current_word_precedes_ignore_word |= is_ignore_word;
     current_word_precedes_punct |= is_punct;
     ptr++;
@@ -512,12 +562,23 @@ int KeywordsExtract::GetKeywords(char* str,
   } else {
     next_word_start = NULL;
   }
-  probe = ptr + 1;
+
+  // now we have to achieve the following
+  //probe = ptr + 1;
+  probe = ptr;
+  try {
+    code_point = utf8::next(probe, end);
+  } catch (...) {
+#ifdef DEBUG
+    std::cout << "EXCEPTION: utf8 returned exception" << std::endl;
+#endif
+    probe++;
+  }
 
   while (ptr && probe && *ptr != '\n' && *ptr != '\0') {
     // this loop works between second letter to end punctuation for each word
     is_punct = false;
-    if (' ' == *probe || '\0' == *probe || (ispunct(*probe) && (is_punct = IsPunct(probe, probe-1, probe+1)))) {
+    if (' ' == *probe || '\0' == *probe || (ispunct(*probe) && (is_punct = IsPunct((char *) probe, (char *) probe-1, (char *) probe+1)))) {
 
 #ifdef DEBUG
       if (NULL != stopwords_entity_end)
@@ -583,7 +644,7 @@ int KeywordsExtract::GetKeywords(char* str,
 
       // stop words
       if (next_word_start) {
-        if (m_stopwords_dictionary.Find(next_word_start) == 1) {
+        if (m_stopwords_dictionary.Find((char *) next_word_start) == 1) {
           next_word_stop = true;
           num_stop_words++;
 #ifdef DEBUG
@@ -595,7 +656,7 @@ int KeywordsExtract::GetKeywords(char* str,
         }
 
         // dictionary words
-        if (m_dictionary.Find(next_word_start) == 1) {
+        if (m_dictionary.Find((char *) next_word_start) == 1) {
           next_word_dict = true;
           num_dict_words++;
 #ifdef DEBUG
@@ -606,7 +667,7 @@ int KeywordsExtract::GetKeywords(char* str,
           next_word_dict = false;
         }
 
-        if (m_unsafe_dictionary.Find(next_word_start) == 1) {
+        if (m_unsafe_dictionary.Find((char *) next_word_start) == 1) {
           text_has_unsafe_words = true;
         }
       }
@@ -628,7 +689,7 @@ int KeywordsExtract::GetKeywords(char* str,
       if (NULL == stopwords_entity_start) {
         if (current_word_stop) {
           // X of Y case
-          if (strcmp(current_word_start, "of") == 0 && NULL != next_word_start && NULL != prev_word_start) {
+          if (strcmp((char *) current_word_start, "of") == 0 && NULL != next_word_start && NULL != prev_word_start) {
             if ((prev_word_caps && next_word_caps) &&
                 (!prev_word_stop && !next_word_stop) &&
                 (!prev_word_dict && !next_word_dict) &&
@@ -641,7 +702,7 @@ int KeywordsExtract::GetKeywords(char* str,
                 stopwords_entity_start = prev_word_start;
             }
           }
-          if (caps_entity_start && (strcmp(current_word_start, "and") == 0) &&
+          if (caps_entity_start && (strcmp((char *) current_word_start, "and") == 0) &&
               next_word_start && next_word_caps && !next_word_dict && !next_word_stop &&
               !prev_word_precedes_ignore_word && !prev_word_precedes_punct &&
               !current_word_precedes_ignore_word && !current_word_precedes_punct) {
@@ -666,7 +727,7 @@ int KeywordsExtract::GetKeywords(char* str,
           }
         } else if (prev_word_stop) {
           if ((NULL == next_word_start || next_word_start == sentence_start) &&
-              prev_word_start && strncmp(prev_word_start, "at", 2) == 0 && current_word_caps &&
+              prev_word_start && strncmp((char *) prev_word_start, "at", 2) == 0 && current_word_caps &&
               !current_word_stop && !current_word_dict) {
             // TODO (balaji) dangerous! don't use strncmp. instead preserve prev_word_delimiter
             stopwords_entity_start = current_word_start;
@@ -674,17 +735,17 @@ int KeywordsExtract::GetKeywords(char* str,
           } else if (!caps_entity_start && prev_word_start && next_word_start) {
             // Experimental location detection - TODO (balaji) use regex if this experiment succeeds
             if (current_word_caps &&
-                strcmp(prev_word_start, "in") == 0 && ',' == current_word_delimiter &&
+                strcmp((char *) prev_word_start, "in") == 0 && ',' == current_word_delimiter &&
                 next_word_caps && !current_word_dict &&
                 !next_word_stop && !next_word_dict && !current_word_stop
                ) {
               stopwords_entity_start = current_word_start;
               stopwords_entity_end = current_word_end;
             } else if (next_word_caps &&
-                       ((strcmp(prev_word_start, "place") == 0 && strcmp(current_word_start, "called") == 0 &&
+                       ((strcmp((char *) prev_word_start, "place") == 0 && strcmp((char *) current_word_start, "called") == 0 &&
                          !next_word_stop && (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)) ||
-                        (strcmp(prev_word_start, "town") == 0 &&
-                         (strcmp(current_word_start, "of") == 0 || strcmp(current_word_start, "called") == 0) &&
+                        (strcmp((char *) prev_word_start, "town") == 0 &&
+                         (strcmp((char *) current_word_start, "of") == 0 || strcmp((char *) current_word_start, "called") == 0) &&
                          !next_word_stop && (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)))
                       ) {
               stopwords_entity_start = next_word_start;
@@ -694,13 +755,13 @@ int KeywordsExtract::GetKeywords(char* str,
         } else if (caps_entity_start &&
                    next_word_start && next_word_caps && !next_word_stop && !next_word_dict) {
           // Experimental sports event detection - TODO (balaji) use regex if this experiment succeeds
-          if ((strcmp(current_word_start, "vs") == 0) ||
-              (strcmp(current_word_start, "v") == 0) ||
-              (strcmp(current_word_start, "beat") == 0) ||
-              (strcmp(current_word_start, "def") == 0) ||
-              (strcmp(current_word_start, "defeat") == 0) ||
-              (strcmp(current_word_start, "beats") == 0) ||
-              (strcmp(current_word_start, "defeats") == 0)) {
+          if ((strcmp((char *) current_word_start, "vs") == 0) ||
+              (strcmp((char *) current_word_start, "v") == 0) ||
+              (strcmp((char *) current_word_start, "beat") == 0) ||
+              (strcmp((char *) current_word_start, "def") == 0) ||
+              (strcmp((char *) current_word_start, "defeat") == 0) ||
+              (strcmp((char *) current_word_start, "beats") == 0) ||
+              (strcmp((char *) current_word_start, "defeats") == 0)) {
             stopwords_entity_start = caps_entity_start;
           }
         }
@@ -835,23 +896,23 @@ int KeywordsExtract::GetKeywords(char* str,
 #ifdef DEBUG
           cout << endl << string(stopwords_keyphrase_start, (stopwords_keyphrase_end - stopwords_keyphrase_start)) << " :keyphrase";
 #endif
-          if (strncmp(stopwords_keyphrase_end-2, "\'s", 2) == 0) {
+          if (strncmp((char *) stopwords_keyphrase_end-2, "\'s", 2) == 0) {
             ch = *(stopwords_keyphrase_end-2);
             *(stopwords_keyphrase_end-2) = '\0';
-            keyphrases_set.insert(string(stopwords_keyphrase_start, ((stopwords_keyphrase_end-2) - stopwords_keyphrase_start)));
+            keyphrases_set.insert(string((char *) stopwords_keyphrase_start, ((stopwords_keyphrase_end-2) - stopwords_keyphrase_start)));
             *(stopwords_keyphrase_end-2) = ch;
           }
-          else if ((pch = strstr(stopwords_keyphrase_start, "\'s")) && (pch < stopwords_keyphrase_end)) {
+          else if ((pch = (unsigned char*) strstr((char *) stopwords_keyphrase_start, "\'s")) && (pch < stopwords_keyphrase_end)) {
             ch = *pch;
             *pch = '\0';
             // but don't insert the X in X's if X is a single word!
-            if (strstr(stopwords_keyphrase_start, " "))
-              keyphrases_set.insert(string(stopwords_keyphrase_start, (pch - stopwords_keyphrase_start)));
+            if (strstr((char *) stopwords_keyphrase_start, " "))
+              keyphrases_set.insert(string((char *) stopwords_keyphrase_start, (pch - stopwords_keyphrase_start)));
             *pch = ch;
-            keyphrases_set.insert(string(stopwords_keyphrase_start, (stopwords_keyphrase_end - stopwords_keyphrase_start)));
+            keyphrases_set.insert(string((char *) stopwords_keyphrase_start, (stopwords_keyphrase_end - stopwords_keyphrase_start)));
           }
           else { 
-            keyphrases_set.insert(string(stopwords_keyphrase_start, (stopwords_keyphrase_end - stopwords_keyphrase_start)));
+            keyphrases_set.insert(string((char *) stopwords_keyphrase_start, (stopwords_keyphrase_end - stopwords_keyphrase_start)));
           }
         } else {
           if (stopwords_keyphrase_start > stopwords_keyphrase_end)
@@ -868,24 +929,24 @@ int KeywordsExtract::GetKeywords(char* str,
           if ('#' == *stopwords_entity_start)
             stopwords_entity_start++;
 #ifdef DEBUG
-          cout << endl << string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) << " :entity by stopword";
+          cout << endl << string((char *) stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) << " :entity by stopword";
 #endif
-          if (strncmp(stopwords_entity_end-2, "\'s", 2) == 0) {
+          if (strncmp((char *) stopwords_entity_end-2, "\'s", 2) == 0) {
             ch = *(stopwords_entity_end-2);
             *(stopwords_entity_end-2) = '\0';
-            keywords_set.insert(string(stopwords_entity_start, ((stopwords_entity_end-2) - stopwords_entity_start)));
+            keywords_set.insert(string((char *) stopwords_entity_start, ((stopwords_entity_end-2) - stopwords_entity_start)));
             *(stopwords_entity_end-2) = ch;
           }
-          else if ((pch = strstr(stopwords_entity_start, "\'s")) && (pch < stopwords_entity_end)) {
+          else if ((pch = (unsigned char*) strstr((char *) stopwords_entity_start, "\'s")) && (pch < stopwords_entity_end)) {
             ch = *pch;
             *pch = '\0';
             // but don't insert the X in X's if X is a single word!
-            if (strstr(stopwords_entity_start, " "))
-              keywords_set.insert(string(stopwords_entity_start, (pch - stopwords_entity_start)));
+            if (strstr((char *) stopwords_entity_start, " "))
+              keywords_set.insert(string((char *) stopwords_entity_start, (pch - stopwords_entity_start)));
             *pch = ch;
-            keywords_set.insert(string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)));
+            keywords_set.insert(string((char *) stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)));
           } else {
-           keywords_set.insert(string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)));
+           keywords_set.insert(string((char *) stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)));
           }
         } else {
           cout << "ERROR: stopwords entity markers are wrong\n";
@@ -902,23 +963,23 @@ int KeywordsExtract::GetKeywords(char* str,
 #ifdef DEBUG
           cout << endl << string(caps_entity_start, (caps_entity_end - caps_entity_start)) << " :entity by caps";
 #endif
-          if (strncmp(caps_entity_end-2, "\'s", 2) == 0) {
+          if (strncmp((char *) caps_entity_end-2, "\'s", 2) == 0) {
             ch = *(caps_entity_end-2);
             *(caps_entity_end-2) = '\0';
-            keywords_set.insert(string(caps_entity_start, ((caps_entity_end-2) - caps_entity_start)));
+            keywords_set.insert(string((char *) caps_entity_start, ((caps_entity_end-2) - caps_entity_start)));
             *(caps_entity_end-2) = ch;
           }
-          else if ((pch = strstr(caps_entity_start, "\'s")) && (pch < caps_entity_end)) {
+          else if ((pch = (unsigned char*) strstr((char *) caps_entity_start, "\'s")) && (pch < caps_entity_end)) {
             ch = *pch;
             *pch = '\0';
             // but don't insert the X in X's if X is a single word!
-            if (strstr(caps_entity_start, " "))
-              keywords_set.insert(string(caps_entity_start, (pch - caps_entity_start)));
+            if (strstr((char *) caps_entity_start, " "))
+              keywords_set.insert(string((char *) caps_entity_start, (pch - caps_entity_start)));
             *pch = ch;
-            keywords_set.insert(string(caps_entity_start, (caps_entity_end - caps_entity_start)));
+            keywords_set.insert(string((char *) caps_entity_start, (caps_entity_end - caps_entity_start)));
           }
           else { 
-            keywords_set.insert(string(caps_entity_start, (caps_entity_end - caps_entity_start)));
+            keywords_set.insert(string((char *) caps_entity_start, (caps_entity_end - caps_entity_start)));
           }
         } else {
           cout << "ERROR: caps entity markers are wrong\n";
@@ -992,7 +1053,7 @@ int KeywordsExtract::GetKeywords(char* str,
         // IsIgnore will literally ignore the word by changing the cursor to next word end
         is_ignore_word = false;
         is_punct = false;
-        while ('\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && (is_punct = IsPunct(ptr, ptr-1, ptr+1))) || (is_ignore_word = IsIgnore(ptr)))) {
+        while ('\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && (is_punct = IsPunct((char *) ptr, (char *) ptr-1, (char *) ptr+1))) || (is_ignore_word = IsIgnore((char *&) ptr)))) {
           current_word_precedes_ignore_word |= is_ignore_word;
           current_word_precedes_punct |= is_punct; 
           ptr++;
@@ -1062,7 +1123,7 @@ int KeywordsExtract::GetKeywords(char* str,
       } // check for current word delimiter 
 
     } else {
-      if (!strcmp(probe, "&#")) {
+      if (!strcmp((char *) probe, "&#")) {
         while (' ' != *probe && '\0' != *probe)
           probe++;
         if ('\0' == *probe)
@@ -1085,31 +1146,33 @@ int KeywordsExtract::GetKeywords(char* str,
     }
 
     // a mere cog in a loop wheel, but a giant killer if commented
-    if (script_count > 9 || english_count > 20) {
-      probe++;
-    } else {
-      try {
-        code_point = utf8::next(probe, end);
-        if (code_point > 0x7F) {
-          if (m_script_detector.DetectScript(code_point, script_temp) > 0) {
-            if (script_temp != "en") {
-              if (script_temp != script) {
-                script_count = 0;
-                script = script_temp;
-              } else {
-                script_count++;
+    if (probe && *probe != '\0') {
+      if (script_count > 9 || english_count > 20) {
+        probe++;
+      } else {
+        try {
+          code_point = utf8::next(probe, end);
+          if (code_point > 0x7F) {
+            if (m_script_detector.DetectScript(code_point, script_temp) > 0) {
+              if (script_temp != "en") {
+                if (script_temp != script) {
+                  script_count = 0;
+                  script = script_temp;
+                } else {
+                  script_count++;
+                }
               }
             }
+          } else {
+            if (code_point > 0x40 && code_point < 0x7B)
+              english_count++;
           }
-        } else {
-          if (code_point > 0x40 && code_point < 0x7B)
-            english_count++;
-        }
-      } catch (...) {
+        } catch (...) {
 #ifdef DEBUG
-        std::cout << "Exception: " << code_point << " " << probe << std::endl;
+          std::cout << "Exception: " << code_point << " " << probe << std::endl;
 #endif
-        probe++;
+          probe++;
+        }
       }
     }
   }
@@ -1155,12 +1218,12 @@ int KeywordsExtract::GetKeywords(char* str,
 }
 
 #ifdef KEYPHRASE_ENABLED
-int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
+int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buffer_len,
                                  char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
                                  char* script_buffer, const unsigned int& script_buffer_len,
-                                 char* keywords_buffer, const unsigned int& keywords_buffer_len,
+                                 unsigned char* keywords_buffer, const unsigned int& keywords_buffer_len,
                                  unsigned int& keywords_len, unsigned int& keywords_count,
-                                 char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
+                                 unsigned char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
                                  unsigned int& keyphrases_len, unsigned int& keyphrases_count) {
 
   // initialize output parameters
@@ -1176,10 +1239,10 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
   if (!buffer || buffer_len < 1 || !script_buffer || !keywords_buffer || !keyphrases_buffer)
     return -1;
 #else
-int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
+int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buffer_len,
                                  char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
                                  char* script_buffer, const unsigned int& script_buffer_len,
-                                 char* keywords_buffer, const unsigned int& keywords_buffer_len,
+                                 unsigned char* keywords_buffer, const unsigned int& keywords_buffer_len,
                                  unsigned int& keywords_len, unsigned int& keywords_count) {
 
   *safe_status_buffer = '\0';
@@ -1192,11 +1255,11 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
     return -1;
 #endif
 
-  char *ptr = NULL;
-  char *probe = NULL;
-  char current_word_delimiter;
-  char prev_word_delimiter;
-  char next_word_delimiter;
+  unsigned char *ptr = NULL;
+  unsigned char *probe = NULL;
+  unsigned char current_word_delimiter;
+  unsigned char prev_word_delimiter;
+  unsigned char next_word_delimiter;
 
   //unsigned in_len = 0;
   //unsigned out_len = 0;
@@ -1213,22 +1276,22 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
   int num_numeric_words = 0;
   int num_normal_words = 0; // not caps or stop or dict or numeric
 
-  char *current_word_start = NULL;
-  char *current_word_end = NULL;
-  char *prev_word_start = NULL;
-  char *prev_word_end = NULL;
-  char *next_word_start = NULL;
-  char *next_word_end = NULL;
+  unsigned char *current_word_start = NULL;
+  unsigned char *current_word_end = NULL;
+  unsigned char *prev_word_start = NULL;
+  unsigned char *prev_word_end = NULL;
+  unsigned char *next_word_start = NULL;
+  unsigned char *next_word_end = NULL;
 
-  char *caps_entity_start = NULL;
-  char *caps_entity_end = NULL;
-  char *stopwords_entity_start = NULL;
-  char *stopwords_entity_end = NULL;
+  unsigned char *caps_entity_start = NULL;
+  unsigned char *caps_entity_end = NULL;
+  unsigned char *stopwords_entity_start = NULL;
+  unsigned char *stopwords_entity_end = NULL;
 #ifdef KEYPHRASE_ENABLED
-  char *stopwords_keyphrase_start = NULL;
-  char *stopwords_keyphrase_end = NULL;
+  unsigned char *stopwords_keyphrase_start = NULL;
+  unsigned char *stopwords_keyphrase_end = NULL;
 #endif
-  char *sentence_start = NULL;
+  unsigned char *sentence_start = NULL;
 
   // TODO (balaji) use bit map and masks to reduce comparisons
   bool current_word_caps = false;
@@ -1262,34 +1325,34 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
   //bool second_letter_has_caps = false;
 
   // misc
-  char *pch = NULL;
-  char ch;
-  int temp_len = 0;
+  unsigned char *pch = NULL;
+  unsigned char ch;
+  unsigned int temp_len = 0;
 
   // unsafe
   strcpy(safe_status_buffer, "safe");
   bool text_has_unsafe_words = false;
 
   // script detection
-  char *end = strchr(buffer, '\0');
+  unsigned char *end = (unsigned char*) strchr((char *) buffer, '\0');
   std::string script = "uu";
   strcpy(script_buffer, "uu");
-  int code_point = 0;
+  unsigned int code_point = 0;
   string script_temp;
   //std::map<std::string, int> script_map;
-  int script_count = 0;
-  int english_count = 0;
+  unsigned int script_count = 0;
+  unsigned int english_count = 0;
 
   // the whole thing starts here
   ptr = buffer;
 
 #ifdef DEBUG
-  cout << endl << "original query: " << std::string(buffer) << endl << endl;
+  cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
 #endif
 
   // go to the first word, ignoring handles and punctuations
-  char *prev = NULL;
-  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && IsPunct(ptr, prev, ptr+1)) || IsIgnore(ptr))) {
+  unsigned char *prev = NULL;
+  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && IsPunct((char *) ptr, (char *) prev, (char *) ptr+1)) || IsIgnore((char *&) ptr))) {
     prev = ptr;
     ptr++;
   }
@@ -1325,13 +1388,60 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
   m_script_detector.Init();
 
   // now lets find the end of the current word - while loop works from the second letter
-  ptr++;
-  while (ptr && ' ' != *ptr && '\0' != *ptr && !(is_punct = IsPunct(ptr, ptr-1, ptr+1))) {
-    if (!strcmp(ptr, "&#")) {
-      while (' ' != *ptr && '\0' != *ptr)
+  //ptr++;
+  try {
+    code_point = utf8::next(ptr, end);
+    if (code_point > 0x7F) {
+      if (m_script_detector.DetectScript(code_point, script_temp) > 0) {
+        if (script_temp != "en") {
+          if (script_temp != script) {
+            script_count = 0;
+            script = script_temp;
+          }
+          else {
+            script_count++;
+          }
+        }
+      }
+    } else {
+      if (code_point > 0x40 && code_point < 0x7B)
+        english_count++;
+    }
+  } catch (...) {
+//#ifdef DEBUG
+    std::cout << "EXCEPTION 1: utf8 returned exception" << std::endl;
+    cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
+//#endif
+    memset(script_buffer, '\0', script_buffer_len);
+    strcpy(script_buffer, "00");
+    memset(safe_status_buffer, '\0', safe_status_buffer_len);
+    strcpy(safe_status_buffer, "error");
+    memset((char *) keywords_buffer, '\0', keywords_buffer_len);
+    keywords_len = 0;
+    keywords_count = 0;
+#ifdef KEYPHRASE_ENABLED
+    memset((char *) keyphrases_buffer, '\0', keyphrases_buffer_len);
+    keyphrases_len = 0;
+    keyphrases_count = 0;
+#endif
+    return -1;
+  }
+
+  while (ptr && ' ' != *ptr && '\0' != *ptr && !(is_punct = IsPunct((char *) ptr, (char *) ptr-1, (char *) ptr+1))) {
+    /*
+    if (!strcmp((char *) ptr, "&#")) {
+      ptr+=2;
+      while (' ' != *ptr && '\0' != *ptr && (isdigit(*ptr) || ';' == *ptr))
         ptr++;
       if ('\0' == *ptr)
         break;
+    }
+    */
+    if (!ptr || '\0' == *ptr) {
+#ifdef DEBUG
+      cout << "either the input is empty or has ignore words only" << endl;
+#endif
+      return 0;
     }
     if (isupper(*ptr)) {
       if (!current_word_all_caps && !ispunct(*ptr)) {
@@ -1345,7 +1455,7 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
     //ptr++;
     try {
       code_point = utf8::next(ptr, end);
-      if (code_point > 0x7F) {
+      if (code_point > 0xFF) {
         if (m_script_detector.DetectScript(code_point, script_temp) > 0) {
           if (script_temp != "en") {
             if (script_temp != script) {
@@ -1362,25 +1472,23 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
           english_count++;
       }
     } catch (...) {
-#ifdef DEBUG
-      std::cout << "EXCEPTION: utf8 returned exception" << std::endl;
-#endif
-      ptr++;
-      /*
+//#ifdef DEBUG
+      std::cout << "EXCEPTION 2: utf8 returned exception" << std::endl;
+      cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
+//#endif
       memset(script_buffer, '\0', script_buffer_len);
       strcpy(script_buffer, "00");
       memset(safe_status_buffer, '\0', safe_status_buffer_len);
       strcpy(safe_status_buffer, "error");
-      memset(keywords_buffer, '\0', keywords_buffer_len);
+      memset((char *) keywords_buffer, '\0', keywords_buffer_len);
       keywords_len = 0;
       keywords_count = 0;
 #ifdef KEYPHRASE_ENABLED
-      memset(keyphrases_buffer, '\0', keyphrases_buffer_len);
+      memset((char *) keyphrases_buffer, '\0', keyphrases_buffer_len);
       keyphrases_len = 0;
       keyphrases_count = 0;
 #endif
       return -1;
-      */
     }
   }
 
@@ -1398,7 +1506,7 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
   num_words++;
 
   // stop words
-  if (m_stopwords_dictionary.Find(current_word_start) == 1) {
+  if (m_stopwords_dictionary.Find((char *) current_word_start) == 1) {
     current_word_stop = true;
     num_stop_words++;
 #ifdef DEBUG
@@ -1409,7 +1517,7 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
   }
 
   // dictionary words
-  if (m_dictionary.Find(current_word_start) == 1) {
+  if (m_dictionary.Find((char *) current_word_start) == 1) {
     current_word_dict = true;
     num_dict_words++;
 #ifdef DEBUG
@@ -1420,23 +1528,67 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
   }
 
   // unsafe words
-  if (m_unsafe_dictionary.Find(current_word_start) == 1) {
+  if (m_unsafe_dictionary.Find((char *) current_word_start) == 1) {
     text_has_unsafe_words = true;
   }
 
   // go to the next word, ignoring punctuation and ignore words.
   // however passing over ignorewords must be recorded
-  ptr++;
+  //ptr++;
+  try {
+    code_point = utf8::next(ptr, end);
+    if (code_point > 0xFF) {
+      if (m_script_detector.DetectScript(code_point, script_temp) > 0) {
+        if (script_temp != "en") {
+          if (script_temp != script) {
+            script_count = 0;
+            script = script_temp;
+          }
+          else {
+            script_count++;
+          }
+        }
+      }
+    } else {
+      if (code_point > 0x40 && code_point < 0x7B)
+        english_count++;
+    }
+  } catch (...) {
+//#ifdef DEBUG
+    std::cout << "EXCEPTION 3: utf8 returned exception" << std::endl;
+    cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
+//#endif
+    memset(script_buffer, '\0', script_buffer_len);
+    strcpy(script_buffer, "00");
+    memset(safe_status_buffer, '\0', safe_status_buffer_len);
+    strcpy(safe_status_buffer, "error");
+    memset((char *) keywords_buffer, '\0', keywords_buffer_len);
+    keywords_len = 0;
+    keywords_count = 0;
+#ifdef KEYPHRASE_ENABLED
+    memset((char *) keyphrases_buffer, '\0', keyphrases_buffer_len);
+    keyphrases_len = 0;
+    keyphrases_count = 0;
+#endif
+    return -1;
+  }
+
   is_ignore_word = false;
   is_punct = false;
   while ('\0' != *ptr &&
-         (' ' == *ptr || (ispunct(*ptr) && (is_punct = IsPunct(ptr, ptr-1, ptr+1))) || (is_ignore_word = IsIgnore(ptr)))) {
+         (' ' == *ptr || (ispunct(*ptr) && (is_punct = IsPunct((char *) ptr, (char *) ptr-1, (char *) ptr+1))) || (is_ignore_word = IsIgnore((char *&) ptr)))) {
     current_word_precedes_ignore_word |= is_ignore_word;
     current_word_precedes_punct |= is_punct;
     ptr++;
   }
 
-  if (ptr && '\0' != *ptr) {
+  if (!ptr || '\0' == *ptr) {
+    next_word_start = NULL;
+#ifdef DEBUG
+    std::cout << "only one word found\n";
+    return 0;
+#endif
+  } else {
     next_word_start = ptr;
     num_words++;
     if (current_word_precedes_ignore_word || current_word_precedes_punct) {
@@ -1461,15 +1613,40 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
         next_word_starts_num = false;
       }
     }
-  } else {
-    next_word_start = NULL;
   }
-  probe = ptr + 1;
+
+  // now we need to achieve the following
+  // probe = ptr + 1;
+  probe = ptr;
+  try {
+    if (probe < end)
+      code_point = utf8::next(probe, end);
+    else
+      return 0;
+  } catch (...) {
+//#ifdef DEBUG
+    std::cout << "EXCEPTION 4: utf8 returned exception" << std::endl;
+    cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
+//#endif
+    memset(script_buffer, '\0', script_buffer_len);
+    strcpy(script_buffer, "00");
+    memset(safe_status_buffer, '\0', safe_status_buffer_len);
+    strcpy(safe_status_buffer, "error");
+    memset((char *) keywords_buffer, '\0', keywords_buffer_len);
+    keywords_len = 0;
+    keywords_count = 0;
+#ifdef KEYPHRASE_ENABLED
+    memset((char *) keyphrases_buffer, '\0', keyphrases_buffer_len);
+    keyphrases_len = 0;
+    keyphrases_count = 0;
+#endif
+    return -1;
+  }
 
   while (ptr && probe && *ptr != '\n' && *ptr != '\0') {
     // this loop works between second letter to end punctuation for each word
     is_punct = false;
-    if (' ' == *probe || '\0' == *probe || (ispunct(*probe) && (is_punct = IsPunct(probe, probe-1, probe+1)))) {
+    if (' ' == *probe || '\0' == *probe || (ispunct(*probe) && (is_punct = IsPunct((char *) probe, (char *) probe-1, (char *) probe+1)))) {
 
 #ifdef DEBUG
       if (NULL != stopwords_entity_end)
@@ -1535,7 +1712,7 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
 
       // stop words
       if (next_word_start) {
-        if (m_stopwords_dictionary.Find(next_word_start) == 1) {
+        if (m_stopwords_dictionary.Find((char *) next_word_start) == 1) {
           next_word_stop = true;
           num_stop_words++;
 #ifdef DEBUG
@@ -1547,7 +1724,7 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
         }
 
         // dictionary words
-        if (m_dictionary.Find(next_word_start) == 1) {
+        if (m_dictionary.Find((char *) next_word_start) == 1) {
           next_word_dict = true;
           num_dict_words++;
 #ifdef DEBUG
@@ -1559,7 +1736,7 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
         }
 
         // dictionary words
-        if (m_unsafe_dictionary.Find(next_word_start) == 1) {
+        if (m_unsafe_dictionary.Find((char *) next_word_start) == 1) {
           text_has_unsafe_words = true;
         }
       }
@@ -1581,7 +1758,7 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
       if (NULL == stopwords_entity_start) {
         if (current_word_stop) {
           // X of Y case
-          if (strcmp(current_word_start, "of") == 0 && NULL != next_word_start && NULL != prev_word_start) {
+          if (strcmp((char *) current_word_start, "of") == 0 && NULL != next_word_start && NULL != prev_word_start) {
             if ((prev_word_caps && next_word_caps) &&
                 (!prev_word_stop && !next_word_stop) &&
                 (!prev_word_dict && !next_word_dict) &&
@@ -1594,7 +1771,7 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
                 stopwords_entity_start = prev_word_start;
             }
           }
-          if (caps_entity_start && (strcmp(current_word_start, "and") == 0) &&
+          if (caps_entity_start && (strcmp((char *) current_word_start, "and") == 0) &&
               next_word_start && next_word_caps && !next_word_dict && !next_word_stop &&
               !prev_word_precedes_ignore_word && !prev_word_precedes_punct &&
               !current_word_precedes_ignore_word && !current_word_precedes_punct) {
@@ -1619,7 +1796,7 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
           }
         } else if (prev_word_stop) {
           if ((NULL == next_word_start || next_word_start == sentence_start) &&
-              prev_word_start && strncmp(prev_word_start, "at", 2) == 0 && current_word_caps &&
+              prev_word_start && strncmp((char *) prev_word_start, "at", 2) == 0 && current_word_caps &&
               !current_word_stop && !current_word_dict) {
             // TODO (balaji) dangerous! don't use strncmp. instead preserve prev_word_delimiter
             stopwords_entity_start = current_word_start;
@@ -1627,17 +1804,17 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
           } else if (!caps_entity_start && prev_word_start && next_word_start) {
             // Experimental location detection - TODO (balaji) use regex if this experiment succeeds
             if (current_word_caps &&
-                strcmp(prev_word_start, "in") == 0 && ',' == current_word_delimiter &&
+                strcmp((char *) prev_word_start, "in") == 0 && ',' == current_word_delimiter &&
                 next_word_caps && !current_word_dict &&
                 !next_word_stop && !next_word_dict && !current_word_stop
                ) {
               stopwords_entity_start = current_word_start;
               stopwords_entity_end = current_word_end;
             } else if (next_word_caps &&
-                       ((strcmp(prev_word_start, "place") == 0 && strcmp(current_word_start, "called") == 0 &&
+                       ((strcmp((char *) prev_word_start, "place") == 0 && strcmp((char *) current_word_start, "called") == 0 &&
                          !next_word_stop && (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)) ||
-                        (strcmp(prev_word_start, "town") == 0 &&
-                         (strcmp(current_word_start, "of") == 0 || strcmp(current_word_start, "called") == 0) &&
+                        (strcmp((char *) prev_word_start, "town") == 0 &&
+                         (strcmp((char *) current_word_start, "of") == 0 || strcmp((char *) current_word_start, "called") == 0) &&
                          !next_word_stop && (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)))
                       ) {
               stopwords_entity_start = next_word_start;
@@ -1647,13 +1824,13 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
         } else if (caps_entity_start &&
                    next_word_start && next_word_caps && !next_word_stop && !next_word_dict) {
           // Experimental sports event detection - TODO (balaji) use regex if this experiment succeeds
-          if ((strcmp(current_word_start, "vs") == 0) ||
-              (strcmp(current_word_start, "v") == 0) ||
-              (strcmp(current_word_start, "beat") == 0) ||
-              (strcmp(current_word_start, "def") == 0) ||
-              (strcmp(current_word_start, "defeat") == 0) ||
-              (strcmp(current_word_start, "beats") == 0) ||
-              (strcmp(current_word_start, "defeats") == 0)) {
+          if ((strcmp((char *) current_word_start, "vs") == 0) ||
+              (strcmp((char *) current_word_start, "v") == 0) ||
+              (strcmp((char *) current_word_start, "beat") == 0) ||
+              (strcmp((char *) current_word_start, "def") == 0) ||
+              (strcmp((char *) current_word_start, "defeat") == 0) ||
+              (strcmp((char *) current_word_start, "beats") == 0) ||
+              (strcmp((char *) current_word_start, "defeats") == 0)) {
             stopwords_entity_start = caps_entity_start;
           }
         }
@@ -1788,29 +1965,29 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
 #ifdef DEBUG
           cout << endl << string(stopwords_keyphrase_start, (stopwords_keyphrase_end - stopwords_keyphrase_start)) << " :keyphrase";
 #endif
-          if (strncmp(stopwords_keyphrase_end-2, "\'s", 2) == 0) {
+          if (strncmp((char *) stopwords_keyphrase_end-2, "\'s", 2) == 0) {
             ch = *(stopwords_keyphrase_end-2);
             *(stopwords_keyphrase_end-2) = '\0';
             temp_len = ((stopwords_keyphrase_end-2) - stopwords_keyphrase_start);
             if ((keyphrases_len + temp_len + 1) < keyphrases_buffer_len) {
-              strncpy(keyphrases_buffer + keyphrases_len, stopwords_keyphrase_start, temp_len);
+              strncpy((char *) keyphrases_buffer + keyphrases_len, (char *) stopwords_keyphrase_start, temp_len);
               keyphrases_len += temp_len;
-              strcpy(keyphrases_buffer + keyphrases_len, "|");
+              strcpy((char *) keyphrases_buffer + keyphrases_len, "|");
               keyphrases_len += 1;
               keyphrases_count++;
             }
             *(stopwords_keyphrase_end-2) = ch;
           }
-          else if ((pch = strstr(stopwords_keyphrase_start, "\'s")) && (pch < stopwords_keyphrase_end)) {
+          else if ((pch = (unsigned char*) strstr((char *) stopwords_keyphrase_start, "\'s")) && (pch < stopwords_keyphrase_end)) {
             ch = *pch;
             *pch = '\0';
             // but don't insert the X in X's if X is a single word!
-            if (strstr(stopwords_keyphrase_start, " ")) {
+            if (strstr((char *) stopwords_keyphrase_start, " ")) {
               temp_len = pch - stopwords_keyphrase_start;
               if ((keyphrases_len + temp_len + 1) < keyphrases_buffer_len) {
-                strncpy(keyphrases_buffer + keyphrases_len, stopwords_keyphrase_start, temp_len);
+                strncpy((char *) keyphrases_buffer + keyphrases_len, (char *) stopwords_keyphrase_start, temp_len);
                 keyphrases_len += temp_len;
-                strcpy(keyphrases_buffer + keyphrases_len, "|");
+                strcpy((char *) keyphrases_buffer + keyphrases_len, "|");
                 keyphrases_len += 1;
                 keyphrases_count++;
               }
@@ -1818,9 +1995,9 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
             *pch = ch;
             temp_len = stopwords_keyphrase_end - stopwords_keyphrase_start;
             if ((keyphrases_len + temp_len + 1) < keyphrases_buffer_len) {
-              strncpy(keyphrases_buffer + keyphrases_len, stopwords_keyphrase_start, temp_len);
+              strncpy((char *) keyphrases_buffer + keyphrases_len, (char *) stopwords_keyphrase_start, temp_len);
               keyphrases_len += temp_len;
-              strcpy(keyphrases_buffer + keyphrases_len, "|");
+              strcpy((char *) keyphrases_buffer + keyphrases_len, "|");
               keyphrases_len += 1;
               keyphrases_count++;
             }
@@ -1828,9 +2005,9 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
           else { 
             temp_len = stopwords_keyphrase_end - stopwords_keyphrase_start;
             if ((keyphrases_len + temp_len + 1) < keyphrases_buffer_len) {
-              strncpy(keyphrases_buffer + keyphrases_len, stopwords_keyphrase_start, temp_len);
+              strncpy((char *) keyphrases_buffer + keyphrases_len, (char *) stopwords_keyphrase_start, temp_len);
               keyphrases_len += temp_len;
-              strcpy(keyphrases_buffer + keyphrases_len, "|");
+              strcpy((char *) keyphrases_buffer + keyphrases_len, "|");
               keyphrases_len += 1;
               keyphrases_count++;
             }
@@ -1852,29 +2029,29 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
 #ifdef DEBUG
           cout << endl << string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) << " :entity by stopword";
 #endif
-          if (strncmp(stopwords_entity_end-2, "\'s", 2) == 0) {
+          if (strncmp((char *) stopwords_entity_end-2, "\'s", 2) == 0) {
             ch = *(stopwords_entity_end-2);
             *(stopwords_entity_end-2) = '\0';
             temp_len = (stopwords_entity_end-2) - stopwords_entity_start;
             if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-              strncpy(keywords_buffer + keywords_len, stopwords_entity_start, temp_len);
+              strncpy((char *) keywords_buffer + keywords_len, (char *) stopwords_entity_start, temp_len);
               keywords_len += temp_len;
-              strcpy(keywords_buffer + keywords_len, "|");
+              strcpy((char *) keywords_buffer + keywords_len, "|");
               keywords_len += 1;
               keywords_count++;
             }
             *(stopwords_entity_end-2) = ch;
           }
-          else if ((pch = strstr(stopwords_entity_start, "\'s")) && (pch < stopwords_entity_end)) {
+          else if ((pch = (unsigned char*) strstr((char *) stopwords_entity_start, "\'s")) && (pch < stopwords_entity_end)) {
             ch = *pch;
             *pch = '\0';
             // but don't insert the X in X's if X is a single word!
-            if (strstr(stopwords_entity_start, " ")) {
+            if (strstr((char *) stopwords_entity_start, " ")) {
               temp_len = pch - stopwords_entity_start;
               if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-                strncpy(keywords_buffer + keywords_len, stopwords_entity_start, temp_len);
+                strncpy((char *) keywords_buffer + keywords_len, (char *) stopwords_entity_start, temp_len);
                 keywords_len += temp_len;
-                strcpy(keywords_buffer + keywords_len, "|");
+                strcpy((char *) keywords_buffer + keywords_len, "|");
                 keywords_len += 1;
                 keywords_count++;
               }
@@ -1882,18 +2059,18 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
             *pch = ch;
             temp_len = stopwords_entity_end - stopwords_entity_start;
             if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-              strncpy(keywords_buffer + keywords_len, stopwords_entity_start, temp_len);
+              strncpy((char *) keywords_buffer + keywords_len, (char *) stopwords_entity_start, temp_len);
               keywords_len += temp_len;
-              strcpy(keywords_buffer + keywords_len, "|");
+              strcpy((char *) keywords_buffer + keywords_len, "|");
               keywords_len += 1;
               keywords_count++;
             }
           } else {
             temp_len = stopwords_entity_end - stopwords_entity_start;
             if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-              strncpy(keywords_buffer + keywords_len, stopwords_entity_start, temp_len);
+              strncpy((char *) keywords_buffer + keywords_len, (char *) stopwords_entity_start, temp_len);
               keywords_len += temp_len;
-              strcpy(keywords_buffer + keywords_len, "|");
+              strcpy((char *) keywords_buffer + keywords_len, "|");
               keywords_len += 1;
               keywords_count++;
             }
@@ -1913,29 +2090,29 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
 #ifdef DEBUG
           cout << endl << string(caps_entity_start, (caps_entity_end - caps_entity_start)) << " :entity by caps";
 #endif
-          if (strncmp(caps_entity_end-2, "\'s", 2) == 0) {
+          if (strncmp((char *) caps_entity_end-2, "\'s", 2) == 0) {
             ch = *(caps_entity_end-2);
             *(caps_entity_end-2) = '\0';
             temp_len = (caps_entity_end-2) - caps_entity_start;
             if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-              strncpy(keywords_buffer + keywords_len, caps_entity_start, temp_len);
+              strncpy((char *) keywords_buffer + keywords_len, (char *) caps_entity_start, temp_len);
               keywords_len += temp_len;
-              strcpy(keywords_buffer + keywords_len, "|");
+              strcpy((char *) keywords_buffer + keywords_len, "|");
               keywords_len += 1;
               keywords_count++;
             }
             *(caps_entity_end-2) = ch;
           }
-          else if ((pch = strstr(caps_entity_start, "\'s")) && (pch < caps_entity_end)) {
+          else if ((pch = (unsigned char*) strstr((char *) caps_entity_start, "\'s")) && (pch < caps_entity_end)) {
             ch = *pch;
             *pch = '\0';
             // but don't insert the X in X's if X is a single word!
-            if (strstr(caps_entity_start, " ")) {
+            if (strstr((char *) caps_entity_start, " ")) {
               temp_len = pch - caps_entity_start;
               if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-                strncpy(keywords_buffer + keywords_len, caps_entity_start, temp_len);
+                strncpy((char *) keywords_buffer + keywords_len, (char *) caps_entity_start, temp_len);
                 keywords_len += temp_len;
-                strcpy(keywords_buffer + keywords_len, "|");
+                strcpy((char *) keywords_buffer + keywords_len, "|");
                 keywords_len += 1;
                 keywords_count++;
               }
@@ -1943,9 +2120,9 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
             *pch = ch;
             temp_len = caps_entity_end - caps_entity_start;
             if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-              strncpy(keywords_buffer + keywords_len, caps_entity_start, temp_len);
+              strncpy((char *) keywords_buffer + keywords_len, (char *) caps_entity_start, temp_len);
               keywords_len += temp_len;
-              strcpy(keywords_buffer + keywords_len, "|");
+              strcpy((char *) keywords_buffer + keywords_len, "|");
               keywords_len += 1;
               keywords_count++;
             }
@@ -1953,9 +2130,9 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
           else { 
             temp_len = caps_entity_end - caps_entity_start;
             if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-              strncpy(keywords_buffer + keywords_len, caps_entity_start, temp_len);
+              strncpy((char *) keywords_buffer + keywords_len, (char *) caps_entity_start, temp_len);
               keywords_len += temp_len;
-              strcpy(keywords_buffer + keywords_len, "|");
+              strcpy((char *) keywords_buffer + keywords_len, "|");
               keywords_len += 1;
               keywords_count++;
             }
@@ -2032,7 +2209,7 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
         // IsIgnore will literally ignore the word by changing the cursor to next word end
         is_ignore_word = false;
         is_punct = false;
-        while ('\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && (is_punct = IsPunct(ptr, ptr-1, ptr+1))) || (is_ignore_word = IsIgnore(ptr)))) {
+        while ('\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && (is_punct = IsPunct((char *) ptr, (char *) ptr-1, (char *) ptr+1))) || (is_ignore_word = IsIgnore((char *&) ptr)))) {
           current_word_precedes_ignore_word |= is_ignore_word;
           current_word_precedes_punct |= is_punct; 
           ptr++;
@@ -2104,13 +2281,16 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
       } // check for current word delimiter 
 
     } else {
-      if (!strcmp(probe, "&#")) {
-        while (' ' != *probe && '\0' != *probe)
+      /*
+      if (!strcmp((char *) probe, "&#")) {
+        probe+=2;
+        while (' ' != *probe && '\0' != *probe && (isdigit(*probe) || ';' == *probe))
           probe++;
         if ('\0' == *probe)
           break;
         current_word_precedes_ignore_word = true;
       }
+      */
       // TODO (balaji) - mixed case logic seems twisted
       if (isupper(*probe)) {
         if (!next_word_all_caps && !ispunct(*probe)) {
@@ -2127,46 +2307,46 @@ int KeywordsExtract::GetKeywords(char* buffer, const unsigned int& buffer_len,
     }
 
     // a mere cog in a loop wheel, but a giant killer if commented
-    if (script_count > 9 || english_count > 20) {
-      probe++;
-    } else {
-      try {
-        code_point = utf8::next(probe, end);
-        if (code_point > 0x7F) {
-          if (m_script_detector.DetectScript(code_point, script_temp) > 0) {
-            if (script_temp != "en") {
-              if (script_temp != script) {
-                script_count = 0;
-                script = script_temp;
-              } else {
-                script_count++;
+    if (probe && *probe != '\0') {
+      if (script_count > 9 || english_count > 20) {
+        probe++;
+      } else {
+        try {
+          code_point = utf8::next(probe, end);
+          if (code_point > 0xFF) {
+            if (m_script_detector.DetectScript(code_point, script_temp) > 0) {
+              if (script_temp != "en") {
+                if (script_temp != script) {
+                  script_count = 0;
+                  script = script_temp;
+                } else {
+                  script_count++;
+                }
               }
             }
+          } else {
+            if (code_point > 0x40 && code_point < 0x7B)
+              english_count++;
           }
-        } else {
-          if (code_point > 0x40 && code_point < 0x7B)
-            english_count++;
-        }
-      } catch (...) {
-#ifdef DEBUG
-        std::cout << "Exception: " << code_point << " " << probe << std::endl;
-#endif
-        probe++;
-        /*
-        memset(script_buffer, '\0', script_buffer_len);
-        strcpy(script_buffer, "00");
-        memset(safe_status_buffer, '\0', safe_status_buffer_len);
-        strcpy(safe_status_buffer, "error");
-        memset(keywords_buffer, '\0', keywords_buffer_len);
-        keywords_len = 0;
-        keywords_count = 0;
+        } catch (...) {
+//#ifdef DEBUG
+          std::cout << "Exception 5: " << code_point << " " << probe << std::endl;
+          cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
+//#endif
+          memset(script_buffer, '\0', script_buffer_len);
+          strcpy(script_buffer, "00");
+          memset(safe_status_buffer, '\0', safe_status_buffer_len);
+          strcpy(safe_status_buffer, "error");
+          memset((char *) keywords_buffer, '\0', keywords_buffer_len);
+          keywords_len = 0;
+          keywords_count = 0;
 #ifdef KEYPHRASE_ENABLED
-        memset(keyphrases_buffer, '\0', keyphrases_buffer_len);
-        keyphrases_len = 0;
-        keyphrases_count = 0;
+          memset((char *) keyphrases_buffer, '\0', keyphrases_buffer_len);
+          keyphrases_len = 0;
+          keyphrases_count = 0;
 #endif
-        return -1;
-        */
+          return -1;
+        }
       }
     }
   }

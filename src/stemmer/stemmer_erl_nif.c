@@ -125,6 +125,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 
     if (enif_inspect_binary(env, argv[0], &user_name)) {
       memcpy(user_name_str, user_name.data, user_name.size);
+      user_name_str[user_name.size] = '\0';
       enif_release_binary(env, &user_name);
     }   else {
       enif_release_binary(env, &user_name);
