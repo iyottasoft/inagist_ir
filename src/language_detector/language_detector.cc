@@ -28,7 +28,8 @@ int LanguageDetector::DetectLanguage(const std::string& text, const unsigned int
                                      std::string& guess_lang_output) {
   int num_ngrams = 0;
   Corpus test_corpus;
-  if ((num_ngrams = m_ngrams_generator.GetNgrams(text.c_str(), text_len, test_corpus)) < 0) {
+  //if ((num_ngrams = m_ngrams_generator.GetNgrams(text.c_str(), text_len, test_corpus)) < 0) {
+  if ((num_ngrams = m_ngrams_generator.GetNgramsFromTweet(text, test_corpus)) < 0) {
     std::cerr << "ERROR: could not find ngrams" << std::endl;
     return -1;
   }

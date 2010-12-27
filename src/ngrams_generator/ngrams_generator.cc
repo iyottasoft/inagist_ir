@@ -161,7 +161,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
 
   // go to the first word, ignoring handles and punctuations
   char *prev_temp = NULL;
-  while (ptr && '\0' != *ptr && (' ' == *ptr || '#' == *ptr || (ispunct(*ptr) && utils.IsPunct(ptr, prev_temp, ptr+1)) || utils.IsIgnore(ptr))) {
+  while (ptr && '\0' != *ptr && (' ' == *ptr || '#' == *ptr || isdigit(*ptr) || (ispunct(*ptr) && utils.IsPunct(ptr, prev_temp, ptr+1)) || utils.IsIgnore(ptr))) {
     prev_temp = ptr;
     ptr++;
   }
@@ -191,7 +191,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
   while (ptr && probe && *ptr != '\n' && *ptr != '\0') {
     // this loop works between second letter to end punctuation for each word
     is_punct = false;
-    if (' ' == *probe || '\0' == *probe || '\'' == *probe || (ispunct(*probe) && (is_punct = utils.IsPunct(probe, probe-1, probe+1)))) {
+    if (' ' == *probe || '\0' == *probe || '\'' == *probe || isdigit(*probe) || (ispunct(*probe) && (is_punct = utils.IsPunct(probe, probe-1, probe+1)))) {
 
       current_word_delimiter = *probe;
       current_word_end = probe;
@@ -227,7 +227,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
         // IsIgnore will literally ignore the word by changing the cursor to next word end
         is_ignore_word = false;
         is_punct = false;
-        while ('\0' != *ptr && (' ' == *ptr || '#' == *ptr || (ispunct(*ptr) && (is_punct = utils.IsPunct(ptr, ptr-1, ptr+1))) || (is_ignore_word = utils.IsIgnore(ptr)))) {
+        while ('\0' != *ptr && (' ' == *ptr || '#' == *ptr || isdigit(*ptr) || (ispunct(*ptr) && (is_punct = utils.IsPunct(ptr, ptr-1, ptr+1))) || (is_ignore_word = utils.IsIgnore(ptr)))) {
           ptr++;
         }
 
