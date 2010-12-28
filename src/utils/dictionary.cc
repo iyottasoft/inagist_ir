@@ -46,6 +46,8 @@ int Dictionary::Load(const char* file) {
 }
 
 int Dictionary::Find(const char *word) {
+  if (!word)
+    return -1;
   if (m_dictionary.find(word) != m_dictionary.end())
     return 1;
   return 0;
