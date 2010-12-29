@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdlib>
 #include <cstring>
 #include "keywords_extract.h"
 #include "keywords_manager.h"

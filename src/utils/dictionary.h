@@ -7,8 +7,11 @@
   void operator=(const TypeName&)
 #endif
 
-#include <ext/hash_set>
+//#include <ext/hash_set>
+#include <string>
+#include <set>
 
+/*
 namespace __gnu_cxx
 {
   template<> struct hash< std::string > {
@@ -17,10 +20,11 @@ namespace __gnu_cxx
     }
   };
 }
+*/
 
 namespace inagist_utils {
 
-typedef __gnu_cxx::hash_set<std::string, __gnu_cxx::hash<std::string> > string_hash_set;
+//typedef __gnu_cxx::hash_set<std::string, __gnu_cxx::hash<std::string> > string_hash_set;
 
 class Dictionary {
  public:
@@ -31,7 +35,8 @@ class Dictionary {
   int Print();
 
  private:
-  string_hash_set m_dictionary;
+  //string_hash_set m_dictionary;
+  std::set<std::string> m_dictionary;
 
   DISALLOW_COPY_AND_ASSIGN(Dictionary); 
 };

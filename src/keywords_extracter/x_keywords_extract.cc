@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 
   if (argc != 6) {
     std::cout << "Usage: " << argv[0] << " <stopwords file> <dictionary file> <unsafe dictionary file> <username> <keywords output file>\n";
-    exit(0);
+    return -1;
   }
 
   std::string bin_location = std::string(argv[0]);

@@ -1046,7 +1046,7 @@ int KeywordsExtract::GetKeywords(char* str,
         ptr = probe + 1;
         if (!ptr) {
           std::cerr << "ERROR: Fatal Exception trying to access unallocated memory space\n";
-          exit(-1);
+          return -1;
         }
 
         // find the next position of ptr
@@ -2202,7 +2202,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         ptr = probe + 1;
         if (!ptr) {
           std::cerr << "ERROR: Fatal Exception trying to access unallocated memory space\n";
-          exit(-1);
+          return -1;
         }
 
         // find the next position of ptr

@@ -37,7 +37,8 @@ int Dictionary::Load(const char* file) {
 
   std::string str;
   while (getline(ifs, str)) {
-    m_dictionary.insert(str.c_str());
+    //m_dictionary.insert(str.c_str());
+    m_dictionary.insert(str);
   }
 
   ifs.close();
@@ -46,15 +47,18 @@ int Dictionary::Load(const char* file) {
 }
 
 int Dictionary::Find(const char *word) {
-  if (!word)
+  if (!word) {
+    std::cout << "ERROR: fatal error - memory corruption\n";
     return -1;
-  if (m_dictionary.find(word) != m_dictionary.end())
+  }
+  if (m_dictionary.find(std::string(word)) != m_dictionary.end())
     return 1;
   return 0;
 }
 
 int Dictionary::Print() {
-  string_hash_set::const_iterator iter;
+  //string_hash_set::const_iterator iter;
+  std::set<std::string>::iterator iter;
   for (iter = m_dictionary.begin(); iter != m_dictionary.end(); iter++)
     std::cout << *iter << std::endl;
   return 0;
