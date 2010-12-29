@@ -8,7 +8,9 @@ Dictionary::Dictionary() {
 }
 
 Dictionary::~Dictionary() {
-  m_dictionary.clear();
+  if (!m_dictionary.empty()) {
+    m_dictionary.clear();
+  }
 }
 
 // this function expects the dictionary words in the following format:

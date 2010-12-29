@@ -282,14 +282,24 @@ int ScriptDetector::GetMaxScript(std::string& script) {
 }
 
 int ScriptDetector::GetScripts(std::set<std::string>& scripts) {
+
+  if (m_script_map.empty())
+    return 0;
+
   for (m_script_map_iter = m_script_map.begin(); m_script_map_iter != m_script_map.end(); m_script_map_iter++)
     scripts.insert(m_script_map_iter->first);
+
   return scripts.size();
 }
 
 int ScriptDetector::PrintScripts() {
+
+  if (m_script_map.empty())
+    return 0;
+
   for (m_script_map_iter = m_script_map.begin(); m_script_map_iter != m_script_map.end(); m_script_map_iter++)
     std::cout << m_script_map_iter->first << " " << m_script_map_iter->second << std::endl;
+
   return m_script_map.size();
 }
 
