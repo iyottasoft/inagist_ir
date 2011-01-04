@@ -25,7 +25,7 @@ class ScriptDetector {
  private:
   std::map<std::string, int> m_script_map;
   std::map<std::string, int>::iterator m_script_map_iter;
-  char m_buffer[SD_MAX_BUFFER_LEN];
+  unsigned char m_buffer[SD_MAX_BUFFER_LEN];
 };
 
 }

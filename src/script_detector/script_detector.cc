@@ -30,14 +30,19 @@ int ScriptDetector::Clear() {
 }
 
 int ScriptDetector::DetectScript(const std::string& text, std::set<std::string>& scripts) {
-  if (text.length() <= 1)
-    return -1;  
 
-  strcpy(m_buffer, text.c_str());
-  char* ptr = m_buffer;
-  char* end = strchr(m_buffer, '\0');
-  if (!ptr || !end)
+  if (text.length() <= 1) {
+    scripts.insert(std::string("rr"));
     return -1;
+  }
+
+  strcpy((char *) m_buffer, text.c_str());
+  unsigned char* ptr = m_buffer;
+  unsigned char* end = (unsigned char*) strchr((char *) m_buffer, '\0');
+  if (!ptr || !end) {
+    scripts.insert(std::string("rr"));
+    return -1;
+  }
 
   int code_point = 0;
   std::string script;
@@ -48,11 +53,15 @@ int ScriptDetector::DetectScript(const std::string& text, std::set<std::string>&
       if (DetectScript(code_point, script) >= 0)
         scripts.insert(script); 
     } catch (...) {
-      ptr++;
+      ptr = NULL;
+      end = NULL;
+      scripts.insert(std::string("rr"));
+      return -1;
     }
   }
   ptr = NULL;
   end = NULL;
+
   return scripts.size();
 }
 
