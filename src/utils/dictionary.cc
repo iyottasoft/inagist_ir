@@ -13,6 +13,12 @@ Dictionary::~Dictionary() {
   }
 }
 
+int Dictionary::Clear() {
+  if (!m_dictionary.empty()) {
+    m_dictionary.clear();
+  }
+}
+
 // this function expects the dictionary words in the following format:
 //
 // one word or phrase per line

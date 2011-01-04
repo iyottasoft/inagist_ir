@@ -33,6 +33,7 @@ class Dictionary {
   int Load(const char* dictionary_file_name);
   int Find(const char* key);
   int Print();
+  int Clear();
 
  private:
   //string_hash_set m_dictionary;
