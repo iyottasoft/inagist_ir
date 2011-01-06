@@ -17,9 +17,9 @@ LIB = ${LIB_DIR}/lib${PROJECT}.so
 BINS = ${BIN_DIR}/t_language_detector \
        ${BIN_DIR}/x_GenerateLangModel
 
-OBJS = language_detector.o
+OBJS = language_detector.o language_detector_erl_interface.o
 
-all: ${LIB} ${BINS}
+all: ${LIB} ${BINS} language_detector_erl_nif
 	@echo "build done!"
 
 clean:
@@ -46,5 +46,16 @@ ${BIN_DIR}/x_GenerateLangModel: x_GenerateLangModel.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_GenerateLangModel
 	@echo "done!"
+
+ERL_LIB = ${LIB_DIR}/liblangdetect_erl.so
+ERL_INCLUDE_DIR = -I/usr/local/lib/erlang/usr/include/ -I/usr/local/lib/erlang/lib/erl_interface-3.6.5/include
+ERL_LIBS = -lstdc++ -lei -lerl_interface
+
+language_detector_erl_nif:
+	@echo "creating erlang library file ..."
+	@gcc -fPIC -shared -o ${ERL_LIB} language_detector_erl_nif.c ${INCLUDE_DIR} -L ${LIB_DIR} ${LIBS} ${ERL_INCLUDE_DIR} ${ERL_LIBS} -L/usr/local/lib/erlang/lib/erl_interface-3.6.5/lib
+	@echo ${ERL_LIB}
+	@echo "compiling language_detector.erl"
+	@erlc language_detector.erl
 
 # DO NOT DELETE THIS LINE

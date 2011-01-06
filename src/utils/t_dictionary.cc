@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
       if (dictionary.Print() < 0)
         std::cout << "Error: could not print dictionary\n";
     } else {
-      if (dictionary.Find(word.c_str()) == 1)
+      if (dictionary.Find((unsigned char*) word.c_str()) == 1)
         std::cout << word << " : present in this dictionary\n";
     }
   }

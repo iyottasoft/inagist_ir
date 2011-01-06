@@ -25,13 +25,15 @@ class Stemmer {
            const char *dictionary_file,
            const char *stemmer_dictionary_file);
   int Stem(const std::string& text, std::set<std::string>& stems);
-  unsigned int Stem(const std::string& text,
-                    const unsigned int& output_buffer_len,
-                    char*& pipe_delimited_output);
+  int Stem(const std::string& text,
+           const unsigned int& output_buffer_len,
+           unsigned char*& pipe_delimited_output);
+  int Clear();
 
  private:
-  char m_buffer[MAX_STEM_TEXT_LEN];
-  char m_stemmed_word[MAX_STEM_WORD_LEN];
+  unsigned char m_buffer[MAX_STEM_TEXT_LEN];
+  unsigned char m_stemmed_word[MAX_STEM_WORD_LEN];
+  unsigned char* m_max_end;
   inagist_utils::Dictionary m_exclude_dictionary;
   inagist_utils::Dictionary m_include_dictionary;
   inagist_utils::StringUtils m_utils;

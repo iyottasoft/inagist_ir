@@ -31,12 +31,12 @@ int InitStemmer(const char* stopwords_file_path,
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int SubmitTweet(const char* tweet, const unsigned int tweet_len,
-                char* stem_buffer, const unsigned int stems_buffer_len) {
+int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
+                unsigned char* stem_buffer, const unsigned int stems_buffer_len) {
 #ifdef DEBUG
   std::cout << tweet << std::endl;
 #endif
-  return g_stemmer.Stem(tweet, stems_buffer_len, stem_buffer); 
+  return g_stemmer.Stem(std::string((char *) tweet), stems_buffer_len, stem_buffer); 
 }
 
 #ifdef _CPLUSPLUS
@@ -44,7 +44,7 @@ extern "C"
 #endif
 int GetTestTweets(const char* user_name,
                   const unsigned int in_length,
-                  char* tweets_buffer,
+                  unsigned char* tweets_buffer,
                   unsigned int *out_length) {
 
   if (!tweets_buffer)
@@ -65,16 +65,16 @@ int GetTestTweets(const char* user_name,
 
   // write them to the output buffer
   std::set<std::string>::iterator iter;
-  char *ptr = tweets_buffer;
+  unsigned char *ptr = tweets_buffer;
   unsigned int len = 0;
   unsigned int total_len = 0;
   for (iter = tweets.begin(); iter != tweets.end(); iter++) {
     len = (*iter).length();
     total_len += (len + 1); // 1 for the pipe
     if (total_len < in_length) {
-      strcpy(ptr, (*iter).c_str());
+      strcpy((char *) ptr, (*iter).c_str());
       ptr += len;
-      strcpy(ptr, "|");
+      strcpy((char *) ptr, "|");
       ptr++;
       num_docs++;
     } else {

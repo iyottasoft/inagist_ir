@@ -269,7 +269,7 @@ int ScriptDetector::DetectScript(int code_point, std::string &script) {
 }
 
 int ScriptDetector::GetMaxScript(std::string& script) {
-  // currently sending the first script with more than 5 characters
+  // currently sending the first script with more than 9 characters
   // not necessarily the max
   if (m_script_map.empty()) {
     script = "xx";
@@ -284,8 +284,10 @@ int ScriptDetector::GetMaxScript(std::string& script) {
     }
   }
 
-  if (ret_value <= 9)
-    script = "xx";
+  if (ret_value <= 9) {
+    script = "uu";
+    ret_value = 0;
+  }
 
   return ret_value;
 }

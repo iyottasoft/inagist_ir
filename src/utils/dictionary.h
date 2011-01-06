@@ -31,7 +31,7 @@ class Dictionary {
   Dictionary();
   ~Dictionary();
   int Load(const char* dictionary_file_name);
-  int Find(const char* key);
+  int Find(const unsigned char* key);
   int Print();
   int Clear();
 

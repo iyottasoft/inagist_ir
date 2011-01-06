@@ -17,6 +17,7 @@ int Dictionary::Clear() {
   if (!m_dictionary.empty()) {
     m_dictionary.clear();
   }
+  return 0;
 }
 
 // this function expects the dictionary words in the following format:
@@ -54,12 +55,12 @@ int Dictionary::Load(const char* file) {
   return 0;
 }
 
-int Dictionary::Find(const char *word) {
+int Dictionary::Find(const unsigned char *word) {
   if (!word) {
     std::cout << "ERROR: fatal error - memory corruption\n";
     return -1;
   }
-  if (m_dictionary.find(std::string(word)) != m_dictionary.end())
+  if (m_dictionary.find(std::string((char *) word)) != m_dictionary.end())
     return 1;
   return 0;
 }
@@ -69,6 +70,7 @@ int Dictionary::Print() {
   std::set<std::string>::iterator iter;
   for (iter = m_dictionary.begin(); iter != m_dictionary.end(); iter++)
     std::cout << *iter << std::endl;
+
   return 0;
 }
 

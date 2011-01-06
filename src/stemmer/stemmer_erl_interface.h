@@ -12,11 +12,11 @@ extern "C" {
 int InitStemmer(const char* stopwords_file_path,
                 const char* dictionary_file_path,
                 const char* stemmer_dictionary_file_path);
-int SubmitTweet(const char* tweet, const unsigned int tweet_len,
-                char* stem_buffer, const unsigned int stems_buffer_len);
+int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
+                unsigned char* stem_buffer, const unsigned int stems_buffer_len);
 int GetTestTweets(const char* user_name,
                   const unsigned int in_length,
-                  char* tweets_buffer,
+                  unsigned char* tweets_buffer,
                   unsigned int *out_length);
 #ifdef _CPLUSPLUS
 }
