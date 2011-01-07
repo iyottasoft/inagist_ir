@@ -4,7 +4,7 @@
 #include "twitter_api.h"
 #include "twitter_searcher.h"
 
-//#define DEBUG 1
+#define DEBUG 1
 
 #ifdef _CPLUSPLUS
 #include <set>
@@ -58,10 +58,10 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
     strcpy(safe_status_buffer, "errST");
     strcpy(script_buffer,"rr");
     strcpy((char *) keywords_buffer, "error_submit_tweet_invalid_len");
-    *keywords_len_ptr = strlen(keywords_buffer);
+    *keywords_len_ptr = strlen((char *) keywords_buffer);
     *keywords_count_ptr = 1;
     strcpy((char *) keyphrases_buffer, "error_submit_tweet_invalid_len");
-    *keyphrases_len_ptr = strlen(keyphrases_buffer);
+    *keyphrases_len_ptr = strlen((char *) keyphrases_buffer);
     *keyphrases_count_ptr = 1;
 #endif
     memset(buffer, '\0', MAX_BUFFER_SIZE);
