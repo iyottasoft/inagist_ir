@@ -5,6 +5,7 @@
 //#define DEBUG 0
 #define KEYPHRASE_ENABLED 1
 #define MAX_DEBUG_BUFFER_LEN 1024
+#define I18N_ENABLED 0
 
 namespace inagist_trends {
   // unless otherwise specified functions return 0 or NULL or false as default
@@ -846,6 +847,12 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
       }
 #endif
 
+#ifndef I18N_ENABLED
+      bool current_word_english = false;
+      code_point = *next_word_start;
+      if (code_point > 0x40 && code_point < 0x7B) {
+        current_word_english = true;
+#endif
       // stop words
       if (next_word_start) {
         if (m_stopwords_dictionary.Find(next_word_start) == 1) {
@@ -880,10 +887,16 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
           text_has_unsafe_words = true;
         }
       }
+#ifndef I18N_ENABLED
+      }
+#endif
 
       if (prev_word_end)
         *prev_word_end = prev_word_delimiter;
 
+#ifndef I18N_ENABLED
+      if (current_word_english) {
+#endif
       if (!current_word_stop && !current_word_dict && !current_word_caps &&
           !current_word_starts_num && !current_word_has_mixed_case &&
           (current_word_len > 1) && '#' != *current_word_start) {
@@ -1291,6 +1304,9 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         caps_entity_start = NULL;
         caps_entity_end = NULL;
       }
+#ifndef I18N_ENABLED
+      }
+#endif
 
 #ifdef DEBUG
       if (DEBUG > 5) {
