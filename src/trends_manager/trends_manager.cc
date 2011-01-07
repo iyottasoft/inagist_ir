@@ -51,10 +51,20 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
   // this can be global. keeping it local for the time being
   unsigned char buffer[MAX_BUFFER_SIZE];
   if (tweet_len > 0 && tweet_len < MAX_BUFFER_SIZE) {
-    //strcpy((char *) buffer, (char *) tweet);
     memcpy((char *) buffer, (char *) tweet, tweet_len);
     buffer[tweet_len] = '\0';
   } else {
+#ifdef DEBUG
+    strcpy(safe_status_buffer, "errST");
+    strcpy(script_buffer,"rr");
+    strcpy((char *) keywords_buffer, "error_submit_tweet_invalid_len");
+    *keywords_len_ptr = strlen(keywords_buffer);
+    *keywords_count_ptr = 1;
+    strcpy((char *) keyphrases_buffer, "error_submit_tweet_invalid_len");
+    *keyphrases_len_ptr = strlen(keyphrases_buffer);
+    *keyphrases_count_ptr = 1;
+#endif
+    memset(buffer, '\0', MAX_BUFFER_SIZE);
     return -1;
   }
 
@@ -71,10 +81,14 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                                                   keyphrases_buffer, keyphrases_buffer_len,
                                                   keyphrases_len, keyphrases_count)) <= 0) {
     if (ret_value < 0 ) {
-      *safe_status_buffer = '\0';
-      *script_buffer = '\0';
 #ifdef DEBUG
       std::cout << "Error: could not get keywords from KeywordsExtract\n";
+      strcpy(safe_status_buffer, "errGK");
+      strcpy(script_buffer, "rr");
+      return -1;
+#else
+      *safe_status_buffer = '\0';
+      *script_buffer = '\0';
 #endif
     }
     *keywords_buffer = '\0';

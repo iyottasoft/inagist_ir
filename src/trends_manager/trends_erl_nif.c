@@ -68,7 +68,9 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
                   &keywords_len, &keywords_count,
                   (char *) keyphrases, MAX_BUFFER_LEN,
                   &keyphrases_len, &keyphrases_count)) < 0) {
+#ifndef DEBUG
     return enif_make_atom(env, "error");
+#endif
   }
   
   unsigned int len = 0;
@@ -87,8 +89,13 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     len = 5;
   }
   ret_val = enif_alloc_binary(env, len, &safe_status_bin);
-  if (ret_val < 0)
+  if (ret_val < 0) {
+#ifndef DEBUG
     return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_safe_status_bin_alloc");
+#endif
+  }
   for (i=0; i<len; i++) {
     safe_status_bin.data[i] = *(safe_status + i);
   }
@@ -100,8 +107,13 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     len = 2;
   }
   ret_val = enif_alloc_binary(env, len, &script_bin);
-  if (ret_val < 0)
+  if (ret_val < 0) {
+#ifndef DEBUG
     return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_script_bin_alloc");
+#endif
+  }
   for (i=0; i<len; i++) {
     script_bin.data[i] = *(script + i);
   }
@@ -120,8 +132,13 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
       len = end - start;
 
       ret_val = enif_alloc_binary(env, len, &keywords_bin);
-      if (ret_val < 0)
+      if (ret_val < 0) {
+#ifndef DEBUG
         return enif_make_atom(env, "error");
+#else
+        return enif_make_atom(env, "error_keywords_bin_alloc");
+#endif
+      }
       for (i=0; i<len; i++) {
         keywords_bin.data[i] = *(start + i);
       }
@@ -146,8 +163,13 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
       len = end - start;
 
       ret_val = enif_alloc_binary(env, len, &keyphrases_bin);
-      if (ret_val < 0)
+      if (ret_val < 0) {
+#ifndef DEBUG
         return enif_make_atom(env, "error");
+#else
+        return enif_make_atom(env, "error_keyphrases_bin_alloc");
+#endif
+      }
       for (i=0; i<len; i++) {
         keyphrases_bin.data[i] = *(start + i);
       }
@@ -185,12 +207,18 @@ ERL_NIF_TERM nif_gettrends(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) 
 }
 
 ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-  if (argc != 3)
+
+  if (argc != 3) {
+#ifndef DEBUG
     return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_invalid_argc");
+#endif
+  }
 
   ErlNifBinary file_path;
-  char stopwords_file_path[MAX_NAME_LEN];
 
+  char stopwords_file_path[MAX_NAME_LEN];
   bool success = enif_inspect_binary(env, argv[0], &file_path);
   if (success && (file_path.size < MAX_NAME_LEN)) {
     memcpy(stopwords_file_path, file_path.data, file_path.size);
@@ -198,11 +226,14 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     enif_release_binary(env, &file_path);
   } else {
     enif_release_binary(env, &file_path);
+#ifndef DEBUG
     return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_stopwords_file_path_inspect_bin");
+#endif
   }
 
   char dictionary_file_path[MAX_NAME_LEN];
-
   success = enif_inspect_binary(env, argv[1], &file_path);
   if (success && (file_path.size < MAX_NAME_LEN)) {
     memcpy(dictionary_file_path, file_path.data, file_path.size);
@@ -210,11 +241,14 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     enif_release_binary(env, &file_path);
   } else {
     enif_release_binary(env, &file_path);
+#ifndef DEBUG
     return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_dictionary_file_path_inspect_bin");
+#endif
   }
 
   char unsafe_dictionary_file_path[MAX_NAME_LEN];
-
   success = enif_inspect_binary(env, argv[2], &file_path);
   if (success && (file_path.size < MAX_NAME_LEN)) {
     memcpy(unsafe_dictionary_file_path, file_path.data, file_path.size);
@@ -222,11 +256,20 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     enif_release_binary(env, &file_path);
   } else {
     enif_release_binary(env, &file_path);
+#ifndef DEBUG
     return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_unsafe_dict_file_path_inspect_bin");
+#endif
   }
 
-  if (Init(stopwords_file_path, dictionary_file_path, unsafe_dictionary_file_path) < 0)
+  if (Init(stopwords_file_path, dictionary_file_path, unsafe_dictionary_file_path) < 0) {
+#ifndef DEBUG
     return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_init_dicts");
+#endif
+  }
 
   return enif_make_atom(env, "ok");
 }
@@ -247,20 +290,36 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
       enif_release_binary(env, &user_name);
     }   else {
       enif_release_binary(env, &user_name);
+#ifndef DEBUG
       return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_user_name");
+#endif
     }
 
     if (GetTestTweets(user_name_str, MAX_LIST_BUFFER_LEN, tweets_buffer, &out_length) < 0) {
+#ifndef DEBUG
       return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_get_test_tweets_for_user");
+#endif
     }
   } else {
     if (GetTestTweets(NULL, MAX_LIST_BUFFER_LEN, tweets_buffer, &out_length) < 0) {
+#ifndef DEBUG
       return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_get_test_tweets_for_null_user");
+#endif
     }
   }
 
   if (0 == out_length || out_length > MAX_LIST_BUFFER_LEN) {
+#ifndef DEBUG
     return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_out_length");
+#endif
   }
 
   ErlNifBinary tweet;
@@ -281,11 +340,22 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     *tweet_end = '\0';
     tweet_len = tweet_end - tweet_start;
 
-    if (tweet_len <= 0 || tweet_len >= MAX_BUFFER_LEN)
+    if (tweet_len <= 0 || tweet_len >= MAX_BUFFER_LEN) {
+#ifndef DEBUG
       return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_out_length");
+#endif
+    }
+
     ret_val = enif_alloc_binary(env, tweet_len, &tweet);
-    if (ret_val < 0)
+    if (ret_val < 0) {
+#ifndef DEBUG
       return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_tweet_len");
+#endif
+    }
     for (i=0; i<tweet_len; i++) {
       tweet.data[i] = *(tweet_start + i);
     }
