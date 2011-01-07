@@ -5,7 +5,7 @@
 //#define DEBUG 0
 #define KEYPHRASE_ENABLED 1
 #define MAX_DEBUG_BUFFER_LEN 1024
-#define I18N_ENABLED 0
+//#define I18N_ENABLED 0
 
 namespace inagist_trends {
   // unless otherwise specified functions return 0 or NULL or false as default
@@ -849,12 +849,14 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
 
 #ifndef I18N_ENABLED
       bool current_word_english = false;
-      code_point = *next_word_start;
-      if (code_point > 0x40 && code_point < 0x7B) {
-        current_word_english = true;
 #endif
-      // stop words
       if (next_word_start) {
+#ifndef I18N_ENABLED
+        code_point = *next_word_start;
+        if (code_point > 0x40 && code_point < 0x7B) {
+          current_word_english = true;
+#endif
+        // stop words
         if (m_stopwords_dictionary.Find(next_word_start) == 1) {
           next_word_stop = true;
           num_stop_words++;
@@ -886,10 +888,10 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         if (m_unsafe_dictionary.Find(next_word_start) == 1) {
           text_has_unsafe_words = true;
         }
-      }
 #ifndef I18N_ENABLED
-      }
+        }
 #endif
+      }
 
       if (prev_word_end)
         *prev_word_end = prev_word_delimiter;
