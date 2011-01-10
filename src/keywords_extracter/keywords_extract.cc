@@ -1021,6 +1021,9 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
 #ifdef KEYPHRASE_ENABLED
       if (NULL == stopwords_keyphrase_start) {
         if ('\0' != current_word_delimiter &&
+#ifndef I18N_ENABLED
+            current_word_english &&
+#endif
             !current_word_stop &&
             !current_word_dict &&
             '#' != *current_word_start &&
