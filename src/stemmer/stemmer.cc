@@ -7,7 +7,7 @@
 #include "script_detector.h"
 #include "utf8.h"
 
-#define DEBUG 2
+//#define DEBUG 2
 
 namespace inagist_search {
 

@@ -1,3 +1,4 @@
+include ../Makefile.incl
 PROJECT = stemmer
 CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS #-DDEBUG

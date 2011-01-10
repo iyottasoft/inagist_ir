@@ -1,3 +1,4 @@
+include = ../Makefile.incl
 PROJECT = trendsmanager
 CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS

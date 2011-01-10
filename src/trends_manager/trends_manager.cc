@@ -4,7 +4,7 @@
 #include "twitter_api.h"
 #include "twitter_searcher.h"
 
-#define DEBUG 1
+//#define DEBUG 1
 
 #ifdef _CPLUSPLUS
 #include <set>
