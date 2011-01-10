@@ -7,7 +7,7 @@
 #include "script_detector.h"
 #include "utf8.h"
 
-//#define DEBUG 1
+#define DEBUG 2
 
 namespace inagist_search {
 
@@ -274,12 +274,14 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
       *current_word_end = current_word_delimiter;
       current_word_start = next_word_start;
     } else {
+      /*
       if (!strcmp((char *) probe, "&#")) {
         while (' ' != *probe && '\0' != *probe)
           probe++;
         if ('\0' == *probe)
           break;
       }
+      */
     }
 
     // a mere cog in a loop wheel, but a giant killer if commented
@@ -307,9 +309,15 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
         }
       } catch (...) {
 #ifdef DEBUG
-        std::cout << "Exception: " << code_point << " " << probe << std::endl;
+        if (DEBUG > 0) {
+          std::cout << "Exception: " << code_point << " " << probe << std::endl;
+        }
+        if (DEBUG > 1) {
+          stems.insert("EXCEPTION");
+        } else {
+          sd.Clear();
+        }
 #endif
-        sd.Clear();
         return -1;
       }
     //}
