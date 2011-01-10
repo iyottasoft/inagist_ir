@@ -1,6 +1,7 @@
+include ../Makefile.incl
 PROJECT = keywordsextracter
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated #-DDEBUG
+CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG}
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../inagist_api -I../twitter_api -I../utils -I../script_detector

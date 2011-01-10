@@ -458,7 +458,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   ptr = buffer;
 
 #ifdef DEBUG
-  if (DEBUG >= 0)
+  if (DEBUG > 0)
     cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
 #endif
 
