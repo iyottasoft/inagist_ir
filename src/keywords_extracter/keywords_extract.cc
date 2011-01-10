@@ -458,7 +458,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   ptr = buffer;
 
 #ifdef DEBUG
-  cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
+  if (DEBUG >= 0)
+    cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
 #endif
 
   // go to the first word, ignoring handles and punctuations
@@ -470,7 +471,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
 
   if (!ptr || '\0' == *ptr) {
 #ifdef DEBUG
-    cout << "either the input is empty or has ignore words only" << endl;
+    if (DEBUG > 0)
+      cout << "either the input is empty or has ignore words only" << endl;
 #endif
     return 0;
   }
@@ -478,7 +480,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   current_word_start = ptr;
   sentence_start = ptr;
 #ifdef DEBUG
-  cout << "sentence start: " << sentence_start << endl;
+  if (DEBUG > 0)
+    cout << "sentence start: " << sentence_start << endl;
 #endif
 
   if (isupper(*ptr)) {
@@ -1127,7 +1130,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
       if (NULL != stopwords_keyphrase_start && NULL != stopwords_keyphrase_end) {
         if (stopwords_keyphrase_start != caps_entity_start || stopwords_keyphrase_end != caps_entity_end) {
 #ifdef DEBUG
-          cout << endl << string(stopwords_keyphrase_start, (stopwords_keyphrase_end - stopwords_keyphrase_start)) << " :keyphrase";
+          if (DEBUG > 1)
+            cout << endl << string((char *) stopwords_keyphrase_start, (stopwords_keyphrase_end - stopwords_keyphrase_start)) << " :keyphrase";
 #endif
           if (strncmp((char *) stopwords_keyphrase_end-2, "\'s", 2) == 0) {
             ch = *(stopwords_keyphrase_end-2);
@@ -1191,7 +1195,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
           if ('#' == *stopwords_entity_start)
             stopwords_entity_start++;
 #ifdef DEBUG
-          cout << endl << string(stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) << " :entity by stopword";
+          if (DEBUG > 1)
+            cout << endl << string((char *) stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) << " :entity by stopword";
 #endif
           if (strncmp((char *) stopwords_entity_end-2, "\'s", 2) == 0) {
             ch = *(stopwords_entity_end-2);
@@ -1253,7 +1258,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
             caps_entity_start++;
 #ifdef DEBUG
           if (DEBUG > 2) {
-            cout << endl << string(caps_entity_start, (caps_entity_end - caps_entity_start)) << " :entity by caps";
+            cout << endl << string((char *) caps_entity_start, (caps_entity_end - caps_entity_start)) << " :entity by caps";
           }
 #endif
           if (strncmp((char *) caps_entity_end-2, "\'s", 2) == 0) {
@@ -1545,7 +1550,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
 
 #ifdef DEBUG
   if (DEBUG > 5) {
-    cout << endl << "\norginal query: " << std::string(str) << endl;
+    cout << endl << "\norginal query: " << std::string((char *) buffer) << endl;
     cout << "num words: " << num_words << endl;
     cout << "num caps words: " << num_caps_words << endl;
     cout << "num stop words: " << num_stop_words << endl;
