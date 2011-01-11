@@ -5,36 +5,33 @@
 #include <cstring>
 #include <cstdlib>
 #endif
+
 #include "language_detector.h"
 #include "twitter_api.h"
 #include "twitter_searcher.h"
 
 inagist_classifiers::LanguageDetector g_language_detector;
 
-/*
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int InitStemmer(const char* stopwords_file_path,
-                const char* dictionary_file_path,
-                const char* stemmer_dictionary_file_path) {
+int InitLangD(const char* config_file) {
 
-  if (!stopwords_file_path || !dictionary_file_path || !stemmer_dictionary_file_path)
+  if (!config_file)
     return -1;
 
-  if (g_language_detector.Init(stopwords_file_path, dictionary_file_path, stemmer_dictionary_file_path) < 0)
+  if (g_language_detector.Init(std::string(config_file)) < 0)
     return -1;
 
   return 0;
 }
-*/
 
 // keywords and keyphrases are output parameters
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
 int SubmitTweet(const char* tweet, const unsigned int tweet_len,
-                char* stem_buffer, const unsigned int stems_buffer_len) {
+                char* lang_buffer, const unsigned int lang_buffer_len) {
 #ifdef DEBUG
   std::cout << tweet << std::endl;
 #endif

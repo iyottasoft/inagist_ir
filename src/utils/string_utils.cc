@@ -4,10 +4,12 @@
 #include <cctype>
 #include <iostream>
 #include "utf8.h"
-#include "script_detector.h"
+#include "script_detector_utils.h"
 
 //#define DEBUG 0
 #define MAX_BUFFER_LEN 1024
+
+extern int DetectScript(int code_point, std::string &script);
 
 namespace inagist_utils {
   // unless otherwise specified functions return 0 or NULL or false as default
@@ -171,9 +173,6 @@ int StringUtils::TestUtils(const std::string& text, unsigned int text_len) {
     current_word_starts_num = false;
   }
 
-  // initialize script detecter. this clears its internal hash
-  inagist_classifiers::ScriptDetector sd;
-  sd.Init();
   probe = ptr + 1;
 
   while (ptr && probe && *ptr != '\n' && *ptr != '\0') {
@@ -241,7 +240,7 @@ int StringUtils::TestUtils(const std::string& text, unsigned int text_len) {
       try {
         code_point = utf8::next(probe, end);
         if (code_point > 0x7F) {
-          if (sd.DetectScript(code_point, script_temp) > 0) {
+          if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
             if (script_temp != "en") {
               if (script_temp != script) {
                 script_count = 0;
@@ -267,9 +266,6 @@ int StringUtils::TestUtils(const std::string& text, unsigned int text_len) {
 #ifdef DEBUG
   std::cout << "num words: " << num_words << std::endl;
 #endif
-
-  // deinitialize script detector
-  sd.Clear();
 
   return 0;
 }

@@ -9,11 +9,9 @@
 #ifdef _CPLUSPLUS
 extern "C" {
 #endif
-int InitStemmer(const char* stopwords_file_path,
-                const char* dictionary_file_path,
-                const char* stemmer_dictionary_file_path);
+int InitLangD(const char* config_file);
 int SubmitTweet(const char* tweet, const unsigned int tweet_len,
-                char* stem_buffer, const unsigned int stems_buffer_len);
+                char* lang_buffer, const unsigned int lang_buffer_len);
 int GetTestTweets(const char* user_name,
                   const unsigned int in_length,
                   char* tweets_buffer,

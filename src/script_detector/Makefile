@@ -18,7 +18,7 @@ LIB = ${LIB_DIR}/lib${PROJECT}.so
 BINS = ${BIN_DIR}/t_scripts_from_inagist \
        ${BIN_DIR}/t_scripts_from_twitter
 
-OBJS = script_detector.o
+OBJS = script_detector.o script_detector_utils.o
 
 all: ${LIB} ${BINS}
 	@echo "build done!"

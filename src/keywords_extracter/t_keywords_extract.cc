@@ -7,8 +7,8 @@ using std::string;
 
 int main(int argc, char* argv[]) {
 
-  if (argc > 2) {
-    std::cout << "Usage: " << argv[0] << " <text within double quotes>" << std::endl;
+  if (argc != 2) {
+    std::cout << "Usage: " << argv[0] << " <-i | text within double quotes>" << std::endl;
     return -1;
   }
 
@@ -35,22 +35,29 @@ int main(int argc, char* argv[]) {
   std::string safe_status;
   std::string script;
   char str[141];
-  if (argc == 1) {
+  int ret_value = 0;
+  if (strcmp(argv[1], "-i") == 0) {
     std::string s;
     while (getline(std::cin, s)) {
       if (s.compare("exit") == 0)
         break;
       strcpy(str, s.c_str()); 
-      ke.GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
-      std::cout << "Safe Status: " << safe_status << std::endl;
-      std::cout << "Script: " << script << std::endl;
-      std::cout << "Keywords:" << std::endl;
-      ke.PrintKeywords(keywords_set);
-      keywords_set.clear();
-      if (keyphrases_set.size() > 0) {
-        std::cout << "Keyphrases:" << std::endl;
-        ke.PrintKeywords(keyphrases_set);
-        keyphrases_set.clear();
+      ret_value = ke.GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
+      if (ret_value < 0) {
+        std::cout << "ERROR: could not get keywords\n";
+      } else if (ret_value == 0) {
+        std::cout << "No keywords found\n";
+      } else {
+        std::cout << "Safe Status: " << safe_status << std::endl;
+        std::cout << "Script: " << script << std::endl;
+        std::cout << "Keywords:" << std::endl;
+        ke.PrintKeywords(keywords_set);
+        keywords_set.clear();
+        if (keyphrases_set.size() > 0) {
+          std::cout << "Keyphrases:" << std::endl;
+          ke.PrintKeywords(keyphrases_set);
+          keyphrases_set.clear();
+        }
       }
     }
   } else {

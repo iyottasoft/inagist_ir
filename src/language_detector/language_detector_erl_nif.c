@@ -29,21 +29,21 @@ ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     return enif_make_atom(env, "error");
   }
 
-  char stems_buffer[MAX_BUFFER_LEN];
-  stems_buffer[0] = '\0';
-  if (SubmitTweet(tweet_str, tweet_len, stems_buffer, MAX_BUFFER_LEN) <= 0) { 
-    return enif_make_list(env, 0);
+  char lang_buffer[MAX_BUFFER_LEN];
+  lang_buffer[0] = '\0';
+  if (SubmitTweet(tweet_str, tweet_len, lang_buffer, MAX_BUFFER_LEN) <= 0) { 
+    return enif_make_atom(env, "error");
   }
 
   unsigned int len = 0;
   unsigned int i = 0;
   int ret_val = 0;
-  ErlNifBinary stem;
+  ErlNifBinary lang;
 
-  char *start = stems_buffer;
+  char *start = lang_buffer;
   char *end = strstr(start, "|");
 
-  ERL_NIF_TERM stems_list = enif_make_list(env, 0);
+  ERL_NIF_TERM lang_list = enif_make_list(env, 0);
   while (start && end && *end != '\0') {
     end = strstr(start, "|");
     if (!end)
@@ -51,63 +51,39 @@ ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     *end = '\0';
     len = end - start;
 
-    ret_val = enif_alloc_binary(env, len, &stem);
+    ret_val = enif_alloc_binary(env, len, &lang);
     if (ret_val < 0)
       return enif_make_atom(env, "error");
     for (i=0; i<len; i++) {
-      stem.data[i] = *(start + i);
+      lang.data[i] = *(start + i);
     }
-    stems_list = enif_make_list_cell(env, enif_make_binary(env, &stem), stems_list);
+    lang_list = enif_make_list_cell(env, enif_make_binary(env, &lang), lang_list);
 
     *end = '|';
     start = end + 1;
   }
 
-  return stems_list;
+  return lang_list;
 }
 
 ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-  if (argc != 3)
+  if (argc != 1)
     return enif_make_atom(env, "error");
 
   ErlNifBinary file_path;
-  char stopwords_file_path[MAX_NAME_LEN];
+  char config_file[MAX_NAME_LEN];
 
   bool success = enif_inspect_binary(env, argv[0], &file_path);
   if (success && (file_path.size < MAX_NAME_LEN)) {
-    memcpy(stopwords_file_path, file_path.data, file_path.size);
-    stopwords_file_path[file_path.size] = '\0';
+    memcpy(config_file, file_path.data, file_path.size);
+    config_file[file_path.size] = '\0';
     enif_release_binary(env, &file_path);
   } else {
     enif_release_binary(env, &file_path);
     return enif_make_atom(env, "error");
   }
 
-  char dictionary_file_path[MAX_NAME_LEN];
-
-  success = enif_inspect_binary(env, argv[1], &file_path);
-  if (success && (file_path.size < MAX_NAME_LEN)) {
-    memcpy(dictionary_file_path, file_path.data, file_path.size);
-    dictionary_file_path[file_path.size] = '\0';
-    enif_release_binary(env, &file_path);
-  } else {
-    enif_release_binary(env, &file_path);
-    return enif_make_atom(env, "error");
-  }
-
-  char stemmer_dictionary_file_path[MAX_NAME_LEN];
-
-  success = enif_inspect_binary(env, argv[2], &file_path);
-  if (success && (file_path.size < MAX_NAME_LEN)) {
-    memcpy(stemmer_dictionary_file_path, file_path.data, file_path.size);
-    stemmer_dictionary_file_path[file_path.size] = '\0';
-    enif_release_binary(env, &file_path);
-  } else {
-    enif_release_binary(env, &file_path);
-    return enif_make_atom(env, "error");
-  }
-
-  if (InitStemmer(stopwords_file_path, dictionary_file_path, stemmer_dictionary_file_path) < 0)
+  if (InitLangD(config_file) < 0)
     return enif_make_atom(env, "error");
 
   return enif_make_atom(env, "ok");
@@ -153,7 +129,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   unsigned int tweet_len = 0;
   ERL_NIF_TERM arg_array[1]; 
   ERL_NIF_TERM list;
-  ERL_NIF_TERM stems_list = enif_make_list(env, 0);
+  ERL_NIF_TERM lang_list = enif_make_list(env, 0);
   ERL_NIF_TERM cell, head, tail;
 
   while (tweet_start && tweet_end && *tweet_end != '\0') {
@@ -173,12 +149,12 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     }
 
     arg_array[0] = enif_make_binary(env, &tweet);
-    list = nif_stem(env, 1, arg_array);
+    list = nif_detect_lang(env, 1, arg_array);
 
     // now insert this into the bigger list
     while (enif_get_list_cell(env, list, &head, &tail)) {
       if (enif_is_binary(env, head)) {
-        stems_list = enif_make_list_cell(env, head, stems_list);
+        lang_list = enif_make_list_cell(env, head, lang_list);
       }
       list = tail; 
     }
@@ -189,14 +165,14 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   tweet_start = NULL;
   tweet_end = NULL;
 
-  return stems_list;
+  return lang_list;
 }
 
 static ErlNifFunc nif_funcs[] =
 {
-  {"init_c", 3, nif_init_c},
-  {"stem", 1, nif_detect_lang},
+  {"init_c", 1, nif_init_c},
+  {"detect_lang", 1, nif_detect_lang},
   {"test_twitter_timeline", 0, nif_test_twitter_timeline},
   {"test_twitter_timeline", 1, nif_test_twitter_timeline},
 };
-ERL_NIF_INIT(language_detector, nif_funcs, NULL, NULL, NULL, NULL)
+ERL_NIF_INIT(langd, nif_funcs, NULL, NULL, NULL, NULL)

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cmath>
 
-#define NBC_DEBUG 1
+#define NBC_DEBUG 3
 
 namespace inagist_classifiers {
 
@@ -44,11 +44,24 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   unsigned int max_index = 0;
   for (unsigned int j=0; j<i; j++) {
     freqs[j] = exp(freqs[j]);
+#ifdef NBC_DEBUG
+    if (NBC_DEBUG > 2) {
+      std::cout << "freqs: " << freqs[j] << std::endl;
+    }
+#endif
     if (max_freq < freqs[j]) {
       max_freq = freqs[j];
       max_index = j;
     }
   }
+
+#ifdef NBC_DEBUG
+  if (NBC_DEBUG > 1) {
+    std::cout << "max freq: " << max_freq << std::endl;
+    std::cout << "max index: " << max_index << std::endl;
+    std::cout << "guess_lang_output: " << langs[max_index] << std::endl;
+  }
+#endif
 
   guess_lang_output = langs[max_index];
 
@@ -81,15 +94,22 @@ int NaiveBayesClassifier::GuessClass(std::map<std::string, int> testfile_feature
   }
 
 #ifdef NBC_DEBUG
-  std::cout << "Lang 1 freq: " << lang1_freq << std::endl;
-  std::cout << "Lang 2 freq: " << lang2_freq << std::endl;
+  if (NBC_DEBUG > 1) {
+    std::cout << "Lang 1 freq: " << lang1_freq << std::endl;
+    std::cout << "Lang 2 freq: " << lang2_freq << std::endl;
+  }
 #endif
+
   double score1 = exp(lang1_freq);
   double score2 = exp(lang2_freq);
+
 #ifdef NBC_DEBUG
-  std::cout << "Lang 1 score: " << score1 << std::endl;
-  std::cout << "Lang 2 score: " << score2 << std::endl;
+  if (NBC_DEBUG > 1) {
+    std::cout << "Lang 1 score: " << score1 << std::endl;
+    std::cout << "Lang 2 score: " << score2 << std::endl;
+  }
 #endif
+
   if (score1 > score2) {
     return 1;
   } else {

@@ -6,7 +6,7 @@
 #include <map>
 
 #ifndef SD_MAX_BUFFER_LEN
-#define SD_MAX_BUFFER_LEN 560
+#define SD_MAX_BUFFER_LEN 1024
 #endif
 
 namespace inagist_classifiers {
@@ -18,7 +18,7 @@ class ScriptDetector {
   int Init();
   int Clear();
   int DetectScript(const std::string& text, std::set<std::string>& scripts);
-  int DetectScript(int code_point, std::string& script);
+  int TrackScripts(const std::string& script);
   int GetMaxScript(std::string& script);
   int GetScripts(std::set<std::string>& scripts);
   int PrintScripts();

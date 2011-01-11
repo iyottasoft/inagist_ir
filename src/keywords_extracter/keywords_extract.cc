@@ -1,4 +1,5 @@
 #include "keywords_extract.h"
+#include "script_detector_utils.h"
 #include <cstring>
 #include "utf8.h"
 
@@ -6,6 +7,8 @@
 #define KEYPHRASE_ENABLED 1
 #define MAX_DEBUG_BUFFER_LEN 1024
 //#define I18N_ENABLED 0
+
+extern int DetectScript(int code_point, std::string &script);
 
 namespace inagist_trends {
   // unless otherwise specified functions return 0 or NULL or false as default
@@ -498,15 +501,12 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
     }
   }
 
-  // initialize script detecter. this clears its internal hash
-  m_script_detector.Init();
-
   // now lets find the end of the current word - while loop works from the second letter
   //ptr++;
   try {
     code_point = utf8::next(ptr, end);
     if (code_point > 0x7F) {
-      if (m_script_detector.DetectScript(code_point, script_temp) > 0) {
+      if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
         if (script_temp != "en") {
           if (script_temp != script) {
             script_count = 0;
@@ -574,7 +574,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
     try {
       code_point = utf8::next(ptr, end);
       if (code_point > 0xFF) {
-        if (m_script_detector.DetectScript(code_point, script_temp) > 0) {
+        if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
           if (script_temp != "en") {
             if (script_temp != script) {
               script_count = 0;
@@ -664,7 +664,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   try {
     code_point = utf8::next(ptr, end);
     if (code_point > 0xFF) {
-      if (m_script_detector.DetectScript(code_point, script_temp) > 0) {
+      if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
         if (script_temp != "en") {
           if (script_temp != script) {
             script_count = 0;
@@ -1495,7 +1495,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         try {
           code_point = utf8::next(probe, end);
           if (code_point > 0xFF) {
-            if (m_script_detector.DetectScript(code_point, script_temp) > 0) {
+            if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
               if (script_temp != "en") {
                 if (script_temp != script) {
                   script_count = 0;
@@ -1564,9 +1564,6 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
     *keywords_buffer = '\0';
     keywords_len = 0;
   }
-
-  // deinitialize script detector
-  m_script_detector.Clear();
 
   if (script_count == 0 && english_count > 10) {
     script = "en";

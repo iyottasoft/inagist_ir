@@ -4,10 +4,12 @@
 #include <cstdlib>
 #include <cctype>
 #include "porter_stemmer.h"
-#include "script_detector.h"
+#include "script_detector_utils.h"
 #include "utf8.h"
 
 //#define DEBUG 2
+
+extern int DetectScript(int code_point, std::string &script);
 
 namespace inagist_search {
 
@@ -128,7 +130,6 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
   bool current_word_starts_num = false;
   int num_words = 0;
 
-  // script detection
   unsigned char *end = (unsigned char*) strchr((char *) m_buffer, '\0');
   if (end > m_max_end) {
     std::cout << "Error: invalid string terminator\n";
@@ -173,10 +174,6 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
     current_word_starts_num = false;
   }
 
-  // initialize script detecter. this clears its internal hash
-  inagist_classifiers::ScriptDetector sd;
-  sd.Init();
-
   // now we need to achieve the following
   // probe = ptr + 1;
   probe = ptr;
@@ -186,7 +183,6 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
 #ifdef DEBUG
     std::cout << "EXCEPTION: utf8 returned exception" << std::endl;
 #endif
-    sd.Clear();
     return -1;
   }
 
@@ -247,7 +243,6 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
         ptr = probe + 1;
         if (!ptr) {
           std::cerr << "ERROR: Fatal Exception trying to access unallocated memory space\n";
-          sd.Clear();
           return -1;
         }
 
@@ -291,7 +286,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
       try {
         code_point = utf8::next(probe, end);
         if (code_point > 0x7F) {
-          if (sd.DetectScript(code_point, script_temp) > 0) {
+          if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
             if (script_temp != "en") {
               script_count++;
               if (script_count > 9) {
@@ -326,9 +321,6 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
 #ifdef DEBUG
   std::cout << "num words: " << num_words << std::endl;
 #endif
-
-  // deinitialize script detector
-  sd.Clear();
 
   return stems.size();
 }

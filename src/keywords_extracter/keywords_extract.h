@@ -12,7 +12,6 @@
 #include <map>
 #include <fstream>
 #include <iostream>
-#include "script_detector.h"
 #include "dictionary.h"
 
 namespace inagist_trends {
@@ -74,7 +73,6 @@ class KeywordsExtract {
   inagist_utils::Dictionary m_dictionary;
   inagist_utils::Dictionary m_stopwords_dictionary;
   inagist_utils::Dictionary m_unsafe_dictionary;
-  inagist_classifiers::ScriptDetector m_script_detector;
 
   DISALLOW_COPY_AND_ASSIGN(KeywordsExtract);
   bool IsPunct(char *ptr, char *prev=NULL, char *next=NULL);

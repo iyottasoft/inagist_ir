@@ -5,7 +5,7 @@
 #endif
 #include "test_utfcpp.h"
 #include "utf8.h"
-#include "script_detector.h"
+#include "script_detector_utils.h"
 #include "twitter_api.h"
 #include "twitter_searcher.h"
 
@@ -22,7 +22,6 @@ int test_detect_script(char* text, int text_len, char* script_buffer, int script
   char *ptr = text;
   char *end = strchr(text, '\0');
   int code_point = 0;
-  inagist_classifiers::ScriptDetector sd;
   std::string script = "uu";
   std::string script_temp = "uu";
   int script_count = 0;
@@ -31,7 +30,7 @@ int test_detect_script(char* text, int text_len, char* script_buffer, int script
     try {
       code_point = utf8::next(ptr, end);
       if (code_point > 0x7F) {
-        if (sd.DetectScript(code_point, script_temp) > 0) {
+        if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
           if (script_temp != "en") {
             if (script_temp != script) {
               script_count = 0;
@@ -54,7 +53,6 @@ int test_detect_script(char* text, int text_len, char* script_buffer, int script
       return 0;
     }
   }
-  sd.Clear();
 
   if (script_count == 0 && english_count > 10) {
     script = "en";

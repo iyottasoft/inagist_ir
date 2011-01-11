@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-#include "script_detector.h"
+#include "script_detector_utils.h"
 #include "string_utils.h"
 #include "utf8.h"
 
@@ -183,9 +183,6 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
     current_word_starts_num = false;
   }
 
-  // initialize script detecter. this clears its internal hash
-  inagist_classifiers::ScriptDetector sd;
-  sd.Init();
   probe = ptr + 1;
 
   while (ptr && probe && *ptr != '\n' && *ptr != '\0') {
@@ -264,7 +261,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
       try {
         code_point = utf8::next(probe, end);
         if (code_point > 0x7F) {
-          if (sd.DetectScript(code_point, script_temp) > 0) {
+          if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
             if (script_temp != "en") {
               word_has_all_latin = false;
               if (script_temp != script) {
@@ -296,9 +293,6 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
 #ifdef DEBUG
   std::cout << "num words: " << num_words << std::endl;
 #endif
-
-  // deinitialize script detector
-  sd.Clear();
 
   return features_map.size();
 }

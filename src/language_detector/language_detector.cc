@@ -3,6 +3,8 @@
 #include <fstream>
 #include "twitter_searcher.h"
 
+//#define DEBUG 2
+
 namespace inagist_classifiers {
 
 LanguageDetector::LanguageDetector() {
@@ -28,26 +30,41 @@ int LanguageDetector::DetectLanguage(const std::string& text, const unsigned int
                                      std::string& guess_lang_output) {
   int num_ngrams = 0;
   Corpus test_corpus;
-  //if ((num_ngrams = m_ngrams_generator.GetNgrams(text.c_str(), text_len, test_corpus)) < 0) {
   if ((num_ngrams = m_ngrams_generator.GetNgramsFromTweet(text, test_corpus)) < 0) {
     std::cerr << "ERROR: could not find ngrams" << std::endl;
     return -1;
   }
 
   if (num_ngrams == 0) {
-    std::cout << "no ngrams found\n";
+#ifdef DEBUG
+    if (DEBUG > 0)
+      std::cout << "no ngrams found for" << text << std::endl;
+#endif
+    guess_lang_output.assign("RR");
     return 0;
   }
+
+#ifdef DEBUG
+  if (DEBUG > 1)
+    std::cout << "now guessing class for " << text << std::endl;
+#endif
 
   if (m_naive_bayes_classifier.GuessClass(m_corpus_manager.m_corpus_map,
                                           test_corpus,
                                           guess_lang_output) < 0) {
     std::cout << "ERROR: naive bayes classifiers could not guess the language\n";
+    test_corpus.clear();
+    return -1;
   }
+
+#ifdef DEBUG
+  if (DEBUG > 1)
+    std::cout << "guess_lang: " << guess_lang_output << std::endl;
+#endif
 
   test_corpus.clear();
 
-  return 0;
+  return 1;
 }
 
 int LanguageDetector::GetNgramFrequencies(const std::string& input_file_name,

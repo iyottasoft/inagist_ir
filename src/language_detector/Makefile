@@ -1,6 +1,6 @@
 PROJECT = languagedetector
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated #-DDEBUG
+CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../utils -I../curl_request_maker -I../twitter_api -I../script_detector -I../ngrams_generator -I../classifier
@@ -25,6 +25,7 @@ all: ${LIB} ${BINS} language_detector_erl_nif
 clean:
 	@echo "cleaning libraries ..."
 	@rm *.o ${BINS} ${LIB}
+	@rm langd.beam
 	@echo "done!"
 
 ${LIB}: ${OBJS}
@@ -55,7 +56,7 @@ language_detector_erl_nif:
 	@echo "creating erlang library file ..."
 	@gcc -fPIC -shared -o ${ERL_LIB} language_detector_erl_nif.c ${INCLUDE_DIR} -L ${LIB_DIR} ${LIBS} ${ERL_INCLUDE_DIR} ${ERL_LIBS} -L/usr/local/lib/erlang/lib/erl_interface-3.6.5/lib
 	@echo ${ERL_LIB}
-	@echo "compiling language_detector.erl"
-	@erlc language_detector.erl
+	@echo "compiling langd.erl"
+	@erlc langd.erl
 
 # DO NOT DELETE THIS LINE

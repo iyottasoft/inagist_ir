@@ -1,0 +1,39 @@
+-module(langd).
+
+-export([init/0, init_c/1, detect_lang/1, test_twitter_timeline/0, test_twitter_timeline/1, test_init/0, test/0, test/1, stress_test/1]).
+
+init() ->
+  erlang:load_nif("../../lib/liblangdetect_erl", 0).
+
+init_c(_config_file) ->
+  "NIF library not loaded for init_c".
+
+detect_lang(_tweet) ->
+  "NIF library not loaded for detect_lang".
+
+test_twitter_timeline() ->
+  "NIF library not loaded for test_twitter_timeline".
+
+test_twitter_timeline(_user) ->
+  "NIF library not loaded for test_twitter_timeline for single user".
+
+test_init() ->
+  init_c(<<"../../configs/language_detection.config">>).
+
+test() ->
+  Test_list = test_twitter_timeline(),
+  case is_list(Test_list) of
+    false -> false;
+    true -> [io:format("~p~n",[X]) || X <- Test_list]
+  end.
+
+test(_user) ->
+  Test_list = test_twitter_timeline(_user),
+  case is_list(Test_list) of
+    false -> false;
+    true -> [io:format("~p~n",[X]) || X <- Test_list]
+  end.
+
+stress_test([N]) ->
+  Number = list_to_integer(atom_to_list(N)),
+  lists:foreach(fun(X) -> timer:sleep(500), test(), io:format("~p requests done~n",[X]) end, lists:seq(1,Number)).
