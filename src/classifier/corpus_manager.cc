@@ -93,6 +93,21 @@ int CorpusManager::LoadCorpus(const std::string corpus_file_name, Corpus& corpus
   return 0;
 }
 
+int CorpusManager::LoadCorpusMap(std::map<std::string, std::string> corpus_class_files_map) {
+
+  std::map<std::string, std::string>::iterator cfile_iter;
+  Corpus corpus;
+  for (cfile_iter = corpus_class_files_map.begin(); cfile_iter != corpus_class_files_map.end(); cfile_iter++) {
+    if (LoadCorpus((*cfile_iter).second, corpus) < 0) {
+      std::cout << "ERROR: could not load corpus from file " << (*cfile_iter).second << std::endl;
+    } else {
+      m_corpus_map.insert(std::pair<std::string, Corpus> ((*cfile_iter).first, corpus));
+    }
+  }
+
+  return 0;
+}
+
 int CorpusManager::LoadCorpusMap(const std::string config_file_name) {
 
   std::ifstream ifs(config_file_name.c_str());

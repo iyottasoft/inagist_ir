@@ -18,9 +18,59 @@ int LanguageDetector::Init(std::string config_file_name) {
 
   // this config file name should have corpus files
   // and the strings with which the corpus contents can be uniquely identified
-  if (m_corpus_manager.LoadCorpusMap(config_file_name) < 0) {
-    std::cerr << "ERROR: could not load Corpus Map\n";
+
+  std::ifstream ifs(config_file_name.c_str());
+  if (!ifs.is_open()) {
+    std::cout << "ERROR: could not open config file " << config_file_name << std::endl;
     return -1;
+  } else {
+    std::string line;
+    std::string key;
+    std::string value;
+    std::string::size_type loc;
+    int line_count = 0;
+    //std::string handles_file_name;
+    //std::string tweets_file_name;
+    std::string corpus_file_name;
+    std::string corpus_class_name;
+    std::map<std::string, std::string> corpus_class_file_map;
+    while (getline(ifs, line)) {
+      line_count++;
+      // std::cout << line << std::endl;
+      loc = line.find("=", 0);
+      if (loc == std::string::npos) {
+        std::cout << "ERROR: invalid config file entry\n";
+        break;
+      }
+      key.assign(line.c_str(), loc);
+      value.assign(line.c_str(), loc+1, (line.length()-loc-1));
+      //std::cout << key << std::endl;
+      //std::cout << value << std::endl;
+      if (key.compare(0, 4, "lang") == 0) {
+        corpus_class_name = value;
+      }
+      //else if (key.compare(0, 7, "handles") == 0) {
+        //handles_file_name = value;
+      //}
+      else if (key.compare(0, 6, "corpus") == 0) {
+        corpus_file_name = value;
+      }
+      //else if (key.compare(0, 6, "tweets") == 0) {
+      //  tweets_file_name = value;
+      //}
+      if (line_count == 4) {
+        //std::cout << "loading " << class_name << " with " << corpus_file_name << std::endl;
+        corpus_class_file_map[corpus_class_name] = corpus_file_name;
+        line_count = 0;
+      }
+    }
+    ifs.close();
+    if (!corpus_class_file_map.empty()) {
+      if (m_corpus_manager.LoadCorpusMap(corpus_class_file_map) < 0) {
+        std::cerr << "ERROR: could not load Corpus Map\n";
+        return -1;
+      }
+    }
   }
 
   return 0;

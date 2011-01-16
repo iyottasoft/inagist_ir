@@ -179,6 +179,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
 
   if (isdigit(*ptr)) {
     current_word_starts_num = true; 
+    word_has_all_latin = false;
   } else {
     current_word_starts_num = false;
   }
@@ -280,12 +281,15 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
         } else {
           if (code_point > 0x40 && code_point < 0x7B)
             english_count++;
+          else
+            word_has_all_latin = false;
         }
       } catch (...) {
 #ifdef DEBUG
         std::cout << "Exception: " << code_point << " " << probe << std::endl;
 #endif
-        probe++;
+        features_map.clear();
+        return -1;
       }
     //}
   }

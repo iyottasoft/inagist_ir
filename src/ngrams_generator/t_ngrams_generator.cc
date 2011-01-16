@@ -15,6 +15,7 @@ int main(int argc, char* argv[]) {
   inagist_classifiers::NgramsGenerator ng;
   std::map<std::string, int> features_map;
   std::map<std::string, int>::iterator map_iter;
+  std::string text;
 
   int test_type = 0;
   if (argc >= 2) {
@@ -22,7 +23,6 @@ int main(int argc, char* argv[]) {
   }
 
   if (0 == test_type) {
-    std::string text;
     while (getline(std::cin, text)) {
       if (ng.GetNgrams(text.c_str(), text.length(), features_map) <= 0) {
         std::cout << "ERROR: could not find ngrams" << std::endl;
@@ -47,7 +47,21 @@ int main(int argc, char* argv[]) {
   if (2 == test_type) {
     std::set<std::string> tweets;
     if (argc == 3) {
-      std::cout << "This feature is not implemented yet\n";
+      std::string str = std::string(argv[2]);
+      if (str.compare("-i") == 0) {
+        while (getline(std::cin, text)) {
+          if (ng.GetNgramsFromTweet(text, features_map) <= 0) {
+            std::cout << "ERROR: could not find ngrams" << std::endl;
+          } else {
+            for (map_iter = features_map.begin(); map_iter != features_map.end(); map_iter++)
+              std::cout << (*map_iter).first << " " << (*map_iter).second << std::endl;
+          }
+          features_map.clear();
+        }
+        return 0;
+      } else {
+        std::cout << "This feature is not implemented yet\n";
+      }
     } else {
       inagist_api::TwitterAPI tapi;
       if (tapi.GetPublicTimeLine(tweets) < 0) {

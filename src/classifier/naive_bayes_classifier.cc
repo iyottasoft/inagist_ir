@@ -42,6 +42,7 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
 
   double max_freq = 0;
   unsigned int max_index = 0;
+  unsigned int max_duplicate_count = 0;
   for (unsigned int j=0; j<i; j++) {
     freqs[j] = exp(freqs[j]);
 #ifdef NBC_DEBUG
@@ -49,9 +50,12 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
       std::cout << "freqs: " << freqs[j] << std::endl;
     }
 #endif
-    if (max_freq < freqs[j]) {
+    if (max_freq == freqs[j]) {
+      max_duplicate_count++;
+    } else if (max_freq < freqs[j]) {
       max_freq = freqs[j];
       max_index = j;
+      max_duplicate_count = 0;
     }
   }
 
@@ -60,10 +64,14 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
     std::cout << "max freq: " << max_freq << std::endl;
     std::cout << "max index: " << max_index << std::endl;
     std::cout << "guess_lang_output: " << langs[max_index] << std::endl;
+    std::cout << "max duplicate count: " << max_duplicate_count << std::endl;
   }
 #endif
 
-  guess_lang_output = langs[max_index];
+  if (0 == max_duplicate_count)
+    guess_lang_output = langs[max_index];
+  else
+    guess_lang_output = "xx";
 
   return 0;
 }
