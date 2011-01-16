@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cmath>
 
-#define NBC_DEBUG 3
+//#define NBC_DEBUG 3
 
 namespace inagist_classifiers {
 

@@ -180,40 +180,40 @@ int LanguageDetector::GenerateLangModelFromTweets(const std::string& twitter_han
 
   std::set<std::string> tweets;
   inagist_api::TwitterSearcher twitter_searcher;
-  std::ofstream ofs(output_tweets_file_name.c_str());
-  if (!ofs) {
-    std::cout << "ERROR: could not open tweets output file " << output_tweets_file_name << std::endl;
-    handles.clear();
-    return -1;
-  }
 
   std::set<std::string>::iterator handle_iter;
   unsigned int num_tweets = 0;
+  unsigned int num_ngrams = 0;
+  unsigned int ngrams_temp = 0;
+  Corpus lang_corpus;
   for (handle_iter = handles.begin(); handle_iter != handles.end(); handle_iter++) {
     if (twitter_searcher.GetTweetsFromUser(*handle_iter, tweets) > 0) {
       num_tweets += tweets.size();
       std::set<std::string>::iterator set_iter;
       for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
-        ofs << *set_iter << std::endl;
+        if ((ngrams_temp = m_ngrams_generator.GetNgramsFromTweet(*set_iter, lang_corpus)) < 0) {
+          std::cerr << "ERROR: could not find ngrams from tweet: " << *set_iter << std::endl;
+        } else {
+          num_ngrams += ngrams_temp;
+        }
       }
       tweets.clear();
     }
   }
-  ofs.close();
   handles.clear();
 
   if (num_tweets == 0) {
     std::cout << "No tweets found for handles in file " << twitter_handles_file_name << std::endl;
     return 0;
+  } else {
+    if (m_corpus_manager.WriteCorpusToFile(lang_corpus, output_file_name) < 0) {
+      std::cout << "ERROR: could not write to features to output file " << output_file_name << std::endl;
+    }
   }
 
-  int ret_value = 0;
-  if ((ret_value = GenerateLangModel(output_tweets_file_name, output_file_name)) < 0) {
-    std::cout << "ERROR: could not generate lang model for tweets in file " << output_tweets_file_name << std::endl;
-    return -1;
-  }
+  lang_corpus.clear();
 
-  return ret_value;
+  return num_ngrams;
 }
 
 int LanguageDetector::Clear() {
