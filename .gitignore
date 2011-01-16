@@ -13,5 +13,4 @@ todo.txt
 data/static_data/output.txt
 data/lang/test/[^.]*
 data/lang/tweetsource/corpus/[^.]*
-data/lang/tweetsource/handles/[^.]*
 data/lang/tweetsource/tweets/[^.]*

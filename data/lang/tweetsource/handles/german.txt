@@ -1,0 +1,7 @@
+spiegel_alles
+SPIEGELzwischen
+SPIEGEL_Rezens
+SPIEGEL_Sport
+SPIEGEL_Politik
+REUTERS_DE
+dw_german
