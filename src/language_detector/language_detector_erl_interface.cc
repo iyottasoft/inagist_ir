@@ -4,6 +4,7 @@
 #include <set>
 #include <cstring>
 #include <cstdlib>
+#include <iostream>
 #endif
 
 #include "language_detector.h"
@@ -36,7 +37,24 @@ int SubmitTweet(const char* tweet, const unsigned int tweet_len,
   std::cout << tweet << std::endl;
 #endif
   std::string lang;
-  return g_language_detector.DetectLanguage(std::string(tweet), tweet_len, lang); 
+  int ret_value = 0;
+  if ((ret_value = g_language_detector.DetectLanguage(std::string(tweet), tweet_len, lang)) < 0) {
+    strcpy(lang_buffer, "ERR");
+    return -1;
+  }
+
+  unsigned int len = lang.length();
+  if (len > 1) {
+    strcpy(lang_buffer, lang.c_str());
+  } else if (len < 1) {
+    strcpy(lang_buffer, "ERR");
+    return -1;
+  } else if (len == 0) {
+    strcpy(lang_buffer, "XX");
+    return 0;
+  }
+
+  return ret_value;
 }
 
 #ifdef _CPLUSPLUS

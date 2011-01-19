@@ -3,7 +3,7 @@
 #include <fstream>
 #include "twitter_searcher.h"
 
-//#define DEBUG 2
+#define DEBUG 1
 
 namespace inagist_classifiers {
 
@@ -81,14 +81,14 @@ int LanguageDetector::DetectLanguage(const std::string& text, const unsigned int
   int num_ngrams = 0;
   Corpus test_corpus;
   if ((num_ngrams = m_ngrams_generator.GetNgramsFromTweet(text, test_corpus)) < 0) {
-    std::cerr << "ERROR: could not find ngrams" << std::endl;
+    std::cerr << "ERROR: m_ngrams_generator returned -1" << std::endl;
     return -1;
   }
 
   if (num_ngrams == 0) {
 #ifdef DEBUG
     if (DEBUG > 0)
-      std::cout << "no ngrams found for" << text << std::endl;
+      std::cout << "no ngrams found for " << text << std::endl;
 #endif
     guess_lang_output.assign("RR");
     return 0;
@@ -129,7 +129,7 @@ int LanguageDetector::GetNgramFrequencies(const std::string& input_file_name,
   std::string line;
   int num_docs = 0;
   while (getline(ifs, line)) {
-    if (m_ngrams_generator.GetNgrams(line.c_str(), line.length(), corpus) <= 0) {
+    if (m_ngrams_generator.GetNgrams((unsigned char*) line.c_str(), line.length(), corpus) <= 0) {
       num_docs++;
     }
   }

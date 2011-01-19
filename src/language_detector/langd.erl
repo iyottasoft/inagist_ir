@@ -21,17 +21,21 @@ test_init() ->
   init_c(<<"../../configs/language_detection.config">>).
 
 test() ->
-  Test_list = test_twitter_timeline(),
-  case is_list(Test_list) of
+  Tuple2_list = test_twitter_timeline(),
+  case is_atom(Tuple2_list) of
     false -> false;
-    true -> [io:format("~p~n",[X]) || X <- Test_list]
+    true -> io:format("error")
+  end,
+  case is_list(Tuple2_list) of
+    false -> false;
+    true -> [io:format("~p~n",[X]) || X <- Tuple2_list]
   end.
 
 test(_user) ->
-  Test_list = test_twitter_timeline(_user),
-  case is_list(Test_list) of
+  Tuple2_list = test_twitter_timeline(_user),
+  case is_list(Tuple2_list) of
     false -> false;
-    true -> [io:format("~p~n",[X]) || X <- Test_list]
+    true -> [io:format("~p~n",[X]) || X <- Tuple2_list]
   end.
 
 stress_test([N]) ->

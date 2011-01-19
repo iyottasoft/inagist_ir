@@ -24,7 +24,7 @@ all: ${LIB} ${BINS} language_detector_erl_nif
 
 clean:
 	@echo "cleaning libraries ..."
-	@rm *.o ${BINS} ${LIB}
+	@rm *.o ${BINS} ${LIB} ${ERL_LIB}
 	@rm langd.beam
 	@echo "done!"
 

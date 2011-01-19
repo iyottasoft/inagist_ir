@@ -18,15 +18,15 @@ class NgramsGenerator {
  public:
   NgramsGenerator();
   ~NgramsGenerator();
-  int GetNgrams(const char* text, const unsigned int& text_len, std::map<std::string, int>& features_map);
+  int GetNgrams(const unsigned char* text, const unsigned int& text_len, std::map<std::string, int>& features_map);
   int GetNgramsFromTweet(const std::string& tweet,
                          std::map<std::string, int>& features_map);
   int GetNgramsFromFile(const std::string& input_file_name,
                         std::map<std::string, int>& features_map);
 
  private:
-  char m_buffer[MAX_STEM_TEXT_LEN];
-  int PositionPointer(char*& prev, char*& current, char*& next);
+  unsigned char m_buffer[MAX_STEM_TEXT_LEN];
+  int PositionPointer(unsigned char*& prev, unsigned char*& current, unsigned char*& next);
   DISALLOW_COPY_AND_ASSIGN(NgramsGenerator); 
 };
 

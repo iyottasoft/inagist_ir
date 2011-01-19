@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
 
   if (0 == test_type) {
     while (getline(std::cin, text)) {
-      if (ng.GetNgrams(text.c_str(), text.length(), features_map) <= 0) {
+      if (ng.GetNgrams((unsigned char*) text.c_str(), text.length(), features_map) <= 0) {
         std::cout << "ERROR: could not find ngrams" << std::endl;
       } else {
         for (map_iter = features_map.begin(); map_iter != features_map.end(); map_iter++)
