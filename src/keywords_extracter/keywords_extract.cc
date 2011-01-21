@@ -252,17 +252,37 @@ int KeywordsExtract::GetKeywords(char* str,
 #endif
 
 #ifdef KEYPHRASE_ENABLED
+#ifdef HASHTAGS_ENABLED
 int KeywordsExtract::GetKeywords(char* str, 
                                  std::string& safe_status,
                                  std::string& script,
                                  std::set<std::string>& keywords_set,
+                                 std::set<std::string>& hashtags_set,
                                  std::set<std::string>& keyphrases_set) {
 #else
 int KeywordsExtract::GetKeywords(char* str, 
                                  std::string& safe_status,
                                  std::string& script,
-                                 std::set<std::string>& keywords_set) {
+                                 std::set<std::string>& keywords_set,
+                                 std::set<std::string>& keyphrases_set) {
+  std::set<std::string> hashtags_set;
+#endif
+#else
+#ifdef HASHTAGS_ENABLED
+int KeywordsExtract::GetKeywords(char* str, 
+                                 std::string& safe_status,
+                                 std::string& script,
+                                 std::set<std::string>& keywords_set,
+                                 std::set<std::string>& hashtags_set) {
   std::set<std::string> keyphrases_set;
+#else
+int KeywordsExtract::GetKeywords(char* str, 
+                                 std::string& safe_status,
+                                 std::string& script,
+                                 std::set<std::string>& keywords_set) {
+  std::set<std::string> hashtags_set;
+  std::set<std::string> keyphrases_set;
+#endif
 #endif
 
   unsigned int buffer_len = strlen(str);
@@ -283,11 +303,16 @@ int KeywordsExtract::GetKeywords(char* str,
   unsigned char keywords_buffer[MAX_DEBUG_BUFFER_LEN];
   memset(keywords_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
   unsigned int keywords_buffer_len = MAX_DEBUG_BUFFER_LEN;
+  unsigned char hashtags_buffer[MAX_DEBUG_BUFFER_LEN];
+  memset(hashtags_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
+  unsigned int hashtags_buffer_len = MAX_DEBUG_BUFFER_LEN;
   unsigned char keyphrases_buffer[MAX_DEBUG_BUFFER_LEN];
   memset(keyphrases_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
   unsigned int keyphrases_buffer_len = MAX_DEBUG_BUFFER_LEN;
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
+  unsigned int hashtags_len = 0;
+  unsigned int hashtags_count = 0;
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
 
@@ -298,11 +323,14 @@ int KeywordsExtract::GetKeywords(char* str,
                   script_buffer, script_buffer_len,
                   keywords_buffer, keywords_buffer_len,
                   keywords_len, keywords_count,
+                  hashtags_buffer, hashtags_buffer_len,
+                  hashtags_len, hashtags_count,
                   keyphrases_buffer, keyphrases_buffer_len,
                   keyphrases_len, keyphrases_count)) < 0) {
     std::cout << "ERROR: could not get keywords\n";
     buffer[0] = '\0';
     keywords_buffer[0] = '\0';
+    hashtags_buffer[0] = '\0';
     keyphrases_buffer[0] = '\0';
     return -1;
   }
@@ -322,6 +350,7 @@ int KeywordsExtract::GetKeywords(char* str,
   }
 
   keywords_buffer[0] = '\0';
+  hashtags_buffer[0] = '\0';
   keyphrases_buffer[0] = '\0';
 
   return count;
@@ -333,6 +362,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
                                  char* script_buffer, const unsigned int& script_buffer_len,
                                  unsigned char* keywords_buffer, const unsigned int& keywords_buffer_len,
                                  unsigned int& keywords_len, unsigned int& keywords_count,
+                                 unsigned char* hashtags_buffer, const unsigned int& hashtags_buffer_len,
+                                 unsigned int& hashtags_len, unsigned int& hashtags_count,
                                  unsigned char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
                                  unsigned int& keyphrases_len, unsigned int& keyphrases_count) {
 
@@ -342,11 +373,14 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   *keywords_buffer = '\0';
   keywords_len = 0;
   keywords_count = 0;
+  *hashtags_buffer = '\0';
+  hashtags_len = 0;
+  hashtags_count = 0;
   *keyphrases_buffer = '\0';
   keyphrases_len = 0;
   keyphrases_count = 0;
 
-  if (!buffer || buffer_len < 1 || !script_buffer || !keywords_buffer || !keyphrases_buffer) {
+  if (!buffer || buffer_len < 1 || !script_buffer || !keywords_buffer || !hashtags_buffer || !keyphrases_buffer) {
     std::cout << "ERROR: invalid buffer(s) at input\n";
     return -1;
   }
@@ -1314,6 +1348,18 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         caps_entity_start = NULL;
         caps_entity_end = NULL;
       }
+
+      // hash tags
+      if ('#' == *current_word_start && current_word_len >= 2) {
+        if ((hashtags_len + current_word_len + 1) < hashtags_buffer_len) {
+          strncpy((char *) hashtags_buffer + hashtags_len, (char *) current_word_start, current_word_len);
+          hashtags_len += current_word_len;
+          strcpy((char *) hashtags_buffer + hashtags_len, "|");
+          hashtags_len += 1;
+          hashtags_count++;
+        }
+      }
+
 #ifndef I18N_ENABLED
       }
 #endif

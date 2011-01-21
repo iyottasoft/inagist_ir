@@ -55,6 +55,10 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   keywords[0] = '\0';
   int keywords_len = 0;
   int keywords_count = 0;
+  char hashtags[MAX_BUFFER_LEN];
+  hashtags[0] = '\0';
+  int hashtags_len = 0;
+  int hashtags_count = 0;
   char keyphrases[MAX_BUFFER_LEN];
   keyphrases[0] = '\0';
   int keyphrases_len = 0;
@@ -66,6 +70,8 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
                   (char *) script, 4,
                   (char *) keywords, MAX_BUFFER_LEN,
                   &keywords_len, &keywords_count,
+                  (char *) hashtags, MAX_BUFFER_LEN,
+                  &hashtags_len, &hashtags_count,
                   (char *) keyphrases, MAX_BUFFER_LEN,
                   &keyphrases_len, &keyphrases_count)) < 0) {
 #ifndef DEBUG
@@ -79,6 +85,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   ErlNifBinary safe_status_bin;
   ErlNifBinary script_bin;
   ErlNifBinary keywords_bin;
+  ErlNifBinary hashtags_bin;
   ErlNifBinary keyphrases_bin;
   ERL_NIF_TERM safe_status_term; 
   ERL_NIF_TERM lang_term; 
@@ -149,6 +156,37 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     }
   }
 
+  start = hashtags;
+  end = strstr(start, "|");
+  len = 0;
+
+  ERL_NIF_TERM hashtags_list = enif_make_list(env, 0);
+  if (hashtags_count > 0) {
+    while (start && end && *end != '\0') {
+      end = strstr(start, "|");
+      if (!end)
+        break;
+      *end = '\0';
+      len = end - start;
+
+      ret_val = enif_alloc_binary(env, len, &hashtags_bin);
+      if (ret_val < 0) {
+#ifndef DEBUG
+        return enif_make_atom(env, "error");
+#else
+        return enif_make_atom(env, "error_hashtags_bin_alloc");
+#endif
+      }
+      for (i=0; i<len; i++) {
+        hashtags_bin.data[i] = *(start + i);
+      }
+      hashtags_list = enif_make_list_cell(env, enif_make_binary(env, &hashtags_bin), hashtags_list);
+
+      *end = '|';
+      start = end + 1;
+    }
+  }
+
   start = keyphrases;
   end = strstr(start, "|");
   len = 0;
@@ -180,7 +218,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     }
   }
 
-  return enif_make_tuple4(env, safe_status_term, lang_term, keywords_list, keyphrases_list);
+  return enif_make_tuple5(env, safe_status_term, lang_term, keywords_list, hashtags_list, keyphrases_list);
 }
 
 ERL_NIF_TERM nif_gettrends(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
@@ -329,11 +367,12 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   unsigned int i = 0;
   unsigned int tweet_len = 0;
   ERL_NIF_TERM arg_array[1]; 
-  ERL_NIF_TERM tuple4;
-  ERL_NIF_TERM tuple4_list = enif_make_list(env, 0);
+  ERL_NIF_TERM tuple5;
+  ERL_NIF_TERM tuple5_list = enif_make_list(env, 0);
   unsigned int error_count = 0;
 
   while (tweet_start && tweet_end && *tweet_end != '\0') {
+
     tweet_end = strstr(tweet_start, "|");
     if (!tweet_end)
       break;
@@ -361,11 +400,11 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     }
 
     arg_array[0] = enif_make_binary(env, &tweet);
-    tuple4 = nif_getkeywords(env, 1, arg_array);
-    if (enif_is_atom(env, tuple4)) {
+    tuple5 = nif_getkeywords(env, 1, arg_array);
+    if (enif_is_atom(env, tuple5)) {
       error_count++;
     } else {
-      tuple4_list = enif_make_list_cell(env, tuple4, tuple4_list);
+      tuple5_list = enif_make_list_cell(env, tuple5, tuple5_list);
     }
     *tweet_end = '|';
     tweet_start = tweet_end + 1;
@@ -373,10 +412,10 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   tweet_start = NULL;
   tweet_end = NULL;
 
-  return tuple4_list;
+  return tuple5_list;
 
   ERL_NIF_TERM tuple2_list = enif_make_list(env, 0);
-  enif_make_list_cell(env, tuple2_list, tuple4_list);
+  enif_make_list_cell(env, tuple2_list, tuple5_list);
   char error_str[10];
   sprintf(error_str, "%d", error_count);
   ERL_NIF_TERM error_term = enif_make_atom(env, error_str);

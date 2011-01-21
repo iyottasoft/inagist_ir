@@ -54,6 +54,8 @@ class KeywordsExtract {
                   char* script_buffer, const unsigned int& script_buffer_len,
                   unsigned char* keywords_buffer, const unsigned int& keywords_buffer_len,
                   unsigned int& keywords_len, unsigned int& keywords_count,
+                  unsigned char* hashtags_buffer, const unsigned int& hashtags_buffer_len,
+                  unsigned int& hashtags_len, unsigned int& hashtags_count,
                   unsigned char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
                   unsigned int& keyphrases_len, unsigned int& keyphrases_count);
 

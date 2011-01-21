@@ -41,6 +41,8 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                 char* script_buffer, const unsigned int script_buffer_len,
                 unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
                 unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr,
+                unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
+                unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
                 unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
                 unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr) {
 
@@ -60,6 +62,9 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
     strcpy((char *) keywords_buffer, "error_submit_tweet_invalid_len");
     *keywords_len_ptr = strlen((char *) keywords_buffer);
     *keywords_count_ptr = 1;
+    strcpy((char *) hashtags_buffer, "error_submit_tweet_invalid_len");
+    *hashtags_len_ptr = strlen((char *) hashtags_buffer);
+    *hashtags_count_ptr = 1;
     strcpy((char *) keyphrases_buffer, "error_submit_tweet_invalid_len");
     *keyphrases_len_ptr = strlen((char *) keyphrases_buffer);
     *keyphrases_count_ptr = 1;
@@ -71,6 +76,8 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
   int ret_value = 0;
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
+  unsigned int hashtags_len = 0;
+  unsigned int hashtags_count = 0;
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
   if ((ret_value = g_keywords_extract.GetKeywords(buffer, tweet_len,
@@ -78,6 +85,8 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                                                   script_buffer, script_buffer_len,
                                                   keywords_buffer, keywords_buffer_len,
                                                   keywords_len, keywords_count,
+                                                  hashtags_buffer, hashtags_buffer_len,
+                                                  hashtags_len, hashtags_count,
                                                   keyphrases_buffer, keyphrases_buffer_len,
                                                   keyphrases_len, keyphrases_count)) <= 0) {
     if (ret_value < 0 ) {
@@ -94,6 +103,9 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
     *keywords_buffer = '\0';
     *keywords_len_ptr = 0;
     *keywords_count_ptr = 0;
+    *hashtags_buffer = '\0';
+    *hashtags_len_ptr = 0;
+    *hashtags_count_ptr = 0;
     *keyphrases_buffer = '\0';
     *keyphrases_len_ptr = 0;
     *keyphrases_count_ptr = 0;
@@ -101,6 +113,8 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
   buffer[0] = '\0';
   *keywords_len_ptr = keywords_len;
   *keywords_count_ptr = keywords_count;
+  *hashtags_len_ptr = hashtags_len;
+  *hashtags_count_ptr = hashtags_count;
   *keyphrases_len_ptr = keyphrases_len;
   *keyphrases_count_ptr = keyphrases_count;
 

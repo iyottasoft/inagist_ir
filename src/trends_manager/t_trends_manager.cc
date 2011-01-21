@@ -12,6 +12,8 @@ extern int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                     char* script_buffer, const unsigned int script_buffer_len,
                     unsigned char* keywords, const unsigned int keywords_buffer_len,
                     unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr,
+                    unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
+                    unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
                     unsigned char* keyphrases, const unsigned int keyphrases_buffer_len,
                     unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr);
 extern int GetTrends();
@@ -50,6 +52,10 @@ int test_trends_manager(std::set<std::string> tweets) {
   memset(keywords, 0, T_MAX_BUFFER_LEN);
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
+  unsigned char hashtags[T_MAX_BUFFER_LEN];
+  memset(hashtags, 0, T_MAX_BUFFER_LEN);
+  unsigned int hashtags_len = 0;
+  unsigned int hashtags_count = 0;
   unsigned char keyphrases[T_MAX_BUFFER_LEN];
   memset(keyphrases, 0, T_MAX_BUFFER_LEN);
   unsigned int keyphrases_len = 0;
@@ -67,22 +73,26 @@ int test_trends_manager(std::set<std::string> tweets) {
                 script, 4,
                 (unsigned char*) keywords, T_MAX_BUFFER_LEN,
                 &keywords_len, &keywords_count,
+                (unsigned char*) hashtags, T_MAX_BUFFER_LEN,
+                &hashtags_len, &hashtags_count,
                 (unsigned char*) keyphrases, T_MAX_BUFFER_LEN,
                 &keyphrases_len, &keyphrases_count);
+
     std::cout << "safe status: " << safe_status << std::endl \
               << "script: " << script << std::endl \
               << "keywords: " << keywords << std::endl \
+              << "hashtags: " << hashtags << std::endl \
               << "keyphrases: " << keyphrases << std::endl;
     memset(buffer, 0, T_MAX_BUFFER_LEN);
     memset(script, 0, 4);
     memset(keywords, 0, T_MAX_BUFFER_LEN);
+    memset(hashtags, 0, T_MAX_BUFFER_LEN);
     memset(keyphrases, 0, T_MAX_BUFFER_LEN);
-    //keywords[0] = '\0';
-    //keyphrases[0] = '\0';
   }
   tweets.clear();
   memset(script, 0, 4);
   memset(keywords, 0, T_MAX_BUFFER_LEN);
+  memset(hashtags, 0, T_MAX_BUFFER_LEN);
   memset(keyphrases, 0, T_MAX_BUFFER_LEN);
 
   return 0;
