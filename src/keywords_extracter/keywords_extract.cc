@@ -1611,18 +1611,30 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
     keywords_len = 0;
   }
 
-  if (script_count == 0 && english_count > 10) {
-    script = "en";
-  } else if (script_count > 0 && (script_count < 11 || script_count < english_count)) {
-    script = "uu";
-  }
-  strcpy(script_buffer, script.c_str());
-
   // safe status
   if (text_has_unsafe_words)
     strcpy(safe_status_buffer, "unsafe");
   else
     strcpy(safe_status_buffer, "safe");
+
+  bool detect_lang = false;
+  if (script_count == 0 && english_count > 10) {
+    script = "en";
+    detect_lang = true;
+  } else if (script_count > 0 && (script_count < 11 || script_count < english_count)) {
+    script = "uu";
+    detect_lang = true;
+  }
+
+  if (detect_lang) {
+    std::string lang;
+    if (m_language_detector.DetectLanguage(std::string((char *) buffer), buffer_len, lang) < 0) {
+      std::cout << "ERROR: language detection failed\n";
+    }
+    strcpy(script_buffer, lang.c_str());
+  } else {
+    strcpy(script_buffer, script.c_str());
+  }
 
 #ifdef DEBUG
   if (DEBUG > 2) {

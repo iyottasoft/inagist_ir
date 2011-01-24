@@ -29,8 +29,13 @@ static int my_enif_get_string(ErlNifEnv *env, ERL_NIF_TERM list, char *buf) {
 
 ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
-  if (argc != 1)
+  if (argc != 1) {
+#ifndef DEBUG
     return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_invalid_argc");
+#endif
+  }
 
   ErlNifBinary tweet;
   char tweet_str[MAX_BUFFER_LEN];
@@ -44,7 +49,11 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     enif_release_binary(env, &tweet);
   } else {
     enif_release_binary(env, &tweet);
+#ifndef DEBUG
     return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_invalid_tweet_len");
+#endif
   }
 
   char safe_status[10];

@@ -157,6 +157,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
   bool is_ignore_word = false;
   bool is_punct = false;
   bool current_word_starts_num = false;
+  bool current_word_all_caps = true;
   int num_words = 0;
 
   inagist_utils::StringUtils utils;
@@ -230,13 +231,24 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
 #endif
 
       // find ngrams
-      if (word_has_all_latin) {
+      if (word_has_all_latin && !current_word_all_caps) {
         if (GetNgrams((const unsigned char*) current_word_start, current_word_len, features_map) < 0) {
 #ifdef NG_DEBUG
           std::cout << "ERROR: could not get ngrams for word " << current_word_start << std::endl;
 #endif
           return -1;
         }
+#ifdef NG_DEBUG
+      } else {
+        if (NG_DEBUG > 2) {
+          if (!word_has_all_latin) {
+            std::cout << current_word_start << " is not all latin. ignored.\n";
+          }
+          if (current_word_all_caps) {
+            std::cout << current_word_start << " has all caps. ignored.\n";
+          }
+        }
+#endif
       }
 
       // exit conditions
@@ -267,6 +279,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
           next_word_start = ptr;
           num_words++;
           word_has_all_latin = true;
+          current_word_all_caps = true;
           // after finding the start of next word, probe shud be at the same place as ptr
           probe = ptr;
         } else {
@@ -313,8 +326,12 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
             word_has_all_latin = false;
           }
         } else {
-          if (code_point > 0x40 && code_point < 0x7B)
+          if (code_point > 0x40 && code_point < 0x7B) {
             english_count++;
+            if (code_point > 0x60) {
+              current_word_all_caps = false;
+            }
+          }
           else
             word_has_all_latin = false;
         }

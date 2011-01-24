@@ -47,7 +47,7 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
     freqs[j] = exp(freqs[j]);
 #ifdef NBC_DEBUG
     if (NBC_DEBUG > 2) {
-      std::cout << "freqs: " << freqs[j] << std::endl;
+      std::cout << langs[j] << " freqs: " << freqs[j] << std::endl;
     }
 #endif
     if (max_freq == freqs[j]) {

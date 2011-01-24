@@ -26,17 +26,21 @@ test_init() ->
 
 test() ->
   %io:format("~p~n",[getkeywords(<<"Testing Keywords extract">>)]).
-  Tuple4_list = test_twitter_timeline(),
-  case is_list(Tuple4_list) of
+  Tuple5_list = test_twitter_timeline(),
+  case is_atom(Tuple5_list) of
     false -> false;
-    true -> [io:format("~p~n",[X]) || X <- Tuple4_list]
+    true -> io:format("error")
+  end,
+  case is_list(Tuple5_list) of
+    false -> false;
+    true -> [io:format("~p~n",[X]) || X <- Tuple5_list]
   end.
 
 test(_user) ->
-  Tuple4_list = test_twitter_timeline(_user),
-  case is_list(Tuple4_list) of
+  Tuple5_list = test_twitter_timeline(_user),
+  case is_list(Tuple5_list) of
     false -> false;
-    true -> [io:format("~p~n",[X]) || X <- Tuple4_list]
+    true -> [io:format("~p~n",[X]) || X <- Tuple5_list]
   end.
 
 stress_test([N]) ->

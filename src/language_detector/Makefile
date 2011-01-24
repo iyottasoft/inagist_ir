@@ -15,7 +15,8 @@ BIN_DIR = ../../bin
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_language_detector \
-       ${BIN_DIR}/x_GenerateLangModel
+       ${BIN_DIR}/x_GenerateLangModel \
+       ${BIN_DIR}/t_clean_lang_model
 
 OBJS = language_detector.o language_detector_erl_interface.o
 
@@ -46,6 +47,11 @@ ${BIN_DIR}/t_language_detector: t_language_detector.o ${LIB}
 ${BIN_DIR}/x_GenerateLangModel: x_GenerateLangModel.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_GenerateLangModel
+	@echo "done!"
+
+${BIN_DIR}/t_clean_lang_model: t_clean_lang_model.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_clean_lang_model
 	@echo "done!"
 
 ERL_LIB = ${LIB_DIR}/liblangdetect_erl.so
