@@ -1,2 +1,7 @@
 balajiworld
 londonnewsnow
+nytimes
+ibnlive
+bbcworld
+techcrunch
+ndtv
