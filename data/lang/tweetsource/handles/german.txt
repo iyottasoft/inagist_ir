@@ -5,3 +5,8 @@ SPIEGEL_Sport
 SPIEGEL_Politik
 REUTERS_DE
 dw_german
+dradio
+annnalist
+3sat
+MTV_Germany
+AFPTV_de

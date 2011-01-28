@@ -4,3 +4,12 @@ twitter_es
 peopleenespanol
 Telemundo
 dw_spanish
+AFPTV_es
+bbcmundo
+20m
+tve_tve
+RTVMadrid
+telecincoes
+A3Noticias
+abc_es
+Madridiario
