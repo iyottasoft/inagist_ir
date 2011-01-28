@@ -1626,6 +1626,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
     detect_lang = true;
   }
 
+/*
   if (detect_lang) {
     std::string lang;
     if (m_language_detector.DetectLanguage(std::string((char *) buffer), buffer_len, lang) < 0) {
@@ -1635,6 +1636,9 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   } else {
     strcpy(script_buffer, script.c_str());
   }
+*/
+
+  strcpy(script_buffer, script.c_str());
 
 #ifdef DEBUG
   if (DEBUG > 2) {

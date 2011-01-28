@@ -87,6 +87,10 @@ int main(int argc, char* argv[]) {
 
   if (0 == input_type) {
     std::string lang_model_file_name = std::string(argv[2]);
+    if (lang_model_file_name.find(".config") != std::string::npos) {
+      std::cout << "WARNING: config file given as input for corpus file? " << lang_model_file_name << ". will be wiped out. check and rename!" << std::endl;
+      return -1;
+    }
     return clean_lang_model(lang_model_file_name);
   }
 
@@ -94,6 +98,7 @@ int main(int argc, char* argv[]) {
   // and the strings with which the corpus contents can be uniquely identified
 
   std::string config_file_name = std::string(argv[2]);
+
   std::ifstream ifs(config_file_name.c_str());
   if (!ifs.is_open()) {
     std::cout << "ERROR: could not open config file " << config_file_name << std::endl;

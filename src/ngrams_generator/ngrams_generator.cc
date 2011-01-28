@@ -7,8 +7,9 @@
 #include "utf8.h"
 
 #ifdef DEBUG
-#define NG_DEBUG=DEBUG
+//#define NG_DEBUG=DEBUG
 #endif
+#define NG_DEBUG 1
 
 namespace inagist_classifiers {
 
@@ -377,6 +378,91 @@ int NgramsGenerator::GetNgramsFromFile(const std::string& input_file_name,
   ifs.close();
 
   return features_map.size();
+}
+
+int NgramsGenerator::GetAllNgrams(const std::string& tweet,
+                                  std::map<std::string, int>& features_map) {
+
+  if (tweet.length() < 1) {
+    std::cout << "ERROR: empty string. no ngrams.\n";
+    return -1;
+  }
+
+  unsigned char* ptr = m_buffer;
+  /*
+  if (tweet.at(0) != ' ') {
+    *m_buffer = ' ';
+    ptr++;
+  }
+  */
+  strcpy((char *) m_buffer, tweet.c_str());
+
+  unsigned char* end = m_buffer + tweet.length() - 1;
+  unsigned char* stop = ptr;
+  unsigned char* pch = NULL;
+
+  while (ptr && *ptr != '\0' && stop <= end) {
+    if ((pch = (unsigned char*) strstr((char *) ptr, "http:")) != NULL ||
+        (pch = (unsigned char*) strstr((char *) ptr, "@")) != NULL) {
+      if (pch > ptr) {
+        stop = pch - 1;
+        if (GetAllNgrams(ptr, stop, features_map) < 0) {
+          std::cout << "ERROR: could not find ngrams\n";
+          return -1;
+        }
+        ptr = pch;
+      }
+      while (ptr && *ptr != ' ' && *ptr != '\0') {
+        ptr++;
+      }
+    } else {
+      break;
+    }
+  }
+
+  if (ptr && ptr < end) {
+    if (GetAllNgrams(ptr, end, features_map) < 0) {
+      std::cout << "ERROR: could not find ngrams\n";
+      return -1;
+    }
+  }
+
+#ifdef NG_DEBUG
+  if (NG_DEBUG) {
+    std::cout << "Num ngrams: " << features_map.size() << std::endl;
+  }
+#endif
+
+  return features_map.size();
+}
+
+int NgramsGenerator::GetAllNgrams(unsigned char* start,
+                                  unsigned char* stop,
+                                  std::map<std::string, int>& features_map) {
+
+  unsigned char* ptr = start;
+  unsigned char* pch = NULL;
+
+  std::string ngram;
+  while (ptr && ptr < stop) {
+    // replace usual punctuations with terminating null space
+    pch = ptr+1;
+    while (pch <= stop && ((pch - ptr) <= 3)) {
+      ngram.assign((char *) ptr, ((pch-ptr) + 1));
+#ifdef NG_DEBUG
+      std::cout << ngram << std::endl;
+#endif
+      if (features_map.find(ngram) != features_map.end()) {
+        features_map[ngram] += 1;
+      } else {
+        features_map[ngram] = 1;
+      }
+      pch++;
+    }
+    ptr++;
+  }
+
+  return 0;
 }
 
 } // namespace inagist classifiers

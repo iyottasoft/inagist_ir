@@ -15,12 +15,20 @@ namespace inagist_classifiers {
 #define MAX_STEM_TEXT_LEN 1024
 
 class NgramsGenerator {
+
  public:
   NgramsGenerator();
   ~NgramsGenerator();
-  int GetNgrams(const unsigned char* text, const unsigned int& text_len, std::map<std::string, int>& features_map);
+  int GetNgrams(const unsigned char* text,
+                const unsigned int& text_len,
+                std::map<std::string, int>& features_map);
   int GetNgramsFromTweet(const std::string& tweet,
                          std::map<std::string, int>& features_map);
+  int GetAllNgrams(const std::string& tweet,
+                   std::map<std::string, int>& features_map);
+  int GetAllNgrams(unsigned char* start,
+                   unsigned char* stop,
+                   std::map<std::string, int>& features_map);
   int GetNgramsFromFile(const std::string& input_file_name,
                         std::map<std::string, int>& features_map);
 
