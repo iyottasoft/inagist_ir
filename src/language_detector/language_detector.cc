@@ -2,8 +2,12 @@
 #include <iostream>
 #include <fstream>
 #include "twitter_searcher.h"
+#include "string_utils.h"
 
-#define DEBUG 1
+#ifdef DEBUG
+#define LD_DEBUG=DEBUG
+#endif
+//#define LD_DEBUG 0
 
 namespace inagist_classifiers {
 
@@ -80,23 +84,24 @@ int LanguageDetector::DetectLanguage(const std::string& text, const unsigned int
                                      std::string& guess_lang_output) {
   int num_ngrams = 0;
   Corpus test_corpus;
+
   if ((num_ngrams = m_ngrams_generator.GetNgramsFromTweet(text, test_corpus)) < 0) {
     std::cerr << "ERROR: m_ngrams_generator returned -1" << std::endl;
     return -1;
   }
 
   if (num_ngrams == 0) {
-#ifdef DEBUG
-    if (DEBUG > 0)
-      std::cout << "no ngrams found for " << text << std::endl;
+#ifdef LD_DEBUG
+    if (LD_DEBUG > 0)
+      std::cout << "no ngrams found for ... \n" << text << std::endl;
 #endif
     guess_lang_output.assign("RR");
     return 0;
   }
 
-#ifdef DEBUG
-  if (DEBUG > 1)
-    std::cout << "now guessing class for " << text << std::endl;
+#ifdef LD_DEBUG
+  if (LD_DEBUG > 1)
+    std::cout << "now guessing class for ... \n" << text << std::endl;
 #endif
 
   if (m_naive_bayes_classifier.GuessClass(m_corpus_manager.m_corpus_map,
@@ -107,8 +112,8 @@ int LanguageDetector::DetectLanguage(const std::string& text, const unsigned int
     return -1;
   }
 
-#ifdef DEBUG
-  if (DEBUG > 1)
+#ifdef LD_DEBUG
+  if (LD_DEBUG > 1)
     std::cout << "guess_lang: " << guess_lang_output << std::endl;
 #endif
 

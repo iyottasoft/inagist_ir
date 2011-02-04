@@ -15,15 +15,16 @@ namespace inagist_utils {
   // unless otherwise specified functions return 0 or NULL or false as default
   // return values less than 0 are likely error codes
 
-StringUtils::StringUtils() {
-}
+//StringUtils::StringUtils() {
+//}
 
-StringUtils::~StringUtils() {
-}
+//StringUtils::~StringUtils() {
+//}
 
 // this function isn't unicode safe
 // TODO (balaji) for ascii, we can ofcourse use an array lookup to speed up
-bool StringUtils::IsPunct(char *ptr, char *prev, char *next) {
+//bool StringUtils::IsPunct(char *ptr, char *prev, char *next) {
+bool IsPunct(char *ptr, char *prev, char *next) {
   if (!ptr || *ptr == ' ' || *ptr == '\0')
     return true;
   if (!ispunct(*ptr))
@@ -90,7 +91,8 @@ bool StringUtils::IsPunct(char *ptr, char *prev, char *next) {
   return true;
 }
 
-bool StringUtils::IsIgnore(char *&ptr) {
+//bool StringUtils::IsIgnore(char *&ptr) {
+bool IsIgnore(char *&ptr) {
 #ifdef DEBUG
   char* word = ptr;
 #endif
@@ -111,9 +113,43 @@ bool StringUtils::IsIgnore(char *&ptr) {
   return false;
 }
 
+// TODO (balaji)
+// this is a rudimentary test version, will write a detailed one later
+//int StringUtils::Tokenize(const std::string& text, std::set<std::string>& tokens) {
+int Tokenize(const std::string& text, std::set<std::string>& tokens) {
+
+  unsigned int len = text.length();
+  if (len < 1) {
+    std::cout << "ERROR: empty string\n";
+    return -1;
+  }
+
+  std::string::size_type loc = 0;
+  std::string::size_type prev = -1;
+  std::string word;
+  unsigned int size = 0;
+  while ((loc = text.find(" ", prev+1)) != std::string::npos) {
+    if ((size = loc-prev) > 1) {
+      word.assign(text, prev+1, size-1); 
+      tokens.insert(word);
+    }
+    prev = loc;
+  }
+  if (std::string::npos == loc) {
+    if ((size = len-prev) > 1) {
+      word.assign(text, prev+1, size); 
+      tokens.insert(word);
+    }
+  }
+
+  return tokens.size();
+
+}
+
 // TODO (balaji) this code is long winded becos its copied from keyword_extract.cc
 // need to write a simple version of this code
-int StringUtils::TestUtils(const std::string& text, unsigned int text_len) {
+//int StringUtils::TestUtils(const std::string& text, unsigned int text_len) {
+int TestUtils(const std::string& text, unsigned int text_len) {
 
   if (text.length() < 1)
     return -1;

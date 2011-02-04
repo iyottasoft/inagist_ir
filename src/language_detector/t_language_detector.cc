@@ -9,7 +9,7 @@
 int main(int argc, char* argv[]) {
 
   if (argc < 2 || argc > 4) {
-    std::cout << "Usage: " << argv[0] << " <config_file_name> <0/1/2, 0-interactive/1-file/2-tweets> [<input_file_name>/[handle]]\n";
+    std::cout << "Usage: " << argv[0] << " \n\t<config_file_name> \n\t<0/1/2, 0-interactive/1-file/2-tweets> \n\t[<input_file_name>/[handle]]\n";
     return -1;
   }
 

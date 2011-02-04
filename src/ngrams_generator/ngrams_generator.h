@@ -9,6 +9,7 @@
 
 #include <string>
 #include <map>
+#include <set>
 
 namespace inagist_classifiers {
 
@@ -30,6 +31,11 @@ class NgramsGenerator {
                    unsigned char* stop,
                    std::map<std::string, int>& features_map);
   int GetNgramsFromFile(const std::string& input_file_name,
+                        std::map<std::string, int>& features_map);
+  int GetNgramsFromWords(std::set<std::string>& words_set,
+                         std::map<std::string, int>& features_map);
+  int GetNgramsFromWord(const unsigned char* word_str,
+                        unsigned int word_len,
                         std::map<std::string, int>& features_map);
 
  private:

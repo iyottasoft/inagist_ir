@@ -15,8 +15,7 @@ BIN_DIR = ../../bin
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
-BINS = ${BIN_DIR}/t_ngrams_generator \
-       ${BIN_DIR}/t_all_ngrams_generator
+BINS = ${BIN_DIR}/t_ngrams_generator
 
 OBJS = ngrams_generator.o
 
@@ -41,11 +40,6 @@ ${LIB}: ${OBJS}
 ${BIN_DIR}/t_ngrams_generator: t_ngrams_generator.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_ngrams_generator
-	@echo "done!"
-
-${BIN_DIR}/t_all_ngrams_generator: t_all_ngrams_generator.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_all_ngrams_generator
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

@@ -7,9 +7,13 @@
 #include "utf8.h"
 
 #ifdef DEBUG
-//#define NG_DEBUG=DEBUG
+#define NG_DEBUG=DEBUG
 #endif
-#define NG_DEBUG 1
+//#define NG_DEBUG 1
+
+#define NGRAM_LENGTH 5
+// this is used in a conditional, hence the macro
+#define NGRAM_DIFF NGRAM_LENGTH-1
 
 namespace inagist_classifiers {
 
@@ -161,7 +165,6 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
   bool current_word_all_caps = true;
   int num_words = 0;
 
-  inagist_utils::StringUtils utils;
   // script detection
   unsigned char *end = (unsigned char*) strchr((char *) m_buffer, '\0');
   std::string script = "uu";
@@ -181,7 +184,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
 
   // go to the first word, ignoring handles and punctuations
   unsigned char *prev_temp = NULL;
-  while (ptr && '\0' != *ptr && (' ' == *ptr || '#' == *ptr || isdigit(*ptr) || (ispunct(*ptr) && utils.IsPunct((char *) ptr, (char *) prev_temp, (char *) ptr+1)) || utils.IsIgnore((char *&) ptr))) {
+  while (ptr && '\0' != *ptr && (' ' == *ptr || '#' == *ptr || isdigit(*ptr) || (ispunct(*ptr) && inagist_utils::IsPunct((char *) ptr, (char *) prev_temp, (char *) ptr+1)) || inagist_utils::IsIgnore((char *&) ptr))) {
     prev_temp = ptr;
     ptr++;
   }
@@ -219,7 +222,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
   while (ptr && probe && *ptr != '\n' && *ptr != '\0') {
     // this loop works between second letter to end punctuation for each word
     is_punct = false;
-    if (' ' == *probe || '\0' == *probe || '\'' == *probe || isdigit(*probe) || (ispunct(*probe) && (is_punct = utils.IsPunct((char *) probe, (char *) probe-1, (char *) probe+1)))) {
+    if (' ' == *probe || '\0' == *probe || '\'' == *probe || isdigit(*probe) || (ispunct(*probe) && (is_punct = inagist_utils::IsPunct((char *) probe, (char *) probe-1, (char *) probe+1)))) {
 
       current_word_delimiter = *probe;
       current_word_end = probe;
@@ -233,7 +236,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
 
       // find ngrams
       if (word_has_all_latin && !current_word_all_caps) {
-        if (GetNgrams((const unsigned char*) current_word_start, current_word_len, features_map) < 0) {
+        if (GetNgramsFromWord((const unsigned char*) current_word_start, current_word_len, features_map) < 0) {
 #ifdef NG_DEBUG
           std::cout << "ERROR: could not get ngrams for word " << current_word_start << std::endl;
 #endif
@@ -272,7 +275,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
         // IsIgnore will literally ignore the word by changing the cursor to next word end
         is_ignore_word = false;
         is_punct = false;
-        while ('\0' != *ptr && (' ' == *ptr || '#' == *ptr || isdigit(*ptr) || (ispunct(*ptr) && (is_punct = utils.IsPunct((char *) ptr, (char *) ptr-1, (char *) ptr+1))) || (is_ignore_word = utils.IsIgnore((char *&) ptr)))) {
+        while ('\0' != *ptr && (' ' == *ptr || '#' == *ptr || isdigit(*ptr) || (ispunct(*ptr) && (is_punct = inagist_utils::IsPunct((char *) ptr, (char *) ptr-1, (char *) ptr+1))) || (is_ignore_word = inagist_utils::IsIgnore((char *&) ptr)))) {
           ptr++;
         }
 
@@ -352,7 +355,6 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
     std::cout << "features map size: " << features_map.size() << std::endl;
   }
 #endif
-
 
   return features_map.size();
 }
@@ -442,27 +444,94 @@ int NgramsGenerator::GetAllNgrams(unsigned char* start,
 
   unsigned char* ptr = start;
   unsigned char* pch = NULL;
+  unsigned int diff = 0;
 
   std::string ngram;
   while (ptr && ptr < stop) {
     // replace usual punctuations with terminating null space
     pch = ptr+1;
-    while (pch <= stop && ((pch - ptr) <= 3)) {
-      ngram.assign((char *) ptr, ((pch-ptr) + 1));
+    diff = pch - ptr;
+    while (pch <= stop) {
+      if (diff > 1 && diff <= NGRAM_DIFF) {
+        ngram.assign((char *) ptr, (diff + 1));
 #ifdef NG_DEBUG
-      std::cout << ngram << std::endl;
+        std::cout << ngram << std::endl;
 #endif
-      if (features_map.find(ngram) != features_map.end()) {
-        features_map[ngram] += 1;
-      } else {
-        features_map[ngram] = 1;
+        if (features_map.find(ngram) != features_map.end()) {
+          features_map[ngram] += 1;
+        } else {
+          features_map[ngram] = 1;
+        }
       }
       pch++;
+      diff = pch - ptr;
     }
     ptr++;
   }
 
   return 0;
+}
+
+int NgramsGenerator::GetNgramsFromWords(std::set<std::string>& words_set,
+                                  std::map<std::string, int>& features_map) {
+
+  std::set<std::string>::iterator set_iter;
+  for (set_iter = words_set.begin(); set_iter != words_set.end(); set_iter++) {
+    GetNgramsFromWord((unsigned char*) set_iter->c_str(), set_iter->length(), features_map);
+  }
+
+  return features_map.size();
+}
+
+
+int NgramsGenerator::GetNgramsFromWord(const unsigned char* word_str,
+                                       unsigned int word_len,
+                                       std::map<std::string, int>& features_map) {
+
+  unsigned char* ptr = NULL;
+  unsigned char* pch = NULL;
+  unsigned char* stop = NULL;
+  unsigned int diff = 0;
+  unsigned int len = 0;
+
+  unsigned char buffer[1024];
+  memset(buffer, '\0', 1024);
+
+  std::string ngram;
+
+  len = word_len;
+  ptr = buffer;
+  *ptr = ' ';  
+  ptr++;
+  memcpy((char *) ptr, (char *) word_str, word_len);
+  ptr += len;
+  *ptr = ' ';
+  len += 2;
+  ptr = buffer;
+  stop = ptr + len - 1;
+  while (ptr && ptr < stop) {
+    // replace usual punctuations with terminating null space
+    pch = ptr+1;
+    diff = pch - ptr;
+    while (pch <= stop) {
+      if (diff > 1 && diff <= NGRAM_DIFF) {
+        ngram.assign((char *) ptr, (diff + 1));
+#ifdef NG_DEBUG
+        std::cout << ngram << std::endl;
+#endif
+        if (features_map.find(ngram) != features_map.end()) {
+          features_map[ngram] += 1;
+        } else {
+          features_map[ngram] = 1;
+        }
+      }
+      pch++;
+      diff = pch - ptr;
+    }
+    ptr++;
+  }
+
+  return features_map.size();
 }
 
 } // namespace inagist classifiers

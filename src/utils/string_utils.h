@@ -8,20 +8,22 @@
 #endif
 
 #include <string>
+#include <set>
 
 namespace inagist_utils {
 
-class StringUtils {
- public:
-  StringUtils();
-  ~StringUtils();
+//class StringUtils {
+ //public:
+  //StringUtils();
+  //~StringUtils();
   bool IsPunct(char *ptr, char *prev=NULL, char *next=NULL);
   bool IsIgnore(char *&ptr);
   int TestUtils(const std::string& text, unsigned int text_len);
+  int Tokenize(const std::string& text, std::set<std::string>& tokens);
 
- private:
-  DISALLOW_COPY_AND_ASSIGN(StringUtils);
-};
+ //private:
+  //DISALLOW_COPY_AND_ASSIGN(StringUtils);
+//};
 
 } // namespace inagist_utils
 
