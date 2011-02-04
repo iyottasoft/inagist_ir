@@ -36,7 +36,6 @@ class Stemmer {
   unsigned char* m_max_end;
   inagist_utils::Dictionary m_exclude_dictionary;
   inagist_utils::Dictionary m_include_dictionary;
-  inagist_utils::StringUtils m_utils;
   DISALLOW_COPY_AND_ASSIGN(Stemmer); 
 };
 
