@@ -95,6 +95,11 @@ int main(int argc, char* argv[]) {
     if (ld.DetectLanguage(line, line.length(), lang) < 0) {
       std::cout << "ERROR: could not find language\n";
     } else {
+#ifdef DEBUG
+      if (DEBUG > 0) {
+        std::cout << line << std::endl;
+      }
+#endif
       std::cout << lang << std::endl;
     }
     break;
