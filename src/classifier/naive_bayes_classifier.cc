@@ -2,6 +2,9 @@
 #include <iostream>
 #include <cmath>
 
+#ifdef DEBUG
+#define NBC_DEBUG=DEBUG
+#endif
 //#define NBC_DEBUG 3
 
 namespace inagist_classifiers {
@@ -28,15 +31,20 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
  
   for (corpus_map_iter = corpus_map.begin(); corpus_map_iter != corpus_map.end(); corpus_map_iter++) {
     langs[i] = (*corpus_map_iter).first;
+    freqs[i] = 0;
+    temp_freq = 0;
     for (test_corpus_iter = test_corpus.begin(); test_corpus_iter != test_corpus.end(); test_corpus_iter++) {
       corpus_iter = ((*corpus_map_iter).second).find((*test_corpus_iter).first); 
       if (corpus_iter != ((*corpus_map_iter).second).end()) {
-        temp_freq = (double) (*corpus_iter).second;
-        freqs[i] = log(temp_freq);
-      } else {
-        freqs[i] = 0;
+#ifdef NBC_DEBUG
+        if (NBC_DEBUG > 3) {
+          std::cout << (*corpus_iter).first << " : " << (*corpus_iter).second << " in " << (*corpus_map_iter).first << std::endl;
+        }
+#endif
+        temp_freq += (double) (*corpus_iter).second;
       }
     }
+    freqs[i] += log(temp_freq);
     i++;
   }
 
