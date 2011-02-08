@@ -146,6 +146,24 @@ int Tokenize(const std::string& text, std::set<std::string>& tokens) {
 
 }
 
+int ToLower(const char* input, char* output) {
+
+  char* ptr = (char *) input;
+  char* optr = output;
+  while (ptr && *ptr != '\0') {
+    if (*ptr > 64 && *ptr < 91) {
+      *optr = *ptr + 32; 
+    } else {
+      *optr = *ptr;
+    }
+    ptr++;
+    optr++;
+  }
+  *optr = '\0';
+
+  return 0;
+}
+
 // TODO (balaji) this code is long winded becos its copied from keyword_extract.cc
 // need to write a simple version of this code
 //int StringUtils::TestUtils(const std::string& text, unsigned int text_len) {

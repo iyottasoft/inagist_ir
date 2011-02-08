@@ -10,12 +10,12 @@
 int main(int argc, char* argv[]) {
 
   if (argc != 3 && argc != 4) {
-    std::cout << "Usage:\t" << argv[0] << " \n\t<input_type (0 - interactive, 1 - file_input, 2 - tweet, 3 - many_tweets) \n\t<test_type (0 - test_utils, 1 - tokenize)> \n\t<input/file_name/handle>\n";
+    std::cout << "Usage:\t" << argv[0] << " \n\t<input_type (0 - interactive, 1 - file_input, 2 - tweet, 3 - many_tweets) \n\t<test_type (0 - test_utils, 1 - tokenize, 2 - tolower)> \n\t<input/file_name/handle>\n";
     return -1;
   }
 
   int input_type = atoi(argv[1]);
-  assert((input_type >= 0 && input_type <= 1));
+  assert((input_type >= 0 && input_type <= 3));
 
   int test_type = atoi(argv[2]);
   assert((test_type >= 0 && test_type <= 2));
@@ -25,6 +25,8 @@ int main(int argc, char* argv[]) {
   std::string text;
   std::set<std::string> tokens;
   std::set<std::string>::iterator token_iter;
+  char buffer[1024];
+  memset(buffer, '\0', 1024);
   if (0 == input_type) {
     while(getline(std::cin, text)) {
       if (text.compare("exit") == 0 || text.compare("quit") == 0) {
@@ -44,6 +46,12 @@ int main(int argc, char* argv[]) {
           std::cout << *token_iter << "|" << std::endl;
         }
         tokens.clear();
+      } else if (2 == test_type) {
+        if (inagist_utils::ToLower(text.c_str(), buffer) < 0) {
+          std::cout << "ERROR: ToLower failed\n" << std::endl;
+        } else {
+          std::cout << buffer << std::endl;
+        }
       }
     }
   }
@@ -66,17 +74,16 @@ int main(int argc, char* argv[]) {
   }
 
   std::set<std::string>::iterator tweet_iter;
-  std::string tweet;
   for (tweet_iter = tweets.begin(); tweet_iter != tweets.end(); tweet_iter++) {
-    tweet = *tweet_iter;
-    std::cout << tweet << std::endl;
+    text = *tweet_iter;
+    std::cout << text << std::endl;
     if (0 == test_type) {
-      if (inagist_utils::TestUtils(tweet, tweet.length()) < 0) {
+      if (inagist_utils::TestUtils(text, text.length()) < 0) {
         std::cout << "Error: TestUtils failed\n";
         break;
       }
     } else if (1 == test_type) {
-      if (inagist_utils::Tokenize(tweet, tokens) < 0) {
+      if (inagist_utils::Tokenize(text, tokens) < 0) {
         std::cout << "ERROR: tokenize failed\n";
         break;
       }
@@ -84,6 +91,12 @@ int main(int argc, char* argv[]) {
         std::cout << *token_iter << "|" << std::endl;
       }
       tokens.clear();
+    } else if (2 == test_type) {
+      if (inagist_utils::ToLower(text.c_str(), buffer) < 0) {
+        std::cout << "ERROR: ToLower failed\n" << std::endl;
+      } else {
+        std::cout << buffer << std::endl;
+      }
     }
     if (2 == input_type)
       break;

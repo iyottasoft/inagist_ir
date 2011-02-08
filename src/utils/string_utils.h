@@ -20,6 +20,7 @@ namespace inagist_utils {
   bool IsIgnore(char *&ptr);
   int TestUtils(const std::string& text, unsigned int text_len);
   int Tokenize(const std::string& text, std::set<std::string>& tokens);
+  int ToLower(const char* input, char* output);
 
  //private:
   //DISALLOW_COPY_AND_ASSIGN(StringUtils);
