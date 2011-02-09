@@ -1,6 +1,7 @@
+include ../Makefile.incl
 PROJECT = curlrequestmaker
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated
+CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser

@@ -7,7 +7,12 @@
 #include "script_detector_utils.h"
 #include "utf8.h"
 
-//#define DEBUG 2
+#ifdef DEBUG
+#if DEBUG>0
+#define STEM_DEBUG DEBUG
+#endif
+#endif
+//#define STEM_DEBUG 2
 
 extern int DetectScript(int code_point, std::string &script);
 
@@ -94,7 +99,7 @@ int Stemmer::Stem(const std::string& text,
       strcpy((char *) ptr, "|");
       ptr++;
     } else {
-#ifdef DEBUG
+#ifdef STEM_DEBUG
       std::cout << "ERROR: Not enuf space in the keywords buffer\n";
 #endif
       *pipe_delimited_output = '\0';
@@ -147,7 +152,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
   // the whole thing starts here
   ptr = m_buffer;
 
-#ifdef DEBUG
+#ifdef STEM_DEBUG
   std::cout << std::endl << "original query: " << m_buffer << std::endl;
 #endif
 
@@ -159,7 +164,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
   }
 
   if (!ptr || '\0' == *ptr) {
-#ifdef DEBUG
+#ifdef STEM_DEBUG
     std::cout << "either the input is empty or has ignore words only" << std::endl;
 #endif
     return 0;
@@ -180,7 +185,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
   try {
     code_point = utf8::next(probe, end);
   } catch (...) {
-#ifdef DEBUG
+#ifdef STEM_DEBUG
     std::cout << "EXCEPTION: utf8 returned exception" << std::endl;
 #endif
     return -1;
@@ -195,7 +200,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
       current_word_end = probe;
       *probe = '\0';
       current_word_len = current_word_end - current_word_start;
-#ifdef DEBUG
+#ifdef STEM_DEBUG
       std::cout << "current word: " << current_word_start << std::endl;
 #endif
 
@@ -227,7 +232,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
           }
         }
       } else {
-#ifdef DEBUG
+#ifdef STEM_DEBUG
         std::cout << current_word_start << " is a dictionaty word\n";
 #endif
       }
@@ -290,7 +295,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
             if (script_temp != "en") {
               script_count++;
               if (script_count > 9) {
-#ifdef DEBUG
+#ifdef STEM_DEBUG
                 std::cout << "this is a non-english tweet. don't bother stemming\n";
 #endif
                 stems.clear();
@@ -303,14 +308,12 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
             english_count++;
         }
       } catch (...) {
-#ifdef DEBUG
-        if (DEBUG > 0) {
+#ifdef STEM_DEBUG
+        if (STEM_DEBUG > 0) {
           std::cout << "Exception: " << code_point << " " << probe << std::endl;
         }
-        if (DEBUG > 1) {
+        if (STEM_DEBUG > 1) {
           stems.insert("EXCEPTION");
-        } else {
-          sd.Clear();
         }
 #endif
         return -1;
@@ -318,7 +321,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
     //}
   }
 
-#ifdef DEBUG
+#ifdef STEM_DEBUG
   std::cout << "num words: " << num_words << std::endl;
 #endif
 

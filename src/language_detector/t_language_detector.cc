@@ -2,14 +2,15 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <cassert>
 #include <set>
 #include "twitter_api.h"
 #include "twitter_searcher.h"
 
 int main(int argc, char* argv[]) {
 
-  if (argc < 2 || argc > 4) {
-    std::cout << "Usage: " << argv[0] << " \n\t<config_file_name> \n\t<0/1/2, 0-interactive/1-file/2-tweets> \n\t[<input_file_name>/[handle]]\n";
+  if (argc < 4 || argc > 5) {
+    std::cout << "Usage: " << argv[0] << " \n\t<config_file_name> \n\t<0/1/2, 0-interactive/1-file/2-tweets> [<debug_level>] \n\t[<input_file_name>/[handle]]\n";
     return -1;
   }
 
@@ -21,21 +22,22 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  int test_type = 0;
-  if (argc >= 3) {
-    test_type = atoi(argv[2]);
-    if (test_type < 0 || test_type > 2) {
-      std::cout << "ERROR: invalid test type\n";
-    }
-  } else if (2 == argc) {
-    // by default
-    test_type = 3;
+  int test_type = atoi(argv[2]);
+  assert((test_type >= 0 && test_type <= 2));
+
+  unsigned int debug_level = 0;
+  if (argc >= 4) {
+    debug_level = atoi(argv[3]);
   }
+  ld.SetDebugLevel(debug_level);
 
   std::string line;
   std::string lang;
   if (0 == test_type) {
     while (getline(std::cin, line)) {
+      if (line.compare("exit") == 0 || line.compare("quit") == 0) {
+        break;
+      }
       if (ld.DetectLanguage(line, line.length(), lang) < 0) {
         std::cout << "ERROR: could not find language\n";
       } else {
@@ -49,11 +51,11 @@ int main(int argc, char* argv[]) {
   int num_docs = 0;
 
   if (1 == test_type) {
-    if (argc != 4) {
+    if (argc != 5) {
       std::cout << "ERROR: input file needed\n";
       return -1;
     } else {
-      std::string input_file_name = std::string(argv[3]);
+      std::string input_file_name = std::string(argv[4]);
       std::ifstream ifs(input_file_name.c_str());
       if (!ifs.is_open()) {
         std::cout << "ERROR: could not open input file " << input_file_name << std::endl;
@@ -74,12 +76,12 @@ int main(int argc, char* argv[]) {
   }
 
   if (2 == test_type) {
-    if (3 == argc) { 
+    if (3 == argc || 4 == argc) { 
         inagist_api::TwitterAPI twitter_api;
         num_docs = twitter_api.GetPublicTimeLine(lines);
-    } else if (4 == argc) {
+    } else if (5 == argc) {
         inagist_api::TwitterSearcher twitter_searcher;
-        num_docs = twitter_searcher.GetTweetsFromUser(std::string(argv[3]), lines);
+        num_docs = twitter_searcher.GetTweetsFromUser(std::string(argv[4]), lines);
     }
 
     if (num_docs < 1) {
@@ -95,12 +97,16 @@ int main(int argc, char* argv[]) {
     if (ld.DetectLanguage(line, line.length(), lang) < 0) {
       std::cout << "ERROR: could not find language\n";
     } else {
-#ifdef DEBUG
-      if (DEBUG > 0) {
+#ifdef LD_DEBUG
+      if (LD_DEBUG > 0) {
         std::cout << line << std::endl;
       }
 #endif
       std::cout << lang << std::endl;
+      if (ld.DetectLanguage(line, line.length(), lang, true) < 0) {
+        std::cout << "ERROR: could not find language after ToLower\n";
+      }
+      std::cout << "ignoring case: " << lang << std::endl;
     }
     break;
   }

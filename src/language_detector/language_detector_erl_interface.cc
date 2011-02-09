@@ -33,7 +33,7 @@ extern "C"
 #endif
 int SubmitTweet(const char* tweet, const unsigned int tweet_len,
                 char* lang_buffer, const unsigned int lang_buffer_len) {
-#ifdef DEBUG
+#ifdef LD_DEBUG
   std::cout << tweet << std::endl;
 #endif
   std::string lang;
@@ -96,7 +96,7 @@ int GetTestTweets(const char* user_name,
       ptr++;
       num_docs++;
     } else {
-#ifdef DEBUG
+#ifdef LD_DEBUG
       std::cout << "Not enuf space in the tweets buffer\n";
 #endif
       break;

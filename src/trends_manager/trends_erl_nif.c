@@ -30,7 +30,7 @@ static int my_enif_get_string(ErlNifEnv *env, ERL_NIF_TERM list, char *buf) {
 ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   if (argc != 1) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_invalid_argc");
@@ -49,7 +49,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     enif_release_binary(env, &tweet);
   } else {
     enif_release_binary(env, &tweet);
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_invalid_tweet_len");
@@ -83,7 +83,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
                   &hashtags_len, &hashtags_count,
                   (char *) keyphrases, MAX_BUFFER_LEN,
                   &keyphrases_len, &keyphrases_count)) < 0) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
     return enif_make_atom(env, "error");
 #endif
   }
@@ -106,7 +106,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   }
   ret_val = enif_alloc_binary(env, len, &safe_status_bin);
   if (ret_val < 0) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_safe_status_bin_alloc");
@@ -124,7 +124,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   }
   ret_val = enif_alloc_binary(env, len, &script_bin);
   if (ret_val < 0) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_script_bin_alloc");
@@ -149,7 +149,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
       ret_val = enif_alloc_binary(env, len, &keywords_bin);
       if (ret_val < 0) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
         return enif_make_atom(env, "error");
 #else
         return enif_make_atom(env, "error_keywords_bin_alloc");
@@ -180,7 +180,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
       ret_val = enif_alloc_binary(env, len, &hashtags_bin);
       if (ret_val < 0) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
         return enif_make_atom(env, "error");
 #else
         return enif_make_atom(env, "error_hashtags_bin_alloc");
@@ -211,7 +211,7 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
       ret_val = enif_alloc_binary(env, len, &keyphrases_bin);
       if (ret_val < 0) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
         return enif_make_atom(env, "error");
 #else
         return enif_make_atom(env, "error_keyphrases_bin_alloc");
@@ -256,7 +256,7 @@ ERL_NIF_TERM nif_gettrends(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) 
 ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   if (argc != 3) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_invalid_argc");
@@ -273,7 +273,7 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     enif_release_binary(env, &file_path);
   } else {
     enif_release_binary(env, &file_path);
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_stopwords_file_path_inspect_bin");
@@ -288,7 +288,7 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     enif_release_binary(env, &file_path);
   } else {
     enif_release_binary(env, &file_path);
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_dictionary_file_path_inspect_bin");
@@ -303,7 +303,7 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     enif_release_binary(env, &file_path);
   } else {
     enif_release_binary(env, &file_path);
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_unsafe_dict_file_path_inspect_bin");
@@ -311,7 +311,7 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   }
 
   if (Init(stopwords_file_path, dictionary_file_path, unsafe_dictionary_file_path) < 0) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_init_dicts");
@@ -337,7 +337,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
       enif_release_binary(env, &user_name);
     }   else {
       enif_release_binary(env, &user_name);
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_user_name");
@@ -345,7 +345,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     }
 
     if (GetTestTweets(user_name_str, MAX_LIST_BUFFER_LEN, tweets_buffer, &out_length) < 0) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_get_test_tweets_for_user");
@@ -353,7 +353,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     }
   } else {
     if (GetTestTweets(NULL, MAX_LIST_BUFFER_LEN, tweets_buffer, &out_length) < 0) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_get_test_tweets_for_null_user");
@@ -362,7 +362,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   }
 
   if (0 == out_length || out_length > MAX_LIST_BUFFER_LEN) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_out_length");
@@ -389,7 +389,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     tweet_len = tweet_end - tweet_start;
 
     if (tweet_len <= 0 || tweet_len >= MAX_BUFFER_LEN) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_out_length");
@@ -398,7 +398,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 
     ret_val = enif_alloc_binary(env, tweet_len, &tweet);
     if (ret_val < 0) {
-#ifndef DEBUG
+#ifndef TRENDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_tweet_len");

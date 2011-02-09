@@ -5,6 +5,13 @@
 #include <cstring>
 #include "JSON.h"
 
+#ifdef DEBUG
+#if DEBUG>0
+#define TS_DEBUG DEBUG
+#endif
+#endif
+//#define TS_DEBUG 1
+
 namespace inagist_api {
 
 TwitterSearcher::TwitterSearcher() {
@@ -59,7 +66,7 @@ int TwitterSearcher::GetTweetsFromUser(const std::string& user_name, std::set<st
 
 int TwitterSearcher::GetTweetsFromSearchUrl(const std::string& url, std::set<std::string>& tweets) {
 
-#ifdef DEBUG
+#ifdef TS_DEBUG
   std::cout << url << std::endl;
 #endif
   int num_docs = 0;
@@ -91,7 +98,7 @@ int TwitterSearcher::GetTweetsFromSearchUrl(const std::string& url, std::set<std
             } else {
               std::string tweeter = "unknown";
               JSONObject tweet_object = tweet_value->AsObject();
-#ifdef DEBUG
+#ifdef TS_DEBUG
               if (tweet_object.find("from_user") != tweet_object.end() && tweet_object["from_user"]->IsString()) {
                 std::cout << tweet_object["from_user"]->AsString() << ": "; 
               }
@@ -99,7 +106,7 @@ int TwitterSearcher::GetTweetsFromSearchUrl(const std::string& url, std::set<std
               if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
                 tweet = tweet_object["text"]->AsString(); 
                 tweets.insert(tweet);
-#ifdef DEBUG
+#ifdef TS_DEBUG
                 std::cout << tweet << std::endl;
 #endif
                 ++num_docs;

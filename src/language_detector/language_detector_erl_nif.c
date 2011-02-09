@@ -10,12 +10,12 @@
 #define MAX_BUFFER_LEN 1024
 #define MAX_NAME_LEN 255
 #define MAX_LIST_BUFFER_LEN 20480
-#define DEBUG 1
+#define LD_DEBUG 1
 
 ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   if (argc != 1) {
-#ifndef DEBUG
+#ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_invalid_argc");
@@ -35,7 +35,7 @@ ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     //enif_release_binary(env, &tweet_bin);
   } else {
     enif_release_binary(env, &tweet_bin);
-#ifndef DEBUG
+#ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_invalid_input_binary");
@@ -45,7 +45,7 @@ ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   char lang_buffer[MAX_BUFFER_LEN];
   lang_buffer[0] = '\0';
   if (SubmitTweet(tweet_str, tweet_len, lang_buffer, MAX_BUFFER_LEN) < 0) { 
-#ifndef DEBUG
+#ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_submit_tweet_failed");
@@ -67,7 +67,7 @@ ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 
   ret_val = enif_alloc_binary(env, len, &lang_bin);
   if (ret_val < 0) {
-#ifndef DEBUG
+#ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_lang_bin_alloc");
@@ -85,7 +85,7 @@ ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   if (argc != 1) {
-#ifndef DEBUG
+#ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_invalid_argc");
@@ -102,7 +102,7 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     enif_release_binary(env, &file_path);
   } else {
     enif_release_binary(env, &file_path);
-#ifndef DEBUG
+#ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_invalid_input_binary");
@@ -110,7 +110,7 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   }
 
   if (InitLangD(config_file) < 0) {
-#ifndef DEBUG
+#ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_InitLangD_failed");
@@ -138,7 +138,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
       enif_release_binary(env, &user_name);
     } else {
       enif_release_binary(env, &user_name);
-#ifndef DEBUG
+#ifndef LD_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_user_name");
@@ -146,7 +146,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     }
 
     if (GetTestTweets(user_name_str, MAX_LIST_BUFFER_LEN, tweets_buffer, &out_length) < 0) {
-#ifndef DEBUG
+#ifndef LD_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_get_test_tweets_for_user");
@@ -154,7 +154,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     }
   } else {
     if (GetTestTweets(NULL, MAX_LIST_BUFFER_LEN, tweets_buffer, &out_length) < 0) {
-#ifndef DEBUG
+#ifndef LD_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_get_test_tweets_for_null_user");
@@ -163,7 +163,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   }
 
   if (0 == out_length || out_length > MAX_LIST_BUFFER_LEN) {
-#ifndef DEBUG
+#ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_out_length");
@@ -187,7 +187,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     tweet_len = tweet_end - tweet_start;
 
     if (tweet_len <= 0 || tweet_len >= MAX_BUFFER_LEN) {
-#ifndef DEBUG
+#ifndef LD_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_tweet_length");
@@ -196,7 +196,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 
     ret_val = enif_alloc_binary(env, tweet_len, &tweet);
     if (ret_val < 0) {
-#ifndef DEBUG
+#ifndef LD_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_alloc_bin_failed_for_tweet");
@@ -210,7 +210,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     arg_array[0] = enif_make_binary(env, &tweet);
     ERL_NIF_TERM tuple2 = nif_detect_lang(env, 1, arg_array);
     if (enif_is_atom(env, tuple2)) {
-#ifndef DEBUG
+#ifndef LD_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_not_a_tuple2");
@@ -219,7 +219,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     } else {
       tuple2_list = enif_make_list_cell(env, tuple2, tuple2_list);
 /*
-#ifndef DEBUG
+#ifndef LD_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_undefined_detect_lang_output");

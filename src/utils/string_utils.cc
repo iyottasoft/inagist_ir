@@ -6,7 +6,13 @@
 #include "utf8.h"
 #include "script_detector_utils.h"
 
-//#define DEBUG 0
+#ifdef DEBUG
+#if DEBUG>0
+#define UTILS_DEBUG DEBUG
+#endif
+#endif
+//#define UTILS_DEBUG 0
+
 #define MAX_BUFFER_LEN 1024
 
 extern int DetectScript(int code_point, std::string &script);
@@ -93,7 +99,7 @@ bool IsPunct(char *ptr, char *prev, char *next) {
 
 //bool StringUtils::IsIgnore(char *&ptr) {
 bool IsIgnore(char *&ptr) {
-#ifdef DEBUG
+#ifdef UTILS_DEBUG
   char* word = ptr;
 #endif
   if (!ptr || '\0' == *ptr)
@@ -102,7 +108,7 @@ bool IsIgnore(char *&ptr) {
     while (' ' != *(ptr+1) && '\0' != *(ptr+1)) {
       ptr++;
     }
-#ifdef DEBUG
+#ifdef UTILS_DEBUG
     char temp = *(ptr+1);
     *(ptr+1) = '\0'; 
     std::cout << "Ignore word: " << word << std::endl;
@@ -200,7 +206,7 @@ int TestUtils(const std::string& text, unsigned int text_len) {
   // the whole thing starts here
   ptr = str;
 
-#ifdef DEBUG
+#ifdef UTILS_DEBUG
   std::cout << std::endl << "original query: " << std::string(str) << std::endl << std::endl;
 #endif
 
@@ -212,7 +218,7 @@ int TestUtils(const std::string& text, unsigned int text_len) {
   }
 
   if (!ptr || '\0' == *ptr) {
-#ifdef DEBUG
+#ifdef UTILS_DEBUG
     std::cout << "either the input is empty or has ignore words only" << std::endl;
     return 0;
 #endif
@@ -238,7 +244,7 @@ int TestUtils(const std::string& text, unsigned int text_len) {
       current_word_end = probe;
       *probe = '\0';
       current_word_len = current_word_end - current_word_start;
-#ifdef DEBUG
+#ifdef UTILS_DEBUG
       std::cout << "current word: " << current_word_start << std::endl;
 #endif
 
@@ -309,7 +315,7 @@ int TestUtils(const std::string& text, unsigned int text_len) {
             english_count++;
         }
       } catch (...) {
-#ifdef DEBUG
+#ifdef UTILS_DEBUG
         std::cout << "Exception: " << code_point << " " << probe << std::endl;
 #endif
         probe++;
@@ -317,7 +323,7 @@ int TestUtils(const std::string& text, unsigned int text_len) {
     }
   }
 
-#ifdef DEBUG
+#ifdef UTILS_DEBUG
   std::cout << "num words: " << num_words << std::endl;
 #endif
 

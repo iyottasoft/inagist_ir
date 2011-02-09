@@ -22,8 +22,11 @@ class NaiveBayesClassifier {
   int GuessClass(std::map<std::string, int> testfile_features_map,
                  std::map<std::string, int> lang1_features_map,
                  std::map<std::string, int> lang2_features_map);
+  int SetDebugLevel(unsigned int debug_level);
 
  private:
+  unsigned int m_debug_level;
+
   DISALLOW_COPY_AND_ASSIGN(NaiveBayesClassifier); 
 };
 

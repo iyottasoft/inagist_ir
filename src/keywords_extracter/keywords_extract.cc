@@ -3,7 +3,12 @@
 #include <cstring>
 #include "utf8.h"
 
-//#define DEBUG 0
+#ifdef DEBUG
+#if DEBUG>0
+#define KE_DEBUG DEBUG
+#endif
+#endif
+//#define KE_DEBUG 0
 #define KEYPHRASE_ENABLED 1
 #define MAX_DEBUG_BUFFER_LEN 1024
 //#define I18N_ENABLED 0
@@ -413,7 +418,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   //unsigned out_len = 0;
   unsigned int current_word_len = 0;
   unsigned int next_word_len = 0;
-#ifdef DEBUG
+#ifdef KE_DEBUG
   int score = 0;
 #endif
   int num_mixed_words = 0;
@@ -494,8 +499,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   // the whole thing starts here
   ptr = buffer;
 
-#ifdef DEBUG
-  if (DEBUG > 0)
+#ifdef KE_DEBUG
+  if (KE_DEBUG > 0)
     cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
 #endif
 
@@ -507,8 +512,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   }
 
   if (!ptr || '\0' == *ptr) {
-#ifdef DEBUG
-    if (DEBUG > 0)
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 0)
       cout << "either the input is empty or has ignore words only" << endl;
 #endif
     return 0;
@@ -516,8 +521,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
 
   current_word_start = ptr;
   sentence_start = ptr;
-#ifdef DEBUG
-  if (DEBUG > 0)
+#ifdef KE_DEBUG
+  if (KE_DEBUG > 0)
     cout << "sentence start: " << sentence_start << endl;
 #endif
 
@@ -556,8 +561,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         english_count++;
     }
   } catch (...) {
-#ifdef DEBUG
-    if (DEBUG > 0) {
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 0) {
       std::cout << "EXCEPTION 1: utf8 returned exception" << std::endl;
       cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
     }
@@ -588,8 +593,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
     }
     */
     if (!ptr || '\0' == *ptr) {
-#ifdef DEBUG
-      if (DEBUG > 1) {
+#ifdef KE_DEBUG
+      if (KE_DEBUG > 1) {
         cout << "either the input is empty or has ignore words only" << endl;
       }
 #endif
@@ -624,8 +629,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
           english_count++;
       }
     } catch (...) {
-#ifdef DEBUG
-      if (DEBUG > 1) {
+#ifdef KE_DEBUG
+      if (KE_DEBUG > 1) {
         std::cout << "EXCEPTION 2: utf8 returned exception" << std::endl;
         cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
       }
@@ -647,8 +652,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   }
 
   if (!ptr || '\0' == *ptr) {
-#ifdef DEBUG
-    if (DEBUG > 0) {
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 0) {
       cout << "either the input has only one word or the other words are ignore words" << endl;
     }
 #endif
@@ -665,8 +670,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   if (m_stopwords_dictionary.Find(current_word_start) == 1) {
     current_word_stop = true;
     num_stop_words++;
-#ifdef DEBUG
-    if (DEBUG > 5) {
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 5) {
       cout << "current word: " << current_word_start << " :stopword" << endl;
     }
 #endif
@@ -678,8 +683,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   if (m_dictionary.Find(current_word_start) == 1) {
     current_word_dict = true;
     num_dict_words++;
-#ifdef DEBUG
-    if (DEBUG > 5) {
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 5) {
       cout << "current word: " << current_word_start << " :dictionary word" << endl;
     }
 #endif
@@ -714,8 +719,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         english_count++;
     }
   } catch (...) {
-#ifdef DEBUG
-    if (DEBUG > 0) {
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 0) {
       std::cout << "EXCEPTION 3: utf8 returned exception" << std::endl;
       cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
     }
@@ -746,8 +751,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
 
   if (!ptr || '\0' == *ptr) {
     next_word_start = NULL;
-#ifdef DEBUG
-    if (DEBUG > 1) {
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 1) {
       std::cout << "only one word found\n";
     }
 #endif
@@ -757,8 +762,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
     num_words++;
     if (current_word_precedes_ignore_word || current_word_precedes_punct) {
       sentence_start = next_word_start;
-#ifdef DEBUG
-      if (DEBUG > 5) {
+#ifdef KE_DEBUG
+      if (KE_DEBUG > 5) {
         cout << "sentence start: " << sentence_start << endl;
       }
 #endif
@@ -790,8 +795,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
     else
       return 0;
   } catch (...) {
-#ifdef DEBUG
-    if (DEBUG > 0) {
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 0) {
       std::cout << "EXCEPTION 4: utf8 returned exception" << std::endl;
       cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
     }
@@ -816,8 +821,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
     is_punct = false;
     if (' ' == *probe || '\0' == *probe || (ispunct(*probe) && (is_punct = IsPunct((char *) probe, (char *) probe-1, (char *) probe+1)))) {
 
-#ifdef DEBUG
-      if (DEBUG > 5) {
+#ifdef KE_DEBUG
+      if (KE_DEBUG > 5) {
         if (NULL != stopwords_entity_end)
           cout << "ERROR: stopswords entity end is not null. did you not write it before?" << endl;
         if (NULL != caps_entity_end)
@@ -826,7 +831,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
 #endif
 
       // word boundary
-#ifdef DEBUG
+#ifdef KE_DEBUG
       score = 0;
 #endif
 
@@ -839,8 +844,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         next_word_len = next_word_end - next_word_start;
       }
 
-#ifdef DEBUG
-      if (DEBUG > 5) {
+#ifdef KE_DEBUG
+      if (KE_DEBUG > 5) {
         cout << endl;
         if (prev_word_start)
           cout << "prev word: " << prev_word_start << endl;
@@ -855,7 +860,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
       }
 #endif
 
-#ifdef DEBUG
+#ifdef KE_DEBUG
       if ((current_word_len < 2) && !isdigit(*current_word_start))
         score-=5;
 
@@ -864,8 +869,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
       }
 #endif
 
-#ifdef DEBUG
-      if (DEBUG > 5) {
+#ifdef KE_DEBUG
+      if (KE_DEBUG > 5) {
         if (prev_word_caps)
           cout << "prev word: " << prev_word_start << " :starts with caps" << endl;
         if (current_word_all_caps) {
@@ -897,9 +902,9 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         if (m_stopwords_dictionary.Find(next_word_start) == 1) {
           next_word_stop = true;
           num_stop_words++;
-#ifdef DEBUG
+#ifdef KE_DEBUG
           score--;
-          if (DEBUG > 5) {
+          if (KE_DEBUG > 5) {
             cout << "next word: " << next_word_start << " :stopword" << endl;
           }
 #endif
@@ -911,9 +916,9 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         if (m_dictionary.Find(next_word_start) == 1) {
           next_word_dict = true;
           num_dict_words++;
-#ifdef DEBUG
+#ifdef KE_DEBUG
           score--;
-          if (DEBUG > 5) {
+          if (KE_DEBUG > 5) {
             cout << "next word: " << next_word_start << " :dictionary word" << endl;
           }
 #endif
@@ -939,8 +944,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
       if (!current_word_stop && !current_word_dict && !current_word_caps &&
           !current_word_starts_num && !current_word_has_mixed_case &&
           (current_word_len > 1) && '#' != *current_word_start) {
-#ifdef DEBUG
-        if (DEBUG > 5) {
+#ifdef KE_DEBUG
+        if (KE_DEBUG > 5) {
           cout << current_word_start << ": normal word" << endl;
         }
 #endif
@@ -1029,8 +1034,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
           }
         }
       } else {
-#ifdef DEBUG
-        if (DEBUG > 5) {
+#ifdef KE_DEBUG
+        if (KE_DEBUG > 5) {
           cout << "stopword entity candidate: " << stopwords_entity_start << endl;
         }
 #endif
@@ -1127,8 +1132,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
           }*/
         }
       } else {
-#ifdef DEBUG
-        if (DEBUG > 5) {
+#ifdef KE_DEBUG
+        if (KE_DEBUG > 5) {
           cout << "caps entity candidate: " << caps_entity_start << endl;
         }
 #endif
@@ -1163,8 +1168,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
       // write keyphrases
       if (NULL != stopwords_keyphrase_start && NULL != stopwords_keyphrase_end) {
         if (stopwords_keyphrase_start != caps_entity_start || stopwords_keyphrase_end != caps_entity_end) {
-#ifdef DEBUG
-          if (DEBUG > 1)
+#ifdef KE_DEBUG
+          if (KE_DEBUG > 1)
             cout << endl << string((char *) stopwords_keyphrase_start, (stopwords_keyphrase_end - stopwords_keyphrase_start)) << " :keyphrase";
 #endif
           if (strncmp((char *) stopwords_keyphrase_end-2, "\'s", 2) == 0) {
@@ -1228,8 +1233,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         if (stopwords_entity_start < stopwords_entity_end) {
           if ('#' == *stopwords_entity_start)
             stopwords_entity_start++;
-#ifdef DEBUG
-          if (DEBUG > 1)
+#ifdef KE_DEBUG
+          if (KE_DEBUG > 1)
             cout << endl << string((char *) stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) << " :entity by stopword";
 #endif
           if (strncmp((char *) stopwords_entity_end-2, "\'s", 2) == 0) {
@@ -1290,8 +1295,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         if (caps_entity_start < caps_entity_end) {
           if ('#' == *caps_entity_start)
             caps_entity_start++;
-#ifdef DEBUG
-          if (DEBUG > 2) {
+#ifdef KE_DEBUG
+          if (KE_DEBUG > 2) {
             cout << endl << string((char *) caps_entity_start, (caps_entity_end - caps_entity_start)) << " :entity by caps";
           }
 #endif
@@ -1364,8 +1369,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
       }
 #endif
 
-#ifdef DEBUG
-      if (DEBUG > 5) {
+#ifdef KE_DEBUG
+      if (KE_DEBUG > 5) {
         cout << endl;
       }
 #endif
@@ -1443,8 +1448,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
           num_words++;
           if (current_word_precedes_ignore_word) {
             sentence_start = next_word_start;
-#ifdef DEBUG
-            if (DEBUG > 5) {
+#ifdef KE_DEBUG
+            if (KE_DEBUG > 5) {
               cout << "sentence start: " << sentence_start << endl;
             }
 #endif
@@ -1452,8 +1457,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
 
           if (current_word_precedes_punct) {
             sentence_start = next_word_start;
-#ifdef DEBUG
-            if (DEBUG > 5) {
+#ifdef KE_DEBUG
+            if (KE_DEBUG > 5) {
               cout << "sentence start: " << sentence_start << endl;
             }
 #endif
@@ -1556,8 +1561,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
               english_count++;
           }
         } catch (...) {
-#ifdef DEBUG
-          if (DEBUG > 0) {
+#ifdef KE_DEBUG
+          if (KE_DEBUG > 0) {
             std::cout << "Exception 5: " << code_point << " " << probe << std::endl;
             cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
           }
@@ -1581,8 +1586,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   }
 
   if (num_mixed_words > 2) {
-#ifdef DEBUG
-    if (DEBUG > 1) {
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 1) {
       cout << "non-english tweet. ignoring keywords and keyphrases" << endl;
     }
 #endif
@@ -1594,8 +1599,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
 #endif
   }
 
-#ifdef DEBUG
-  if (DEBUG > 5) {
+#ifdef KE_DEBUG
+  if (KE_DEBUG > 5) {
     cout << endl << "\norginal query: " << std::string((char *) buffer) << endl;
     cout << "num words: " << num_words << endl;
     cout << "num caps words: " << num_caps_words << endl;
@@ -1640,8 +1645,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
 
   strcpy(script_buffer, script.c_str());
 
-#ifdef DEBUG
-  if (DEBUG > 2) {
+#ifdef KE_DEBUG
+  if (KE_DEBUG > 2) {
     cout << "returning from keywords extract. keywords: " << keywords_count << " keyphrases: " << keyphrases_count << std::endl;
   }
 #endif

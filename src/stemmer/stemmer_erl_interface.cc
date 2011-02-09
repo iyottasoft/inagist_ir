@@ -4,6 +4,7 @@
 #include <set>
 #include <cstring>
 #include <cstdlib>
+#include <iostream>
 #endif
 #include "stemmer.h"
 #include "twitter_api.h"

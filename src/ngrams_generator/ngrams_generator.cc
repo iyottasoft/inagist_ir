@@ -7,7 +7,9 @@
 #include "utf8.h"
 
 #ifdef DEBUG
-#define NG_DEBUG=DEBUG
+#if DEBUG>0
+#define NG_DEBUG DEBUG
+#endif
 #endif
 //#define NG_DEBUG 1
 
@@ -15,12 +17,25 @@
 // this is used in a conditional, hence the macro
 #define NGRAM_DIFF NGRAM_LENGTH-1
 
+#define MAX_WORD_LEN 256
+
 namespace inagist_classifiers {
 
 NgramsGenerator::NgramsGenerator() {
+#ifdef NG_DEBUG
+  m_debug_level = NG_DEBUG;
+  std::cout << "NG_DEBUG (default): " << m_debug_level << std::endl;
+#else
+  m_debug_level = 0;
+#endif
 }
 
 NgramsGenerator::~NgramsGenerator() {
+}
+
+int NgramsGenerator::SetDebugLevel(unsigned int debug_level) {
+  m_debug_level = debug_level;
+  return 0;
 }
 
 // return value,
@@ -139,7 +154,8 @@ int NgramsGenerator::GetNgrams(const unsigned char* text,
 // returns the number of bigrams + trigrams + ngrams (words)
 // this handles the ignore words, utf codepoints present in tweets
 int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
-                               std::map<std::string, int>& features_map) {
+                                        std::map<std::string, int>& features_map,
+                                        bool ignore_case) {
 
   if (tweet.length() < 1) {
 #ifdef NG_DEBUG
@@ -148,7 +164,11 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
     return -1;
   }
 
-  strcpy((char *) m_buffer, tweet.c_str());
+  if (ignore_case) {
+    inagist_utils::ToLower(tweet.c_str(), (char *) m_buffer);
+  } else {
+    strcpy((char *) m_buffer, tweet.c_str());
+  }
 
   unsigned char *ptr = NULL;
   unsigned char *probe = NULL;
@@ -178,7 +198,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
   ptr = m_buffer;
 
 #ifdef NG_DEBUG
-  if (NG_DEBUG > 1) {
+  if (m_debug_level > 1) {
     std::cout << std::endl << "original query: " << m_buffer << std::endl;
   }
 #endif
@@ -237,7 +257,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
       *probe = '\0';
       current_word_len = current_word_end - current_word_start;
 #ifdef NG_DEBUG
-      if (NG_DEBUG > 2) {
+      if (m_debug_level > 2) {
         std::cout << "current word: " << current_word_start << " (";
         if (current_word_all_caps) std::cout << "all_caps, ";
         if (word_starts_caps) std::cout << "starts_caps, ";
@@ -262,7 +282,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
         }
 #ifdef NG_DEBUG
       } else {
-        if (NG_DEBUG > 2) {
+        if (m_debug_level > 2) {
           if (!word_has_all_latin) {
             std::cout << current_word_start << " is not all latin. ignored.\n";
           }
@@ -377,7 +397,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
   }
 
 #ifdef NG_DEBUG
-  if (NG_DEBUG > 2) {
+  if (m_debug_level > 2) {
     std::cout << "num words: " << num_words << std::endl;
     std::cout << "features map size: " << features_map.size() << std::endl;
   }
@@ -457,7 +477,7 @@ int NgramsGenerator::GetAllNgrams(const std::string& tweet,
   }
 
 #ifdef NG_DEBUG
-  if (NG_DEBUG) {
+  if (m_debug_level) {
     std::cout << "Num ngrams: " << features_map.size() << std::endl;
   }
 #endif
@@ -500,11 +520,21 @@ int NgramsGenerator::GetAllNgrams(unsigned char* start,
 }
 
 int NgramsGenerator::GetNgramsFromWords(std::set<std::string>& words_set,
-                                  std::map<std::string, int>& features_map) {
+                                  std::map<std::string, int>& features_map,
+                                  bool ignore_case) {
 
   std::set<std::string>::iterator set_iter;
-  for (set_iter = words_set.begin(); set_iter != words_set.end(); set_iter++) {
-    GetNgramsFromWord((unsigned char*) set_iter->c_str(), set_iter->length(), features_map);
+  if (ignore_case) {
+    unsigned char word[MAX_WORD_LEN];
+    word[MAX_WORD_LEN] = '\0';
+    for (set_iter = words_set.begin(); set_iter != words_set.end(); set_iter++) {
+      inagist_utils::ToLower(set_iter->c_str(), (char *) word);
+      GetNgramsFromWord(word, set_iter->length(), features_map);
+    }
+  } else {
+    for (set_iter = words_set.begin(); set_iter != words_set.end(); set_iter++) {
+      GetNgramsFromWord((unsigned char*) set_iter->c_str(), set_iter->length(), features_map);
+    }
   }
 
   return features_map.size();

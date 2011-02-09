@@ -1,6 +1,7 @@
+include ../Makefile.incl
 PROJECT = languagedetector
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS
+CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../utils -I../curl_request_maker -I../twitter_api -I../script_detector -I../ngrams_generator -I../classifier

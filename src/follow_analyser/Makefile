@@ -1,6 +1,7 @@
+include ../Makefile.incl
 PROJECT = followanalyser
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated #-DDEBUG
+CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../utils -I../keywords_extracter -I../language_detector -I../ngrams_generator -I../classifier -I../script_detector

@@ -1,7 +1,7 @@
 include ../Makefile.incl
 PROJECT = stemmer
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS #-DDEBUG
+CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/porter_stemmer -I../../include/utfcpp -I../utils -I../curl_request_maker -I../twitter_api -I../script_detector

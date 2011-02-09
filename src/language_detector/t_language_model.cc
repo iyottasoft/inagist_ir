@@ -9,7 +9,7 @@
 int main(int argc, char* argv[]) {
 
   if (argc < 3 || argc > 4) {
-    std::cout << "Usage: " << argv[0] << " \n\t<0/1/2, 0-interactive|1-file/2-tweet/3-manytweets> \n\t<0/1/2, 0-create|1-test|2-clean> [<output_file_name>]\n";
+    std::cout << "Usage: " << argv[0] << " \n\t<0/1/2, 0-interactive|1-file/2-tweet/3-manytweets> \n\t<0/1/2, 0-create|1-test|2-clean> \n\t[<output_file_name>]\n";
     return -1;
   }
 
@@ -27,11 +27,13 @@ int main(int argc, char* argv[]) {
   inagist_classifiers::NgramsGenerator ng;
 
   std::string text;
-  std::string line;
   inagist_classifiers::Corpus lang_corpus;
   inagist_classifiers::CorpusIter iter;
   if (0 == input_type) {
     while (getline(std::cin, text)) {
+      if (text.compare("exit") == 0 || text.compare("quit") == 0) {
+        break;
+      }
       if (ng.GetNgramsFromTweet(text, lang_corpus) < 0) {
         std::cout << "ERROR: could not get ngrams from tweet\n";
       } else {
@@ -60,14 +62,20 @@ int main(int argc, char* argv[]) {
       text = *set_iter;
       if (ng.GetNgramsFromTweet(text, lang_corpus) < 0) {
         std::cout << "ERROR: could not get ngrams from tweet\n";
-      } else {
+      }
+      if (2 == input_type) {
         for (iter = lang_corpus.begin(); iter != lang_corpus.end(); iter++) {
           std::cout << iter->first << " " << iter->second << std::endl;
         }
+        lang_corpus.clear();
+        getchar();
+      }
+    }
+    if (3 == input_type) {
+      for (iter = lang_corpus.begin(); iter != lang_corpus.end(); iter++) {
+        std::cout << iter->first << " " << iter->second << std::endl;
       }
       lang_corpus.clear();
-      if (2 == input_type)
-        getchar();
     }
     tweets.clear();
   }

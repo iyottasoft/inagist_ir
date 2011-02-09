@@ -5,17 +5,31 @@
 #include "string_utils.h"
 
 #ifdef DEBUG
-#define LD_DEBUG=DEBUG
+#if DEBUG>0
+#define LD_DEBUG DEBUG
+#endif
 #endif
 //#define LD_DEBUG 0
 
 namespace inagist_classifiers {
 
 LanguageDetector::LanguageDetector() {
+#ifdef LD_DEBUG
+  m_debug_level = LD_DEBUG;
+#else
+  m_debug_level = 0;
+#endif
 }
 
 LanguageDetector::~LanguageDetector() {
   Clear();
+}
+
+int LanguageDetector::SetDebugLevel(unsigned int debug_level) {
+  m_debug_level = debug_level;
+  m_ngrams_generator.SetDebugLevel(debug_level);
+  m_naive_bayes_classifier.SetDebugLevel(debug_level);
+  return 0;
 }
 
 int LanguageDetector::Init(std::string config_file_name) {
@@ -80,19 +94,21 @@ int LanguageDetector::Init(std::string config_file_name) {
   return 0;
 }
  
-int LanguageDetector::DetectLanguage(const std::string& text, const unsigned int& text_len,
-                                     std::string& guess_lang_output) {
+int LanguageDetector::DetectLanguage(const std::string& text,
+                                     const unsigned int& text_len,
+                                     std::string& guess_lang_output,
+                                     bool ignore_case) {
   int num_ngrams = 0;
   Corpus test_corpus;
 
-  if ((num_ngrams = m_ngrams_generator.GetNgramsFromTweet(text, test_corpus)) < 0) {
+  if ((num_ngrams = m_ngrams_generator.GetNgramsFromTweet(text, test_corpus, ignore_case)) < 0) {
     std::cerr << "ERROR: m_ngrams_generator returned -1" << std::endl;
     return -1;
   }
 
   if (num_ngrams == 0) {
 #ifdef LD_DEBUG
-    if (LD_DEBUG > 0)
+    if (m_debug_level > 0)
       std::cout << "no ngrams found for ... \n" << text << std::endl;
 #endif
     guess_lang_output.assign("RR");
@@ -100,7 +116,7 @@ int LanguageDetector::DetectLanguage(const std::string& text, const unsigned int
   }
 
 #ifdef LD_DEBUG
-  if (LD_DEBUG > 1)
+  if (m_debug_level > 1)
     std::cout << "now guessing class for ... \n" << text << std::endl;
 #endif
 
@@ -113,7 +129,7 @@ int LanguageDetector::DetectLanguage(const std::string& text, const unsigned int
   }
 
 #ifdef LD_DEBUG
-  if (LD_DEBUG > 1)
+  if (m_debug_level > 1)
     std::cout << "guess_lang: " << guess_lang_output << std::endl;
 #endif
 

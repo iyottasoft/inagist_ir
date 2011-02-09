@@ -4,6 +4,13 @@
 #include "utf8.h"
 #include "script_detector_utils.h"
 
+#ifdef DEBUG
+#if DEBUG>0
+#define SD_DEBUG DEBUG
+#endif
+#endif
+//#define SD_DEBUG 1
+
 namespace inagist_classifiers {
 
 ScriptDetector::ScriptDetector() {

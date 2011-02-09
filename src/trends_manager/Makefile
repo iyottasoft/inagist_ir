@@ -1,7 +1,7 @@
 include ../Makefile.incl
 PROJECT = trendsmanager
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS
+CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../curl_request_maker -I../twitter_api -I../utils -I../keywords_extracter -I../script_detector -I../ngrams_generator -I../classifier -I../language_detector

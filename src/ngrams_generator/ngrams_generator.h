@@ -24,7 +24,8 @@ class NgramsGenerator {
                 const unsigned int& text_len,
                 std::map<std::string, int>& features_map);
   int GetNgramsFromTweet(const std::string& tweet,
-                         std::map<std::string, int>& features_map);
+                         std::map<std::string, int>& features_map,
+                         bool ignore_case=false);
   int GetAllNgrams(const std::string& tweet,
                    std::map<std::string, int>& features_map);
   int GetAllNgrams(unsigned char* start,
@@ -33,14 +34,19 @@ class NgramsGenerator {
   int GetNgramsFromFile(const std::string& input_file_name,
                         std::map<std::string, int>& features_map);
   int GetNgramsFromWords(std::set<std::string>& words_set,
-                         std::map<std::string, int>& features_map);
+                         std::map<std::string, int>& features_map,
+                         bool ignore_case=false);
   int GetNgramsFromWord(const unsigned char* word_str,
                         unsigned int word_len,
                         std::map<std::string, int>& features_map);
+  int SetDebugLevel(unsigned int debug_level);
 
  private:
   unsigned char m_buffer[MAX_STEM_TEXT_LEN];
   int PositionPointer(unsigned char*& prev, unsigned char*& current, unsigned char*& next);
+
+  unsigned int m_debug_level;
+
   DISALLOW_COPY_AND_ASSIGN(NgramsGenerator); 
 };
 

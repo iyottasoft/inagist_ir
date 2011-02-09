@@ -4,7 +4,12 @@
 #include "twitter_api.h"
 #include "twitter_searcher.h"
 
-//#define DEBUG 1
+#ifdef DEBUG
+#if DEBUG>0
+#define TRENDS_DEBUG DEBUG
+#endif
+#endif
+//#define TRENDS_DEBUG 1
 
 #ifdef _CPLUSPLUS
 #include <set>
@@ -46,7 +51,7 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                 unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
                 unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr) {
 
-#ifdef DEBUG
+#ifdef TRENDS_DEBUG
   std::cout << tweet << std::endl;
 #endif
 
@@ -56,7 +61,7 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
     memcpy((char *) buffer, (char *) tweet, tweet_len);
     buffer[tweet_len] = '\0';
   } else {
-#ifdef DEBUG
+#ifdef TRENDS_DEBUG
     strcpy(safe_status_buffer, "errST");
     strcpy(script_buffer,"rr");
     strcpy((char *) keywords_buffer, "error_submit_tweet_invalid_len");
@@ -90,7 +95,7 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                                                   keyphrases_buffer, keyphrases_buffer_len,
                                                   keyphrases_len, keyphrases_count)) <= 0) {
     if (ret_value < 0 ) {
-#ifdef DEBUG
+#ifdef TRENDS_DEBUG
       std::cout << "Error: could not get keywords from KeywordsExtract\n";
       strcpy(safe_status_buffer, "errGK");
       strcpy(script_buffer, "rr");
@@ -148,7 +153,7 @@ int GetTestTweets(const char* user_name, const unsigned int in_length, char* twe
   unsigned int len = 0;
   unsigned int total_len = 0;
   for (iter = tweets.begin(); iter != tweets.end(); iter++) {
-#ifdef DEBUG
+#ifdef TRENDS_DEBUG
     std::cout << *iter << std::endl;
 #endif
     len = (*iter).length();
@@ -160,7 +165,7 @@ int GetTestTweets(const char* user_name, const unsigned int in_length, char* twe
       ptr++;
       num_docs++;
     } else {
-#ifdef DEBUG
+#ifdef TRENDS_DEBUG
       std::cout << "Not enuf space in the tweets buffer\n";
 #endif
       break;
