@@ -49,7 +49,11 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                 unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
                 unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
                 unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
-                unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr) {
+                unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr,
+                char* buffer1, const unsigned int buffer1_len,
+                char* buffer2, const unsigned int buffer2_len,
+                char* buffer3, const unsigned int buffer3_len,
+                char* buffer4, const unsigned int buffer4_len) {
 
 #ifdef TRENDS_DEBUG
   std::cout << tweet << std::endl;
@@ -93,7 +97,11 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                                                   hashtags_buffer, hashtags_buffer_len,
                                                   hashtags_len, hashtags_count,
                                                   keyphrases_buffer, keyphrases_buffer_len,
-                                                  keyphrases_len, keyphrases_count)) <= 0) {
+                                                  keyphrases_len, keyphrases_count,
+                                                  buffer1, buffer1_len,
+                                                  buffer2, buffer2_len,
+                                                  buffer3, buffer3_len,
+                                                  buffer4, buffer4_len)) <= 0) {
     if (ret_value < 0 ) {
 #ifdef TRENDS_DEBUG
       std::cout << "Error: could not get keywords from KeywordsExtract\n";
@@ -114,6 +122,10 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
     *keyphrases_buffer = '\0';
     *keyphrases_len_ptr = 0;
     *keyphrases_count_ptr = 0;
+    *buffer1 = '\0';
+    *buffer2 = '\0';
+    *buffer3 = '\0';
+    *buffer4 = '\0';
   }
   buffer[0] = '\0';
   *keywords_len_ptr = keywords_len;

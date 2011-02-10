@@ -15,7 +15,11 @@ extern int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                     unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
                     unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
                     unsigned char* keyphrases, const unsigned int keyphrases_buffer_len,
-                    unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr);
+                    unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr,
+                    char* buffer1, const unsigned int buffer1_len,
+                    char* buffer2, const unsigned int buffer2_len,
+                    char* buffer3, const unsigned int buffer3_len,
+                    char* buffer4, const unsigned int buffer4_len);
 extern int GetTrends();
 
 using std::string;
@@ -78,6 +82,14 @@ int main(int argc, char *argv[]) {
   memset(keyphrases, 0, T_MAX_BUFFER_LEN);
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
+  char buffer1[4];
+  memset(buffer1, 0, 4);
+  char buffer2[4];
+  memset(buffer2, 0, 4);
+  char buffer3[4];
+  memset(buffer3, 0, 4);
+  char buffer4[4];
+  memset(buffer4, 0, 4);
 
   std::set<std::string>::iterator set_iter;
   std::string tweet;
@@ -92,7 +104,11 @@ int main(int argc, char *argv[]) {
                 (unsigned char*) hashtags, T_MAX_BUFFER_LEN,
                 &hashtags_len, &hashtags_count,
                 (unsigned char*) keyphrases, T_MAX_BUFFER_LEN,
-                &keyphrases_len, &keyphrases_count);
+                &keyphrases_len, &keyphrases_count,
+                buffer1, 4,
+                buffer2, 4,
+                buffer3, 4,
+                buffer4, 4);
 
     if (strcmp(safe_status, "unsafe") == 0) {
       std::cout << tweet << std::endl;
@@ -100,18 +116,30 @@ int main(int argc, char *argv[]) {
                 << "script: " << script << std::endl \
                 << "keywords: " << keywords << std::endl \
                 << "hashtags: " << hashtags << std::endl \
-                << "keyphrases: " << keyphrases << std::endl;
+                << "keyphrases: " << keyphrases << std::endl \
+                << "lang: " << buffer1 << std::endl \
+                << "lang ignoring case: " << buffer2 << std::endl \
+                << "class: " << buffer3 << std::endl \
+                << "sub class: " << buffer4 << std::endl;
     }
     memset(script, 0, 4);
     keywords[0] = '\0';
     hashtags[0] = '\0';
     keyphrases[0] = '\0';
+    memset(buffer1, 0, 4);
+    memset(buffer2, 0, 4);
+    memset(buffer3, 0, 4);
+    memset(buffer4, 0, 4);
   }
   tweets.clear();
   memset(script, 0, 4);
   memset(keywords, 0, T_MAX_BUFFER_LEN);
   memset(hashtags, 0, T_MAX_BUFFER_LEN);
   memset(keyphrases, 0, T_MAX_BUFFER_LEN);
+  memset(buffer1, 0, 4);
+  memset(buffer2, 0, 4);
+  memset(buffer3, 0, 4);
+  memset(buffer4, 0, 4);
 
   return 0;
 }

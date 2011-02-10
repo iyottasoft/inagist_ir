@@ -25,6 +25,9 @@ class LanguageDetector {
                      const unsigned int& text_len,
                      std::string& guess_lang_output,
                      bool ignore_case=false);
+  int DetectLanguage(std::set<std::string>& words_set,
+                     std::string& guess_lang_output,
+                     bool ignore_case=false);
   int GenerateLangModel(const std::string& input_file_name,
                         const std::string& output_file_name);
   int GenerateLangModelFromTweets(const std::string& twitter_handles_file_name,

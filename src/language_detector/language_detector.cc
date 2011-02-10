@@ -138,6 +138,49 @@ int LanguageDetector::DetectLanguage(const std::string& text,
   return 1;
 }
 
+int LanguageDetector::DetectLanguage(std::set<std::string>& words_set,
+                                     std::string& guess_lang_output,
+                                     bool ignore_case) {
+  int num_ngrams = 0;
+  Corpus test_corpus;
+
+  if ((num_ngrams = m_ngrams_generator.GetNgramsFromWords(words_set, test_corpus, ignore_case)) < 0) {
+    std::cerr << "ERROR: m_ngrams_generator returned -1" << std::endl;
+    return -1;
+  }
+
+  if (num_ngrams == 0) {
+#ifdef LD_DEBUG
+    if (m_debug_level > 0)
+      std::cout << "no ngrams found for ... \n" << text << std::endl;
+#endif
+    guess_lang_output.assign("RR");
+    return 0;
+  }
+
+#ifdef LD_DEBUG
+  if (m_debug_level > 1)
+    std::cout << "now guessing class for ... \n" << text << std::endl;
+#endif
+
+  if (m_naive_bayes_classifier.GuessClass(m_corpus_manager.m_corpus_map,
+                                          test_corpus,
+                                          guess_lang_output) < 0) {
+    std::cout << "ERROR: naive bayes classifiers could not guess the language\n";
+    test_corpus.clear();
+    return -1;
+  }
+
+#ifdef LD_DEBUG
+  if (m_debug_level > 1)
+    std::cout << "guess_lang: " << guess_lang_output << std::endl;
+#endif
+
+  test_corpus.clear();
+
+  return 1;
+}
+
 int LanguageDetector::GetNgramFrequencies(const std::string& input_file_name,
                                           Corpus& corpus) {
 

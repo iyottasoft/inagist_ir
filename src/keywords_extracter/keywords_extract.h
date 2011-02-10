@@ -58,13 +58,21 @@ class KeywordsExtract {
                   unsigned char* hashtags_buffer, const unsigned int& hashtags_buffer_len,
                   unsigned int& hashtags_len, unsigned int& hashtags_count,
                   unsigned char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
-                  unsigned int& keyphrases_len, unsigned int& keyphrases_count);
+                  unsigned int& keyphrases_len, unsigned int& keyphrases_count,
+                  char* buffer1, const unsigned int& buffer1_len,
+                  char* buffer2, const unsigned int& buffer2_len,
+                  char* buffer3, const unsigned int& buffer3_len,
+                  char* buffer4, const unsigned int& buffer4_len);
 
   int GetKeywords(char* buffer, const unsigned int& buffer_len,
                   char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
                   char* script_buffer, const unsigned int& script_buffer_len,
                   char* keywords_buffer, const unsigned int& keywords_buffer_len,
-                  unsigned int& keywords_len, unsigned int& keywords_count);
+                  unsigned int& keywords_len, unsigned int& keywords_count,
+                  char* buffer1, const unsigned int& buffer1_len,
+                  char* buffer2, const unsigned int& buffer2_len,
+                  char* buffer3, const unsigned int& buffer3_len,
+                  char* buffer4, const unsigned int& buffer4_len);
 
   void printKeywords(); // not implemented yet, to be used for testing
   void PrintKeywords(std::set<std::string> &keywords_set);
@@ -76,7 +84,7 @@ class KeywordsExtract {
   inagist_utils::Dictionary m_dictionary;
   inagist_utils::Dictionary m_stopwords_dictionary;
   inagist_utils::Dictionary m_unsafe_dictionary;
-  //inagist_classifiers::LanguageDetector m_language_detector;
+  inagist_classifiers::LanguageDetector m_language_detector;
 
   DISALLOW_COPY_AND_ASSIGN(KeywordsExtract);
   bool IsPunct(char *ptr, char *prev=NULL, char *next=NULL);

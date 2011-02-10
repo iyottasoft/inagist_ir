@@ -9,6 +9,7 @@
 #endif
 #endif
 //#define KE_DEBUG 0
+
 #define KEYPHRASE_ENABLED 1
 #define MAX_DEBUG_BUFFER_LEN 1024
 //#define I18N_ENABLED 0
@@ -320,6 +321,18 @@ int KeywordsExtract::GetKeywords(char* str,
   unsigned int hashtags_count = 0;
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
+  char buffer1[4];
+  unsigned int buffer1_len = 4;
+  memset(buffer1, '\0', 4);
+  char buffer2[4];
+  unsigned int buffer2_len = 4;
+  memset(buffer2, '\0', 4);
+  char buffer3[4];
+  unsigned int buffer3_len = 4;
+  memset(buffer3, '\0', 4);
+  char buffer4[4];
+  unsigned int buffer4_len = 4;
+  memset(buffer4, '\0', 4);
 
   int count = 0;
 
@@ -331,12 +344,20 @@ int KeywordsExtract::GetKeywords(char* str,
                   hashtags_buffer, hashtags_buffer_len,
                   hashtags_len, hashtags_count,
                   keyphrases_buffer, keyphrases_buffer_len,
-                  keyphrases_len, keyphrases_count)) < 0) {
+                  keyphrases_len, keyphrases_count,
+                  buffer1, buffer1_len,
+                  buffer2, buffer2_len,
+                  buffer3, buffer3_len,
+                  buffer4, buffer4_len)) < 0) {
     std::cout << "ERROR: could not get keywords\n";
     buffer[0] = '\0';
     keywords_buffer[0] = '\0';
     hashtags_buffer[0] = '\0';
     keyphrases_buffer[0] = '\0';
+    buffer1[0] = '\0';
+    buffer2[0] = '\0';
+    buffer3[0] = '\0';
+    buffer4[0] = '\0';
     return -1;
   }
 
@@ -357,6 +378,10 @@ int KeywordsExtract::GetKeywords(char* str,
   keywords_buffer[0] = '\0';
   hashtags_buffer[0] = '\0';
   keyphrases_buffer[0] = '\0';
+  buffer1[0] = '\0';
+  buffer2[0] = '\0';
+  buffer3[0] = '\0';
+  buffer4[0] = '\0';
 
   return count;
 }
@@ -370,7 +395,11 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
                                  unsigned char* hashtags_buffer, const unsigned int& hashtags_buffer_len,
                                  unsigned int& hashtags_len, unsigned int& hashtags_count,
                                  unsigned char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
-                                 unsigned int& keyphrases_len, unsigned int& keyphrases_count) {
+                                 unsigned int& keyphrases_len, unsigned int& keyphrases_count,
+                                 char* buffer1, const unsigned int& buffer1_len,
+                                 char* buffer2, const unsigned int& buffer2_len,
+                                 char* buffer3, const unsigned int& buffer3_len,
+                                 char* buffer4, const unsigned int& buffer4_len) {
 
   // initialize output parameters
   *safe_status_buffer = '\0';
@@ -384,8 +413,13 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   *keyphrases_buffer = '\0';
   keyphrases_len = 0;
   keyphrases_count = 0;
+  *buffer1 = '\0';
+  *buffer2 = '\0';
+  *buffer3 = '\0';
+  *buffer4 = '\0';
 
-  if (!buffer || buffer_len < 1 || !script_buffer || !keywords_buffer || !hashtags_buffer || !keyphrases_buffer) {
+  if (!buffer || buffer_len < 1 || !script_buffer || !keywords_buffer ||
+      !hashtags_buffer || !keyphrases_buffer || !buffer1 || !buffer2 || !buffer3 || !buffer4) {
     std::cout << "ERROR: invalid buffer(s) at input\n";
     return -1;
   }
@@ -394,15 +428,24 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
                                  char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
                                  char* script_buffer, const unsigned int& script_buffer_len,
                                  unsigned char* keywords_buffer, const unsigned int& keywords_buffer_len,
-                                 unsigned int& keywords_len, unsigned int& keywords_count) {
+                                 unsigned int& keywords_len, unsigned int& keywords_count,
+                                 char* buffer1, const unsigned int& buffer1_len,
+                                 char* buffer2, const unsigned int& buffer2_len,
+                                 char* buffer3, const unsigned int& buffer3_len,
+                                 char* buffer4, const unsigned int& buffer4_len) {
 
   *safe_status_buffer = '\0';
   *script_buffer = '\0';
   *keywords_buffer = '\0';
   keywords_len = 0;
   keywords_count = 0;
+  *buffer1 = '\0';
+  *buffer2 = '\0';
+  *buffer3 = '\0';
+  *buffer4 = '\0';
 
-  if (!buffer || buffer_len < 1 || !script_buffer || !keywords_buffer) {
+  if (!buffer || buffer_len < 1 || !script_buffer || !keywords_buffer ||
+      !buffer1 || !buffer2 || !buffer3 || !buffer4) {
     std::cout << "ERROR: invalid buffer(s) at input\n";
     return -1;
   }
@@ -428,6 +471,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   int num_dict_words = 0;
   int num_numeric_words = 0;
   int num_normal_words = 0; // not caps or stop or dict or numeric
+  std::set<std::string> normal_words_set;
 
   unsigned char *current_word_start = NULL;
   unsigned char *current_word_end = NULL;
@@ -567,18 +611,6 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
       cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
     }
 #endif
-    memset(script_buffer, '\0', script_buffer_len);
-    strcpy(script_buffer, "00");
-    memset(safe_status_buffer, '\0', safe_status_buffer_len);
-    strcpy(safe_status_buffer, "error_exception1");
-    memset((char *) keywords_buffer, '\0', keywords_buffer_len);
-    keywords_len = 0;
-    keywords_count = 0;
-#ifdef KEYPHRASE_ENABLED
-    memset((char *) keyphrases_buffer, '\0', keyphrases_buffer_len);
-    keyphrases_len = 0;
-    keyphrases_count = 0;
-#endif
     return -1;
   }
 
@@ -635,18 +667,6 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
       }
 #endif
-      memset(script_buffer, '\0', script_buffer_len);
-      strcpy(script_buffer, "00");
-      memset(safe_status_buffer, '\0', safe_status_buffer_len);
-      strcpy(safe_status_buffer, "error_exception2");
-      memset((char *) keywords_buffer, '\0', keywords_buffer_len);
-      keywords_len = 0;
-      keywords_count = 0;
-#ifdef KEYPHRASE_ENABLED
-      memset((char *) keyphrases_buffer, '\0', keyphrases_buffer_len);
-      keyphrases_len = 0;
-      keyphrases_count = 0;
-#endif
       return -1;
     }
   }
@@ -670,6 +690,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   if (m_stopwords_dictionary.Find(current_word_start) == 1) {
     current_word_stop = true;
     num_stop_words++;
+    normal_words_set.insert(std::string((char *) current_word_start));
 #ifdef KE_DEBUG
     if (KE_DEBUG > 5) {
       cout << "current word: " << current_word_start << " :stopword" << endl;
@@ -683,6 +704,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   if (m_dictionary.Find(current_word_start) == 1) {
     current_word_dict = true;
     num_dict_words++;
+    normal_words_set.insert(std::string((char *) current_word_start));
 #ifdef KE_DEBUG
     if (KE_DEBUG > 5) {
       cout << "current word: " << current_word_start << " :dictionary word" << endl;
@@ -724,18 +746,6 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
       std::cout << "EXCEPTION 3: utf8 returned exception" << std::endl;
       cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
     }
-#endif
-    memset(script_buffer, '\0', script_buffer_len);
-    strcpy(script_buffer, "00");
-    memset(safe_status_buffer, '\0', safe_status_buffer_len);
-    strcpy(safe_status_buffer, "error_exception3");
-    memset((char *) keywords_buffer, '\0', keywords_buffer_len);
-    keywords_len = 0;
-    keywords_count = 0;
-#ifdef KEYPHRASE_ENABLED
-    memset((char *) keyphrases_buffer, '\0', keyphrases_buffer_len);
-    keyphrases_len = 0;
-    keyphrases_count = 0;
 #endif
     return -1;
   }
@@ -790,28 +800,22 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   // probe = ptr + 1;
   probe = ptr;
   try {
-    if (probe < end)
+    if (probe < end) {
       code_point = utf8::next(probe, end);
-    else
+    } else {
+#ifdef KE_DEBUG
+      if (KE_DEBUG > 0) {
+        std::cout << "ERROR: invalid pointers?" << std::endl;
+      }
+#endif
       return 0;
+    }
   } catch (...) {
 #ifdef KE_DEBUG
     if (KE_DEBUG > 0) {
       std::cout << "EXCEPTION 4: utf8 returned exception" << std::endl;
       cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
     }
-#endif
-    memset(script_buffer, '\0', script_buffer_len);
-    strcpy(script_buffer, "00");
-    memset(safe_status_buffer, '\0', safe_status_buffer_len);
-    strcpy(safe_status_buffer, "error_exception4");
-    memset((char *) keywords_buffer, '\0', keywords_buffer_len);
-    keywords_len = 0;
-    keywords_count = 0;
-#ifdef KEYPHRASE_ENABLED
-    memset((char *) keyphrases_buffer, '\0', keyphrases_buffer_len);
-    keyphrases_len = 0;
-    keyphrases_count = 0;
 #endif
     return -1;
   }
@@ -902,6 +906,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         if (m_stopwords_dictionary.Find(next_word_start) == 1) {
           next_word_stop = true;
           num_stop_words++;
+          normal_words_set.insert(std::string((char *) next_word_start));
 #ifdef KE_DEBUG
           score--;
           if (KE_DEBUG > 5) {
@@ -916,6 +921,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         if (m_dictionary.Find(next_word_start) == 1) {
           next_word_dict = true;
           num_dict_words++;
+          normal_words_set.insert(std::string((char *) next_word_start));
 #ifdef KE_DEBUG
           score--;
           if (KE_DEBUG > 5) {
@@ -950,6 +956,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         }
 #endif
         num_normal_words++;
+        normal_words_set.insert(std::string((char *) current_word_start));
       }
       if (current_word_has_mixed_case)
         num_mixed_words++;
@@ -1567,18 +1574,6 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
             cout << endl << "original query: " << std::string((char *) buffer) << endl << endl;
           }
 #endif
-          memset(script_buffer, '\0', script_buffer_len);
-          strcpy(script_buffer, "00");
-          memset(safe_status_buffer, '\0', safe_status_buffer_len);
-          strcpy(safe_status_buffer, "error_exception5");
-          memset((char *) keywords_buffer, '\0', keywords_buffer_len);
-          keywords_len = 0;
-          keywords_count = 0;
-#ifdef KEYPHRASE_ENABLED
-          memset((char *) keyphrases_buffer, '\0', keyphrases_buffer_len);
-          keyphrases_len = 0;
-          keyphrases_count = 0;
-#endif
           return -1;
         }
       //}
@@ -1631,19 +1626,21 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
     detect_lang = true;
   }
 
-/*
+  strcpy(script_buffer, script.c_str());
+
   if (detect_lang) {
     std::string lang;
+    if (m_language_detector.DetectLanguage(normal_words_set, lang, true) < 0) {
+      std::cout << "ERROR: language detection failed\n";
+    } else {
+      strcpy(buffer1, lang.c_str());
+    }
     if (m_language_detector.DetectLanguage(std::string((char *) buffer), buffer_len, lang) < 0) {
       std::cout << "ERROR: language detection failed\n";
+    } else {
+      strcpy(buffer2, lang.c_str());
     }
-    strcpy(script_buffer, lang.c_str());
-  } else {
-    strcpy(script_buffer, script.c_str());
   }
-*/
-
-  strcpy(script_buffer, script.c_str());
 
 #ifdef KE_DEBUG
   if (KE_DEBUG > 2) {
@@ -1655,3 +1652,25 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
 }
 
 } // namespace inagist_trends
+/*
+          memset(script_buffer, '\0', script_buffer_len);
+          strcpy(script_buffer, "00");
+          memset(buffer1, '\0', buffer1_len);
+          strcpy(buffer1, "00");
+          memset(buffer2, '\0', buffer2_len);
+          strcpy(buffer2, "00");
+          memset(safe_status_buffer, '\0', safe_status_buffer_len);
+          strcpy(safe_status_buffer, "error_exception5");
+          memset(buffer3, '\0', buffer3_len);
+          strcpy(buffer3, "00");
+          memset(buffer4, '\0', buffer4_len);
+          strcpy(buffer4, "00");
+          memset((char *) keywords_buffer, '\0', keywords_buffer_len);
+          keywords_len = 0;
+          keywords_count = 0;
+#ifdef KEYPHRASE_ENABLED
+          memset((char *) keyphrases_buffer, '\0', keyphrases_buffer_len);
+          keyphrases_len = 0;
+          keyphrases_count = 0;
+#endif
+*/
