@@ -27,12 +27,28 @@ extern "C"
 #endif
 int Init(const char* stopwords_file_path,
          const char* dictionary_file_path,
-         const char* unsafe_dictionary_file_path) {
-  if (!stopwords_file_path || !dictionary_file_path || !unsafe_dictionary_file_path)
-    return -1;
+         const char* unsafe_dictionary_file_path,
+         const char* lang_detect_config_file_path) {
 
-  if (g_keywords_extract.Init(stopwords_file_path, dictionary_file_path, unsafe_dictionary_file_path) < 0)
+  if (!stopwords_file_path ||
+      !dictionary_file_path ||
+      !unsafe_dictionary_file_path ||
+      !lang_detect_config_file_path) {
+#ifdef TRENDS_DEBUG
+    std::cerr << "ERROR: invalid input file name(s)\n";
+#endif
     return -1;
+  }
+
+  if (g_keywords_extract.Init(stopwords_file_path,
+                              dictionary_file_path,
+                              unsafe_dictionary_file_path,
+                              lang_detect_config_file_path) < 0) {
+#ifdef TRENDS_DEBUG
+    std::cerr << "ERROR: could not initialize KeywordsExtract\n";
+#endif
+    return -1;
+  }
 
   return 0;
 }

@@ -27,6 +27,7 @@ int main(int argc, char *argv[]) {
   std::string stopwords_file = data_dir + "static_data/stopwords.txt";
   std::string dictionary_file = data_dir + "static_data/dictionary.txt";
   std::string unsafe_dictionary_file = data_dir + "static_data/unsafe_dictionary.txt";
+  std::string lang_detect_config_file = root_dir + "configs/language_detection.config";
   std::string input_file = data_dir + "tweets.txt";
   std::string output_file = data_dir + "static_data/output.txt";
 
@@ -35,6 +36,7 @@ int main(int argc, char *argv[]) {
               dictionary_file.c_str(),
               unsafe_dictionary_file.c_str(),
               NULL,
+              lang_detect_config_file.c_str(),
               input_file.c_str(),
               output_file.c_str()) < 0) {
     std::cerr << "ERROR: couldn't initialize KeywordsExtract\n";

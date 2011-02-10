@@ -25,7 +25,8 @@ int main(int argc, char* argv[]) {
   string stopwords_file = root_dir + "/data/static_data/stopwords.txt";
   string dictionary_file = root_dir + "/data/static_data/dictionary.txt";
   string unsafe_dictionary_file = root_dir + "/data/static_data/unsafe_dictionary.txt";
-  if (ke.Init(stopwords_file.c_str(), dictionary_file.c_str(), unsafe_dictionary_file.c_str()) < 0) {
+  string lang_detect_config_file = root_dir + "/configs/language_detection.config";
+  if (ke.Init(stopwords_file.c_str(), dictionary_file.c_str(), unsafe_dictionary_file.c_str(), NULL, lang_detect_config_file.c_str()) < 0) {
     std::cerr << "ERROR: couldn't initialize KeywordsExtract\n";
     return -1;
   }

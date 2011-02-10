@@ -6,20 +6,20 @@
 
 #define T_MAX_BUFFER_LEN 1024 
 
-extern int Init(const char*, const char*);
+extern int Init(const char*, const char*, const char*, const char*);
 extern int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
-                    char* safe_status_buffer, const unsigned int safe_status_buffer_len,
-                    char* script_buffer, const unsigned int script_buffer_len,
-                    unsigned char* keywords, const unsigned int keywords_buffer_len,
-                    unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr,
-                    unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
-                    unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
-                    unsigned char* keyphrases, const unsigned int keyphrases_buffer_len,
-                    unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr,
-                    char* buffer1, const unsigned int buffer1_len,
-                    char* buffer2, const unsigned int buffer2_len,
-                    char* buffer3, const unsigned int buffer3_len,
-                    char* buffer4, const unsigned int buffer4_len);
+                       char* safe_status_buffer, const unsigned int safe_status_buffer_len,
+                       char* script_buffer, const unsigned int script_buffer_len,
+                       unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
+                       unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr,
+                       unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
+                       unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
+                       unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
+                       unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr,
+                       char* buffer1, const unsigned int buffer1_len,
+                       char* buffer2, const unsigned int buffer2_len,
+                       char* buffer3, const unsigned int buffer3_len,
+                       char* buffer4, const unsigned int buffer4_len);
 extern int GetTrends();
 
 using std::string;
@@ -48,8 +48,15 @@ int main(int argc, char *argv[]) {
   string stopwords_file = root_dir + "/data/static_data/stopwords.txt";
   string dictionary_file = root_dir + "/data/static_data/dictionary.txt";
   string unsafe_dictionary_file = root_dir + "/data/static_data/unsafe_dictionary.txt";
+  string lang_detect_config_file = root_dir + "/configs/language_detection.config";
 
-  Init(stopwords_file.c_str(), dictionary_file.c_str(), unsafe_dictionary_file.c_str());
+  if (Init(stopwords_file.c_str(),
+           dictionary_file.c_str(),
+           unsafe_dictionary_file.c_str(),
+           lang_detect_config_file.c_str()) < 0) {
+    std::cerr << "ERROR: could not initialize\n";
+    return -1;
+  }
 
   std::set<std::string> tweets;
   int num_docs = 0;

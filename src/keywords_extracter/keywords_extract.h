@@ -25,6 +25,7 @@ class KeywordsExtract {
            const char* dictionary_file=NULL,
            const char* unsafe_dictionary_file=NULL,
            const char* stemmer_dictionary_file=NULL,
+           const char* lang_detect_config_file=NULL,
            const char* input_file=NULL,
            const char* output_file=NULL);
   int DeInit();

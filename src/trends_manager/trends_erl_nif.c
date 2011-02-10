@@ -402,7 +402,22 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #endif
   }
 
-  if (Init(stopwords_file_path, dictionary_file_path, unsafe_dictionary_file_path) < 0) {
+  char lang_detect_config_file_path[MAX_NAME_LEN];
+  success = enif_inspect_binary(env, argv[2], &file_path);
+  if (success && (file_path.size < MAX_NAME_LEN)) {
+    memcpy(lang_detect_config_file_path, file_path.data, file_path.size);
+    lang_detect_config_file_path[file_path.size] = '\0';
+    enif_release_binary(env, &file_path);
+  } else {
+    enif_release_binary(env, &file_path);
+#ifndef TRENDS_DEBUG
+    return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_lang_detect_config_file_path_inspect_bin");
+#endif
+  }
+
+  if (Init(stopwords_file_path, dictionary_file_path, unsafe_dictionary_file_path, lang_detect_config_file_path) < 0) {
 #ifndef TRENDS_DEBUG
     return enif_make_atom(env, "error");
 #else
@@ -527,7 +542,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 
 static ErlNifFunc nif_funcs[] =
 {
-  {"init_c", 3, nif_init_c},
+  {"init_c", 4, nif_init_c},
   {"getkeywords", 1, nif_getkeywords},
   {"gettrends", 1, nif_gettrends},
   {"test_twitter_timeline", 0, nif_test_twitter_timeline},

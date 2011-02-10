@@ -45,6 +45,7 @@ int KeywordsExtract::Init(const char *stopwords_file,
     const char *dictionary_file,
     const char *unsafe_dictionary_file,
     const char *stemmer_dictionary_file,
+    const char *lang_detect_config_file,
     const char *input_file,
     const char *output_file) {
 
@@ -69,6 +70,13 @@ int KeywordsExtract::Init(const char *stopwords_file,
     int ret = m_unsafe_dictionary.Load(unsafe_dictionary_file);
     if (ret < 0) {
       std::cerr << "ERROR: could not load dictionary file into dictionary\n";
+      return -1;
+    }
+  }
+
+  if (lang_detect_config_file) {
+    if (m_language_detector.Init(std::string(lang_detect_config_file)) < 0) {
+      std::cerr << "ERROR: could not initialize lang detect\n";
       return -1;
     }
   }
