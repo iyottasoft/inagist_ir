@@ -75,6 +75,7 @@ int KeywordsExtract::Init(const char *stopwords_file,
   }
 
   if (lang_detect_config_file) {
+    std::cout << "ERROR: Initializing lang detect\n";
     if (m_language_detector.Init(std::string(lang_detect_config_file)) < 0) {
       std::cerr << "ERROR: could not initialize lang detect\n";
       return -1;

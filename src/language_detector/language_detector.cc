@@ -152,16 +152,11 @@ int LanguageDetector::DetectLanguage(std::set<std::string>& words_set,
   if (num_ngrams == 0) {
 #ifdef LD_DEBUG
     if (m_debug_level > 0)
-      std::cout << "no ngrams found for ... \n" << text << std::endl;
+      std::cout << "no ngrams found for the given word set" << std::endl;
 #endif
     guess_lang_output.assign("RR");
     return 0;
   }
-
-#ifdef LD_DEBUG
-  if (m_debug_level > 1)
-    std::cout << "now guessing class for ... \n" << text << std::endl;
-#endif
 
   if (m_naive_bayes_classifier.GuessClass(m_corpus_manager.m_corpus_map,
                                           test_corpus,

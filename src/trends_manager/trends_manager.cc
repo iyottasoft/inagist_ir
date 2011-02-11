@@ -43,6 +43,7 @@ int Init(const char* stopwords_file_path,
   if (g_keywords_extract.Init(stopwords_file_path,
                               dictionary_file_path,
                               unsafe_dictionary_file_path,
+                              NULL,
                               lang_detect_config_file_path) < 0) {
 #ifdef TRENDS_DEBUG
     std::cerr << "ERROR: could not initialize KeywordsExtract\n";
