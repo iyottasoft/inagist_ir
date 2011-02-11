@@ -9,6 +9,7 @@
 #define MAX_BUFFER_LEN 1024
 #define MAX_NAME_LEN 255
 #define MAX_LIST_BUFFER_LEN 20480
+//#define TRENDS_DEBUG 1
 
 static int my_enif_get_string(ErlNifEnv *env, ERL_NIF_TERM list, char *buf) {
   ERL_NIF_TERM cell, head, tail;
@@ -319,7 +320,22 @@ ERL_NIF_TERM nif_getkeywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   }
   buffer4_term = enif_make_binary(env, &buffer4_bin);
 
+#ifndef TRENDS_DEBUG
   return enif_make_tuple9(env, safe_status_term, lang_term, keywords_list, hashtags_list, keyphrases_list, buffer1_term, buffer2_term, buffer3_term, buffer4_term);
+#else
+  ErlNifBinary tweet_debug_bin;
+  ERL_NIF_TERM tweet_debug_term; 
+  len = strlen(tweet_str);
+  ret_val = enif_alloc_binary(env, len, &tweet_debug_bin);
+  if (ret_val < 0) {
+    return enif_make_atom(env, "error");
+  }
+  for (i=0; i<len; i++) {
+    tweet_debug_bin.data[i] = *(tweet_str + i);
+  }
+  tweet_debug_term = enif_make_binary(env, &tweet_debug_bin);
+  return enif_make_tuple10(env, tweet_debug_term, safe_status_term, lang_term, keywords_list, hashtags_list, keyphrases_list, buffer1_term, buffer2_term, buffer3_term, buffer4_term);
+#endif
 }
 
 ERL_NIF_TERM nif_gettrends(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
