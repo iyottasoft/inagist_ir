@@ -37,7 +37,14 @@
                 char* buffer3, const unsigned int buffer3_len,
                 char* buffer4, const unsigned int buffer4_len);
     // c - cant pass by reference
-    int GetTestTweets(const char* user_name, const unsigned int in_length, char* tweets_buffer, unsigned int* out_length);
+    int GetTestTweets(const char* user_name,
+                      const unsigned int in_length,
+                      char* tweets_buffer,
+                      unsigned int* out_length);
+    int GetTestTweetsFromFile(const char* file_name,
+                          const unsigned int in_length,
+                          char *tweets_buffer,
+                          unsigned int *out_length);
 #ifdef _CPLUSPLUS
   }
 #endif

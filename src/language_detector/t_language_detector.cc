@@ -10,7 +10,7 @@
 int main(int argc, char* argv[]) {
 
   if (argc < 4 || argc > 5) {
-    std::cout << "Usage: " << argv[0] << " \n\t<config_file_name> \n\t<0/1/2, 0-interactive/1-file/2-tweets> [<debug_level>] \n\t[<input_file_name>/[handle]]\n";
+    std::cout << "Usage: " << argv[0] << " \n\t<config_file_name> \n\t<0/1/2, 0-interactive/1-file/2-tweets> \n\t[<debug_level>] \n\t[<input_file_name>/[handle]]\n";
     return -1;
   }
 

@@ -10,7 +10,6 @@
 #endif
 //#define KE_DEBUG 0
 
-#define KEYPHRASE_ENABLED 1
 #define MAX_DEBUG_BUFFER_LEN 1024
 //#define I18N_ENABLED 0
 
@@ -75,7 +74,6 @@ int KeywordsExtract::Init(const char *stopwords_file,
   }
 
   if (lang_detect_config_file) {
-    std::cout << "ERROR: Initializing lang detect\n";
     if (m_language_detector.Init(std::string(lang_detect_config_file)) < 0) {
       std::cerr << "ERROR: could not initialize lang detect\n";
       return -1;
@@ -209,7 +207,12 @@ int KeywordsExtract::GetKeywords(char* str, std::set<std::string>& keywords_set)
   std::set<std::string> keyphrases_set;
   std::string safe_status;
   std::string script;
+#ifndef HASHTAGS_ENABLED
   return GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
+#else
+  std::set<std::string> hashtags_set;
+  return GetKeywords(str, safe_status, script, keywords_set, keyphrases_set, hashtags_set);
+#endif
 }
 
 #ifdef KEYPHRASE_ENABLED
@@ -218,7 +221,12 @@ int KeywordsExtract::GetKeywords(char* str,
                                  std::string& script,
                                  std::set<std::string>& keywords_set) {
   std::set<std::string> keyphrases_set;
+#ifndef HASHTAGS_ENABLED
   return GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
+#else
+  std::set<std::string> hashtags_set;
+  return GetKeywords(str, safe_status, script, keywords_set, keyphrases_set, hashtags_set);
+#endif
 }
 #endif
 
@@ -260,7 +268,10 @@ int KeywordsExtract::GetKeywords(char* str,
                                  std::set<std::string>& keywords_set) {
   std::set<std::string> keyphrases_set;
   std::string safe_status;
-  int ret_value = GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
+  int ret_value = 0;
+#ifndef HASHTAGS_ENABLED
+  GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
+#endif
   keyphrases_set.clear();
   return ret_value;
 }
@@ -378,6 +389,32 @@ int KeywordsExtract::GetKeywords(char* str,
     while (pch1 && pch1 != '\0') {
       ch = *pch1;
       keywords_set.insert((char *) pch2);
+      *pch1 = ch;
+      pch1 = (unsigned char*) strchr((char *) pch2, '|');
+      pch2 = pch1 + 1;
+    }
+  }
+
+  if (keyphrases_len > 0) {
+    unsigned char *pch1 = keyphrases_buffer;
+    unsigned char *pch2 = pch1;
+    char ch;
+    while (pch1 && pch1 != '\0') {
+      ch = *pch1;
+      keyphrases_set.insert((char *) pch2);
+      *pch1 = ch;
+      pch1 = (unsigned char*) strchr((char *) pch2, '|');
+      pch2 = pch1 + 1;
+    }
+  }
+
+  if (hashtags_len > 0) {
+    unsigned char *pch1 = hashtags_buffer;
+    unsigned char *pch2 = pch1;
+    char ch;
+    while (pch1 && pch1 != '\0') {
+      ch = *pch1;
+      hashtags_set.insert((char *) pch2);
       *pch1 = ch;
       pch1 = (unsigned char*) strchr((char *) pch2, '|');
       pch2 = pch1 + 1;

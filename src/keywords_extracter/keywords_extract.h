@@ -15,6 +15,14 @@
 #include "dictionary.h"
 #include "language_detector.h"
 
+#ifndef HASHTAGS_ENABLED
+#define HASHTAGS_ENABLED 1
+#endif
+
+#ifndef KEYPHRASE_ENABLED
+#define KEYPHRASE_ENABLED 1
+#endif
+
 namespace inagist_trends {
 
 class KeywordsExtract {
@@ -49,6 +57,46 @@ class KeywordsExtract {
                   std::set<std::string>& keywords_set,
                   std::map<std::string, std::string>& script_user_map,
                   std::map<std::string, std::string>& keyword_user_map);
+
+#ifdef KEYPHRASE_ENABLED
+#ifdef HASHTAGS_ENABLED
+int GetKeywords(char* str,
+                std::string& safe_status,
+                std::string& script,
+                std::set<std::string>& keywords_set,
+                std::set<std::string>& hashtags_set,
+                std::set<std::string>& keyphrases_set);
+#endif
+#endif
+
+#ifdef KEYPHRASE_ENABLED
+#ifndef HASHTAGS_ENABLED
+int GetKeywords(char* str,
+                std::string& safe_status,
+                std::string& script,
+                std::set<std::string>& keywords_set,
+                std::set<std::string>& keyphrases_set);
+#endif
+#endif
+
+#ifndef KEYPHRASE_ENABLED
+#ifdef HASHTAGS_ENABLED
+int GetKeywords(char* str,
+                std::string& safe_status,
+                std::string& script,
+                std::set<std::string>& keywords_set,
+                std::set<std::string>& hashtags_set);
+#endif
+#endif
+
+#ifndef KEYPHRASE_ENABLED
+#ifndef HASHTAGS_ENABLED
+int GetKeywords(char* str,
+                std::string& safe_status,
+                std::string& script,
+                std::set<std::string>& keywords_set);
+#endif
+#endif
 
   // directly writing to an output buffer instead of a set
   int GetKeywords(unsigned char* buffer, const unsigned int& buffer_len,
