@@ -57,7 +57,7 @@ int LanguageDetector::Init(std::string config_file_name) {
       // std::cout << line << std::endl;
       loc = line.find("=", 0);
       if (loc == std::string::npos) {
-        std::cout << "ERROR: invalid config file entry\n";
+        std::cout << "ERROR: invalid config file entry in " << config_file_name;
         break;
       }
       key.assign(line.c_str(), loc);

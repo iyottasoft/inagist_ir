@@ -236,11 +236,117 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   return tuple2_list;
 }
 
+ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+
+  char tweets_buffer[MAX_LIST_BUFFER_LEN];
+  memset(tweets_buffer, 0, MAX_LIST_BUFFER_LEN);
+
+  int out_length = 0;
+  if (argc != 1) {
+#ifndef LD_DEBUG
+     return enif_make_atom(env, "error"); 
+#else
+     return enif_make_atom(env, "error_invalid_argc"); 
+#endif
+  } else {
+    char file_name_str[MAX_NAME_LEN];
+    memset(file_name_str, 0, MAX_NAME_LEN);
+    ErlNifBinary file_name;
+
+    if (enif_inspect_binary(env, argv[0], &file_name)) {
+      memcpy(file_name_str, file_name.data, file_name.size);
+      file_name_str[file_name.size] = '\0';
+      enif_release_binary(env, &file_name);
+    } else {
+      enif_release_binary(env, &file_name);
+#ifndef LD_DEBUG
+      return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_file_name");
+#endif
+    }
+
+    if (GetTestTweetsFromFile(file_name_str, MAX_LIST_BUFFER_LEN, tweets_buffer, &out_length) < 0) {
+#ifndef LD_DEBUG
+      return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_get_test_tweets_for_user");
+#endif
+    }
+  }
+
+  if (0 == out_length || out_length > MAX_LIST_BUFFER_LEN) {
+#ifndef LD_DEBUG
+    return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_out_length");
+#endif
+  }
+
+  ErlNifBinary tweet;
+  char *tweet_start = tweets_buffer;
+  char *tweet_end = strstr(tweet_start, "|");
+  int ret_val = 0;
+  unsigned int i = 0;
+  unsigned int tweet_len = 0;
+  ERL_NIF_TERM arg_array[1]; 
+  ERL_NIF_TERM tuple2_list = enif_make_list(env, 0);
+
+  while (tweet_start && tweet_end && *tweet_end != '\0') {
+    tweet_end = strstr(tweet_start, "|");
+    if (!tweet_end)
+      break;
+    *tweet_end = '\0';
+    tweet_len = tweet_end - tweet_start;
+
+    if (tweet_len <= 0 || tweet_len >= MAX_BUFFER_LEN) {
+#ifndef LD_DEBUG
+      return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_tweet_length");
+#endif
+    }
+
+    ret_val = enif_alloc_binary(env, tweet_len, &tweet);
+    if (ret_val < 0) {
+#ifndef LD_DEBUG
+      return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_alloc_bin_failed_for_tweet");
+#endif
+    }
+
+    for (i=0; i<tweet_len; i++) {
+      tweet.data[i] = *(tweet_start + i);
+    }
+
+    arg_array[0] = enif_make_binary(env, &tweet);
+    ERL_NIF_TERM tuple2 = nif_detect_lang(env, 1, arg_array);
+    if (enif_is_atom(env, tuple2)) {
+#ifndef LD_DEBUG
+      return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_not_a_tuple2");
+#endif
+    } else {
+      tuple2_list = enif_make_list_cell(env, tuple2, tuple2_list);
+    }
+
+    *tweet_end = '|';
+    tweet_start = tweet_end + 1;
+  }
+  tweet_start = NULL;
+  tweet_end = NULL;
+
+  return tuple2_list;
+}
+
 static ErlNifFunc nif_funcs[] =
 {
   {"init_c", 1, nif_init_c},
   {"detect_lang", 1, nif_detect_lang},
   {"test_twitter_timeline", 0, nif_test_twitter_timeline},
   {"test_twitter_timeline", 1, nif_test_twitter_timeline},
+  {"test_from_file", 1, nif_test_from_file},
 };
 ERL_NIF_INIT(langd, nif_funcs, NULL, NULL, NULL, NULL)

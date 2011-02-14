@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
 
   std::set<std::string> keywords_set;
   std::set<std::string> keyphrases_set;
+  std::set<std::string> hashtags_set;
   std::string safe_status;
   std::string script;
   char str[141];
@@ -43,7 +44,7 @@ int main(int argc, char* argv[]) {
       if (s.compare("exit") == 0)
         break;
       strcpy(str, s.c_str()); 
-      ret_value = ke.GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
+      ret_value = ke.GetKeywords(str, safe_status, script, keywords_set, keyphrases_set, hashtags_set);
       if (ret_value < 0) {
         std::cout << "ERROR: could not get keywords\n";
       } else if (ret_value == 0) {
@@ -62,7 +63,7 @@ int main(int argc, char* argv[]) {
       }
     }
   } else {
-    ke.GetKeywords(argv[1], safe_status, script, keywords_set, keyphrases_set);
+    ke.GetKeywords(argv[1], safe_status, script, keywords_set, keyphrases_set, hashtags_set);
     std::cout << script << std::endl;
     ke.PrintKeywords(keywords_set);
     keywords_set.clear();

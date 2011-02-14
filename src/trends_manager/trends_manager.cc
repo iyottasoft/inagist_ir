@@ -211,6 +211,60 @@ int GetTestTweets(const char* user_name, const unsigned int in_length, char* twe
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
+int GetTestTweetsFromFile(const char* file_name,
+                          const unsigned int in_length,
+                          char *tweets_buffer,
+                          unsigned int *out_length) {
+  int num_docs = 0;
+
+  // get tweeets
+  std::ifstream ifs(file_name);
+  if (!ifs.is_open()) {
+    std::cerr << "ERROR: could not open input file " << file_name << std::endl;
+    return -1;
+  }
+
+  std::string line;
+  char *ptr = tweets_buffer;
+  unsigned int len = 0;
+  unsigned int total_len = 0;
+  while (getline(ifs, line)) {
+#ifdef LD_DEBUG
+    if (line.length() <= 0) {
+      std::cerr << "Empty file\n":
+      continue;
+    }
+#endif
+
+    len = line.length();
+    total_len += (len + 1); // 1 for the pipe
+    if (total_len < in_length) {
+      strcpy(ptr, line.c_str());
+      ptr += len;
+      strcpy(ptr, "|");
+      ptr++;
+      num_docs++;
+    } else {
+#ifdef LD_DEBUG
+      std::cout << "Not enuf space in the tweets buffer\n";
+#endif
+      break;
+    }
+  
+    num_docs++;
+  }
+  *ptr = '\0';
+  ifs.close();
+  *out_length = ptr - tweets_buffer;
+  ptr = NULL;
+
+  return num_docs;
+}
+
+
+#ifdef _CPLUSPLUS
+extern "C"
+#endif
 int GetTrends(const char* user_name, char* trends_buffer) {
   if (!user_name || !trends_buffer)
     return -1;

@@ -1,6 +1,6 @@
 -module(langd).
 
--export([init/0, init_c/1, detect_lang/1, test_twitter_timeline/0, test_twitter_timeline/1, test_init/0, test/0, test/1, stress_test/1]).
+-export([init/0, init_c/1, detect_lang/1, test_twitter_timeline/0, test_twitter_timeline/1, test_init/0, test/0, test/1, test_file/0, stress_test/1]).
 
 init() ->
   erlang:load_nif("../../lib/liblangdetect_erl", 0).
@@ -16,6 +16,9 @@ test_twitter_timeline() ->
 
 test_twitter_timeline(_user) ->
   "NIF library not loaded for test_twitter_timeline for single user".
+
+test_from_file(_file_name) ->
+  "NIF library not loaded for test_from_file".
 
 test_init() ->
   init_c(<<"../../configs/language_detection.config">>).
@@ -33,6 +36,18 @@ test() ->
 
 test(_user) ->
   Tuple2_list = test_twitter_timeline(_user),
+  case is_list(Tuple2_list) of
+    false -> false;
+    true -> [io:format("~p~n",[X]) || X <- Tuple2_list]
+  end.
+
+test_file() ->
+  Tuple2_list = test_from_file(<<"../../data/lang/tweetsource/tweets/english.txt">>),
+  %Tuple2_list = test_from_file(_file_name),
+  case is_atom(Tuple2_list) of
+    false -> false;
+    true -> io:format("error")
+  end,
   case is_list(Tuple2_list) of
     false -> false;
     true -> [io:format("~p~n",[X]) || X <- Tuple2_list]
