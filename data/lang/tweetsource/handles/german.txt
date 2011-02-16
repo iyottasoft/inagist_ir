@@ -18,3 +18,7 @@ antiatom
 ausgestrahlt
 1893_news
 N24_News
+bov
+SPDSH
+FirstGermany
+DFB_Frauen
