@@ -13,13 +13,13 @@ LIBS = -l${PROJECT} -lscriptdetector -ltwitterapi -ljsonparser -lcurlrequestmake
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
 
-
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_string_utils \
-       ${BIN_DIR}/t_dictionary
+       ${BIN_DIR}/t_dictionary_set \
+       ${BIN_DIR}/t_dictionary_map
 
-OBJS = string_utils.o dictionary.o
+OBJS = string_utils.o dictionary_set.o dictionary_map.o
 
 all: ${LIB} ${BINS}
 	@echo "build done!"
@@ -44,9 +44,14 @@ ${BIN_DIR}/t_string_utils: t_string_utils.o ${LIB}
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_string_utils
 	@echo "done!"
 
-${BIN_DIR}/t_dictionary: t_dictionary.o ${LIB}
+${BIN_DIR}/t_dictionary_set: t_dictionary_set.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_dictionary
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_dictionary_set
+	@echo "done!"
+
+${BIN_DIR}/t_dictionary_map: t_dictionary_map.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_dictionary_map
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

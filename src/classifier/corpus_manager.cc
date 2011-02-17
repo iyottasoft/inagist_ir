@@ -32,7 +32,7 @@ int CorpusManager::WriteCorpusToFile(Corpus& corpus, const std::string& file_nam
 int CorpusManager::InitRead(const std::string& corpus_file_name) {
 
   if (LoadCorpus(corpus_file_name, m_corpus) < 0) {
-    std::cout << "ERROR: could not load corpus file " << corpus_file_name << std::endl;
+    std::cout << "ERROR: could not load corpus file for read" << corpus_file_name << std::endl;
     return -1;
   } else {
     return m_corpus.size();
@@ -61,6 +61,11 @@ int CorpusManager::Clear() {
 }
 
 int CorpusManager::LoadCorpus(const std::string corpus_file_name, Corpus& corpus) {
+
+  if (corpus_file_name.length() < 1) {
+    std::cerr << "ERROR: invalid file name for corpus\n";
+    return -1;
+  }
 
   std::ifstream ifs(corpus_file_name.c_str());
   if (!ifs) {
@@ -109,6 +114,11 @@ int CorpusManager::LoadCorpusMap(std::map<std::string, std::string> corpus_class
 }
 
 int CorpusManager::LoadCorpusMap(const std::string config_file_name) {
+
+  if (config_file_name.length() < 1) {
+    std::cerr << "ERROR: invalid file name for corpus map config\n";
+    return -1;
+  }
 
   std::ifstream ifs(config_file_name.c_str());
   if (!ifs) {

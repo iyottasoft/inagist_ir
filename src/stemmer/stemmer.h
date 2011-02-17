@@ -10,7 +10,7 @@
 #include <string>
 #include <set>
 #include "string_utils.h"
-#include "dictionary.h"
+#include "dictionary_set.h"
 
 namespace inagist_search {
 
@@ -34,8 +34,8 @@ class Stemmer {
   unsigned char m_buffer[MAX_STEM_TEXT_LEN];
   unsigned char m_stemmed_word[MAX_STEM_WORD_LEN];
   unsigned char* m_max_end;
-  inagist_utils::Dictionary m_exclude_dictionary;
-  inagist_utils::Dictionary m_include_dictionary;
+  inagist_utils::DictionarySet m_exclude_dictionary;
+  inagist_utils::DictionarySet m_include_dictionary;
   DISALLOW_COPY_AND_ASSIGN(Stemmer); 
 };
 

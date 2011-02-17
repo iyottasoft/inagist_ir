@@ -12,7 +12,8 @@
 #include <map>
 #include <fstream>
 #include <iostream>
-#include "dictionary.h"
+#include "dictionary_set.h"
+#include "dictionary_map.h"
 #include "language_detector.h"
 
 #ifndef HASHTAGS_ENABLED
@@ -32,8 +33,9 @@ class KeywordsExtract {
   int Init(const char* stopwords_file=NULL,
            const char* dictionary_file=NULL,
            const char* unsafe_dictionary_file=NULL,
-           const char* stemmer_dictionary_file=NULL,
            const char* lang_detect_config_file=NULL,
+           const char* channels_dictionary_file=NULL,
+           const char* stemmer_dictionary_file=NULL,
            const char* input_file=NULL,
            const char* output_file=NULL);
   int DeInit();
@@ -130,14 +132,20 @@ int GetKeywords(char* str,
  private:
   std::ifstream m_tweet_stream;
   std::ofstream m_out_stream;
-  inagist_utils::Dictionary m_dictionary;
-  inagist_utils::Dictionary m_stopwords_dictionary;
-  inagist_utils::Dictionary m_unsafe_dictionary;
+  inagist_utils::DictionarySet m_dictionary;
+  inagist_utils::DictionarySet m_stopwords_dictionary;
+  inagist_utils::DictionarySet m_unsafe_dictionary;
   inagist_classifiers::LanguageDetector m_language_detector;
+  inagist_utils::DictionaryMap m_channels_dictionary_map;
 
   DISALLOW_COPY_AND_ASSIGN(KeywordsExtract);
   bool IsPunct(char *ptr, char *prev=NULL, char *next=NULL);
   bool IsIgnore(char *&ptr);
+  inline void Insert(unsigned char* buffer, unsigned int& current_len,
+                     unsigned char* str_to_add, const unsigned int& str_len,
+                     unsigned int& buffer_content_count);
+  inline void Insert(unsigned char* buffer, unsigned int& current_len,
+                     std::string& str, unsigned int& buffer_content_count);
 };
 
 } // namespace inagist_trends

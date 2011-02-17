@@ -8,7 +8,7 @@
 #define KE_DEBUG DEBUG
 #endif
 #endif
-//#define KE_DEBUG 0
+//#define KE_DEBUG 5
 
 #define MAX_DEBUG_BUFFER_LEN 1024
 //#define I18N_ENABLED 0
@@ -43,13 +43,19 @@ KeywordsExtract::~KeywordsExtract() {
 int KeywordsExtract::Init(const char *stopwords_file,
     const char *dictionary_file,
     const char *unsafe_dictionary_file,
-    const char *stemmer_dictionary_file,
     const char *lang_detect_config_file,
+    const char *channels_dictionary_file,
+    const char *stemmer_dictionary_file,
     const char *input_file,
     const char *output_file) {
 
   // load dictionaries
   if (stopwords_file) {
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 3) {
+      std::cout << "Info: loading stopwords file - " << stopwords_file << std::endl;
+    }
+#endif
     int ret = m_stopwords_dictionary.Load(stopwords_file);
     if (ret < 0) {
       std::cerr << "ERROR: could not load stopwords file into dictionary\n";
@@ -58,6 +64,11 @@ int KeywordsExtract::Init(const char *stopwords_file,
   }
 
   if (dictionary_file) {
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 3) {
+      std::cout << "Info: loading dictionary file - " << dictionary_file << std::endl;
+    }
+#endif
     int ret = m_dictionary.Load(dictionary_file);
     if (ret < 0) {
       std::cerr << "ERROR: could not load dictionary file into dictionary\n";
@@ -66,6 +77,11 @@ int KeywordsExtract::Init(const char *stopwords_file,
   }
 
   if (unsafe_dictionary_file) {
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 3) {
+      std::cout << "Info: loading unsafe dictionary file - " << unsafe_dictionary_file << std::endl;
+    }
+#endif
     int ret = m_unsafe_dictionary.Load(unsafe_dictionary_file);
     if (ret < 0) {
       std::cerr << "ERROR: could not load dictionary file into dictionary\n";
@@ -74,8 +90,26 @@ int KeywordsExtract::Init(const char *stopwords_file,
   }
 
   if (lang_detect_config_file) {
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 3) {
+      std::cout << "Info: initialising lang detect with config file - " << lang_detect_config_file << std::endl;
+    }
+#endif
     if (m_language_detector.Init(std::string(lang_detect_config_file)) < 0) {
       std::cerr << "ERROR: could not initialize lang detect\n";
+      return -1;
+    }
+  }
+
+  if (channels_dictionary_file) {
+#ifdef KE_DEBUG
+    if (KE_DEBUG > 3) {
+      std::cout << "Info: loading channels dictionary file - " << channels_dictionary_file << std::endl;
+    }
+#endif
+    int ret = m_channels_dictionary_map.Load(channels_dictionary_file);
+    if (ret < 0) {
+      std::cerr << "ERROR: could not load channels file into dictionary\n";
       return -1;
     }
   }
@@ -211,7 +245,7 @@ int KeywordsExtract::GetKeywords(char* str, std::set<std::string>& keywords_set)
   return GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
 #else
   std::set<std::string> hashtags_set;
-  return GetKeywords(str, safe_status, script, keywords_set, keyphrases_set, hashtags_set);
+  return GetKeywords(str, safe_status, script, keywords_set, hashtags_set, keyphrases_set);
 #endif
 }
 
@@ -225,7 +259,7 @@ int KeywordsExtract::GetKeywords(char* str,
   return GetKeywords(str, safe_status, script, keywords_set, keyphrases_set);
 #else
   std::set<std::string> hashtags_set;
-  return GetKeywords(str, safe_status, script, keywords_set, keyphrases_set, hashtags_set);
+  return GetKeywords(str, safe_status, script, keywords_set, hashtags_set, keyphrases_set);
 #endif
 }
 #endif
@@ -517,7 +551,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   int num_dict_words = 0;
   int num_numeric_words = 0;
   int num_normal_words = 0; // not caps or stop or dict or numeric
-  std::set<std::string> normal_words_set;
+  std::set<std::string> words_set;
 
   unsigned char *current_word_start = NULL;
   unsigned char *current_word_end = NULL;
@@ -585,6 +619,11 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   //std::map<std::string, int> script_map;
   unsigned int script_count = 0;
   unsigned int english_count = 0;
+
+  // channel classification
+  unsigned int channels_count = 0;
+  unsigned int channels_len = 0;
+  std::string channel;
 
   // the whole thing starts here
   ptr = buffer;
@@ -736,7 +775,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   if (m_stopwords_dictionary.Find(current_word_start) == 1) {
     current_word_stop = true;
     num_stop_words++;
-    normal_words_set.insert(std::string((char *) current_word_start));
+    words_set.insert(std::string((char *) current_word_start));
 #ifdef KE_DEBUG
     if (KE_DEBUG > 5) {
       cout << "current word: " << current_word_start << " :stopword" << endl;
@@ -750,7 +789,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   if (m_dictionary.Find(current_word_start) == 1) {
     current_word_dict = true;
     num_dict_words++;
-    normal_words_set.insert(std::string((char *) current_word_start));
+    words_set.insert(std::string((char *) current_word_start));
 #ifdef KE_DEBUG
     if (KE_DEBUG > 5) {
       cout << "current word: " << current_word_start << " :dictionary word" << endl;
@@ -763,6 +802,10 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   // unsafe words
   if (m_unsafe_dictionary.Find(current_word_start) == 1) {
     text_has_unsafe_words = true;
+  }
+
+  if (m_channels_dictionary_map.FindPart(current_word_start, channel) == 1) {
+    Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
   }
 
   // go to the next word, ignoring punctuation and ignore words.
@@ -952,7 +995,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         if (m_stopwords_dictionary.Find(next_word_start) == 1) {
           next_word_stop = true;
           num_stop_words++;
-          normal_words_set.insert(std::string((char *) next_word_start));
+          words_set.insert(std::string((char *) next_word_start));
 #ifdef KE_DEBUG
           score--;
           if (KE_DEBUG > 5) {
@@ -967,7 +1010,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         if (m_dictionary.Find(next_word_start) == 1) {
           next_word_dict = true;
           num_dict_words++;
-          normal_words_set.insert(std::string((char *) next_word_start));
+          words_set.insert(std::string((char *) next_word_start));
 #ifdef KE_DEBUG
           score--;
           if (KE_DEBUG > 5) {
@@ -981,6 +1024,11 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         // dictionary words
         if (m_unsafe_dictionary.Find(next_word_start) == 1) {
           text_has_unsafe_words = true;
+        }
+
+        // channels
+        if (m_channels_dictionary_map.FindPart(next_word_start, channel) == 1) {
+          Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
         }
 #ifndef I18N_ENABLED
         }
@@ -1002,7 +1050,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
         }
 #endif
         num_normal_words++;
-        normal_words_set.insert(std::string((char *) current_word_start));
+        words_set.insert(std::string((char *) current_word_start));
       }
       if (current_word_has_mixed_case)
         num_mixed_words++;
@@ -1092,6 +1140,12 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
           cout << "stopword entity candidate: " << stopwords_entity_start << endl;
         }
 #endif
+
+        // each candidate should be checked against channel dictionary
+        if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
+          Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
+        }
+
         if (!current_word_caps || current_word_stop || current_word_dict || current_word_starts_num) {
           if (stopwords_entity_start != prev_word_start) {
             stopwords_entity_end = prev_word_end;
@@ -1190,6 +1244,11 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
           cout << "caps entity candidate: " << caps_entity_start << endl;
         }
 #endif
+        // each candidate should be checked against channel dictionary
+        if (m_channels_dictionary_map.FindPart(caps_entity_start, channel) == 1) {
+          Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
+        }
+
         if (current_word_stop ||
             !current_word_caps ||
             current_word_dict ||
@@ -1302,13 +1361,18 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
               keywords_count++;
             }
             *(stopwords_entity_end-2) = ch;
+
+            if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
+              Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
+            }
+
           }
           else if ((pch = (unsigned char*) strstr((char *) stopwords_entity_start, "\'s")) && (pch < stopwords_entity_end)) {
             ch = *pch;
             *pch = '\0';
             // but don't insert the X in X's if X is a single word!
+            temp_len = pch - stopwords_entity_start;
             if (strstr((char *) stopwords_entity_start, " ")) {
-              temp_len = pch - stopwords_entity_start;
               if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
                 strncpy((char *) keywords_buffer + keywords_len, (char *) stopwords_entity_start, temp_len);
                 keywords_len += temp_len;
@@ -1316,7 +1380,16 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
                 keywords_len += 1;
                 keywords_count++;
               }
+            } else {
+              if ((hashtags_len + temp_len + 1) < hashtags_buffer_len) {
+                Insert(hashtags_buffer, hashtags_len, stopwords_entity_start, temp_len, hashtags_count);
+              }
             }
+
+            if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
+              Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
+            }
+
             *pch = ch;
             temp_len = stopwords_entity_end - stopwords_entity_start;
             if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
@@ -1335,6 +1408,11 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
               keywords_len += 1;
               keywords_count++;
             }
+
+            if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
+              Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
+            }
+
           }
         } else {
           cout << "ERROR: stopwords entity markers are wrong\n";
@@ -1365,13 +1443,18 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
               keywords_count++;
             }
             *(caps_entity_end-2) = ch;
+
+            if (m_channels_dictionary_map.FindPart(caps_entity_start, channel) == 1) {
+              Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
+            }
+
           }
           else if ((pch = (unsigned char*) strstr((char *) caps_entity_start, "\'s")) && (pch < caps_entity_end)) {
             ch = *pch;
             *pch = '\0';
-            // but don't insert the X in X's if X is a single word!
+            // don't insert the X in X's if X is a single word!
+            temp_len = pch - caps_entity_start;
             if (strstr((char *) caps_entity_start, " ")) {
-              temp_len = pch - caps_entity_start;
               if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
                 strncpy((char *) keywords_buffer + keywords_len, (char *) caps_entity_start, temp_len);
                 keywords_len += temp_len;
@@ -1379,7 +1462,19 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
                 keywords_len += 1;
                 keywords_count++;
               }
+            } else {
+              // but such single word X's can be hashtags
+              strncpy((char *) hashtags_buffer + hashtags_len, (char *) caps_entity_start, temp_len);
+              hashtags_len += temp_len;
+              strcpy((char *) hashtags_buffer + hashtags_len, "|");
+              hashtags_len += 1;
+              hashtags_count++;
             }
+
+            if (m_channels_dictionary_map.FindPart(caps_entity_start, channel) == 1) {
+              Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
+            }
+
             *pch = ch;
             temp_len = caps_entity_end - caps_entity_start;
             if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
@@ -1399,6 +1494,11 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
               keywords_len += 1;
               keywords_count++;
             }
+
+            if (m_channels_dictionary_map.FindPart(caps_entity_start, channel) == 1) {
+              Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
+            }
+
           }
         } else {
           cout << "ERROR: caps entity markers are wrong\n";
@@ -1409,12 +1509,15 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
 
       // hash tags
       if ('#' == *current_word_start && current_word_len >= 2) {
-        if ((hashtags_len + current_word_len + 1) < hashtags_buffer_len) {
-          strncpy((char *) hashtags_buffer + hashtags_len, (char *) current_word_start, current_word_len);
+        if ((hashtags_len + current_word_len/* + 1*/) < hashtags_buffer_len) {
+          strncpy((char *) hashtags_buffer + hashtags_len, (char *) (current_word_start + 1), current_word_len-1);
           hashtags_len += current_word_len;
           strcpy((char *) hashtags_buffer + hashtags_len, "|");
           hashtags_len += 1;
           hashtags_count++;
+        }
+        if (m_channels_dictionary_map.FindPart(current_word_start+1, channel) == 1) {
+          Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
         }
       }
 
@@ -1674,9 +1777,10 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
 
   strcpy(script_buffer, script.c_str());
 
+  // language detection
   if (detect_lang) {
     std::string lang;
-    if (m_language_detector.DetectLanguage(normal_words_set, lang, true) < 0) {
+    if (m_language_detector.DetectLanguage(words_set, lang, true) < 0) {
       std::cout << "ERROR: language detection failed\n";
     } else {
       strcpy(buffer1, lang.c_str());
@@ -1689,34 +1793,49 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   }
 
 #ifdef KE_DEBUG
+  if (KE_DEBUG > 1) {
+    std::cout << "\nbuffer1: " << buffer1 << std::endl;
+    std::cout << "buffer2: " << buffer2 << std::endl;
+    std::cout << "buffer3: " << buffer3 << std::endl;
+    std::cout << "buffer4: " << buffer4 << std::endl;
+  }
+#endif
+#ifdef KE_DEBUG
   if (KE_DEBUG > 2) {
-    cout << "returning from keywords extract. keywords: " << keywords_count << " keyphrases: " << keyphrases_count << std::endl;
+    cout << "returning from keywords extract. keywords: " << keywords_count \
+         << " keyphrases: " << keyphrases_count << std::endl;
   }
 #endif
 
   return keywords_count + keyphrases_count;
 }
 
+// this is an helper function used to make a|b|c| kind of strings given a, b, c in consecutive calls
+inline void KeywordsExtract::Insert(unsigned char* buffer, unsigned int& current_len,
+                   unsigned char* str_to_add, const unsigned int& str_len,
+                   unsigned int& buffer_content_count) { 
+  if (strstr((char *) buffer, (char *) str_to_add) == NULL) {
+    strncpy((char *) buffer + current_len, (char *) str_to_add, str_len);
+    current_len += str_len;
+    strcpy((char *) buffer + current_len, "|");
+    current_len += 1;
+    buffer_content_count++;
+  }
+}
+
+inline void KeywordsExtract::Insert(unsigned char* buffer, unsigned int& current_len,
+                                    std::string& str, unsigned int& buffer_content_count) { 
+  unsigned int len = str.length();
+  if (len > 0) {
+    if (strstr((char *) buffer, str.c_str()) == NULL) {
+      strncpy((char *) buffer + current_len, str.c_str(), len);
+      current_len += len;
+      strcpy((char *) buffer + current_len, "|");
+      current_len += 1;
+      buffer_content_count++;
+    }
+  }
+}
+
 } // namespace inagist_trends
-/*
-          memset(script_buffer, '\0', script_buffer_len);
-          strcpy(script_buffer, "00");
-          memset(buffer1, '\0', buffer1_len);
-          strcpy(buffer1, "00");
-          memset(buffer2, '\0', buffer2_len);
-          strcpy(buffer2, "00");
-          memset(safe_status_buffer, '\0', safe_status_buffer_len);
-          strcpy(safe_status_buffer, "error_exception5");
-          memset(buffer3, '\0', buffer3_len);
-          strcpy(buffer3, "00");
-          memset(buffer4, '\0', buffer4_len);
-          strcpy(buffer4, "00");
-          memset((char *) keywords_buffer, '\0', keywords_buffer_len);
-          keywords_len = 0;
-          keywords_count = 0;
-#ifdef KEYPHRASE_ENABLED
-          memset((char *) keyphrases_buffer, '\0', keyphrases_buffer_len);
-          keyphrases_len = 0;
-          keyphrases_count = 0;
-#endif
-*/
+

@@ -1,21 +1,21 @@
-#include "dictionary.h"
+#include "dictionary_set.h"
 #include <iostream>
 #include <fstream>
 
 namespace inagist_utils {
 
-Dictionary::Dictionary() {
+DictionarySet::DictionarySet() {
 }
 
-Dictionary::~Dictionary() {
-  if (!m_dictionary.empty()) {
-    m_dictionary.clear();
+DictionarySet::~DictionarySet() {
+  if (!m_dictionary_set.empty()) {
+    m_dictionary_set.clear();
   }
 }
 
-int Dictionary::Clear() {
-  if (!m_dictionary.empty()) {
-    m_dictionary.clear();
+int DictionarySet::Clear() {
+  if (!m_dictionary_set.empty()) {
+    m_dictionary_set.clear();
   }
   return 0;
 }
@@ -32,7 +32,7 @@ int Dictionary::Clear() {
 // the caller MUST ensure that the above conditions are met
 // this function checks nothing of the above. just inserts whatever is given
 //
-int Dictionary::Load(const char* file) {
+int DictionarySet::Load(const char* file) {
   if (NULL == file) {
     std::cerr << "ERROR: invalid dictionary file\n";
     return -1;
@@ -47,7 +47,7 @@ int Dictionary::Load(const char* file) {
   std::string str;
   while (getline(ifs, str)) {
     //m_dictionary.insert(str.c_str());
-    m_dictionary.insert(str);
+    m_dictionary_set.insert(str);
   }
 
   ifs.close();
@@ -55,20 +55,24 @@ int Dictionary::Load(const char* file) {
   return 0;
 }
 
-int Dictionary::Find(const unsigned char *word) {
+int DictionarySet::Find(const unsigned char *word) {
+
   if (!word) {
     std::cout << "ERROR: fatal error - memory corruption\n";
     return -1;
   }
-  if (m_dictionary.find(std::string((char *) word)) != m_dictionary.end())
+
+  if (m_dictionary_set.find(std::string((char *) word)) != m_dictionary_set.end()) {
     return 1;
+  }
+
   return 0;
 }
 
-int Dictionary::Print() {
+int DictionarySet::Print() {
   //string_hash_set::const_iterator iter;
   std::set<std::string>::iterator iter;
-  for (iter = m_dictionary.begin(); iter != m_dictionary.end(); iter++)
+  for (iter = m_dictionary_set.begin(); iter != m_dictionary_set.end(); iter++)
     std::cout << *iter << std::endl;
 
   return 0;

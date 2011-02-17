@@ -6,7 +6,7 @@
 
 #define T_MAX_BUFFER_LEN 1024 
 
-extern int Init(const char*, const char*, const char*, const char*);
+extern int Init(const char*, const char*, const char*, const char*, const char*);
 extern int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                        char* safe_status_buffer, const unsigned int safe_status_buffer_len,
                        char* script_buffer, const unsigned int script_buffer_len,
@@ -49,11 +49,13 @@ int main(int argc, char *argv[]) {
   string dictionary_file = root_dir + "/data/static_data/dictionary.txt";
   string unsafe_dictionary_file = root_dir + "/data/static_data/unsafe_dictionary.txt";
   string lang_detect_config_file = root_dir + "/configs/language_detection.config";
+  string channels_dictionary_file = root_dir + "/data/static_data/channels_dictionary.txt";
 
   if (Init(stopwords_file.c_str(),
            dictionary_file.c_str(),
            unsafe_dictionary_file.c_str(),
-           lang_detect_config_file.c_str()) < 0) {
+           lang_detect_config_file.c_str(),
+           channels_dictionary_file.c_str()) < 0) {
     std::cerr << "ERROR: could not initialize\n";
     return -1;
   }

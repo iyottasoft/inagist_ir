@@ -1,5 +1,5 @@
-#ifndef _INAGIST_UTILS_DICTIONARY_H_
-#define _INAGIST_UTILS_DICTIONARY_H_
+#ifndef _INAGIST_UTILS_DICTIONARY_MAP_H_
+#define _INAGIST_UTILS_DICTIONARY_MAP_H_
 
 #ifndef DISALLOW_COPY_AND_ASSIGN
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
@@ -9,7 +9,7 @@
 
 //#include <ext/hash_set>
 #include <string>
-#include <set>
+#include <map>
 
 /*
 namespace __gnu_cxx
@@ -26,22 +26,24 @@ namespace inagist_utils {
 
 //typedef __gnu_cxx::hash_set<std::string, __gnu_cxx::hash<std::string> > string_hash_set;
 
-class Dictionary {
+class DictionaryMap {
  public:
-  Dictionary();
-  ~Dictionary();
+  DictionaryMap();
+  ~DictionaryMap();
   int Load(const char* dictionary_file_name);
-  int Find(const unsigned char* key);
+  int Find(const unsigned char *key, std::string& value);
+  int FindPart(const unsigned char* key, std::string& value);
   int Print();
   int Clear();
 
  private:
-  //string_hash_set m_dictionary;
-  std::set<std::string> m_dictionary;
+  //string_hash_set m_dictionary_map;
+  std::map<std::string, std::string> m_dictionary_map;
+  std::map<std::string, std::string>::iterator m_dict_map_iter;
 
-  DISALLOW_COPY_AND_ASSIGN(Dictionary); 
+  DISALLOW_COPY_AND_ASSIGN(DictionaryMap); 
 };
 
-} // inagist_test
+} // namespace inagist_utils
 
-#endif // _INAGIST_UTILS_DICTIONARY_H_
+#endif // _INAGIST_UTILS_DICTIONARY_MAP_H_

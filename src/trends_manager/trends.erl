@@ -1,10 +1,10 @@
 -module(trends).
--export([init/0, init_c/4, getkeywords/1, gettrends/1, test_twitter_timeline/0, test_twitter_timeline/1, test_init/0, test/0, test/1, test_file/0, stress_test/1]).
+-export([init/0, init_c/5, getkeywords/1, gettrends/1, test_twitter_timeline/0, test_twitter_timeline/1, test_init/0, test/0, test/1, test_file/0, stress_test/1]).
 
 init() ->
   erlang:load_nif("../../lib/libtrends", 0).
 
-init_c(_stopwords_file_path, _dictionary_file_path, _unsafe_dictionary_file_path, _lang_detect_config_file_path) ->
+init_c(_stopwords_file_path, _dictionary_file_path, _unsafe_dictionary_file_path, _lang_detect_config_file_path, _channels_dictionary_file_path) ->
   "NIF library not loaded".
 
 getkeywords(_tweet) ->
@@ -26,7 +26,8 @@ test_init() ->
   init_c(<<"../../data/static_data/stopwords.txt">>,
          <<"../../data/static_data/dictionary.txt">>,
          <<"../../data/static_data/unsafe_dictionary.txt">>,
-         <<"../../configs/language_detection.config">>).
+         <<"../../configs/language_detection.config">>,
+         <<"../../data/static_data/channels_dictionary.txt">>).
 
 test() ->
   %io:format("~p~n",[getkeywords(<<"Testing Keywords extract">>)]).

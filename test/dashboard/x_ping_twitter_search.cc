@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
   std::string temp_str;
   std::string reply_message;
   std::set<std::string> keywords_set;
+  std::set<std::string> hashtags_set;
   std::set<std::string> keyphrases_set;
   std::set<std::string> commenters;
 
@@ -133,7 +134,7 @@ int main(int argc, char *argv[]) {
           //std::cout.flush();
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
           ofs << buffer << std::endl;
-          ke.GetKeywords(buffer, safe_status, script, keywords_set, keyphrases_set);
+          ke.GetKeywords(buffer, safe_status, script, keywords_set, hashtags_set, keyphrases_set);
           km.PopulateFreqMap(keywords_set);
           //km.PopulateFreqMap(keyphrases_set);
           keywords_set.clear();
@@ -193,7 +194,7 @@ return 0;
           //std::cout.flush();
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
           ofs << buffer << std::endl;
-          ke.GetKeywords(buffer, safe_status, script, keywords_set, keyphrases_set);
+          ke.GetKeywords(buffer, safe_status, script, keywords_set, hashtags_set, keyphrases_set);
           km.PopulateFreqMap(keywords_set);
           //km.PopulateFreqMap(keyphrases_set);
           keywords_set.clear();
@@ -298,7 +299,7 @@ return 0;
         // now lets work on the json object thus obtained
         if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
           strcpy(buffer, (char *) tweet_object["text"]->Stringify().c_str());
-          ke.GetKeywords(buffer, safe_status, script, keywords_set, keyphrases_set);
+          ke.GetKeywords(buffer, safe_status, script, keywords_set, hashtags_set, keyphrases_set);
           ofs << buffer << std::endl;
           km.PopulateFreqMap(keywords_set);
           //km.PopulateFreqMap(keyphrases_set);

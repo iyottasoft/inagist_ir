@@ -21,7 +21,8 @@
     int Init(const char* stopwords_file_path,
              const char* dictionary_file_path,
              const char* unsafe_dictionary_file_path,
-             const char* lang_detect_config_file_path);
+             const char* lang_detect_config_file_path,
+             const char* channels_dictionary_file_path);
     int GetTrends(const char* user_name, char* trends_buffer);
     int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                 char* safe_status_buffer, const unsigned int safe_status_buffer_len,
