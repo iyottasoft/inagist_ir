@@ -3,6 +3,7 @@ SPIEGELzwischen
 SPIEGEL_Rezens
 SPIEGEL_Sport
 SPIEGEL_Politik
+SPIEGEL_Seite2
 REUTERS_DE
 dw_german
 dradio
@@ -10,3 +11,14 @@ annnalist
 3sat
 MTV_Germany
 AFPTV_de
+lto_de
+SPIEGEL_live
+AKND_de
+antiatom
+ausgestrahlt
+1893_news
+N24_News
+bov
+SPDSH
+FirstGermany
+DFB_Frauen

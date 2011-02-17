@@ -1,7 +1,10 @@
-balajiworld
 londonnewsnow
 nytimes
 ibnlive
 bbcworld
 techcrunch
 ndtv
+reuters
+slate
+scobleizer
+justinbieber
