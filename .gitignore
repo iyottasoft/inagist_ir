@@ -12,5 +12,4 @@ test/*/*.beam
 todo.txt
 data/static_data/output.txt
 data/lang/test/[^.]*
-data/lang/tweetsource/corpus/*.txt
 data/lang/tweetsource/tweets/*.txt
