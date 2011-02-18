@@ -416,6 +416,9 @@ int KeywordsExtract::GetKeywords(char* str,
   }
 
   buffer[0] = '\0';
+
+  script.assign(script_buffer, script_buffer_len);
+  safe_status.assign(safe_status_buffer, safe_status_buffer_len);
   if (keywords_len > 0) {
     unsigned char *pch1 = keywords_buffer;
     unsigned char *pch2 = pch1;
@@ -619,6 +622,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   //std::map<std::string, int> script_map;
   unsigned int script_count = 0;
   unsigned int english_count = 0;
+  bool current_word_english = false;
+  bool next_word_english = false;
 
   // channel classification
   unsigned int channels_count = 0;
@@ -771,42 +776,57 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   current_word_precedes_punct = is_punct;
   num_words++;
 
-  // stop words
-  if (m_stopwords_dictionary.Find(current_word_start) == 1) {
-    current_word_stop = true;
-    num_stop_words++;
-    words_set.insert(std::string((char *) current_word_start));
-#ifdef KE_DEBUG
-    if (KE_DEBUG > 5) {
-      cout << "current word: " << current_word_start << " :stopword" << endl;
-    }
+#ifndef I18N_ENABLED
+  code_point = *current_word_start;
+  if (code_point > 0x40 && code_point < 0x7B) {
+    current_word_english = true;
+  } else if (code_point == 0x23) {
+    code_point = *(current_word_start+1);
+    if (code_point > 0x40 && code_point < 0x7B)
+      current_word_english = true;
+  }
+
+  if (current_word_english) {
 #endif
-  } else {
-    current_word_stop = false;
-  }
-
-  // dictionary words
-  if (m_dictionary.Find(current_word_start) == 1) {
-    current_word_dict = true;
-    num_dict_words++;
-    words_set.insert(std::string((char *) current_word_start));
+    // stop words
+    if (m_stopwords_dictionary.Find(current_word_start) == 1) {
+      current_word_stop = true;
+      num_stop_words++;
+      words_set.insert(std::string((char *) current_word_start));
 #ifdef KE_DEBUG
-    if (KE_DEBUG > 5) {
-      cout << "current word: " << current_word_start << " :dictionary word" << endl;
-    }
+      if (KE_DEBUG > 5) {
+        cout << "current word: " << current_word_start << " :stopword" << endl;
+      }
 #endif
-  } else {
-    current_word_dict = false;
-  }
+    } else {
+      current_word_stop = false;
+    }
 
-  // unsafe words
-  if (m_unsafe_dictionary.Find(current_word_start) == 1) {
-    text_has_unsafe_words = true;
+    // dictionary words
+    if (m_dictionary.Find(current_word_start) == 1) {
+      current_word_dict = true;
+      num_dict_words++;
+      words_set.insert(std::string((char *) current_word_start));
+#ifdef KE_DEBUG
+      if (KE_DEBUG > 5) {
+        cout << "current word: " << current_word_start << " :dictionary word" << endl;
+      }
+#endif
+    } else {
+      current_word_dict = false;
+    }
+  
+    // unsafe words
+    if (m_unsafe_dictionary.Find(current_word_start) == 1) {
+      text_has_unsafe_words = true;
+    }
+  
+    if (m_channels_dictionary_map.FindPart(current_word_start, channel) == 1) {
+      Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
+    }
+#ifndef I18N_ENABLED
   }
-
-  if (m_channels_dictionary_map.FindPart(current_word_start, channel) == 1) {
-    Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
-  }
+#endif
 
   // go to the next word, ignoring punctuation and ignore words.
   // however passing over ignorewords must be recorded
@@ -982,14 +1002,17 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
       }
 #endif
 
-#ifndef I18N_ENABLED
-      bool current_word_english = false;
-#endif
       if (next_word_start) {
 #ifndef I18N_ENABLED
         code_point = *next_word_start;
         if (code_point > 0x40 && code_point < 0x7B) {
-          current_word_english = true;
+          next_word_english = true;
+        } else if (code_point == 0x23) {
+          code_point = *(next_word_start+1);
+          if (code_point > 0x40 && code_point < 0x7B)
+            next_word_english = true;
+        }
+        if (next_word_english) {
 #endif
         // stop words
         if (m_stopwords_dictionary.Find(next_word_start) == 1) {
@@ -1228,15 +1251,21 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
             }
             caps_entity_end = NULL;
 
-          } /*else if (prev_word_stop &&
+          } else if (prev_word_stop &&
               ('\0' == current_word_delimiter ||
               NULL == next_word_start ||
               current_word_precedes_ignore_word ||
               current_word_precedes_punct)) { 
 
-              caps_entity_start = current_word_start;
-              caps_entity_end = current_word_end;
-          }*/
+              // this is a single word entity. so not inserting into keywords
+              // caps_entity_start = current_word_start;
+              // caps_entity_end = current_word_end;
+              
+              // instead insert into hashtags set
+              if ((hashtags_len + current_word_len + 1) < hashtags_buffer_len) {
+                Insert(hashtags_buffer, hashtags_len, current_word_start, current_word_len, hashtags_count);
+              }
+          }
         }
       } else {
 #ifdef KE_DEBUG
@@ -1360,12 +1389,12 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
               keywords_len += 1;
               keywords_count++;
             }
-            *(stopwords_entity_end-2) = ch;
 
             if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
               Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
             }
 
+            *(stopwords_entity_end-2) = ch;
           }
           else if ((pch = (unsigned char*) strstr((char *) stopwords_entity_start, "\'s")) && (pch < stopwords_entity_end)) {
             ch = *pch;
@@ -1412,7 +1441,6 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
             if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
               Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
             }
-
           }
         } else {
           cout << "ERROR: stopwords entity markers are wrong\n";
@@ -1442,12 +1470,12 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
               keywords_len += 1;
               keywords_count++;
             }
-            *(caps_entity_end-2) = ch;
 
             if (m_channels_dictionary_map.FindPart(caps_entity_start, channel) == 1) {
               Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
             }
 
+            *(caps_entity_end-2) = ch;
           }
           else if ((pch = (unsigned char*) strstr((char *) caps_entity_start, "\'s")) && (pch < caps_entity_end)) {
             ch = *pch;
@@ -1510,8 +1538,8 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
       // hash tags
       if ('#' == *current_word_start && current_word_len >= 2) {
         if ((hashtags_len + current_word_len/* + 1*/) < hashtags_buffer_len) {
-          strncpy((char *) hashtags_buffer + hashtags_len, (char *) (current_word_start + 1), current_word_len-1);
-          hashtags_len += current_word_len;
+          strncpy((char *) hashtags_buffer + hashtags_len, (char *) current_word_start + 1, current_word_len-1);
+          hashtags_len += (current_word_len-1);
           strcpy((char *) hashtags_buffer + hashtags_len, "|");
           hashtags_len += 1;
           hashtags_count++;
@@ -1566,6 +1594,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
       current_word_precedes_ignore_word = next_word_precedes_ignore_word;
       current_word_precedes_punct = next_word_precedes_punct;
       current_word_len = next_word_len;
+      current_word_english = next_word_english;
 
       next_word_start = NULL;
       next_word_end = NULL;
@@ -1578,6 +1607,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
       next_word_delimiter = '\0';
       next_word_precedes_ignore_word = false;
       next_word_precedes_punct = false;
+      next_word_english = false;
 
       // BE CAREFUL ABOUT WHAT IS NEXT WORD OR CURRENT WORD NOW
 
@@ -1807,7 +1837,7 @@ int KeywordsExtract::GetKeywords(unsigned char* buffer, const unsigned int& buff
   }
 #endif
 
-  return keywords_count + keyphrases_count;
+  return keywords_count + keyphrases_count + hashtags_count;
 }
 
 // this is an helper function used to make a|b|c| kind of strings given a, b, c in consecutive calls

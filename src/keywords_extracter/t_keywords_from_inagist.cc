@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
   std::string dictionary_file = data_dir + "static_data/dictionary.txt";
   std::string unsafe_dictionary_file = data_dir + "static_data/unsafe_dictionary.txt";
   std::string lang_detect_config_file = root_dir + "configs/language_detection.config";
-  std::string channels_dictionary_file = root_dir + "static_data/channels_dictionary.txt";
+  std::string channels_dictionary_file = data_dir + "static_data/channels_dictionary.txt";
   std::string input_file = data_dir + "tweets.txt";
   std::string output_file = data_dir + "static_data/output.txt";
 
@@ -59,21 +59,26 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  inagist_trends::KeywordsManager km;
-
   char buffer[1024];
+  std::string safe_status;
   std::string script;
   std::set<std::string> keywords_set;
+  std::set<std::string> hashtags_set;
+  std::set<std::string> keyphrases_set;
 
   std::set<std::string>::iterator set_iter;
   for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
     strcpy(buffer, (char *) (*set_iter).c_str());
     std::cout << buffer << std::endl;
-    ke.GetKeywords(buffer, script, keywords_set);
+    ke.GetKeywords(buffer, safe_status, script, keywords_set, hashtags_set, keyphrases_set);
+    std::cout << safe_status << std::endl;
     std::cout << script << std::endl;
     ke.PrintKeywords(keywords_set);
-    km.PopulateFreqMap(keywords_set);
     keywords_set.clear();
+    ke.PrintKeywords(hashtags_set);
+    hashtags_set.clear();
+    ke.PrintKeywords(keyphrases_set);
+    keyphrases_set.clear();
     memset(buffer, 0, 1024);
   }
   tweets.clear();
