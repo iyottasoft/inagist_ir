@@ -18,14 +18,12 @@ int Init(std::string& root_dir) {
   std::string lang_detect_config_file = root_dir + "/configs/language_detection.config";
   std::string channels_dictionary_file = root_dir + "/data/static_data/channels_dictionary.txt";
 
-  if (g_ke.Init(stopwords_file.c_str(),
-                              dictionary_file.c_str(),
-                              unsafe_dictionary_file.c_str(),
-                              lang_detect_config_file.c_str(),
-                              channels_dictionary_file.c_str()) < 0) {
-#ifdef TRENDS_DEBUG
-    std::cerr << "ERROR: could not initialize KeywordsExtract\n";
-#endif
+  if (Init(stopwords_file.c_str(),
+           dictionary_file.c_str(),
+           unsafe_dictionary_file.c_str(),
+           lang_detect_config_file.c_str(),
+           channels_dictionary_file.c_str()) < 0) {
+    std::cout << "ERROR: could not initialize keywords extract\n";
     return -1;
   }
 
