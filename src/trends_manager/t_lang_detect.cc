@@ -59,8 +59,6 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
   char *tweet_start = tweets_buffer;
   char *tweet_end = strstr(tweet_start, "|");
   unsigned int tweet_len = 0;
-  unsigned int temp_tweets_num = 0;
-  unsigned int temp_detected_num = 0;
 
   while (tweet_start && tweet_end && *tweet_end != '\0') {
 
@@ -84,7 +82,7 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
     buffer3[0] = '\0';
     buffer4[0] = '\0';
     int ret_value = 0;
-    temp_tweets_num++;
+    tweets_num++;
     if ((ret_value = SubmitTweet((const unsigned char *) tweet_start, tweet_len,
                     (char *) safe_status, 10,
                     (char *) script, 4,
@@ -105,17 +103,15 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
     std::cout << "lang guess 1: " << buffer1 << std::endl;
     std::cout << "lang guess 2: " << buffer2 << std::endl;
     if (strcmp(expected_lang, buffer1) == 0) {
-      temp_detected_num++;
+      detected_num++;
     }
     *tweet_end = '|';
     tweet_start = tweet_end + 1;
   }
   tweet_start = NULL;
   tweet_end = NULL;
-  tweets_num = temp_tweets_num;
-  detected_num = temp_detected_num;
 
-  std::cout << std::endl << "tweets: " << temp_tweets_num << " detected: " << temp_detected_num << std::endl;
+  std::cout << std::endl << "tweets: " << tweets_num << " detected: " << detected_num << std::endl;
 
   return 0;
 }
@@ -158,6 +154,11 @@ int main(int argc, char* argv[]) {
     std::string output_corpus_file_name;
     unsigned int tweets_num = 0;
     unsigned int detected_num = 0;
+    unsigned int total_tweets_num = 0;
+    unsigned int total_detected_num = 0;
+    char debug_str[255];
+    memset(debug_str, '\0', 255);
+    std::set<std::string> debug_str_set;
     while (getline(ifs, line)) {
       line_count++;
       loc = line.find("=", 0);
@@ -189,14 +190,23 @@ int main(int argc, char* argv[]) {
             std::cout << "ERROR: TestLangForHandle failed for lang: " \
                       << lang << "on handle: " << handle << std::endl;
           }
+          total_tweets_num += tweets_num;
+          total_detected_num += detected_num;
+          memset(debug_str, '\0', 255);
+          sprintf(debug_str, "%s %u %u", lang.c_str(), tweets_num, detected_num);
+          debug_str_set.insert(std::string(debug_str));
         }
         line_count = 0;
       }
     }
     ifs.close();
 
-    std::cout << std::endl << "total tweets: " << tweets_num \
-              << " total detected: " << detected_num << std::endl;
+    std::set<std::string>::iterator set_iter;
+    for (set_iter = debug_str_set.begin(); set_iter != debug_str_set.end(); set_iter++)
+      std::cout << *set_iter << std::endl;
+
+    std::cout << std::endl << "total tweets: " << total_tweets_num \
+              << " total detected: " << total_detected_num << std::endl;
 
   }
 
