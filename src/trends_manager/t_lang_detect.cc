@@ -31,7 +31,7 @@ int Init(std::string& root_dir) {
 }
 
 int TestLangForHandle(std::string& handle, const char* expected_lang,
-                      unsigned int& tweets_num, unsigned int& detected_num) {
+                      unsigned int& tweets_num, unsigned int& detected_num, unsigned undefined_num) {
 
   std::cout << "testing tweets of handle: " << handle << std::endl;
   char tweets_buffer[MAX_BUFFER_LEN];
@@ -104,6 +104,11 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
     std::cout << "lang guess 2: " << buffer2 << std::endl;
     if (strcmp(expected_lang, buffer1) == 0) {
       detected_num++;
+    } else if ((strlen(buffer1) < 2) ||
+               (strcmp("RR", buffer1) == 0) ||
+               (strcmp("xx", buffer1) == 0) ||
+               (strcmp("uu", buffer1) == 0)) {
+      undefined_num++;
     }
     *tweet_end = '|';
     tweet_start = tweet_end + 1;
@@ -111,7 +116,9 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
   tweet_start = NULL;
   tweet_end = NULL;
 
-  std::cout << std::endl << "tweets: " << tweets_num << " detected: " << detected_num << std::endl;
+  std::cout << std::endl << "tweets: " << tweets_num \
+            << " detected: " << detected_num \
+            << " undefined: " << undefined_num << std::endl;
 
   return 0;
 }
@@ -154,8 +161,10 @@ int main(int argc, char* argv[]) {
     std::string output_corpus_file_name;
     unsigned int tweets_num = 0;
     unsigned int detected_num = 0;
+    unsigned int undefined_num = 0;
     unsigned int total_tweets_num = 0;
     unsigned int total_detected_num = 0;
+    unsigned int total_undefined_num = 0;
     char debug_str[255];
     memset(debug_str, '\0', 255);
     std::set<std::string> debug_str_set;
@@ -186,14 +195,15 @@ int main(int argc, char* argv[]) {
           std::string handle;
           getline(hfs, handle);
           hfs.close();
-          if (TestLangForHandle(handle, lang.c_str(), tweets_num, detected_num) < 0) {
+          if (TestLangForHandle(handle, lang.c_str(), tweets_num, detected_num, undefined_num) < 0) {
             std::cout << "ERROR: TestLangForHandle failed for lang: " \
                       << lang << "on handle: " << handle << std::endl;
           }
           total_tweets_num += tweets_num;
           total_detected_num += detected_num;
+          total_undefined_num += undefined_num;
           memset(debug_str, '\0', 255);
-          sprintf(debug_str, "%s %u %u", lang.c_str(), tweets_num, detected_num);
+          sprintf(debug_str, "%s %u %u %u", lang.c_str(), tweets_num, detected_num, undefined_num);
           debug_str_set.insert(std::string(debug_str));
         }
         line_count = 0;
@@ -206,6 +216,7 @@ int main(int argc, char* argv[]) {
       std::cout << *set_iter << std::endl;
 
     std::cout << std::endl << "total tweets: " << total_tweets_num \
+              << " total undefined: " << total_undefined_num \
               << " total detected: " << total_detected_num << std::endl;
 
   }
