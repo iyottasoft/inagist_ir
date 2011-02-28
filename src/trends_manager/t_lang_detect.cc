@@ -100,9 +100,12 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
     }
     std::cout << "Tweet: " << tweet_start << std::endl;
     std::cout << "expected lang: " << expected_lang << std::endl;
+    std::cout << "script: " << script << std::endl;
     std::cout << "lang guess 1: " << buffer1 << std::endl;
     std::cout << "lang guess 2: " << buffer2 << std::endl;
-    if (strcmp(expected_lang, buffer1) == 0) {
+    if ((strcmp(expected_lang, buffer1) == 0) ||
+        ((strcmp(script, buffer1) == 0) &&
+         (strcmp("en", buffer1) != 0))) {
       detected_num++;
     } else if ((strlen(buffer1) < 2) ||
                (strcmp("RR", buffer1) == 0) ||
