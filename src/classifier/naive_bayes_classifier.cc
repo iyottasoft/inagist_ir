@@ -49,6 +49,7 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
 
   double freqs[MAX_CORPUS_NUMBER];
   double temp_freq = 0;
+  double temp_total_freq = 0;
   unsigned int i = 0;
   std::string langs[MAX_CORPUS_NUMBER];
  
@@ -74,8 +75,8 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
         entry_found = true;
       }
     }
-    if (temp_freq > 0) {
-      freqs[i] += log(temp_freq/test_corpus.size());
+    if (temp_total_freq > 0) {
+      freqs[i] += log(temp_total_freq/test_corpus.size());
     }
     i++;
   }
