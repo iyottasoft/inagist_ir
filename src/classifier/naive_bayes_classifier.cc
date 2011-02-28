@@ -37,6 +37,11 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
                                      Corpus& test_corpus,
                                      std::string& guess_lang_output) {
 
+  if (test_corpus.size() < 1) {
+    guess_lang_output = "RR";
+    return -1;
+  }
+
   CorpusMapIter corpus_map_iter;
   CorpusIter test_corpus_iter;
   CorpusIter corpus_iter;
@@ -52,6 +57,7 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
     langs[i] = (*corpus_map_iter).first;
     freqs[i] = 0;
     temp_freq = 0;
+    temp_total_freq = 0;
     for (test_corpus_iter = test_corpus.begin(); test_corpus_iter != test_corpus.end(); test_corpus_iter++) {
       corpus_iter = ((*corpus_map_iter).second).find((*test_corpus_iter).first); 
       if (corpus_iter != ((*corpus_map_iter).second).end()) {
@@ -60,12 +66,16 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
           std::cout << (*corpus_iter).first << " : " << (*corpus_iter).second << " in " << (*corpus_map_iter).first << std::endl;
         }
 #endif
-        temp_freq += (double) (*corpus_iter).second;
+        temp_freq = (double) (*corpus_iter).second;
+        if (temp_freq > 8) {
+          temp_freq = 8;
+        }
+        temp_total_freq += temp_freq;
         entry_found = true;
       }
     }
     if (temp_freq > 0) {
-      freqs[i] += log(temp_freq);
+      freqs[i] += log(temp_freq/test_corpus.size());
     }
     i++;
   }

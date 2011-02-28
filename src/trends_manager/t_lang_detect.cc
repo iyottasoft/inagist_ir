@@ -31,7 +31,7 @@ int Init(std::string& root_dir) {
 }
 
 int TestLangForHandle(std::string& handle, const char* expected_lang,
-                      unsigned int& tweets_num, unsigned int& detected_num, unsigned undefined_num) {
+                      unsigned int& tweets_num, unsigned int& detected_num, unsigned int& undefined_num) {
 
   std::cout << "testing tweets of handle: " << handle << std::endl;
   char tweets_buffer[MAX_BUFFER_LEN];
@@ -216,8 +216,8 @@ int main(int argc, char* argv[]) {
       std::cout << *set_iter << std::endl;
 
     std::cout << std::endl << "total tweets: " << total_tweets_num \
-              << " total undefined: " << total_undefined_num \
-              << " total detected: " << total_detected_num << std::endl;
+              << " total detected: " << total_detected_num \
+              << " total undefined: " << total_undefined_num << std::endl;
 
   }
 
