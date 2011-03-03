@@ -105,11 +105,18 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
         ostream_ptr << "</tr></td><br/>" << std::endl;
       return -1;
     }
-    ostream_ptr << "Tweet: " << tweet_start << std::endl;
-    ostream_ptr << "expected lang: " << expected_lang << std::endl;
-    ostream_ptr << "script: " << script << std::endl;
-    ostream_ptr << "lang guess 1: " << buffer1 << std::endl;
-    ostream_ptr << "lang guess 2: " << buffer2 << std::endl;
+
+    if (output_type == 1) {
+      ostream_ptr << "<tr><td><br/>" << tweet_start << "<br/>" << expected_lang << "<br/>" << script << "<br/>" << buffer1 << "<br/>" << buffer2 << std::endl;
+      ostream_ptr << "</td></tr><br/>" << std::endl;
+    } else {
+      ostream_ptr << "Tweet: " << tweet_start << std::endl;
+      ostream_ptr << "expected lang: " << expected_lang << std::endl;
+      ostream_ptr << "script: " << script << std::endl;
+      ostream_ptr << "lang guess 1: " << buffer1 << std::endl;
+      ostream_ptr << "lang guess 2: " << buffer2 << std::endl;
+    }
+
     if ((strcmp(expected_lang, buffer1) == 0) ||
         ((strcmp(expected_lang, script) == 0) &&
          (strcmp("en", script) != 0))) {
@@ -134,7 +141,7 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
       << " undefined: " << undefined_num << std::endl;
 
   if (output_type == 1)
-    ostream_ptr << "</tr></td><br/>" << std::endl;
+    ostream_ptr << "</td></tr><br/>" << std::endl;
 
   return 0;
 }
@@ -265,9 +272,16 @@ int main(int argc, char* argv[]) {
   }
   debug_str_set.clear();
 
-  *ostream_ptr << std::endl << "total tweets: " << total_tweets_num \
-            << " total detected: " << total_detected_num \
-            << " total undefined: " << total_undefined_num << std::endl;
+  if (output_type == 1)
+    *ostream_ptr << "<br/>" << std::endl;
+
+  *ostream_ptr << std::endl << "total tweets: " << total_tweets_num << std::endl;
+  if (output_type == 1)
+    *ostream_ptr << "<br/>" << std::endl;
+  *ostream_ptr << " total detected: " << total_detected_num << std::endl;
+  if (output_type == 1)
+    *ostream_ptr << "<br/>" << std::endl;
+  *ostream_ptr << " total undefined: " << total_undefined_num << std::endl;
 
   if (output_type == 1) {
     *ostream_ptr << "</body>\n</html>" << std::endl;
