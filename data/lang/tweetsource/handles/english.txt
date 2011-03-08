@@ -1,4 +1,3 @@
-londonnewsnow
 nytimes
 ibnlive
 bbcworld

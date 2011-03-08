@@ -36,13 +36,20 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
                       const unsigned int output_type, std::ostream& ostream_ptr) {
 
   if (output_type == 1) {
-    ostream_ptr << "<tr><td><br/>" << std::endl;
+    ostream_ptr << "<table width=100%>" << std::endl;
+    ostream_ptr << "<tr width=100%><td width=100%>" << std::endl;
   }
   ostream_ptr << "handle: " << handle << std::endl;
+  if (output_type == 1)
+    ostream_ptr << "</td></tr>" << std::endl;
+
   char tweets_buffer[MAX_BUFFER_LEN];
   unsigned int tweets_len = 0;
   if (GetTestTweets(handle.c_str(), MAX_BUFFER_LEN, tweets_buffer, &tweets_len) < 0) {
     std::cout << "ERROR: could not get tweets for handle: " << handle << std::endl;
+    ostream_ptr << "<tr><td>ERROR: could not get tweets for handle: " << handle << "</td></tr>" << std::endl;
+    ostream_ptr << "</table>" << std::endl;
+    return -1;
   }
 
   char safe_status[10];
@@ -64,6 +71,7 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
   char *tweet_start = tweets_buffer;
   char *tweet_end = strstr(tweet_start, "|");
   unsigned int tweet_len = 0;
+  int flag = 0;
 
   while (tweet_start && tweet_end && *tweet_end != '\0') {
 
@@ -102,13 +110,44 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
                     (char *) buffer3, MAX_BUFFER_LEN,
                     (char *) buffer4, MAX_BUFFER_LEN)) < 0) {
       if (output_type == 1)
-        ostream_ptr << "</tr></td><br/>" << std::endl;
+        ostream_ptr << "</table>" << std::endl;
       return -1;
     }
 
+    if (strcmp("en", script) != 0) {
+      if (strcmp(expected_lang, buffer1) == 0)
+        flag = 1;
+      else
+        flag = 0;
+    } else if ((strcmp(expected_lang, buffer1) == 0) ||
+        ((strcmp(expected_lang, script) == 0) &&
+         (strcmp("en", script) != 0))) {
+      detected_num++;
+      flag = 2;
+    } else if ((strlen(buffer1) < 2) ||
+               (strcmp("RR", buffer1) == 0) ||
+               (strcmp("xx", buffer1) == 0) ||
+               (strcmp("uu", buffer1) == 0)) {
+      undefined_num++;
+      flag = -1;
+    } else {
+      flag = -2;
+    }
+
     if (output_type == 1) {
-      ostream_ptr << "<tr><td><br/>" << tweet_start << "<br/>" << expected_lang << "<br/>" << script << "<br/>" << buffer1 << "<br/>" << buffer2 << std::endl;
-      ostream_ptr << "</td></tr><br/>" << std::endl;
+      if (2 == flag) {
+        ostream_ptr << "<tr><td bgcolor=#07B133>";
+      } else if (1 == flag) {
+        ostream_ptr << "<tr><td bgcolor=#3EA99F>";
+      } else if (0 == flag) {
+        ostream_ptr << "<tr><td bgcolor=#FFFFFF>";
+      } else if (-1 == flag) {
+        ostream_ptr << "<tr><td bgcolor=#C71585>";
+      } else if (-2 == flag) {
+        ostream_ptr << "<tr><td bgcolor=#FF0000>";
+      }
+      ostream_ptr << "<br/>" << tweet_start << "<br/>expected: " << expected_lang << "<br/>script: " << script << "<br/>guess 1: " << buffer1 << "<br/>guess 2: " << buffer2 << std::endl;
+      ostream_ptr << "</td></tr>\n" << std::endl;
     } else {
       ostream_ptr << "Tweet: " << tweet_start << std::endl;
       ostream_ptr << "expected lang: " << expected_lang << std::endl;
@@ -117,16 +156,6 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
       ostream_ptr << "lang guess 2: " << buffer2 << std::endl;
     }
 
-    if ((strcmp(expected_lang, buffer1) == 0) ||
-        ((strcmp(expected_lang, script) == 0) &&
-         (strcmp("en", script) != 0))) {
-      detected_num++;
-    } else if ((strlen(buffer1) < 2) ||
-               (strcmp("RR", buffer1) == 0) ||
-               (strcmp("xx", buffer1) == 0) ||
-               (strcmp("uu", buffer1) == 0)) {
-      undefined_num++;
-    }
     *tweet_end = '|';
     tweet_start = tweet_end + 1;
   }
@@ -134,14 +163,19 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
   tweet_end = NULL;
 
   if (output_type == 1)
-    ostream_ptr << "<hr/>" << std::endl;
+    ostream_ptr << "<tr><td>" << std::endl;
 
   ostream_ptr << std::endl << "tweets: " << tweets_num \
       << " detected: " << detected_num \
       << " undefined: " << undefined_num << std::endl;
 
   if (output_type == 1)
-    ostream_ptr << "</td></tr><br/>" << std::endl;
+    ostream_ptr << "</td></tr>" << std::endl;
+
+  if (output_type == 1) {
+    ostream_ptr << "<hr/>" << std::endl;
+    ostream_ptr << "</table>\n" << std::endl;
+  }
 
   return 0;
 }
@@ -172,7 +206,8 @@ int main(int argc, char* argv[]) {
     ostream_ptr = &ofs;
     *ostream_ptr << "<html>\n<head>\n" \
                  << "<title>Inagist Language Detection</title>\n" \
-                 << "</head>\n<body>\n<table>" << std::endl;
+                 << "<h3>Inagist Language Detection</h3>\n" \
+                 << "</head>\n<body>\n<table width=100%>" << std::endl;
     ofs.close();
     ofs.open(output_html_file_name.c_str(), std::ios_base::app);
     output_type = 1;
@@ -211,6 +246,8 @@ int main(int argc, char* argv[]) {
   char debug_str[255];
   memset(debug_str, '\0', 255);
   std::set<std::string> debug_str_set;
+  std::set<std::string> handles_set;
+  std::set<std::string>::iterator set_iter;
   while (getline(ifs, line)) {
     line_count++;
     loc = line.find("=", 0);
@@ -230,46 +267,78 @@ int main(int argc, char* argv[]) {
       output_tweets_file_name = value;
     }
     if (line_count == 4) {
+      line_count = 0;
       std::ifstream hfs(handles_file_name.c_str());
       if (!hfs.is_open()) {
         std::cout << "ERROR: could not open handles file: " << handles_file_name \
                   << " for lang: " << lang << std::endl;
+        continue;
       } else {
+
         std::string handle;
-        getline(hfs, handle);
+        while (getline(hfs, handle)) {
+          handles_set.insert(handle);
+        }
         hfs.close();
+
+        unsigned int index = rand();
+        index = index % handles_set.size();
+        if (index > 0 && index >= handles_set.size()) {
+          continue;
+        }
+
+        unsigned int temp_index = 0;
+        for (set_iter = handles_set.begin(); set_iter != handles_set.end(); set_iter++) {
+          if (temp_index == index) {
+            handle = *set_iter;
+            break;
+          }
+          temp_index++;
+        }
+        handles_set.clear();
+
         tweets_num = 0;
         detected_num = 0;
         undefined_num = 0;
+        if (output_type == 1) {
+          *ostream_ptr << "<tr width=100%><td width=100%>" << std::endl;
+        }
         if (TestLangForHandle(handle, lang.c_str(),
                               tweets_num, detected_num, undefined_num,
                               output_type, *ostream_ptr) < 0) {
           std::cout << "ERROR: TestLangForHandle failed for lang: " \
                     << lang << "on handle: " << handle << std::endl;
         }
+        if (output_type == 1) {
+          *ostream_ptr << "</td></tr>" << std::endl;
+        }
         total_tweets_num += tweets_num;
         total_detected_num += detected_num;
         total_undefined_num += undefined_num;
         memset(debug_str, '\0', 255);
-        sprintf(debug_str, "%s %u %u %u", lang.c_str(), tweets_num, detected_num, undefined_num);
+        if (output_type == 1) {
+          sprintf(debug_str, "<tr><td>%s</td><td>%u</td><td>%u</td><td>%u</td></tr>", lang.c_str(), tweets_num, detected_num, undefined_num);
+        } else {
+          sprintf(debug_str, "%s %u %u %u", lang.c_str(), tweets_num, detected_num, undefined_num);
+        }
         debug_str_set.insert(std::string(debug_str));
       }
-      line_count = 0;
     }
   }
   ifs.close();
 
-  if (output_type == 1) {
-    *ostream_ptr << "</table>\n<br/>" << std::endl;
-  }
+  if (output_type == 1)
+    *ostream_ptr << "<tr><td><br/>" << std::endl;
   *ostream_ptr << "Summary:" << std::endl;
-  std::set<std::string>::iterator set_iter;
+  if (output_type == 1)
+    *ostream_ptr << "<br/>" << std::endl;
+  if (output_type == 1)
+    *ostream_ptr << "<table border=1>" << std::endl;
   for (set_iter = debug_str_set.begin(); set_iter != debug_str_set.end(); set_iter++) {
     *ostream_ptr << *set_iter << std::endl;
-    if (output_type == 1) {
-      *ostream_ptr << "<br/>" << std::endl;
-    }
   }
+  if (output_type == 1)
+    *ostream_ptr << "</table>" << std::endl;
   debug_str_set.clear();
 
   if (output_type == 1)
@@ -278,13 +347,18 @@ int main(int argc, char* argv[]) {
   *ostream_ptr << std::endl << "total tweets: " << total_tweets_num << std::endl;
   if (output_type == 1)
     *ostream_ptr << "<br/>" << std::endl;
-  *ostream_ptr << " total detected: " << total_detected_num << std::endl;
+  *ostream_ptr << "total detected: " << total_detected_num << std::endl;
   if (output_type == 1)
     *ostream_ptr << "<br/>" << std::endl;
-  *ostream_ptr << " total undefined: " << total_undefined_num << std::endl;
+  *ostream_ptr << "total undefined: " << total_undefined_num << std::endl;
+  if (output_type == 1)
+    *ostream_ptr << "<br/>" << std::endl;
+  *ostream_ptr << "total failed: " << (total_tweets_num - total_undefined_num - total_detected_num) << std::endl;
+  if (output_type == 1)
+    *ostream_ptr << "</td></tr>" << std::endl;
 
   if (output_type == 1) {
-    *ostream_ptr << "</body>\n</html>" << std::endl;
+    *ostream_ptr << "</table></body>\n</html>" << std::endl;
   }
 
   if (argc == 3) {
