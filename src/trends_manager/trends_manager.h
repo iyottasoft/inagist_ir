@@ -23,7 +23,7 @@
              const char* unsafe_dictionary_file_path,
              const char* lang_detect_config_file_path,
              const char* channels_dictionary_file_path);
-    int GetTrends(const char* user_name, char* trends_buffer);
+    int GetTrends(char* trends_buffer, unsigned int* trends_len_ptr, unsigned int* num_trends_ptr);
     int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                 char* safe_status_buffer, const unsigned int safe_status_buffer_len,
                 char* script_buffer, const unsigned int script_buffer_len,
@@ -46,6 +46,9 @@
                           const unsigned int in_length,
                           char *tweets_buffer,
                           unsigned int *out_length);
+    int GetTestTrends(const char* trends_file_path,
+                      unsigned char* trends_buffer, const unsigned int trends_buffer_len,
+                      unsigned int* trends_len_ptr, unsigned int* trends_count_ptr);
 #ifdef _CPLUSPLUS
   }
 #endif

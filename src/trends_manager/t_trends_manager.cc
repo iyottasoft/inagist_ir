@@ -20,7 +20,6 @@ extern int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
                        char* buffer2, const unsigned int buffer2_len,
                        char* buffer3, const unsigned int buffer3_len,
                        char* buffer4, const unsigned int buffer4_len);
-extern int GetTrends();
 
 using std::string;
 
