@@ -17,7 +17,8 @@ LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_trends_manager \
        ${BIN_DIR}/t_show_unsafe_trends \
-       ${BIN_DIR}/t_lang_detect
+       ${BIN_DIR}/t_lang_detect \
+       ${BIN_DIR}/x_lang_test_data_generator
 
 OBJS = trends_manager.o 
 
@@ -55,6 +56,11 @@ ${BIN_DIR}/t_show_unsafe_trends: t_show_unsafe_trends.o ${LIB}
 ${BIN_DIR}/t_lang_detect: t_lang_detect.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_lang_detect
+	@echo "done!"
+
+${BIN_DIR}/x_lang_test_data_generator: x_lang_test_data_generator.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_lang_test_data_generator
 	@echo "done!"
 
 ERL_LIB = ${LIB_DIR}/libtrends.so

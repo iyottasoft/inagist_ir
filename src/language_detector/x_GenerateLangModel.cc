@@ -28,7 +28,9 @@ int main(int argc, char* argv[]) {
     std::string output_tweets_file_name;
     std::string output_corpus_file_name;
     while (getline(ifs, line)) {
-      line_count++;
+      if (key.compare(0, 8, "testdata") != 0) {
+        line_count++;
+      }
       //std::cout << line << std::endl;
       loc = line.find("=", 0);
       if (loc == std::string::npos) {

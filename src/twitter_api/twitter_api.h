@@ -10,7 +10,7 @@ class TwitterAPI {
  public:
   TwitterAPI();
   ~TwitterAPI();
-  int GetPublicTimeLine(std::set<std::string>& tweets);
+  static int GetPublicTimeLine(std::set<std::string>& tweets);
 };
 
 }

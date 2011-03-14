@@ -115,7 +115,9 @@ int main(int argc, char* argv[]) {
     std::string corpus_class_name;
     std::map<std::string, std::string> corpus_class_file_map;
     while (getline(ifs, line)) {
-      line_count++;
+      if (key.compare(0, 8, "testdata") != 0) {
+        line_count++;
+      }
       // std::cout << line << std::endl;
       loc = line.find("=", 0);
       if (loc == std::string::npos) {
