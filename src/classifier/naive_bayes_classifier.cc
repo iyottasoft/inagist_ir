@@ -33,6 +33,9 @@ int NaiveBayesClassifier::SetDebugLevel(unsigned int debug_level) {
   return 0;
 }
 
+// this is pretty naive!
+// TODO (balaji) need to build a hash map with (say) ngram as key and
+// a list of structs with frequency and corpus as keys
 int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
                                      Corpus& test_corpus,
                                      std::string& guess_lang_output) {
