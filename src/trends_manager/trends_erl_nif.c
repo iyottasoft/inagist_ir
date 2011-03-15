@@ -10,7 +10,7 @@
 #define MAX_NAME_LEN 255
 #define MAX_LIST_BUFFER_LEN 20480
 //#define TRENDS_DEBUG 1
-//#define ERLANG_R14B02 1
+#define ERLANG_R14B02 1
 
 static int my_enif_get_string(ErlNifEnv *env, ERL_NIF_TERM list, char *buf) {
   ERL_NIF_TERM cell, head, tail;

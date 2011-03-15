@@ -12,6 +12,8 @@
 #define MAX_LIST_BUFFER_LEN 20480
 #define LD_DEBUG 1
 
+#define ERLANG_R14B02 1
+
 ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   if (argc != 1) {
@@ -34,7 +36,11 @@ ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     tweet_term = enif_make_binary(env, &tweet_bin);
     //enif_release_binary(env, &tweet_bin);
   } else {
+#ifdef ERLANG_R14B02
     enif_release_binary(&tweet_bin);
+#else
+    enif_release_binary(env, &tweet_bin);
+#endif
 #ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
@@ -65,7 +71,11 @@ ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     lang_buffer[2] = '\0';
   }
 
+#ifdef ERLANG_R14B02
   ret_val = enif_alloc_binary(len, &lang_bin);
+#else
+  ret_val = enif_alloc_binary(env, len, &lang_bin);
+#endif
   if (ret_val < 0) {
 #ifndef LD_DEBUG
     return enif_make_atom(env, "error");
@@ -99,9 +109,17 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if (success && (file_path.size < MAX_NAME_LEN)) {
     memcpy(config_file, file_path.data, file_path.size);
     config_file[file_path.size] = '\0';
+#ifdef ERLANG_R14B02
     enif_release_binary(&file_path);
+#else
+    enif_release_binary(env, &file_path);
+#endif
   } else {
+#ifdef ERLANG_R14B02
     enif_release_binary(&file_path);
+#else
+    enif_release_binary(env, &file_path);
+#endif
 #ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
@@ -127,7 +145,6 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 
   int out_length = 0;
   if (argc == 1) {
-  exit(1);
     char user_name_str[MAX_NAME_LEN];
     memset(user_name_str, 0, MAX_NAME_LEN);
     ErlNifBinary user_name;
@@ -135,9 +152,17 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     if (enif_inspect_binary(env, argv[0], &user_name)) {
       memcpy(user_name_str, user_name.data, user_name.size);
       user_name_str[user_name.size] = '\0';
+#ifdef ERLANG_R14B02
       enif_release_binary(&user_name);
+#else
+      enif_release_binary(env, &user_name);
+#endif
     } else {
+#ifdef ERLANG_R14B02
       enif_release_binary(&user_name);
+#else
+      enif_release_binary(env, &user_name);
+#endif
 #ifndef LD_DEBUG
       return enif_make_atom(env, "error");
 #else
@@ -194,7 +219,11 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 #endif
     }
 
+#ifdef ERLANG_R14B02
     ret_val = enif_alloc_binary(tweet_len, &tweet);
+#else
+    ret_val = enif_alloc_binary(env, tweet_len, &tweet);
+#endif
     if (ret_val < 0) {
 #ifndef LD_DEBUG
       return enif_make_atom(env, "error");
@@ -256,9 +285,17 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
     if (enif_inspect_binary(env, argv[0], &file_name)) {
       memcpy(file_name_str, file_name.data, file_name.size);
       file_name_str[file_name.size] = '\0';
+#ifdef ERLANG_R14B02
       enif_release_binary(&file_name);
+#else
+      enif_release_binary(env, &file_name);
+#endif
     } else {
+#ifdef ERLANG_R14B02
       enif_release_binary(&file_name);
+#else
+      enif_release_binary(env, &file_name);
+#endif
 #ifndef LD_DEBUG
       return enif_make_atom(env, "error");
 #else
@@ -307,7 +344,11 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
 #endif
     }
 
+#ifdef ERLANG_R14B02
     ret_val = enif_alloc_binary(tweet_len, &tweet);
+#else
+    ret_val = enif_alloc_binary(env, tweet_len, &tweet);
+#endif
     if (ret_val < 0) {
 #ifndef LD_DEBUG
       return enif_make_atom(env, "error");
