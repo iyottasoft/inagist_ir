@@ -9,6 +9,7 @@
 #define MAX_BUFFER_LEN 1024
 #define MAX_NAME_LEN 255
 #define MAX_LIST_BUFFER_LEN 20480
+#define ERLANG_R14B02 1
 
 ERL_NIF_TERM nif_test_utfcpp(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
@@ -23,9 +24,17 @@ ERL_NIF_TERM nif_test_utfcpp(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
   if (success && tweet_len > 1 && tweet_len < MAX_BUFFER_LEN) {
     memcpy(tweet_str, tweet.data, tweet_len);
     tweet_str[tweet_len] = '\0';
+#ifdef ERLANG_R14B02 
+    enif_release_binary(&tweet);
+#else
     enif_release_binary(env, &tweet);
+#endif
   } else {
+#ifdef ERLANG_R14B02 
+    enif_release_binary(&tweet);
+#else
     enif_release_binary(env, &tweet);
+#endif
     return enif_make_atom(env, "error2");
   }
 
@@ -46,7 +55,11 @@ ERL_NIF_TERM nif_test_utfcpp(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
     strcpy(script_buffer, "00");
     len = 2;
   }
+#ifdef ERLANG_R14B02 
+  ret_val = enif_alloc_binary(len, &script_bin);
+#else
   ret_val = enif_alloc_binary(env, len, &script_bin);
+#endif
   if (ret_val < 0)
     return enif_make_atom(env, "error4");
   for (i=0; i<len; i++) {
@@ -69,9 +82,17 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 
     if (enif_inspect_binary(env, argv[0], &user_name)) {
       memcpy(user_name_str, user_name.data, user_name.size);
+#ifdef ERLANG_R14B02 
+      enif_release_binary(&user_name);
+#else
       enif_release_binary(env, &user_name);
-    }   else {
+#endif
+    } else {
+#ifdef ERLANG_R14B02 
+      enif_release_binary(&user_name);
+#else
       enif_release_binary(env, &user_name);
+#endif
       return enif_make_atom(env, "error5");
     }
 
@@ -107,7 +128,11 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 
     if (tweet_len <= 0 || tweet_len >= MAX_BUFFER_LEN)
       return enif_make_atom(env, "error9");
+#ifdef ERLANG_R14B02 
+    ret_val = enif_alloc_binary(tweet_len, &tweet);
+#else
     ret_val = enif_alloc_binary(env, tweet_len, &tweet);
+#endif
     if (ret_val < 0)
       return enif_make_atom(env, "error10");
     for (i=0; i<tweet_len; i++) {
