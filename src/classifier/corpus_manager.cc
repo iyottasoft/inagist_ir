@@ -52,10 +52,18 @@ int CorpusManager::Clear() {
 
   m_corpus.clear();
   CorpusMapIter corpus_map_iter;
-  for (corpus_map_iter = m_corpus_map.begin(); corpus_map_iter != m_corpus_map.end(); corpus_map_iter++) {
-    (corpus_map_iter->second).clear();
+  if (!m_corpus_map.empty()) {
+    for (corpus_map_iter = m_corpus_map.begin(); corpus_map_iter != m_corpus_map.end(); corpus_map_iter++) {
+      if (!corpus_map_iter->second.empty()) {
+        (corpus_map_iter->second).clear();
+      }
+    }
+    m_corpus_map.clear();
   }
-  m_corpus_map.clear();
+
+  if (!m_classes_freq_map.empty()) {
+    m_classes_freq_map.clear();
+  }
 
   return 0;
 }

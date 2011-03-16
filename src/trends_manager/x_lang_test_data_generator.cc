@@ -13,6 +13,7 @@
 #include <string>
 #include <cstring>
 #include "language_detector.h"
+#include "corpus_manager.h"
 #include "trends_manager.h"
 #include "twitter_api.h"
 
@@ -40,12 +41,18 @@ int Init(std::string& root_dir) {
   return 0;
 }
 
-int GetLangTestData(std::map<std::string, unsigned int>& test_data_map,
+int GetLangTestData(inagist_classifiers::Corpus& test_data_map,
                     unsigned int& tweets_num,
                     unsigned int& detected_num,
                     unsigned int& undefined_num,
                     unsigned int& non_latin_num,
                     unsigned int& unknown_script_num) {
+
+  tweets_num = 0;
+  detected_num = 0;
+  undefined_num = 0;
+  non_latin_num = 0;
+  unknown_script_num = 0;
 
   std::set<std::string> tweets;
   if (inagist_api::TwitterAPI::GetPublicTimeLine(tweets) < 0) {
@@ -55,6 +62,7 @@ int GetLangTestData(std::map<std::string, unsigned int>& test_data_map,
   tweets_num = tweets.size();
   if (tweets_num < 1) {
     std::cout << "ERROR: no tweets found\n";
+    return 0;
   }
 
   unsigned char tweet_buffer[MAX_BUFFER_LEN];
@@ -142,7 +150,7 @@ int GetLangTestData(std::map<std::string, unsigned int>& test_data_map,
   }
   tweets.clear();
 
-  return 0;
+  return tweets_num;
 }
 
 int main(int argc, char* argv[]) {
@@ -207,37 +215,50 @@ int main(int argc, char* argv[]) {
   unsigned int total_undefined_num = 0;
   unsigned int total_non_latin_num = 0;
   unsigned int total_unknown_script_num = 0;
-  std::map<std::string, unsigned int> test_data_map;
-  
+  inagist_classifiers::Corpus test_data_map;
+
+  if (inagist_classifiers::CorpusManager::LoadCorpus(test_data_file_name, test_data_map) < 0) {
+    std::cout << "ERROR: could not load test_data from file: " << test_data_file_name << std::endl;
+    return -1;
+  }
+
   tweets_num = 0;
   detected_num = 0;
   undefined_num = 0;
-  if (GetLangTestData(test_data_map, tweets_num, detected_num, undefined_num, non_latin_num, unknown_script_num) < 0) {
+  if (GetLangTestData(test_data_map, tweets_num, detected_num,
+                      undefined_num, non_latin_num, unknown_script_num) < 0) {
     std::cout << "ERROR: could not get lang test data\n";
   } else {
     total_tweets_num += tweets_num;
     total_detected_num += detected_num;
     total_undefined_num += undefined_num;
+    total_non_latin_num += non_latin_num;
+    total_unknown_script_num += unknown_script_num;
   }
   
   std::cout << std::endl << "total tweets: " << total_tweets_num << std::endl;
   std::cout << "total detected: " << total_detected_num << std::endl;
-  std::cout << "total undefined: " << total_undefined_num << std::endl;
-  std::cout << "total non latin: " << total_non_latin_num << std::endl;
-  std::cout << "total undefined: " << total_unknown_script_num << std::endl;
+  std::cout << "total undefined lang: " << total_undefined_num << std::endl;
+  std::cout << "total non latin script: " << total_non_latin_num << std::endl;
+  std::cout << "total unknown script: " << total_unknown_script_num << std::endl;
   std::cout << "total failed: " << (total_tweets_num - total_undefined_num - total_detected_num - total_non_latin_num - total_unknown_script_num) << std::endl;
 
-  std::ofstream ofs(test_data_file_name.c_str());
-  if (!ofs.is_open()) {
-    std::cout << "ERROR: could not open test data file: " << test_data_file_name << std::endl;
-  } else {
-    std::map<std::string, unsigned int>::iterator map_iter;
-    for (map_iter = test_data_map.begin(); map_iter != test_data_map.end(); map_iter++) {
-      ofs << map_iter->first << "=" << map_iter->second << std::endl;
+  if (!test_data_map.empty()) {
+    std::ofstream ofs(test_data_file_name.c_str());
+    if (!ofs.is_open()) {
+      std::cout << "ERROR: could not open test data file: " << test_data_file_name << std::endl;
+    } else {
+      inagist_classifiers::CorpusIter corpus_iter;
+      unsigned int sum = 0;
+      for (corpus_iter = test_data_map.begin(); corpus_iter != test_data_map.end(); corpus_iter++) {
+        ofs << corpus_iter->first << "=" << corpus_iter->second << std::endl;
+        sum += corpus_iter->second;
+      }
+      ofs << "all_classes=" << sum << std::endl;
+      ofs.close();
     }
-    ofs.close();
+    test_data_map.clear();
   }
-  test_data_map.clear();
 
   return 0;
 }

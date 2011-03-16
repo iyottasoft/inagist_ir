@@ -17,11 +17,12 @@ class NaiveBayesClassifier {
   NaiveBayesClassifier();
   ~NaiveBayesClassifier();
   int GuessClass(CorpusMap& corpus_map,
+                 Corpus& classes_freq_map,
                  Corpus& test_corpus,
-                 std::string& guess_lang_output);
+                 std::string& guess_class_output);
   int GuessClass(std::map<std::string, int> testfile_features_map,
-                 std::map<std::string, int> lang1_features_map,
-                 std::map<std::string, int> lang2_features_map);
+                 std::map<std::string, int> class1_features_map,
+                 std::map<std::string, int> class2_features_map);
   int SetDebugLevel(unsigned int debug_level);
 
  private:
