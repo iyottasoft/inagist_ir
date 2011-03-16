@@ -176,11 +176,6 @@ int main(int argc, char* argv[]) {
     root_dir.assign(argv[0], loc);
   }
 
-  if (Init(root_dir) < 0) {
-    std::cout << "ERROR: could not initialize keywords extract\n";
-    return -1;
-  }
-
   std::string test_data_file_name;
   std::string line;
   std::string key;
@@ -202,6 +197,27 @@ int main(int argc, char* argv[]) {
 
   if (test_data_file_name.length() < 1) {
     std::cout << "ERROR: no test_data_file_name given\n";
+    return -1;
+  }
+
+  // if the test data file doesn't exist, create a dummy file
+  std::ifstream test_data_ifs(test_data_file_name.c_str());
+  if (!test_data_ifs.is_open()) {
+    std::cout << "WARNING: could not open test_data file: " << test_data_file_name << std::endl;
+    std::cout << "INFO: creating a test_data_file: " << test_data_file_name << std::endl;
+    std::ofstream test_data_ofs(test_data_file_name.c_str());
+    if (!test_data_ofs.is_open()) {
+      std::cout << "ERROR: could not create dummy file: " << test_data_file_name << std::endl;
+      return -1;
+    } else {
+      test_data_ofs.close();
+    }
+  } else {
+    test_data_ifs.close();
+  }
+
+  if (Init(root_dir) < 0) {
+    std::cout << "ERROR: could not initialize keywords extract\n";
     return -1;
   }
 
@@ -251,8 +267,10 @@ int main(int argc, char* argv[]) {
       inagist_classifiers::CorpusIter corpus_iter;
       unsigned int sum = 0;
       for (corpus_iter = test_data_map.begin(); corpus_iter != test_data_map.end(); corpus_iter++) {
-        ofs << corpus_iter->first << "=" << corpus_iter->second << std::endl;
-        sum += corpus_iter->second;
+        if (corpus_iter->first.compare("all_classes") != 0) {
+          ofs << corpus_iter->first << "=" << corpus_iter->second << std::endl;
+          sum += corpus_iter->second;
+        }
       }
       ofs << "all_classes=" << sum << std::endl;
       ofs.close();

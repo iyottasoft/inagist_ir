@@ -11,6 +11,5 @@ test/*/*.so
 test/*/*.beam
 todo.txt
 data/static_data/output.txt
-data/lang/test/[^.]*
 data/lang/tweetsource/tweets/*.txt
 data/trends/[^.]*
