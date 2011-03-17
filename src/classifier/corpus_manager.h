@@ -24,7 +24,7 @@ class CorpusManager {
   CorpusManager();
   ~CorpusManager();
   int InitRead(const std::string& corpus_file_name);
-  int LoadCorpus(const std::string corpus_file_name, Corpus& corpus);
+  static int LoadCorpus(const std::string corpus_file_name, Corpus& corpus);
   int LoadCorpusMap(const std::string config_file_name);
   int LoadCorpusMap(std::map<std::string, std::string> corpus_class_file_map);
   int LookUp(const std::string& entry);
@@ -33,6 +33,7 @@ class CorpusManager {
   int Clear();
 
   CorpusMap m_corpus_map;
+  Corpus m_classes_freq_map;
  private:
   Corpus m_corpus;
 

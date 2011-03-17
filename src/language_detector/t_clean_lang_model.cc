@@ -111,11 +111,14 @@ int main(int argc, char* argv[]) {
     int line_count = 0;
     //std::string handles_file_name;
     //std::string tweets_file_name;
-    std::string corpus_file_name;
-    std::string corpus_class_name;
-    std::map<std::string, std::string> corpus_class_file_map;
+    //std::string corpus_file_name;
+    std::string lang_class_file_name;
+    std::string lang_class_name;
+    std::map<std::string, std::string> lang_class_map;
     while (getline(ifs, line)) {
-      line_count++;
+      if (key.compare(0, 8, "testdata") != 0) {
+        line_count++;
+      }
       // std::cout << line << std::endl;
       loc = line.find("=", 0);
       if (loc == std::string::npos) {
@@ -127,23 +130,29 @@ int main(int argc, char* argv[]) {
       //std::cout << key << std::endl;
       //std::cout << value << std::endl;
       if (key.compare(0, 4, "lang") == 0) {
-        corpus_class_name = value;
+        lang_class_name = value;
       }
-      //else if (key.compare(0, 7, "handles") == 0) {
-        //handles_file_name = value;
-      //}
+      /*
+      else if (key.compare(0, 7, "handles") == 0) {
+        handles_file_name = value;
+      }
       else if (key.compare(0, 6, "corpus") == 0) {
         corpus_file_name = value;
       }
-      //else if (key.compare(0, 6, "tweets") == 0) {
-      //  tweets_file_name = value;
-      //}
-      if (line_count == 4) {
+      else if (key.compare(0, 6, "tweets") == 0) {
+        tweets_file_name = value;
+      }
+      */
+      else if (key.compare(0, 12, "trainingdata") == 0) {
+        lang_class_file_name = value;
+      }
+
+      if (line_count == 5) {
 #ifdef TEST_DEBUG
-        std::cout << "loading " << corpus_class_name << " with " << corpus_file_name << std::endl;
+        std::cout << "loading " << lang_class_name << " with " << lang_class_file_name << std::endl;
 #endif
-        if (clean_lang_model(corpus_file_name) < 0) {
-          std::cout << "ERROR: could not clean lang model for class " << corpus_class_name << std::endl;
+        if (clean_lang_model(lang_class_file_name) < 0) {
+          std::cout << "ERROR: could not clean lang model for class " << lang_class_name << std::endl;
           break;
         }
         line_count = 0;

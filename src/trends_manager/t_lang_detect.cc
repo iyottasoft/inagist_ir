@@ -237,6 +237,7 @@ int main(int argc, char* argv[]) {
   std::string handles_file_name;
   std::string output_tweets_file_name;
   std::string output_corpus_file_name;
+  std::string training_data_file_name;
   unsigned int tweets_num = 0;
   unsigned int detected_num = 0;
   unsigned int undefined_num = 0;
@@ -249,7 +250,9 @@ int main(int argc, char* argv[]) {
   std::set<std::string> handles_set;
   std::set<std::string>::iterator set_iter;
   while (getline(ifs, line)) {
-    line_count++;
+    if (key.compare(0, 8, "testdata") != 0) {
+      line_count++;
+    }
     loc = line.find("=", 0);
     if (loc == std::string::npos) {
       std::cout << "ERROR: invalid config file entry\n";
@@ -265,8 +268,10 @@ int main(int argc, char* argv[]) {
       output_corpus_file_name = value;
     } else if (key.compare(0, 6, "tweets") == 0) {
       output_tweets_file_name = value;
+    } else if (key.compare(0, 12, "trainingdata") == 0) {
+      training_data_file_name = value;
     }
-    if (line_count == 4) {
+    if (line_count == 5) {
       line_count = 0;
       std::ifstream hfs(handles_file_name.c_str());
       if (!hfs.is_open()) {

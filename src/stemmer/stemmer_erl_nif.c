@@ -9,6 +9,7 @@
 #define MAX_BUFFER_LEN 1024
 #define MAX_NAME_LEN 255
 #define MAX_LIST_BUFFER_LEN 20480
+#define ERLANG_R14B02 1
 
 ERL_NIF_TERM nif_stem(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
@@ -23,9 +24,17 @@ ERL_NIF_TERM nif_stem(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if (success && tweet_len > 1 && tweet_len < MAX_BUFFER_LEN) {
     memcpy(tweet_str, tweet.data, tweet_len);
     tweet_str[tweet_len] = '\0';
+#ifdef ERLANG_R14B02
     enif_release_binary(&tweet);
+#else
+    enif_release_binary(env, &tweet);
+#endif
   } else {
+#ifdef ERLANG_R14B02 
     enif_release_binary(&tweet);
+#else
+    enif_release_binary(env, &tweet);
+#endif
     return enif_make_atom(env, "error");
   }
 
@@ -51,7 +60,11 @@ ERL_NIF_TERM nif_stem(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     *end = '\0';
     len = end - start;
 
+#ifdef ERLANG_R14B02
     ret_val = enif_alloc_binary(len, &stem);
+#else
+    ret_val = enif_alloc_binary(env, len, &stem);
+#endif
     if (ret_val < 0)
       return enif_make_atom(env, "error");
     for (i=0; i<len; i++) {
@@ -77,9 +90,17 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if (success && (file_path.size < MAX_NAME_LEN)) {
     memcpy(stopwords_file_path, file_path.data, file_path.size);
     stopwords_file_path[file_path.size] = '\0';
+#ifdef ERLANG_R14B02 
     enif_release_binary(&file_path);
+#else
+    enif_release_binary(env, &file_path);
+#endif
   } else {
+#ifdef ERLANG_R14B02 
     enif_release_binary(&file_path);
+#else
+    enif_release_binary(env, &file_path);
+#endif
     return enif_make_atom(env, "error");
   }
 
@@ -89,9 +110,17 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if (success && (file_path.size < MAX_NAME_LEN)) {
     memcpy(dictionary_file_path, file_path.data, file_path.size);
     dictionary_file_path[file_path.size] = '\0';
+#ifdef ERLANG_R14B02 
     enif_release_binary(&file_path);
+#else
+    enif_release_binary(env, &file_path);
+#endif
   } else {
+#ifdef ERLANG_R14B02 
     enif_release_binary(&file_path);
+#else
+    enif_release_binary(env, &file_path);
+#endif
     return enif_make_atom(env, "error");
   }
 
@@ -101,9 +130,17 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if (success && (file_path.size < MAX_NAME_LEN)) {
     memcpy(stemmer_dictionary_file_path, file_path.data, file_path.size);
     stemmer_dictionary_file_path[file_path.size] = '\0';
+#ifdef ERLANG_R14B02 
     enif_release_binary(&file_path);
+#else
+    enif_release_binary(env, &file_path);
+#endif
   } else {
+#ifdef ERLANG_R14B02 
     enif_release_binary(&file_path);
+#else
+    enif_release_binary(env, &file_path);
+#endif
     return enif_make_atom(env, "error");
   }
 
@@ -126,9 +163,17 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     if (enif_inspect_binary(env, argv[0], &user_name)) {
       memcpy(user_name_str, user_name.data, user_name.size);
       user_name_str[user_name.size] = '\0';
+#ifdef ERLANG_R14B02 
       enif_release_binary(&user_name);
+#else
+      enif_release_binary(env, &user_name);
+#endif
     }   else {
+#ifdef ERLANG_R14B02 
       enif_release_binary(&user_name);
+#else
+      enif_release_binary(env, &user_name);
+#endif
       return enif_make_atom(env, "error");
     }
 
@@ -165,7 +210,11 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 
     if (tweet_len <= 0 || tweet_len >= MAX_BUFFER_LEN)
       return enif_make_atom(env, "error");
+#ifdef ERLANG_R14B02
     ret_val = enif_alloc_binary(tweet_len, &tweet);
+#else
+    ret_val = enif_alloc_binary(env, tweet_len, &tweet);
+#endif
     if (ret_val < 0)
       return enif_make_atom(env, "error");
     for (i=0; i<tweet_len; i++) {

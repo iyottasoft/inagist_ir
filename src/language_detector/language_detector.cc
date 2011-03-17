@@ -49,11 +49,23 @@ int LanguageDetector::Init(std::string config_file_name) {
     int line_count = 0;
     //std::string handles_file_name;
     //std::string tweets_file_name;
-    std::string corpus_file_name;
-    std::string corpus_class_name;
-    std::map<std::string, std::string> corpus_class_file_map;
+    //std::string corpus_file_name;
+    std::string lang_class_file_name;
+    std::string lang_classes_freq_file_name;
+    std::string lang_class_name;
+    std::map<std::string, std::string> lang_class_map;
     while (getline(ifs, line)) {
-      line_count++;
+      if (key.compare(0, 8, "testdata") != 0) {
+        line_count++;
+      } else {
+        lang_classes_freq_file_name = value;
+        if (m_corpus_manager.LoadCorpus(lang_classes_freq_file_name,
+                                        m_corpus_manager.m_classes_freq_map) < 0) {
+          ifs.close();
+          std::cerr << "ERROR: could not load classes freq from " << lang_classes_freq_file_name << std::endl;
+          return -1;
+        }
+      }
       // std::cout << line << std::endl;
       loc = line.find("=", 0);
       if (loc == std::string::npos) {
@@ -65,26 +77,31 @@ int LanguageDetector::Init(std::string config_file_name) {
       //std::cout << key << std::endl;
       //std::cout << value << std::endl;
       if (key.compare(0, 4, "lang") == 0) {
-        corpus_class_name = value;
+        lang_class_name = value;
       }
-      //else if (key.compare(0, 7, "handles") == 0) {
-        //handles_file_name = value;
-      //}
+      /*
+      else if (key.compare(0, 7, "handles") == 0) {
+        handles_file_name = value;
+      }
       else if (key.compare(0, 6, "corpus") == 0) {
-        corpus_file_name = value;
+        lang_corpus_file_name = value;
       }
-      //else if (key.compare(0, 6, "tweets") == 0) {
-      //  tweets_file_name = value;
-      //}
-      if (line_count == 4) {
-        //std::cout << "loading " << class_name << " with " << corpus_file_name << std::endl;
-        corpus_class_file_map[corpus_class_name] = corpus_file_name;
+      else if (key.compare(0, 6, "tweets") == 0) {
+        tweets_file_name = value;
+      }
+      */
+      else if (key.compare(0, 12, "trainingdata") == 0) {
+        lang_class_file_name = value;
+      }
+      if (line_count == 5) {
+        //std::cout << "loading " << lang_class_name << " with " << lang_class_file_name << std::endl;
+        lang_class_map[lang_class_name] = lang_class_file_name;
         line_count = 0;
       }
     }
     ifs.close();
-    if (!corpus_class_file_map.empty()) {
-      if (m_corpus_manager.LoadCorpusMap(corpus_class_file_map) < 0) {
+    if (!lang_class_map.empty()) {
+      if (m_corpus_manager.LoadCorpusMap(lang_class_map) < 0) {
         std::cerr << "ERROR: could not load Corpus Map\n";
         return -1;
       }
@@ -121,6 +138,7 @@ int LanguageDetector::DetectLanguage(const std::string& text,
 #endif
 
   if (m_naive_bayes_classifier.GuessClass(m_corpus_manager.m_corpus_map,
+                                          m_corpus_manager.m_classes_freq_map,
                                           test_corpus,
                                           guess_lang_output) < 0) {
     std::cout << "ERROR: naive bayes classifiers could not guess the language\n";
@@ -159,6 +177,7 @@ int LanguageDetector::DetectLanguage(std::set<std::string>& words_set,
   }
 
   if (m_naive_bayes_classifier.GuessClass(m_corpus_manager.m_corpus_map,
+                                          m_corpus_manager.m_classes_freq_map,
                                           test_corpus,
                                           guess_lang_output) < 0) {
     std::cout << "ERROR: naive bayes classifiers could not guess the language\n";
