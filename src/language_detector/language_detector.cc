@@ -49,10 +49,11 @@ int LanguageDetector::Init(std::string config_file_name) {
     int line_count = 0;
     //std::string handles_file_name;
     //std::string tweets_file_name;
-    std::string lang_corpus_file_name;
+    //std::string corpus_file_name;
+    std::string lang_class_file_name;
     std::string lang_classes_freq_file_name;
     std::string lang_class_name;
-    std::map<std::string, std::string> lang_class_and_corpus_names_map;
+    std::map<std::string, std::string> lang_class_map;
     while (getline(ifs, line)) {
       if (key.compare(0, 8, "testdata") != 0) {
         line_count++;
@@ -78,24 +79,29 @@ int LanguageDetector::Init(std::string config_file_name) {
       if (key.compare(0, 4, "lang") == 0) {
         lang_class_name = value;
       }
-      //else if (key.compare(0, 7, "handles") == 0) {
-        //handles_file_name = value;
-      //}
+      /*
+      else if (key.compare(0, 7, "handles") == 0) {
+        handles_file_name = value;
+      }
       else if (key.compare(0, 6, "corpus") == 0) {
         lang_corpus_file_name = value;
       }
-      //else if (key.compare(0, 6, "tweets") == 0) {
-      //  tweets_file_name = value;
-      //}
-      if (line_count == 4) {
-        //std::cout << "loading " << class_name << " with " << corpus_file_name << std::endl;
-        lang_class_and_corpus_names_map[lang_class_name] = lang_corpus_file_name;
+      else if (key.compare(0, 6, "tweets") == 0) {
+        tweets_file_name = value;
+      }
+      */
+      else if (key.compare(0, 12, "trainingdata") == 0) {
+        lang_class_file_name = value;
+      }
+      if (line_count == 5) {
+        //std::cout << "loading " << lang_class_name << " with " << lang_class_file_name << std::endl;
+        lang_class_map[lang_class_name] = lang_class_file_name;
         line_count = 0;
       }
     }
     ifs.close();
-    if (!lang_class_and_corpus_names_map.empty()) {
-      if (m_corpus_manager.LoadCorpusMap(lang_class_and_corpus_names_map) < 0) {
+    if (!lang_class_map.empty()) {
+      if (m_corpus_manager.LoadCorpusMap(lang_class_map) < 0) {
         std::cerr << "ERROR: could not load Corpus Map\n";
         return -1;
       }

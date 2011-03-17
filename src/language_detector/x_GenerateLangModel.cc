@@ -50,10 +50,18 @@ int main(int argc, char* argv[]) {
       } else if (key.compare(0, 6, "tweets") == 0) {
         output_tweets_file_name = value;
       }
-      if (line_count == 4) {
+      /*
+      else if (key.compare(0, 12, "trainingdata") == 0) {
+        training_data_file_name = value;
+      }
+      */
+      if (line_count == 5) {
         int count = 0;
-        if ((count = ld.GenerateLangModelFromTweets(handles_file_name, output_tweets_file_name, output_corpus_file_name)) < 0) {
-          std::cout << "ERROR: could not generate lang model for handles in file " << handles_file_name << std::endl; 
+        if ((count = ld.GenerateLangModelFromTweets(handles_file_name,
+                                                    output_tweets_file_name,
+                                                    output_corpus_file_name)) < 0) {
+          std::cout << "ERROR: could not generate lang model for handles in file " \
+                    << handles_file_name << std::endl; 
         } else {
           std::cout << "Corpus of size " << count << " generated for " << lang << std::endl;
         }
