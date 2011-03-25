@@ -13,11 +13,16 @@
 
 namespace inagist_classifiers {
 
+typedef std::map<std::string, std::string> ChannelsMap;
+typedef std::map<std::string, std::string>::iterator ChannelsMapIter;
+
 class ChannelManager {
  public:
   ChannelManager();
   ~ChannelManager();
-  int Init(std::string config_file_name);
+  int Init(const char* channels_dictionary_file);
+  int FindChannels(std::string& text,
+                   std::set<std::string>& channels);
   int FindChannels(const unsigned char *text,
                    const unsigned int &text_len,
                    char *channels_buffer,
@@ -36,6 +41,7 @@ class ChannelManager {
   
  private:
   unsigned int m_debug_level;
+  ChannelsMap m_channels_dictionary;
 
   DISALLOW_COPY_AND_ASSIGN(ChannelManager); 
 };

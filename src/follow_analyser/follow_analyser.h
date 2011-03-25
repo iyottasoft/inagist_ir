@@ -11,7 +11,7 @@
 #include <string>
 #include <set>
 #include "twitter_searcher.h"
-#include "keywords_extract.h"
+#include "keytuples_extracter.h"
 
 // cc includes
 // curl_request_maker.h
@@ -50,7 +50,7 @@ class FollowAnalyser {
   std::string m_follower_maps_dir;
   std::string m_follower_maps_index_file;
   inagist_api::TwitterSearcher m_twitter_searcher;
-  inagist_trends::KeywordsExtract m_keywords_extract;
+  inagist_trends::KeyTuplesExtracter m_keytuples_extracter;
   int ReadFollowers(std::string handle, std::set<std::string> &followers);
   char m_buffer[MAX_BUFFER_SIZE];
 };

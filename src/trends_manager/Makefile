@@ -4,25 +4,22 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../curl_request_maker -I../twitter_api -I../utils -I../keywords_extracter -I../script_detector -I../ngrams_generator -I../classifier -I../language_detector
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../curl_request_maker -I../twitter_api -I../utils -I../keytuples_extracter -I../script_detector -I../ngrams_generator -I../classifier -I../language_detector
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -lkeywordsextracter -llanguagedetector -lclassifier -lngramsgenerator -lutils -lscriptdetector -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+LIBS = -l${PROJECT} -lkeytuplesextracter -llanguagedetector -lclassifier -lngramsgenerator -lutils -lscriptdetector -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
-BINS = ${BIN_DIR}/t_trends_manager \
-       ${BIN_DIR}/t_show_unsafe_trends \
-       ${BIN_DIR}/t_lang_detect \
-       ${BIN_DIR}/x_lang_test_data_generator
+BINS = ${BIN_DIR}/t_trends_manager
 
 OBJS = trends_manager.o 
 
-all: ${LIB} ${BINS} trends
+all: ${LIB} ${BINS}
 	cp trends_generater.py ${BIN_DIR}
 	@echo "build done!"
 
@@ -30,7 +27,6 @@ clean:
 	@echo "cleaning libraries ..."
 	@rm *.o ${BINS} ${LIB}
 	@rm ${BIN_DIR}/trends_generater.py
-	@rm trends.beam
 	@echo "done!"
 
 ${LIB}: ${OBJS}
@@ -47,28 +43,5 @@ ${BIN_DIR}/t_trends_manager: t_trends_manager.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_trends_manager
 	@echo "done!"
-
-${BIN_DIR}/t_show_unsafe_trends: t_show_unsafe_trends.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_show_unsafe_trends
-	@echo "done!"
-
-${BIN_DIR}/t_lang_detect: t_lang_detect.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_lang_detect
-	@echo "done!"
-
-${BIN_DIR}/x_lang_test_data_generator: x_lang_test_data_generator.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_lang_test_data_generator
-	@echo "done!"
-
-ERL_LIB = ${LIB_DIR}/libtrends.so
-trends:
-	@echo "creating erlang library file ..."
-	@gcc -fPIC -shared -o ${ERL_LIB} trends_erl_nif.c -I/usr/local/lib/erlang/usr/include/ -I../../include/json_parser -I../curl_request_maker -I../utils -I../twitter_api -I../keywords_extracter -I../script_detector -I../ngrams_generator -I../classifier -I../language_detector -I../trends_manager -L../../lib -ltrendsmanager -lkeywordsextracter -llanguagedetector -lngramsgenerator -lclassifier -lscriptdetector -ltwitterapi -lutils -lcurlrequestmaker -ljsonparser -lcurl -lstdc++ -lei -lerl_interface  -I/usr/local/lib/erlang/lib/erl_interface-3.6.5/include -L/usr/local/lib/erlang/lib/erl_interface-3.6.5/lib
-	@echo ${ERL_LIB}
-	@echo "compiling trends.erl"
-	@erlc trends.erl
 
 # DO NOT DELETE THIS LINE

@@ -28,6 +28,9 @@ class Stemmer {
   int Stem(const std::string& text,
            const unsigned int& output_buffer_len,
            unsigned char*& pipe_delimited_output);
+  int Stem(const unsigned char* text,
+           const unsigned int& output_buffer_len,
+           unsigned char*& pipe_delimited_output);
   int Clear();
 
  private:

@@ -29,7 +29,7 @@ int FollowAnalyser::Init(std::string root_dir) {
     std::cout << "ERROR: could not initialize twitter searcher" << std::endl;
     return -1;
   }
-  if (m_keywords_extract.Init("./data/static_data/stopwords.txt",
+  if (m_keytuples_extracter.Init("./data/static_data/stopwords.txt",
                               "./data/static_data/dictionary.txt",
                               "./data/static_data/unsafe_dictionary.txt") < 0) {
     std::cerr << "ERROR: couldn't initialize\n";
@@ -80,7 +80,7 @@ int FollowAnalyser::GetKeywords(const std::string& handle,
   std::string script;
   for (multimap_iter = tweets_map.begin(); multimap_iter != tweets_map.end(); multimap_iter++) {
     strcpy(m_buffer, (char *) multimap_iter->second.c_str());
-    if (m_keywords_extract.GetKeywords((char *) m_buffer, script, keywords_set) < 0) {
+    if (m_keytuples_extracter.GetKeywords((char *) m_buffer, script, keywords_set) < 0) {
       std::cout << "ERROR: could not get keywords for\n" << m_buffer << std::endl;
     }
   }
@@ -127,7 +127,7 @@ int FollowAnalyser::GetKeywordsFromFollowers(const std::set<std::string>& follow
       for (multimap_iter = tweets_map.begin(); multimap_iter != tweets_map.end(); multimap_iter++) {
         strcpy(m_buffer, multimap_iter->second.c_str());
         script = multimap_iter->first;
-        m_keywords_extract.GetKeywords((char *) m_buffer, script, keywords_set, scripts_tweeters_map, keywords_tweeters_map);
+        m_keytuples_extracter.GetKeywords((char *) m_buffer, script, keywords_set, scripts_tweeters_map, keywords_tweeters_map);
       }
       tweets_map.clear();
       // TODO (balaji) - this whole keywords manager thingy can be implemented here. will save some pain
@@ -189,7 +189,7 @@ int FollowAnalyser::GetKeywordsFromMentions(const std::string& handle,
     mentioners.insert(multimap_iter->first);
     strcpy(m_buffer, multimap_iter->second.c_str());
     script = multimap_iter->first;
-    m_keywords_extract.GetKeywords((char *) m_buffer, script, keywords_set, scripts_tweeters_map, keywords_tweeters_map);
+    m_keytuples_extracter.GetKeywords((char *) m_buffer, script, keywords_set, scripts_tweeters_map, keywords_tweeters_map);
   }
   tweets_map.clear();
 

@@ -16,19 +16,16 @@ BIN_DIR = ../../bin
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_language_detector \
-       ${BIN_DIR}/x_GenerateLangModel \
-       ${BIN_DIR}/t_language_model \
-       ${BIN_DIR}/t_clean_lang_model
+       ${BIN_DIR}/x_lang_training_data
 
-OBJS = language_detector.o language_detector_erl_interface.o
+OBJS = language_detector.o
 
-all: ${LIB} ${BINS} language_detector_erl_nif
+all: ${LIB} ${BINS}
 	@echo "build done!"
 
 clean:
 	@echo "cleaning libraries ..."
-	@rm *.o ${BINS} ${LIB} ${ERL_LIB}
-	@rm langd.beam
+	@rm *.o ${BINS} ${LIB}
 	@echo "done!"
 
 ${LIB}: ${OBJS}
@@ -46,30 +43,9 @@ ${BIN_DIR}/t_language_detector: t_language_detector.o ${LIB}
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_language_detector
 	@echo "done!"
 
-${BIN_DIR}/x_GenerateLangModel: x_GenerateLangModel.o ${LIB}
+${BIN_DIR}/x_lang_training_data: x_lang_training_data.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_GenerateLangModel
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_lang_training_data
 	@echo "done!"
-
-${BIN_DIR}/t_clean_lang_model: t_clean_lang_model.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_clean_lang_model
-	@echo "done!"
-
-${BIN_DIR}/t_language_model: t_language_model.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_language_model
-	@echo "done!"
-
-ERL_LIB = ${LIB_DIR}/liblangdetect_erl.so
-ERL_INCLUDE_DIR = -I/usr/local/lib/erlang/usr/include/ -I/usr/local/lib/erlang/lib/erl_interface-3.6.5/include
-ERL_LIBS = -lstdc++ -lei -lerl_interface
-
-language_detector_erl_nif:
-	@echo "creating erlang library file ..."
-	@gcc -fPIC -shared -o ${ERL_LIB} language_detector_erl_nif.c ${INCLUDE_DIR} -L ${LIB_DIR} ${LIBS} ${ERL_INCLUDE_DIR} ${ERL_LIBS} -L/usr/local/lib/erlang/lib/erl_interface-3.6.5/lib
-	@echo ${ERL_LIB}
-	@echo "compiling langd.erl"
-	@erlc langd.erl
 
 # DO NOT DELETE THIS LINE

@@ -1,8 +1,6 @@
 /* trends_manager.cc */
 
 #include "trends_manager.h"
-#include "twitter_api.h"
-#include "twitter_searcher.h"
 
 #ifdef DEBUG
 #if DEBUG>0
@@ -11,21 +9,21 @@
 #endif
 //#define TRENDS_DEBUG 3
 
-#ifdef _CPLUSPLUS
 #include <set>
 #include <cstring>
 #include <cstdlib>
-#endif
 
-#define MAX_BUFFER_SIZE 1024
+#define MAX_BUFFER_LEN 1024
 
-inagist_trends::KeywordsExtract g_keywords_extract;
-inagist_trends::KeywordsManager g_keywords_manager;
+namespace inagist_trends {
 
-#ifdef _CPLUSPLUS
-extern "C"
-#endif
-int Init(const char* stopwords_file_path,
+TrendsManager::TrendsManager() {
+}
+
+TrendsManager::~TrendsManager() {
+}
+
+int TrendsManager::Init(const char* stopwords_file_path,
          const char* dictionary_file_path,
          const char* unsafe_dictionary_file_path,
          const char* lang_detect_config_file_path,
@@ -42,13 +40,13 @@ int Init(const char* stopwords_file_path,
     return -1;
   }
 
-  if (g_keywords_extract.Init(stopwords_file_path,
+  if (m_keytuples_extracter.Init(stopwords_file_path,
                               dictionary_file_path,
                               unsafe_dictionary_file_path,
                               lang_detect_config_file_path,
                               channels_dictionary_file_path) < 0) {
 #ifdef TRENDS_DEBUG
-    std::cerr << "ERROR: could not initialize KeywordsExtract\n";
+    std::cerr << "ERROR: could not initialize KeyTuplesExtracter\n";
 #endif
     return -1;
   }
@@ -56,11 +54,69 @@ int Init(const char* stopwords_file_path,
   return 0;
 }
 
+int TrendsManager::GetKeyTuples(const std::string& text, std::string& safe_status,
+                  std::string& script, std::string& lang, std::set<std::string>& keywords,
+                  std::set<std::string>& hashtags, std::set<std::string>& keyphrases) {
+
+  if (text.length() < 1) {
+    std::cerr << "ERROR: invalid input\n";
+    return -1;
+  }
+
+  unsigned char buffer[MAX_BUFFER_LEN];
+  memset(buffer, 0, MAX_BUFFER_LEN);
+  char safe_status_buffer[10];
+  memset(safe_status_buffer, 0, 10);
+  char script_buffer[4];
+  memset(script_buffer, 0, 4);
+  unsigned char keywords_buffer[MAX_BUFFER_LEN];
+  memset(keywords_buffer, 0, MAX_BUFFER_LEN);
+  unsigned int keywords_len = 0;
+  unsigned int keywords_count = 0;
+  unsigned char hashtags_buffer[MAX_BUFFER_LEN];
+  memset(hashtags_buffer, 0, MAX_BUFFER_LEN);
+  unsigned int hashtags_len = 0;
+  unsigned int hashtags_count = 0;
+  unsigned char keyphrases_buffer[MAX_BUFFER_LEN];
+  memset(keyphrases_buffer, 0, MAX_BUFFER_LEN);
+  unsigned int keyphrases_len = 0;
+  unsigned int keyphrases_count = 0;
+  char buffer1[4];
+  memset(buffer1, 0, 4);
+  char buffer2[4];
+  memset(buffer2, 0, 4);
+  char buffer3[4];
+  memset(buffer3, 0, 4);
+  char buffer4[4];
+  memset(buffer4, 0, 4);
+
+  strcpy((char *) buffer, text.c_str());
+  int ret_value = 0;
+  if ((ret_value = GetKeyTuples((const unsigned char*) buffer, strlen((char *) buffer),
+                safe_status_buffer, 10,
+                script_buffer, 4,
+                (unsigned char*) keywords_buffer, MAX_BUFFER_LEN,
+                &keywords_len, &keywords_count,
+                (unsigned char*) hashtags_buffer, MAX_BUFFER_LEN,
+                &hashtags_len, &hashtags_count,
+                (unsigned char*) keyphrases_buffer, MAX_BUFFER_LEN,
+                &keyphrases_len, &keyphrases_count,
+                buffer1, 4,
+                buffer2, 4,
+                buffer3, 4,
+                buffer4, 4)) < 0) {
+    std::cerr << "ERROR: could not get keywords\n";
+  } else {
+    safe_status = std::string(safe_status_buffer);
+    script = std::string(script_buffer);
+    lang = std::string(buffer1);
+  }
+
+  return ret_value;
+}
+
 // keywords and keyphrases are output parameters
-#ifdef _CPLUSPLUS
-extern "C"
-#endif
-int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
+int TrendsManager::GetKeyTuples(const unsigned char* tweet, const unsigned int tweet_len,
                 char* safe_status_buffer, const unsigned int safe_status_buffer_len,
                 char* script_buffer, const unsigned int script_buffer_len,
                 unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
@@ -79,8 +135,8 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
 #endif
 
   // this can be global. keeping it local for the time being
-  unsigned char buffer[MAX_BUFFER_SIZE];
-  if (tweet_len > 0 && tweet_len < MAX_BUFFER_SIZE) {
+  unsigned char buffer[MAX_BUFFER_LEN];
+  if (tweet_len > 0 && tweet_len < MAX_BUFFER_LEN) {
     memcpy((char *) buffer, (char *) tweet, tweet_len);
     buffer[tweet_len] = '\0';
   } else {
@@ -97,7 +153,7 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
     *keyphrases_len_ptr = strlen((char *) keyphrases_buffer);
     *keyphrases_count_ptr = 1;
 #endif
-    memset(buffer, '\0', MAX_BUFFER_SIZE);
+    memset(buffer, '\0', MAX_BUFFER_LEN);
     return -1;
   }
 
@@ -108,22 +164,18 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
   unsigned int hashtags_count = 0;
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
-  if ((ret_value = g_keywords_extract.GetKeywords(buffer, tweet_len,
-                                                  safe_status_buffer, safe_status_buffer_len,
-                                                  script_buffer, script_buffer_len,
-                                                  keywords_buffer, keywords_buffer_len,
-                                                  keywords_len, keywords_count,
-                                                  hashtags_buffer, hashtags_buffer_len,
-                                                  hashtags_len, hashtags_count,
-                                                  keyphrases_buffer, keyphrases_buffer_len,
-                                                  keyphrases_len, keyphrases_count,
-                                                  buffer1, buffer1_len,
-                                                  buffer2, buffer2_len,
-                                                  buffer3, buffer3_len,
-                                                  buffer4, buffer4_len)) <= 0) {
+
+  ret_value = m_keytuples_extracter.GetKeyTuples(buffer, tweet_len,
+                   safe_status_buffer, safe_status_buffer_len, script_buffer, script_buffer_len,
+                   keywords_buffer, keywords_buffer_len, keywords_len, keywords_count,
+                   hashtags_buffer, hashtags_buffer_len, hashtags_len, hashtags_count,
+                   keyphrases_buffer, keyphrases_buffer_len, keyphrases_len, keyphrases_count,
+                   buffer1, buffer1_len, buffer2, buffer2_len,
+                   buffer3, buffer3_len, buffer4, buffer4_len);
+  if (ret_value <= 0) {
     if (ret_value < 0 ) {
 #ifdef TRENDS_DEBUG
-      std::cout << "Error: could not get keywords from KeywordsExtract\n";
+      std::cout << "Error: could not get keywords from KeyTuplesExtracter\n";
       strcpy(safe_status_buffer, "errGK");
       strcpy(script_buffer, "rr");
       return -1;
@@ -157,194 +209,4 @@ int SubmitTweet(const unsigned char* tweet, const unsigned int tweet_len,
   return ret_value;
 }
 
-#ifdef _CPLUSPLUS
-extern "C"
-#endif
-int GetTestTweets(const char* user_name, const unsigned int in_length, char* tweets_buffer, unsigned int *out_length) {
-
-  if (!tweets_buffer)
-    return -1;
-
-  int num_docs = 0;
-
-  // get tweets
-  std::set<std::string> tweets;
-
-  if (NULL == user_name) {
-    inagist_api::TwitterAPI twitter_api;
-    twitter_api.GetPublicTimeLine(tweets);
-  } else {
-    inagist_api::TwitterSearcher twitter_searcher;
-    twitter_searcher.GetTweetsFromUser(std::string(user_name), tweets);
-  }
-
-  // write them to the output buffer
-  std::set<std::string>::iterator iter;
-  char *ptr = tweets_buffer;
-  unsigned int len = 0;
-  unsigned int total_len = 0;
-  for (iter = tweets.begin(); iter != tweets.end(); iter++) {
-#ifdef TRENDS_DEBUG
-    std::cout << *iter << std::endl;
-#endif
-    len = (*iter).length();
-    total_len += (len + 1); // 1 for the pipe
-    if (total_len < in_length) {
-      strcpy(ptr, (*iter).c_str());
-      ptr += len;
-      strcpy(ptr, "|");
-      ptr++;
-      num_docs++;
-    } else {
-#ifdef TRENDS_DEBUG
-      std::cout << "Not enuf space in the tweets buffer\n";
-#endif
-      break;
-    }
-  }
-  *ptr = '\0';
-  *out_length = ptr - tweets_buffer;
-  tweets.clear();
-  ptr = NULL;
-
-  return num_docs;
-}
-
-#ifdef _CPLUSPLUS
-extern "C"
-#endif
-int GetTestTweetsFromFile(const char* file_name,
-                          const unsigned int in_length,
-                          char *tweets_buffer,
-                          unsigned int *out_length) {
-  int num_docs = 0;
-
-  // get tweets
-  std::ifstream ifs(file_name);
-  if (!ifs.is_open()) {
-    std::cerr << "ERROR: could not open input file " << file_name << std::endl;
-    return -1;
-  }
-
-  std::string line;
-  char *ptr = tweets_buffer;
-  unsigned int len = 0;
-  unsigned int total_len = 0;
-  while (getline(ifs, line)) {
-#ifdef TRENDS_DEBUG
-    if (line.length() <= 0) {
-      std::cerr << "Empty file\n";
-      continue;
-    }
-#endif
-
-    len = line.length();
-    total_len += (len + 1); // 1 for the pipe
-    if (total_len < in_length) {
-      strcpy(ptr, line.c_str());
-      ptr += len;
-      strcpy(ptr, "|");
-      ptr++;
-      num_docs++;
-    } else {
-#ifdef TRENDS_DEBUG
-      std::cout << "Not enuf space in the tweets buffer\n";
-#endif
-      break;
-    }
-  
-    num_docs++;
-  }
-  *ptr = '\0';
-  ifs.close();
-  *out_length = ptr - tweets_buffer;
-  ptr = NULL;
-
-  return num_docs;
-}
-
-
-#ifdef _CPLUSPLUS
-extern "C"
-#endif
-// takes a pipe separated list of the structs
-// <keywords, count, handle, class> and returns a purged list of the same
-int GetTrends(char* trends_buffer, unsigned int* trends_len_ptr, unsigned int* trends_count_ptr) {
-
-  if (!trends_buffer || *trends_len_ptr < 7) {
-    std::cout << "ERROR: invalid input for GetTrends\n";
-    return -1;
-  }
-
-  unsigned char* ptr = (unsigned char*) trends_buffer;
-  while ((ptr = (unsigned char *) strstr((char *) ptr, "|")) != NULL) {
-    (*trends_count_ptr)++;
-    ptr++;
-  }
-  ptr = NULL;
-
-  return 0;
-}
-
-#ifdef _CPLUSPLUS
-extern "C"
-#endif
-int GetTestTrends(const char* trends_file_path,
-                  unsigned char* trends_buffer, const unsigned int trends_buffer_len,
-                  unsigned int *trends_len_ptr, unsigned int *trends_count_ptr) {
-
-  *trends_count_ptr = 0;
-
-  // get trends input
-  std::ifstream ifs(trends_file_path);
-  if (!ifs.is_open()) {
-    std::cerr << "ERROR: could not open trends file: " << trends_file_path << std::endl;
-    return -1;
-  }
-
-  std::string line;
-  unsigned char *ptr = trends_buffer;
-  unsigned int len = 0;
-  unsigned int total_len = 0;
-  while (getline(ifs, line)) {
-#ifdef TRENDS_DEBUG
-    if (line.length() <= 0) {
-      std::cerr << "Empty file\n";
-      continue;
-    }
-    if (TRENDS_DEBUG > 2)
-      std::cout << line << std::endl;
-#endif
-
-    len = line.length();
-    total_len += (len + 1); // 1 for the pipe
-    if (total_len < trends_buffer_len) {
-      strcpy((char *) ptr, line.c_str());
-      ptr += len;
-      strcpy((char *) ptr, "|");
-      ptr++;
-      (*trends_count_ptr)++;
-    } else {
-#ifdef TRENDS_DEBUG
-      std::cout << "Not enuf space in the tweets buffer\n";
-#endif
-      break;
-    }
-  
-    (*trends_count_ptr)++;
-  }
-  *ptr = '\0';
-  ifs.close();
-  *trends_len_ptr = ptr - trends_buffer;
-  ptr = NULL;
-
-#ifdef TRENDS_DEBUG
-  if (TRENDS_DEBUG) {
-    std::cout << "trends len: " << *trends_len_ptr << std::endl;
-    std::cout << "trends count: " << *trends_count_ptr << std::endl;
-  }
-#endif
-
-  return *trends_count_ptr;
-}
-
+} // namespace inagist_trends

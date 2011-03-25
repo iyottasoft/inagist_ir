@@ -71,6 +71,14 @@ int Stemmer::Clear() {
   return 0;
 }
 
+int Stemmer::Stem(const unsigned char* text,
+                  const unsigned int& output_buffer_len,
+                  unsigned char*& pipe_delimited_output) {
+
+  return Stem(std::string((char *) text), output_buffer_len, pipe_delimited_output);
+
+}
+
 int Stemmer::Stem(const std::string& text,
                   const unsigned int& output_buffer_len,
                   unsigned char*& pipe_delimited_output) {

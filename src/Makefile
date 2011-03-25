@@ -1,4 +1,4 @@
-SUBDIRS = curl_request_maker twitter_api inagist_api script_detector utils stemmer ngrams_generator classifier language_detector sentiment_analyser keywords_extracter trends_manager follow_analyser channel_manager
+SUBDIRS = curl_request_maker twitter_api inagist_api script_detector utils stemmer ngrams_generator classifier language_detector sentiment_analyser keytuples_extracter trends_manager follow_analyser channel_manager erlang_nif
 
 .PHONY: subdirs $(SUBDIRS)
 

@@ -10,13 +10,14 @@
 #include <string>
 #include <map>
 #include <set>
+#include "classifier.h"
 #include "ngrams_generator.h"
 #include "corpus_manager.h"
 #include "naive_bayes_classifier.h"
 
 namespace inagist_classifiers {
 
-class LanguageDetector {
+class LanguageDetector : public Classifier {
  public:
   LanguageDetector();
   ~LanguageDetector();
@@ -37,6 +38,7 @@ class LanguageDetector {
                           Corpus& corpus);
   int Clear();
   int SetDebugLevel(unsigned int debug_level);
+  int GetCorpus(const std::string& text, Corpus& corpus);
   
  private:
   NgramsGenerator m_ngrams_generator;

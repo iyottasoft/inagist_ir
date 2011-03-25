@@ -3,6 +3,7 @@
 #include <fstream>
 #include "twitter_searcher.h"
 #include "string_utils.h"
+#include "config_reader.h"
 
 #ifdef DEBUG
 #if DEBUG>0
@@ -37,76 +38,30 @@ int LanguageDetector::Init(std::string config_file_name) {
   // this config file name should have corpus files
   // and the strings with which the corpus contents can be uniquely identified
 
-  std::ifstream ifs(config_file_name.c_str());
-  if (!ifs.is_open()) {
-    std::cout << "ERROR: could not open config file " << config_file_name << std::endl;
+  inagist_classifiers::Config config;
+  if (inagist_classifiers::ConfigReader::Read(config_file_name.c_str(), config) < 0) {
+    std::cerr << "ERROR: could not read config file: " << config_file_name << std::endl;
     return -1;
-  } else {
-    std::string line;
-    std::string key;
-    std::string value;
-    std::string::size_type loc;
-    int line_count = 0;
-    //std::string handles_file_name;
-    //std::string tweets_file_name;
-    //std::string corpus_file_name;
-    std::string lang_class_file_name;
-    std::string lang_classes_freq_file_name;
-    std::string lang_class_name;
-    std::map<std::string, std::string> lang_class_map;
-    while (getline(ifs, line)) {
-      if (key.compare(0, 8, "testdata") != 0) {
-        line_count++;
-      } else {
-        lang_classes_freq_file_name = value;
-        if (m_corpus_manager.LoadCorpus(lang_classes_freq_file_name,
-                                        m_corpus_manager.m_classes_freq_map) < 0) {
-          ifs.close();
-          std::cerr << "ERROR: could not load classes freq from " << lang_classes_freq_file_name << std::endl;
-          return -1;
-        }
-      }
-      // std::cout << line << std::endl;
-      loc = line.find("=", 0);
-      if (loc == std::string::npos) {
-        std::cout << "ERROR: invalid config file entry in " << config_file_name;
-        break;
-      }
-      key.assign(line.c_str(), loc);
-      value.assign(line.c_str(), loc+1, (line.length()-loc-1));
-      //std::cout << key << std::endl;
-      //std::cout << value << std::endl;
-      if (key.compare(0, 4, "lang") == 0) {
-        lang_class_name = value;
-      }
-      /*
-      else if (key.compare(0, 7, "handles") == 0) {
-        handles_file_name = value;
-      }
-      else if (key.compare(0, 6, "corpus") == 0) {
-        lang_corpus_file_name = value;
-      }
-      else if (key.compare(0, 6, "tweets") == 0) {
-        tweets_file_name = value;
-      }
-      */
-      else if (key.compare(0, 12, "trainingdata") == 0) {
-        lang_class_file_name = value;
-      }
-      if (line_count == 5) {
-        //std::cout << "loading " << lang_class_name << " with " << lang_class_file_name << std::endl;
-        lang_class_map[lang_class_name] = lang_class_file_name;
-        line_count = 0;
-      }
-    }
-    ifs.close();
-    if (!lang_class_map.empty()) {
-      if (m_corpus_manager.LoadCorpusMap(lang_class_map) < 0) {
-        std::cerr << "ERROR: could not load Corpus Map\n";
-        return -1;
-      }
+  }
+
+  if (config.classes.empty()) {
+    std::cerr << "ERROR: class structs could not be read from config file: " << config_file_name << std::endl;
+    return -1;
+  }
+
+  std::map<std::string, std::string> lang_class_map;
+  for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
+    lang_class_map[config.iter->name] = config.iter->training_data_file;
+  }
+  inagist_classifiers::ConfigReader::Clear(config);
+
+  if (!lang_class_map.empty()) {
+    if (m_corpus_manager.LoadCorpusMap(lang_class_map) < 0) {
+      std::cerr << "ERROR: could not load Corpus Map\n";
+      return -1;
     }
   }
+  lang_class_map.clear();
 
   return 0;
 }
@@ -234,64 +189,12 @@ int LanguageDetector::GenerateLangModel(const std::string& input_file_name,
   return count;
 }
 
-int LanguageDetector::GenerateLangModelFromTweets(const std::string& twitter_handles_file_name,
-                                               const std::string& output_tweets_file_name,
-                                               const std::string& output_file_name) {
-
-  std::ifstream ifs(twitter_handles_file_name.c_str());
-  if (!ifs) {
-    std::cout << "ERROR: could not open file " << twitter_handles_file_name << std::endl;
-    return -1;
+int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
+  int ngrams_count = 0;
+  if ((ngrams_count = m_ngrams_generator.GetNgramsFromTweet(text, corpus)) < 0) {
+    std::cerr << "ERROR: could not find ngrams from tweet: " << text << std::endl;
   }
-
-  std::string handle;
-  std::set<std::string> handles;
-  while(getline(ifs, handle)) {
-    handles.insert(handle);
-  }
-  ifs.close();
-
-  if (handles.size() < 1) {
-    std::cout << "ERROR: no handles found in file " << twitter_handles_file_name << std::endl;
-    return 0;
-  }
-
-  std::set<std::string> tweets;
-  inagist_api::TwitterSearcher twitter_searcher;
-
-  std::set<std::string>::iterator handle_iter;
-  unsigned int num_tweets = 0;
-  unsigned int num_ngrams = 0;
-  unsigned int ngrams_temp = 0;
-  Corpus lang_corpus;
-  for (handle_iter = handles.begin(); handle_iter != handles.end(); handle_iter++) {
-    if (twitter_searcher.GetTweetsFromUser(*handle_iter, tweets) > 0) {
-      num_tweets += tweets.size();
-      std::set<std::string>::iterator set_iter;
-      for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
-        if ((ngrams_temp = m_ngrams_generator.GetNgramsFromTweet(*set_iter, lang_corpus)) < 0) {
-          std::cerr << "ERROR: could not find ngrams from tweet: " << *set_iter << std::endl;
-        } else {
-          num_ngrams += ngrams_temp;
-        }
-      }
-      tweets.clear();
-    }
-  }
-  handles.clear();
-
-  if (num_tweets == 0) {
-    std::cout << "No tweets found for handles in file " << twitter_handles_file_name << std::endl;
-    return 0;
-  } else {
-    if (m_corpus_manager.WriteCorpusToFile(lang_corpus, output_file_name) < 0) {
-      std::cout << "ERROR: could not write to features to output file " << output_file_name << std::endl;
-    }
-  }
-
-  lang_corpus.clear();
-
-  return num_ngrams;
+  return ngrams_count;
 }
 
 int LanguageDetector::Clear() {

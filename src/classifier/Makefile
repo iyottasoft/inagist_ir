@@ -4,20 +4,21 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../utils -I../curl_request_maker -I../twitter_api -I../script_detector -I../ngrams_generator
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../utils -I../curl_request_maker -I../twitter_api -I../ngrams_generator
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -lngramsgenerator -lscriptdetector -lutils -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+LIBS = -l${PROJECT} -lngramsgenerator -lutils -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
-BINS = ${BIN_DIR}/t_corpus_manager
+BINS = ${BIN_DIR}/t_corpus_manager \
+       ${BIN_DIR}/t_config_reader
 
-OBJS = corpus_manager.o naive_bayes_classifier.o
+OBJS = config_reader.o corpus_manager.o naive_bayes_classifier.o classifier.o
 
 all: ${LIB} ${BINS}
 	@echo "build done!"
@@ -40,6 +41,11 @@ ${LIB}: ${OBJS}
 ${BIN_DIR}/t_corpus_manager: t_corpus_manager.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_corpus_manager
+	@echo "done!"
+
+${BIN_DIR}/t_config_reader: t_config_reader.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_config_reader
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

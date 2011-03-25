@@ -8,15 +8,14 @@
 int main(int argc, char* argv[]) {
 
   if (argc < 3 || argc > 4) {
-    std::cout << "Usage: " << argv[0] << " \n\t<0/1/2, 0-interactive|1-file/2-tweet/3-manytweets> \n\t<0/1/2, 0-create|1-test|2-clean> \n\t[<output_file_name>]\n";
+    std::cout << "Usage: " << argv[0] << " \n\t<0/1/2, 0-interactive|1-file/2-tweet/3-manytweets> \n\t<channels_dictionary_file> \n\t[<output_file_name>]\n";
     return -1;
   }
 
   unsigned int input_type = atoi(argv[1]);
   assert((input_type >= 0 && input_type <= 3));
  
-  unsigned int test_type = atoi(argv[2]);
-  assert(test_type >= 0 && test_type <= 2);
+  std::string channels_dictionary_file = std::string(argv[2]);
 
   std::string output_file_name;
   if (4 == argc) 
@@ -42,13 +41,26 @@ int main(int argc, char* argv[]) {
     std::set<std::string> tweets;
     inagist_api::TwitterAPI tapi;
     if (tapi.GetPublicTimeLine(tweets) < 0) {
-      std::cout << "Error: could not get trending tweets from inagist\n";
+      std::cerr << "Error: could not get trending tweets from inagist\n";
       return -1;
     }
-    std::set<std::string>::iterator set_iter;
-    for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
-      text = *set_iter;
+    std::set<std::string> channels_set;
+    std::set<std::string>::iterator channels_iter;
+    std::set<std::string>::iterator tweets_iter;
+    std::string text;
+    for (tweets_iter = tweets.begin(); tweets_iter != tweets.end(); tweets_iter++) {
+      text = *tweets_iter;
+      if (cm.FindChannels(text, channels_set) < 0) {
+        std::cerr << "ERROR: could not find channels\n";
+      } else {
+        for (channels_iter = channels_set.begin();
+             channels_iter != channels_set.end();
+             channels_iter++) {
+          std::cout << *channels_iter << std::endl;
+        }
+      }
     }
+    channels_set.clear();
     tweets.clear();
   }
 
