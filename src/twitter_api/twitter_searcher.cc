@@ -163,7 +163,6 @@ int TwitterSearcher::Search(const std::string& url,
       } else {
         std::string script;
         std::string tweet;
-        std::set<std::string> unused_keyphrases_set;
         JSONObject tweet_o = json_value->AsObject();
         if (tweet_o.find("results") != tweet_o.end() && tweet_o["results"]->IsArray()) {
           JSONArray tweet_array = tweet_o["results"]->AsArray();
