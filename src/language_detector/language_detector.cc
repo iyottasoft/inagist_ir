@@ -53,6 +53,13 @@ int LanguageDetector::Init(std::string config_file_name) {
   for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
     lang_class_map[config.iter->name] = config.iter->training_data_file;
   }
+
+  if (m_corpus_manager.LoadCorpus(config.test_data_file,
+                                  m_corpus_manager.m_classes_freq_map) < 0) {
+    std::cerr << "ERROR: could not load the lang classes freq file (test data)\n";
+    std::cout << "WARNING: continuing with the lang classes freq data\n";
+  }
+
   inagist_classifiers::ConfigReader::Clear(config);
 
   if (!lang_class_map.empty()) {

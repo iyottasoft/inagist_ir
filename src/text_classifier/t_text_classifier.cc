@@ -1,4 +1,4 @@
-#include "language_detector.h"
+#include "text_classifier.h"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -10,14 +10,14 @@
 int main(int argc, char* argv[]) {
 
   if (argc < 3 || argc > 5) {
-    std::cout << "Usage: " << argv[0] << " \n\t<config_file_name> \n\t<0/1/2, 0-interactive/1-file/2-tweet/3-many tweets> \n\t[<debug_level>] \n\t[<input_file_name>/[handle]]\n";
+    std::cout << "Usage: " << argv[0] << " \n\t<config_file_name> \n\t<0/1/2, 0-interactive/1-file/2-tweets/3-many tweets> \n\t[<debug_level>] \n\t[<input_file_name>/[handle]]\n";
     return -1;
   }
 
   std::string corpus_config_file_name = std::string(argv[1]);
 
-  inagist_classifiers::LanguageDetector ld;
-  if (ld.Init(corpus_config_file_name) < 0) {
+  inagist_classifiers::TextClassifier tc;
+  if (tc.Init(corpus_config_file_name) < 0) {
     std::cout << "ERROR: could not initialize language detector\n";
     return -1;
   }
@@ -29,19 +29,19 @@ int main(int argc, char* argv[]) {
   if (argc >= 4) {
     debug_level = atoi(argv[3]);
   }
-  ld.SetDebugLevel(debug_level);
+  tc.SetDebugLevel(debug_level);
 
   std::string line;
-  std::string lang;
+  std::string text_class;
   if (0 == input_type) {
     while (getline(std::cin, line)) {
       if (line.compare("exit") == 0 || line.compare("quit") == 0) {
         break;
       }
-      if (ld.DetectLanguage(line, line.length(), lang) < 0) {
-        std::cout << "ERROR: could not find language\n";
+      if (tc.GuessClass(line, line.length(), text_class) < 0) {
+        std::cerr << "ERROR: could not find text class: " << line << std::endl;
       } else {
-        std::cout << lang << std::endl;
+        std::cout << text_class << std::endl;
       }
     }
     return 0;
@@ -94,19 +94,15 @@ int main(int argc, char* argv[]) {
   for (set_iter = lines.begin(); set_iter != lines.end(); set_iter++) {
     line = *set_iter;
     std::cout << line << std::endl;
-    if (ld.DetectLanguage(line, line.length(), lang) < 0) {
-      std::cout << "ERROR: could not find language\n";
+    if (tc.GuessClass(line, line.length(), text_class) < 0) {
+      std::cout << "ERROR: could not find text class\n";
     } else {
-#ifdef LD_DEBUG
-      if (LD_DEBUG > 0) {
+#ifdef TC_DEBUG
+      if (TC_DEBUG > 0) {
         std::cout << line << std::endl;
       }
 #endif
-      std::cout << lang << std::endl;
-      if (ld.DetectLanguage(line, line.length(), lang, true) < 0) {
-        std::cout << "ERROR: could not find language after ToLower\n";
-      }
-      std::cout << "ignoring case: " << lang << std::endl;
+      std::cout << text_class << std::endl;
     }
     if (2 == input_type)
       break;

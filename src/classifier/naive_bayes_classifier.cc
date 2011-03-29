@@ -7,7 +7,7 @@
 #define NBC_DEBUG DEBUG
 #endif
 #endif
-//#define NBC_DEBUG 3
+//#define NBC_DEBUG 5
 
 namespace inagist_classifiers {
 
@@ -75,7 +75,8 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
       corpus_iter = ((*corpus_map_iter).second).find((*test_corpus_iter).first); 
       if (corpus_iter != ((*corpus_map_iter).second).end()) {
 #ifdef NBC_DEBUG
-        if (m_debug_level > 3) {
+        if (NBC_DEBUG > 3) {
+        //if (m_debug_level > 3) {
           std::cout << (*corpus_iter).first << " : " << (*corpus_iter).second << " in " << (*corpus_map_iter).first << std::endl;
         }
 #endif
@@ -91,7 +92,8 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
       freqs[i] += log(temp_total_freq/test_corpus.size());
     }
 #ifdef NBC_DEBUG
-    if (m_debug_level > 2) {
+    if (NBC_DEBUG > 2) {
+    //if (m_debug_level > 2) {
       std::cout << classes[i] << ": " << freqs[i] << " where prior record is (" \
                 << prior_entry_for_class << " / " << prior_total_entries << ")" << std::endl;
     }
@@ -116,7 +118,8 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   for (unsigned int j=1; j<i; j++) {
     freqs[j] = exp(freqs[j]);
 #ifdef NBC_DEBUG
-    if (m_debug_level > 2) {
+    if (NBC_DEBUG > 2) {
+    //if (m_debug_level > 2) {
       std::cout << classes[j] << " freqs: " << freqs[j] << std::endl;
     }
 #endif
@@ -130,7 +133,8 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   }
 
 #ifdef NBC_DEBUG
-  if (m_debug_level > 1) {
+  if (NBC_DEBUG > 1) {
+  //if (m_debug_level > 1) {
     std::cout << "max freq: " << max_freq << std::endl;
     std::cout << "max index: " << max_index << std::endl;
     std::cout << "guess_class_output: " << classes[max_index] << std::endl;

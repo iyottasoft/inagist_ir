@@ -16,7 +16,7 @@ class NaiveBayesClassifier {
  public:
   NaiveBayesClassifier();
   ~NaiveBayesClassifier();
-  int GuessClass(CorpusMap& corpus_map,
+  static int GuessClass(CorpusMap& corpus_map,
                  Corpus& classes_freq_map,
                  Corpus& test_corpus,
                  std::string& guess_class_output);
