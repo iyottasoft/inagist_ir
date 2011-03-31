@@ -12,6 +12,7 @@
 #include <set>
 #include "classifier.h"
 #include "corpus_manager.h"
+#include "keytuples_extracter.h"
 
 namespace inagist_classifiers {
 
@@ -32,9 +33,15 @@ class TextClassifier : public Classifier {
   int GetCorpus(const std::string& text, Corpus& corpus);
   int GetWordFrequencies(const std::string& input_file_name,
                          Corpus& corpus);
+  int InitTraining(const char* keytuples_config_file);
+  int InitTraining(const char *stopwords_file,
+                   const char *dictionary_file,
+                   const char *unsafe_dictionary_file);
+  int ClearTraining();
 
  private:
   CorpusManager m_corpus_manager;
+  inagist_trends::KeyTuplesExtracter m_keytuples_extracter;
 
   unsigned int m_debug_level;
 

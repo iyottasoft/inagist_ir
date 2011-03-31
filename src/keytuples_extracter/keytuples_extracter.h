@@ -14,7 +14,10 @@
 #include <iostream>
 #include "dictionary_set.h"
 #include "dictionary_map.h"
+
+#ifdef LANG_DETECT
 #include "language_detector.h"
+#endif
 
 #ifndef HASHTAGS_ENABLED
 #define HASHTAGS_ENABLED 1
@@ -30,9 +33,10 @@ class KeyTuplesExtracter {
  public:
   KeyTuplesExtracter();
   ~KeyTuplesExtracter();
-  int Init(const char* stopwords_file=NULL,
-           const char* dictionary_file=NULL,
-           const char* unsafe_dictionary_file=NULL,
+  int Init(std::string config_file);
+  int Init(const char* stopwords_file,
+           const char* dictionary_file,
+           const char* unsafe_dictionary_file,
            const char* lang_detect_config_file=NULL,
            const char* channels_dictionary_file=NULL,
            const char* stemmer_dictionary_file=NULL,
@@ -147,7 +151,9 @@ int GetKeywords(char* str,
   inagist_utils::DictionarySet m_dictionary;
   inagist_utils::DictionarySet m_stopwords_dictionary;
   inagist_utils::DictionarySet m_unsafe_dictionary;
+#ifdef LANG_DETECT
   inagist_classifiers::LanguageDetector m_language_detector;
+#endif
   inagist_utils::DictionaryMap m_channels_dictionary_map;
 
   DISALLOW_COPY_AND_ASSIGN(KeyTuplesExtracter);

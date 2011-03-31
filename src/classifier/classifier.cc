@@ -54,6 +54,30 @@ int Classifier::GetTrainingData(const char* config_file_name) {
   return 0;
 }
 
+int Classifier::GetTrainingData(const std::string& handle, Corpus& corpus) {
+
+  std::set<std::string> tweets;
+  inagist_api::TwitterSearcher twitter_searcher;
+
+  unsigned int count = 0;
+  unsigned int count_temp = 0;
+  if (twitter_searcher.GetTweetsFromUser(handle, tweets) > 0) {
+    std::set<std::string>::iterator set_iter;
+    for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
+      // this GetCorpus is a pure virtual function
+      // ensure your derivation of this classifier provides this function
+      if ((count_temp = GetCorpus(*set_iter, corpus)) < 0) {
+        std::cerr << "ERROR: could not find ngrams from tweet: " << *set_iter << std::endl;
+      } else {
+        count += count_temp;
+      }
+    }
+  }
+  tweets.clear();
+
+  return count;
+}
+
 int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
                                 const std::string& output_tweets_file_name,
                                 const std::string& output_corpus_file_name) {

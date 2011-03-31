@@ -71,7 +71,31 @@ int TextClassifier::Init(std::string config_file_name) {
 
   return 0;
 }
- 
+
+int TextClassifier::InitTraining(const char* keytuples_config_file) {
+
+  if (m_keytuples_extracter.Init(keytuples_config_file) < 0) {
+    std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
+    return -1;
+  }
+
+  return 0;
+} 
+// 
+int TextClassifier::InitTraining(const char* stopwords_file,
+                                 const char* dictionary_file,
+                                 const char* unsafe_dictionary_file) {
+
+  if (m_keytuples_extracter.Init(stopwords_file,
+                                 dictionary_file,
+                                 unsafe_dictionary_file) < 0) {
+    std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
+    return -1;
+  }
+
+  return 0;
+}
+
 int TextClassifier::GuessClass(const std::string& text,
                                const unsigned int& text_len,
                                std::string& text_class,
@@ -176,17 +200,70 @@ int TextClassifier::GetWordFrequencies(const std::string& input_file_name,
 }
 
 int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
+
   int words_count = 0;
-  std::set<std::string> words_set;
-  if ((words_count = inagist_utils::Tokenize(text, words_set)) < 0) {
-    std::cerr << "ERROR: could not tokenize: " << text << std::endl;
+  char buffer[MAX_BUFFER_LEN];
+  strcpy((char *) buffer, text.c_str());
+
+  std::set<std::string> keywords_set;
+  std::set<std::string> hashtags_set;
+  std::set<std::string> keyphrases_set;
+  std::string safe_status;
+  std::string script;
+  if (m_keytuples_extracter.GetKeyTuples(buffer,
+                                         safe_status, script,
+                                         keywords_set, hashtags_set, keyphrases_set) < 0) {
+    std::cerr << "ERROR: could not get words for: " << text << std::endl;
     return -1;
   }
 
-  std::set<std::string>::iterator set_iter;
-  for (set_iter = words_set.begin(); set_iter != words_set.end(); set_iter++) {
-    corpus[*set_iter] = 1;
+  if ((script.compare(0, 2, "en")) != 0) {
+     return 0;
   }
+
+  std::set<std::string>::iterator set_iter;
+  std::set<std::string> words;
+  std::set<std::string>::iterator words_iter;
+  if (keywords_set.size() > 0) {
+    std::cout << "keywords:\n";
+    for (set_iter = keywords_set.begin(); set_iter != keywords_set.end(); set_iter++) {
+      corpus[*set_iter] = 1;
+      std::cout << *set_iter << std::endl;
+      if (inagist_utils::Tokenize(*set_iter, words) > 1) {
+        for (words_iter = words.begin(); words_iter != words.end(); words_iter++) {
+          corpus[*words_iter] = 1;
+        }
+      }
+    }
+    keywords_set.clear();
+  }
+  if (hashtags_set.size() > 0) {
+    std::cout << "hashtags:\n";
+    for (set_iter = hashtags_set.begin(); set_iter != hashtags_set.end(); set_iter++) {
+      corpus[*set_iter] = 1;
+      std::cout << *set_iter << std::endl;
+      if (inagist_utils::Tokenize(*set_iter, words) > 1) {
+        for (words_iter = words.begin(); words_iter != words.end(); words_iter++) {
+          corpus[*words_iter] = 1;
+        }
+      }
+    }
+    hashtags_set.clear();
+  }
+  if (keyphrases_set.size() > 0) {
+    std::cout << "keyphrases:\n";
+    for (set_iter = keyphrases_set.begin(); set_iter != keyphrases_set.end(); set_iter++) {
+      corpus[*set_iter] = 1;
+      std::cout << *set_iter << std::endl;
+      if (inagist_utils::Tokenize(*set_iter, words) > 1) {
+        for (words_iter = words.begin(); words_iter != words.end(); words_iter++) {
+          corpus[*words_iter] = 1;
+        }
+      }
+    }
+    keyphrases_set.clear();
+  }
+  buffer[0] = '\0';
 
   return words_count;
 }
@@ -196,6 +273,15 @@ int TextClassifier::Clear() {
     m_corpus_manager.Clear();
   } catch (...) {
     std::cerr << "ERROR: Corpus Manager throws exception" << std::endl;
+  }
+  return 0;
+}
+
+int TextClassifier::ClearTraining() {
+  try {
+    m_keytuples_extracter.DeInit();
+  } catch (...) {
+    std::cerr << "ERROR: KeyTuples Extracter throws exception" << std::endl;
   }
   return 0;
 }

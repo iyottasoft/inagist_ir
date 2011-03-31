@@ -126,7 +126,7 @@ int Tokenize(const std::string& text, std::set<std::string>& tokens) {
 
   unsigned int len = text.length();
   if (len < 1) {
-    std::cout << "ERROR: empty string\n";
+    std::cout << "ERROR: empty string. no tokens\n";
     return -1;
   }
 

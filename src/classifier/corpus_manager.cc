@@ -12,6 +12,16 @@ CorpusManager::~CorpusManager() {
   Clear();
 }
 
+int CorpusManager::PrintCorpus(Corpus& corpus) {
+
+  CorpusIter corpus_iter;
+  for (corpus_iter = corpus.begin(); corpus_iter != corpus.end(); corpus_iter++) {
+    std::cout << (*corpus_iter).first << "=" << (*corpus_iter).second << std::endl;
+  }
+
+  return 0;
+}
+
 int CorpusManager::WriteCorpusToFile(Corpus& corpus, const std::string& file_name) {
 
   std::ofstream ofs(file_name.c_str());

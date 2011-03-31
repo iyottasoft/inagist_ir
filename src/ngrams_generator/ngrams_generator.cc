@@ -159,7 +159,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
 
   if (tweet.length() < 1) {
 #ifdef NG_DEBUG
-    std::cout << "ERROR: empty string" << std::endl;
+    std::cout << "ERROR: empty string. no ngrams." << std::endl;
 #endif
     return -1;
   }

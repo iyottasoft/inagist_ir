@@ -170,6 +170,7 @@ HASN'T
 have
 Have
 HAVE
+hv
 haven
 haven't
 Haven't

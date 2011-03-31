@@ -4,11 +4,11 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../script_detector -I../utils -I../classifier
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../script_detector -I../utils -I../classifier -I../keytuples_extracter
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -lclassifier -lutils -lscriptdetector -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+LIBS = -l${PROJECT} -lkeytuplesextracter -lclassifier -lutils -lscriptdetector -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
@@ -16,7 +16,8 @@ BIN_DIR = ../../bin
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_text_classifier \
-       ${BIN_DIR}/x_textclass_training_data
+       ${BIN_DIR}/x_textclass_training_data \
+       ${BIN_DIR}/t_textclass_training_data
 
 OBJS = text_classifier.o
 
@@ -46,6 +47,11 @@ ${BIN_DIR}/t_text_classifier: t_text_classifier.o ${LIB}
 ${BIN_DIR}/x_textclass_training_data: x_textclass_training_data.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_textclass_training_data
+	@echo "done!"
+
+${BIN_DIR}/t_textclass_training_data: t_textclass_training_data.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_textclass_training_data
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

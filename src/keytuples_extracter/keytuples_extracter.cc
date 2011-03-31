@@ -2,6 +2,7 @@
 #include "script_detector_utils.h"
 #include <cstring>
 #include "utf8.h"
+#include "keytuples_config.h"
 
 #ifdef DEBUG
 #if DEBUG>0
@@ -29,6 +30,33 @@ KeyTuplesExtracter::KeyTuplesExtracter() {
 KeyTuplesExtracter::~KeyTuplesExtracter() {
   if (DeInit() < 0)
     std::cerr << "ERROR: DeInit() failed\n";
+}
+
+int KeyTuplesExtracter::Init(std::string config_file) {
+
+  if (config_file.size() < 5) {
+    std::cerr << "ERROR: invalid config file name\n";
+    return -1;
+  }
+
+  inagist_trends::Config config;
+  if (inagist_trends::KeyTuplesConfig::Read(config_file.c_str(), config) < 0) {
+    std::cerr << "ERROR: could not read config file: " << config_file << std::endl;
+    return -1;
+  }
+
+  if (Init(config.stopwords_file.c_str(),
+           config.dictionary_file.c_str(),
+           config.unsafe_dictionary_file.c_str(),
+           config.lang_detect_config_file.c_str(),
+           NULL,
+           config.stemmer_dictionary_file.c_str()) < 0) {
+    std::cerr << "ERROR: could not initialize KeyTuplesExtracter\n";
+    return -1;
+  }
+  inagist_trends::KeyTuplesConfig::Clear(config);
+
+  return 0;
 }
 
 // every input parameter is optional!
@@ -89,6 +117,7 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
     }
   }
 
+#ifdef LANG_DETECT
   if (lang_detect_config_file) {
 #ifdef KE_DEBUG
     if (KE_DEBUG > 3) {
@@ -100,6 +129,7 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
       return -1;
     }
   }
+#endif
 
   if (channels_dictionary_file) {
 #ifdef KE_DEBUG
@@ -419,42 +449,49 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
 
   script.assign(script_buffer, script_buffer_len);
   safe_status.assign(safe_status_buffer, safe_status_buffer_len);
+
+  unsigned char* pch1 = NULL;
+  unsigned char* pch2 = NULL;
+  unsigned char ch;
   if (keywords_len > 0) {
-    unsigned char *pch1 = keywords_buffer;
-    unsigned char *pch2 = pch1;
-    char ch;
+    pch1 = keywords_buffer;
+    pch2 = pch1;
+    pch1 = (unsigned char*) strchr((char *) pch2, '|');
     while (pch1 && pch1 != '\0') {
       ch = *pch1;
+      *pch1 = '\0';
       keywords_set.insert((char *) pch2);
       *pch1 = ch;
-      pch1 = (unsigned char*) strchr((char *) pch2, '|');
       pch2 = pch1 + 1;
+      pch1 = (unsigned char*) strchr((char *) pch2, '|');
     }
   }
 
   if (keyphrases_len > 0) {
-    unsigned char *pch1 = keyphrases_buffer;
-    unsigned char *pch2 = pch1;
-    char ch;
+    pch1 = keyphrases_buffer;
+    pch2 = pch1;
+    pch1 = (unsigned char*) strchr((char *) pch2, '|');
     while (pch1 && pch1 != '\0') {
       ch = *pch1;
+      *pch1 = '\0';
       keyphrases_set.insert((char *) pch2);
       *pch1 = ch;
-      pch1 = (unsigned char*) strchr((char *) pch2, '|');
       pch2 = pch1 + 1;
+      pch1 = (unsigned char*) strchr((char *) pch2, '|');
     }
   }
 
   if (hashtags_len > 0) {
-    unsigned char *pch1 = hashtags_buffer;
-    unsigned char *pch2 = pch1;
-    char ch;
+    pch1 = hashtags_buffer;
+    pch2 = pch1;
+    pch1 = (unsigned char*) strchr((char *) pch2, '|');
     while (pch1 && pch1 != '\0') {
       ch = *pch1;
+      *pch1 = '\0';
       hashtags_set.insert((char *) pch2);
       *pch1 = ch;
-      pch1 = (unsigned char*) strchr((char *) pch2, '|');
       pch2 = pch1 + 1;
+      pch1 = (unsigned char*) strchr((char *) pch2, '|');
     }
   }
 
@@ -1807,6 +1844,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
 
   strcpy(script_buffer, script.c_str());
 
+#ifdef LANG_DETECT
   // language detection
   if (detect_lang) {
     std::string lang;
@@ -1821,6 +1859,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
       strcpy(buffer2, lang.c_str());
     }
   }
+#endif
 
 #ifdef KE_DEBUG
   if (KE_DEBUG > 1) {
