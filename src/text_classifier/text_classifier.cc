@@ -96,6 +96,17 @@ int TextClassifier::InitTraining(const char* stopwords_file,
   return 0;
 }
 
+int TextClassifier::LoadKeyTuplesDictionary(const char* dictionary_file) {
+
+  m_keytuples_extracter.m_dictionary.Clear();
+
+  if (m_keytuples_extracter.m_dictionary.Load(dictionary_file) < 0) {
+    std::cout << "ERROR: couldn't load dictionary file: " << dictionary_file << std::endl;
+  }
+
+  return 0;
+}
+
 int TextClassifier::GuessClass(const std::string& text,
                                const unsigned int& text_len,
                                std::string& text_class,
@@ -201,7 +212,6 @@ int TextClassifier::GetWordFrequencies(const std::string& input_file_name,
 
 int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
 
-  int words_count = 0;
   char buffer[MAX_BUFFER_LEN];
   strcpy((char *) buffer, text.c_str());
 
@@ -224,14 +234,16 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   std::set<std::string>::iterator set_iter;
   std::set<std::string> words;
   std::set<std::string>::iterator words_iter;
+  std::set<std::string> corpus_set;
+
   if (keywords_set.size() > 0) {
     std::cout << "keywords:\n";
     for (set_iter = keywords_set.begin(); set_iter != keywords_set.end(); set_iter++) {
-      corpus[*set_iter] = 1;
+      corpus_set.insert(*set_iter);
       std::cout << *set_iter << std::endl;
       if (inagist_utils::Tokenize(*set_iter, words) > 1) {
         for (words_iter = words.begin(); words_iter != words.end(); words_iter++) {
-          corpus[*words_iter] = 1;
+          corpus_set.insert(*words_iter);
         }
       }
     }
@@ -240,11 +252,11 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   if (hashtags_set.size() > 0) {
     std::cout << "hashtags:\n";
     for (set_iter = hashtags_set.begin(); set_iter != hashtags_set.end(); set_iter++) {
-      corpus[*set_iter] = 1;
+      corpus_set.insert(*set_iter);
       std::cout << *set_iter << std::endl;
       if (inagist_utils::Tokenize(*set_iter, words) > 1) {
         for (words_iter = words.begin(); words_iter != words.end(); words_iter++) {
-          corpus[*words_iter] = 1;
+          corpus_set.insert(*words_iter);
         }
       }
     }
@@ -253,17 +265,23 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   if (keyphrases_set.size() > 0) {
     std::cout << "keyphrases:\n";
     for (set_iter = keyphrases_set.begin(); set_iter != keyphrases_set.end(); set_iter++) {
-      corpus[*set_iter] = 1;
+      corpus_set.insert(*set_iter);
       std::cout << *set_iter << std::endl;
       if (inagist_utils::Tokenize(*set_iter, words) > 1) {
         for (words_iter = words.begin(); words_iter != words.end(); words_iter++) {
-          corpus[*words_iter] = 1;
+          corpus_set.insert(*words_iter);
         }
       }
     }
     keyphrases_set.clear();
   }
   buffer[0] = '\0';
+
+  int words_count = corpus_set.size();
+  for (set_iter = corpus_set.begin(); set_iter != corpus_set.end(); set_iter++) {
+    corpus[*set_iter] = 1;
+  }
+  corpus.clear();
 
   return words_count;
 }

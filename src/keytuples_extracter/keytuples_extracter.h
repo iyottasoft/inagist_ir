@@ -31,6 +31,10 @@ namespace inagist_trends {
 
 class KeyTuplesExtracter {
  public:
+  // variables
+  inagist_utils::DictionarySet m_dictionary;
+
+  // functions
   KeyTuplesExtracter();
   ~KeyTuplesExtracter();
   int Init(std::string config_file);
@@ -148,7 +152,6 @@ int GetKeywords(char* str,
  private:
   std::ifstream m_tweet_stream;
   std::ofstream m_out_stream;
-  inagist_utils::DictionarySet m_dictionary;
   inagist_utils::DictionarySet m_stopwords_dictionary;
   inagist_utils::DictionarySet m_unsafe_dictionary;
 #ifdef LANG_DETECT

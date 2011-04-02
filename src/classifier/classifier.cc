@@ -38,20 +38,22 @@ int Classifier::GetTrainingData(const char* config_file_name) {
     return -1;
   }
 
+  int count = 0;
+  int count_temp = 0;
   for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
-    int count = 0;
-    if ((count = GetTrainingData(config.iter->handles_file,
+    if ((count_temp = GetTrainingData(config.iter->handles_file,
                                  config.iter->tweets_file,
                                  config.iter->corpus_file)) < 0) {
       std::cout << "ERROR: could not get training data for handles in file: " \
                 << config.iter->handles_file << std::endl; 
     } else {
-      std::cout << "Corpus of size " << count << " generated for " << config.iter->name << std::endl;
+      std::cout << "Corpus of size " << count_temp << " generated for " << config.iter->name << std::endl;
+      count += count_temp;
     }
   }
   ConfigReader::Clear(config);
 
-  return 0;
+  return count;
 }
 
 int Classifier::GetTrainingData(const std::string& handle, Corpus& corpus) {

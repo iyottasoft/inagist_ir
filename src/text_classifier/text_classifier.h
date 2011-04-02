@@ -37,6 +37,7 @@ class TextClassifier : public Classifier {
   int InitTraining(const char *stopwords_file,
                    const char *dictionary_file,
                    const char *unsafe_dictionary_file);
+  int LoadKeyTuplesDictionary(const char* dictionary_file);
   int ClearTraining();
 
  private:
