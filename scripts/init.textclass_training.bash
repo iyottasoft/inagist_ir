@@ -17,9 +17,8 @@ do
   i=`expr $i + 1`
 done
 
-exit
 for user_name in ${user_names[@]}
 do
   echo "$home_folder/bin/t_twitter_api 3 $user_name $home_folder/data/text_class/tweetsource/handles/$user_name.txt"
-  #/home/balaji/ir_cpp/bin/t_twitter_api 3 $user_name /home/balaji/ir_cpp/data/text_class/tweetsource/handles/$user_name.txt
+  /home/balaji/ir_cpp/bin/t_twitter_api 3 $user_name /home/balaji/ir_cpp/data/text_class/tweetsource/handles/$user_name.txt
 done
