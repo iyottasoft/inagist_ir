@@ -1866,6 +1866,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
     } else {
       strcpy(buffer2, lang.c_str());
     }
+/*
     if (lang.compare(0,2,"en") != 0) {
 #ifdef KEYPHRASE_ENABLED
 #ifdef KE_DEBUG
@@ -1876,6 +1877,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
       keyphrases_count = 0;
 #endif
     }
+*/
   }
 #endif
 
