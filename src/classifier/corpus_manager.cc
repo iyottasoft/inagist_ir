@@ -22,6 +22,37 @@ int CorpusManager::PrintCorpus(Corpus& corpus) {
   return 0;
 }
 
+int CorpusManager::UpdateCorpusFile(Corpus& corpus, const std::string& file_name) {
+
+  Corpus temp_corpus;
+  if (LoadCorpus(file_name, temp_corpus) < 0) {
+    std::cerr << "ERROR: could not load corpus from file: " << file_name << std::endl;
+    return -1;
+  }
+
+  CorpusIter corpus_iter;
+  for (corpus_iter = corpus.begin(); corpus_iter != corpus.end(); corpus_iter++) {
+    if (temp_corpus.find((*corpus_iter).first) != temp_corpus.end()) {
+      temp_corpus[(*corpus_iter).first] += (*corpus_iter).second;
+    } else {
+      temp_corpus[(*corpus_iter).first] = (*corpus_iter).second;
+    }
+  }
+
+  std::ofstream ofs(file_name.c_str());
+  if (!ofs) {
+    std::cout << "ERROR: could not open file " << file_name << std::endl;
+    return -1;
+  }
+
+  for (corpus_iter = temp_corpus.begin(); corpus_iter != temp_corpus.end(); corpus_iter++) {
+    ofs << (*corpus_iter).first << "=" << (*corpus_iter).second << std::endl;
+  }
+  ofs.close();
+
+  return 0;
+}
+
 int CorpusManager::WriteCorpusToFile(Corpus& corpus, const std::string& file_name) {
 
   std::ofstream ofs(file_name.c_str());

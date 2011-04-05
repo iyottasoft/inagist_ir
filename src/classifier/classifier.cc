@@ -165,8 +165,8 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
     std::cout << "No tweets found for handles in file " << twitter_handles_file_name << std::endl;
     return 0;
   } else {
-    if (CorpusManager::WriteCorpusToFile(corpus, output_corpus_file_name) < 0) {
-      std::cout << "ERROR: could not write to features to output file " << output_corpus_file_name << std::endl;
+    if (CorpusManager::UpdateCorpusFile(corpus, output_corpus_file_name) < 0) {
+      std::cout << "ERROR: could not update features to output file " << output_corpus_file_name << std::endl;
     }
   }
 
