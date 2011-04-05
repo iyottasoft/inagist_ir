@@ -10,7 +10,7 @@
 #define LD_DEBUG DEBUG
 #endif
 #endif
-//#define LD_DEBUG 0
+//#define LD_DEBUG 5
 
 namespace inagist_classifiers {
 

@@ -271,11 +271,12 @@ int KeyTuplesExtracter::GetKeywords(char* str, std::set<std::string>& keywords_s
   std::set<std::string> keyphrases_set;
   std::string safe_status;
   std::string script;
+  std::string lang;
 #ifndef HASHTAGS_ENABLED
-  return GetKeyTuples(str, safe_status, script, keywords_set, keyphrases_set);
+  return GetKeyTuples(str, safe_status, script, lang, keywords_set, keyphrases_set);
 #else
   std::set<std::string> hashtags_set;
-  return GetKeyTuples(str, safe_status, script, keywords_set, hashtags_set, keyphrases_set);
+  return GetKeyTuples(str, safe_status, script, lang, keywords_set, hashtags_set, keyphrases_set);
 #endif
 }
 
@@ -284,12 +285,13 @@ int KeyTuplesExtracter::GetKeywords(char* str,
                                   std::string& safe_status,
                                   std::string& script,
                                   std::set<std::string>& keywords_set) {
+  std::string lang;
   std::set<std::string> keyphrases_set;
 #ifndef HASHTAGS_ENABLED
-  return GetKeyTuples(str, safe_status, script, keywords_set, keyphrases_set);
+  return GetKeyTuples(str, safe_status, script, lang, keywords_set, keyphrases_set);
 #else
   std::set<std::string> hashtags_set;
-  return GetKeyTuples(str, safe_status, script, keywords_set, hashtags_set, keyphrases_set);
+  return GetKeyTuples(str, safe_status, script, lang, keywords_set, hashtags_set, keyphrases_set);
 #endif
 }
 #endif
@@ -332,9 +334,10 @@ int KeyTuplesExtracter::GetKeywords(char* str,
                                  std::set<std::string>& keywords_set) {
   std::set<std::string> keyphrases_set;
   std::string safe_status;
+  std::string lang;
   int ret_value = 0;
 #ifndef HASHTAGS_ENABLED
-  GetKeyTuples(str, safe_status, script, keywords_set, keyphrases_set);
+  GetKeyTuples(str, safe_status, script, lang, keywords_set, keyphrases_set);
 #endif
   keyphrases_set.clear();
   return ret_value;
@@ -346,6 +349,7 @@ int KeyTuplesExtracter::GetKeywords(char* str,
 int KeyTuplesExtracter::GetKeyTuples(char* str, 
                                    std::string& safe_status,
                                    std::string& script,
+                                   std::string& lang,
                                    std::set<std::string>& keywords_set,
                                    std::set<std::string>& hashtags_set,
                                    std::set<std::string>& keyphrases_set) {
@@ -353,6 +357,7 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
 int KeyTuplesExtracter::GetKeyTuples(char* str, 
                                    std::string& safe_status,
                                    std::string& script,
+                                   std::string& lang,
                                    std::set<std::string>& keywords_set,
                                    std::set<std::string>& keyphrases_set) {
   std::set<std::string> hashtags_set;
@@ -362,6 +367,7 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
 int KeyTuplesExtracter::GetKeyTuples(char* str, 
                                    std::string& safe_status,
                                    std::string& script,
+                                   std::string& lang,
                                    std::set<std::string>& keywords_set,
                                    std::set<std::string>& hashtags_set) {
   std::set<std::string> keyphrases_set;
@@ -369,6 +375,7 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
 int KeyTuplesExtracter::GetKeyTuples(char* str, 
                                    std::string& safe_status,
                                    std::string& script,
+                                   std::string& lang,
                                    std::set<std::string>& keywords_set) {
   std::set<std::string> hashtags_set;
   std::set<std::string> keyphrases_set;
@@ -448,6 +455,7 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
   buffer[0] = '\0';
 
   script.assign(script_buffer, script_buffer_len);
+  lang.assign(buffer1, buffer1_len);
   safe_status.assign(safe_status_buffer, safe_status_buffer_len);
 
   unsigned char* pch1 = NULL;
@@ -1857,6 +1865,14 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
       std::cout << "ERROR: language detection failed\n";
     } else {
       strcpy(buffer2, lang.c_str());
+    }
+    if (lang.compare(0,2,"en") != 0) {
+#ifdef KEYPHRASE_ENABLED
+      std::cout << "Non-english: no keyphrases selected\n";
+      *keyphrases_buffer = '\0';
+      keyphrases_len = 0;
+      keyphrases_count = 0;
+#endif
     }
   }
 #endif

@@ -268,12 +268,14 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
 
       // find ngrams
       if (word_has_all_latin && !current_word_all_caps && !word_starts_caps) {
+        /*
         ngram.assign((char *) current_word_start, current_word_len);
         if (features_map.find(ngram) != features_map.end()) {
           features_map[ngram] += 1;
         } else {
           features_map[ngram] = 1;
         }
+        */
         if (GetNgramsFromWord((const unsigned char*) current_word_start, current_word_len, features_map) < 0) {
 #ifdef NG_DEBUG
           std::cout << "ERROR: could not get ngrams for word " << current_word_start << std::endl;
@@ -545,6 +547,25 @@ int NgramsGenerator::GetNgramsFromWord(const unsigned char* word_str,
                                        unsigned int word_len,
                                        std::map<std::string, int>& features_map) {
 
+  if (!word_str || word_len < 1) {
+    std::cerr << "ERROR: invalid word input. could not get ngrams\n";
+    return -1;
+  }
+
+  std::string ngram;
+  int count = 0;
+
+  ngram.assign((char *) word_str, word_len);
+  if (features_map.find(ngram) != features_map.end()) {
+    features_map[ngram] += 1;
+  } else {
+    features_map[ngram] = 1;
+  }
+  count++;
+
+  if (word_len <= NGRAM_LENGTH)
+    return 1;
+
   unsigned char* ptr = NULL;
   unsigned char* pch = NULL;
   unsigned char* stop = NULL;
@@ -553,8 +574,6 @@ int NgramsGenerator::GetNgramsFromWord(const unsigned char* word_str,
 
   unsigned char buffer[1024];
   memset(buffer, '\0', 1024);
-
-  std::string ngram;
 
   len = word_len;
   ptr = buffer;
@@ -581,6 +600,7 @@ int NgramsGenerator::GetNgramsFromWord(const unsigned char* word_str,
         } else {
           features_map[ngram] = 1;
         }
+        count++;
       }
       pch++;
       diff = pch - ptr;
@@ -588,7 +608,7 @@ int NgramsGenerator::GetNgramsFromWord(const unsigned char* word_str,
     ptr++;
   }
 
-  return features_map.size();
+  return count;
 }
 
 } // namespace inagist classifiers

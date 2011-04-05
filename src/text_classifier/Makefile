@@ -4,11 +4,11 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../script_detector -I../utils -I../classifier -I../keytuples_extracter
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../inagist_api -I../script_detector -I../utils -I../classifier -I../ngrams_generator -I../language_detector -I../keytuples_extracter
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -lkeytuplesextracter -lclassifier -lutils -lscriptdetector -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+LIBS = -l${PROJECT} -lkeytuplesextracter -llanguagedetector -lngramsgenerator -lclassifier -lutils -lscriptdetector -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin

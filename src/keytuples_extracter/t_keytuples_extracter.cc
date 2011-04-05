@@ -17,12 +17,13 @@ int GetKeyTuples(std::string text) {
   char buffer[1024];
   std::string safe_status;
   std::string script;
+  std::string lang;
   std::set<std::string> keywords_set;
   std::set<std::string> hashtags_set;
   std::set<std::string> keyphrases_set;
 
   strcpy(buffer, text.c_str()); 
-  if (g_ke.GetKeyTuples(buffer, safe_status, script, keywords_set, hashtags_set, keyphrases_set) < 0) {
+  if (g_ke.GetKeyTuples(buffer, safe_status, script, lang, keywords_set, hashtags_set, keyphrases_set) < 0) {
     std::cout << "ERROR: could not get keytuples\n";
     return -1;
   }
@@ -103,6 +104,7 @@ int main(int argc, char *argv[]) {
   std::string text;
   std::set<std::string> tweets;
   std::set<std::string>::iterator set_iter;
+  std::ifstream ifs;
   switch (input_type) {
     case 0:
       while (getline(std::cin, text)) {
@@ -112,7 +114,17 @@ int main(int argc, char *argv[]) {
       }
       break;
     case 1:
-      std::cout << "this feature has not been implemented yet\n";
+      ifs.open(input_file_name.c_str());
+      if (!ifs.is_open()) {
+        std::cout << "ERROR: could not open input file: " << input_file_name << std::endl;
+      }
+      while (getline(ifs, text)) {
+        tweets.insert(text);
+      }
+      ifs.close();
+      for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
+        GetKeyTuples(*set_iter);
+      }
       break;
     case 2:
       // fall through

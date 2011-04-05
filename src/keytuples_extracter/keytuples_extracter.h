@@ -15,6 +15,8 @@
 #include "dictionary_set.h"
 #include "dictionary_map.h"
 
+#define LANG_DETECT 0
+
 #ifdef LANG_DETECT
 #include "language_detector.h"
 #endif
@@ -51,6 +53,7 @@ class KeyTuplesExtracter {
   int GetKeyTuples(char* str,
                   std::string& safe_status,
                   std::string& script,
+                  std::string& lang,
                   std::set<std::string>& keywords_set,
                   std::set<std::string>& keyphrases_set);
   int GetKeywords(char* str,
@@ -70,9 +73,10 @@ class KeyTuplesExtracter {
 
 #ifdef KEYPHRASE_ENABLED
 #ifdef HASHTAGS_ENABLED
-int GetKeyTuples(char* str,
+  int GetKeyTuples(char* str,
                  std::string& safe_status,
                  std::string& script,
+                 std::string& lang,
                  std::set<std::string>& keywords_set,
                  std::set<std::string>& hashtags_set,
                  std::set<std::string>& keyphrases_set);
@@ -81,9 +85,10 @@ int GetKeyTuples(char* str,
 
 #ifdef KEYPHRASE_ENABLED
 #ifndef HASHTAGS_ENABLED
-int GetKeyTuples(char* str,
+  int GetKeyTuples(char* str,
                  std::string& safe_status,
                  std::string& script,
+                 std::string& lang,
                  std::set<std::string>& keywords_set,
                  std::set<std::string>& keyphrases_set);
 #endif
@@ -91,9 +96,10 @@ int GetKeyTuples(char* str,
 
 #ifndef KEYPHRASE_ENABLED
 #ifdef HASHTAGS_ENABLED
-int GetKeyTuples(char* str,
+  int GetKeyTuples(char* str,
                  std::string& safe_status,
                  std::string& script,
+                 std::string& lang,
                  std::set<std::string>& keywords_set,
                  std::set<std::string>& hashtags_set);
 #endif
@@ -101,7 +107,7 @@ int GetKeyTuples(char* str,
 
 #ifndef KEYPHRASE_ENABLED
 #ifndef HASHTAGS_ENABLED
-int GetKeywords(char* str,
+  int GetKeywords(char* str,
                 std::string& safe_status,
                 std::string& script,
                 std::set<std::string>& keywords_set);

@@ -11,7 +11,7 @@
 #define TC_DEBUG DEBUG
 #endif
 #endif
-//#define TC_DEBUG 0
+//#define TC_DEBUG 5
 
 namespace inagist_classifiers {
 
@@ -212,6 +212,11 @@ int TextClassifier::GetWordFrequencies(const std::string& input_file_name,
 
 int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
 
+  if (text.length() < 1) {
+    std::cerr << "ERROR: empty string. cannot get corpus\n";
+    return -1;
+  }
+
   char buffer[MAX_BUFFER_LEN];
   strcpy((char *) buffer, text.c_str());
 
@@ -220,15 +225,23 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   std::set<std::string> keyphrases_set;
   std::string safe_status;
   std::string script;
+  std::string lang;
   if (m_keytuples_extracter.GetKeyTuples(buffer,
-                                         safe_status, script,
+                                         safe_status, script, lang,
                                          keywords_set, hashtags_set, keyphrases_set) < 0) {
     std::cerr << "ERROR: could not get words for: " << text << std::endl;
     return -1;
   }
 
-  if ((script.compare(0, 2, "en")) != 0) {
-     return 0;
+  if ((script.compare(0, 2, "en")) != 0 || 
+      (lang.compare(0, 2, "en")) != 0) {
+#ifndef TC_DEBUG
+    std::cout << buffer << "\nnon-english tweet. no keytuples." << std::endl;
+#endif
+    keyphrases_set.clear();
+    keywords_set.clear();
+    hashtags_set.clear();
+    return 0;
   }
 
   std::set<std::string>::iterator set_iter;
@@ -281,7 +294,7 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   for (set_iter = corpus_set.begin(); set_iter != corpus_set.end(); set_iter++) {
     corpus[*set_iter] = 1;
   }
-  corpus.clear();
+  corpus_set.clear();
 
   return words_count;
 }

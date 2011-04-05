@@ -14,8 +14,8 @@ int KeyTuplesConfig::Clear(Config& config) {
   config.stopwords_file.clear();
   config.dictionary_file.clear();
   config.unsafe_dictionary_file.clear();
-  config.stemmer_dictionary_file.clear();
   config.lang_detect_config_file.clear();
+  config.stemmer_dictionary_file.clear();
   return 0;
 }
 
@@ -54,10 +54,10 @@ int KeyTuplesConfig::Read(const char* config_file_name, Config& config) {
         config.dictionary_file = value;
       } else if (key.compare(0, 17, "unsafe_dictionary") == 0) {
         config.unsafe_dictionary_file = value;
+      } else if (key.compare(0, 18, "lang_detect_config") == 0) {
+        config.lang_detect_config_file = value;
       } else if (key.compare(0, 18, "stemmer_dictionary") == 0) {
         config.stemmer_dictionary_file = value;
-      } else if (key.compare(0, 12, "lang_detect_config") == 0) {
-        config.lang_detect_config_file = value;
       }
     }
     ifs.close();
