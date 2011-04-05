@@ -1,6 +1,7 @@
 #include "classifier.h"
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
 #include "corpus_manager.h"
 #include "config_reader.h"
 #include "twitter_searcher.h"
@@ -38,9 +39,17 @@ int Classifier::GetTrainingData(const char* config_file_name) {
     return -1;
   }
 
+  int i = rand() % config.classes.size();
+  int j = 0;
+  for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
+    if (j == i)
+      break;
+    j++;
+  }
+
   int count = 0;
   int count_temp = 0;
-  for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
+  for (; config.iter != config.classes.end(); config.iter++) {
     if ((count_temp = GetTrainingData(config.iter->handles_file,
                                  config.iter->tweets_file,
                                  config.iter->corpus_file)) < 0) {
@@ -51,6 +60,20 @@ int Classifier::GetTrainingData(const char* config_file_name) {
       count += count_temp;
     }
   }
+  j = 0;
+  for (config.iter = config.classes.begin(); config.iter != config.classes.end() && j<i; config.iter++) {
+    j++;
+    if ((count_temp = GetTrainingData(config.iter->handles_file,
+                                 config.iter->tweets_file,
+                                 config.iter->corpus_file)) < 0) {
+      std::cout << "ERROR: could not get training data for handles in file: " \
+                << config.iter->handles_file << std::endl; 
+    } else {
+      std::cout << "Corpus of size " << count_temp << " generated for " << config.iter->name << std::endl;
+      count += count_temp;
+    }
+  }
+
   ConfigReader::Clear(config);
 
   return count;
