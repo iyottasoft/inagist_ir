@@ -1868,7 +1868,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
     }
     if (lang.compare(0,2,"en") != 0) {
 #ifdef KEYPHRASE_ENABLED
+#ifdef KE_DEBUG
       std::cout << "Non-english: no keyphrases selected\n";
+#endif
       *keyphrases_buffer = '\0';
       keyphrases_len = 0;
       keyphrases_count = 0;

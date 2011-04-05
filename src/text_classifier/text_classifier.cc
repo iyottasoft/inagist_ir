@@ -233,10 +233,10 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
     return -1;
   }
 
-  if ((script.compare(0, 2, "en")) != 0 || 
-      (lang.compare(0, 2, "en")) != 0) {
+  if ((script.compare(0, 2, "en")) != 0) {
+     // || (lang.compare(0, 2, "en")) != 0) {
 #ifndef TC_DEBUG
-    std::cout << buffer << "\nnon-english tweet. no keytuples." << std::endl;
+    // std::cout << buffer << "\nnon-english tweet. no keytuples." << std::endl;
 #endif
     keyphrases_set.clear();
     keywords_set.clear();
