@@ -163,7 +163,9 @@ class KeyTuplesExtracter {
 #ifdef LANG_DETECT
   inagist_classifiers::LanguageDetector m_language_detector;
 #endif
+/*
   inagist_utils::DictionaryMap m_channels_dictionary_map;
+*/
 
   DISALLOW_COPY_AND_ASSIGN(KeyTuplesExtracter);
   bool IsPunct(char *ptr, char *prev=NULL, char *next=NULL);

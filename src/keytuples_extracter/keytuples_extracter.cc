@@ -131,6 +131,7 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
   }
 #endif
 
+/*
   if (channels_dictionary_file) {
 #ifdef KE_DEBUG
     if (KE_DEBUG > 3) {
@@ -143,6 +144,7 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
       return -1;
     }
   }
+*/
 
   if (input_file) {
     m_tweet_stream.open(input_file, std::ifstream::in);
@@ -670,10 +672,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
   bool current_word_english = false;
   bool next_word_english = false;
 
+/*
   // channel classification
   unsigned int channels_count = 0;
   unsigned int channels_len = 0;
   std::string channel;
+*/
 
   // the whole thing starts here
   ptr = buffer;
@@ -866,9 +870,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
       text_has_unsafe_words = true;
     }
   
+/*
     if (m_channels_dictionary_map.FindPart(current_word_start, channel) == 1) {
       Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
     }
+*/
 #ifndef I18N_ENABLED
   }
 #endif
@@ -1094,10 +1100,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
           text_has_unsafe_words = true;
         }
 
+/*
         // channels
         if (m_channels_dictionary_map.FindPart(next_word_start, channel) == 1) {
           Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
         }
+*/
 #ifndef I18N_ENABLED
         }
 #endif
@@ -1209,10 +1217,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
         }
 #endif
 
+/*
         // each candidate should be checked against channel dictionary
         if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
           Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
         }
+*/
 
         if (!current_word_caps || current_word_stop || current_word_dict || current_word_starts_num) {
           if (stopwords_entity_start != prev_word_start) {
@@ -1318,10 +1328,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
           cout << "caps entity candidate: " << caps_entity_start << endl;
         }
 #endif
+/*
         // each candidate should be checked against channel dictionary
         if (m_channels_dictionary_map.FindPart(caps_entity_start, channel) == 1) {
           Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
         }
+*/
 
         if (current_word_stop ||
             !current_word_caps ||
@@ -1435,9 +1447,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
               keywords_count++;
             }
 
+/*
             if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
               Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
             }
+*/
 
             *(stopwords_entity_end-2) = ch;
           }
@@ -1460,9 +1474,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
               }
             }
 
+/*
             if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
               Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
             }
+*/
 
             *pch = ch;
             temp_len = stopwords_entity_end - stopwords_entity_start;
@@ -1483,9 +1499,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
               keywords_count++;
             }
 
+/*
             if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
               Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
             }
+*/
           }
         } else {
           cout << "ERROR: stopwords entity markers are wrong\n";
@@ -1516,9 +1534,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
               keywords_count++;
             }
 
+/*
             if (m_channels_dictionary_map.FindPart(caps_entity_start, channel) == 1) {
               Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
             }
+*/
 
             *(caps_entity_end-2) = ch;
           }
@@ -1544,9 +1564,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
               hashtags_count++;
             }
 
+/*
             if (m_channels_dictionary_map.FindPart(caps_entity_start, channel) == 1) {
               Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
             }
+*/
 
             *pch = ch;
             temp_len = caps_entity_end - caps_entity_start;
@@ -1568,9 +1590,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
               keywords_count++;
             }
 
+/*
             if (m_channels_dictionary_map.FindPart(caps_entity_start, channel) == 1) {
               Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
             }
+*/
 
           }
         } else {
@@ -1589,9 +1613,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
           hashtags_len += 1;
           hashtags_count++;
         }
+/*
         if (m_channels_dictionary_map.FindPart(current_word_start+1, channel) == 1) {
           Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
         }
+*/
       }
 
 #ifndef I18N_ENABLED
@@ -1701,6 +1727,8 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
                 caps_entity_end = NULL;
                 stopwords_entity_start = NULL;
                 stopwords_entity_end = NULL;
+                stopwords_keyphrase_start = NULL;
+                stopwords_keyphrase_end = NULL;
               }
             } else {
               for (pch = current_word_end + 1; (pch != next_word_start); pch++) {
@@ -1712,6 +1740,8 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
                     caps_entity_end = NULL;
                     stopwords_entity_start = NULL;
                     stopwords_entity_end = NULL;
+                    stopwords_keyphrase_start = NULL;
+                    stopwords_keyphrase_end = NULL;
                   }
                 }
               }
