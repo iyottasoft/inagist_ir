@@ -125,6 +125,7 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
       }
       tweets.clear();
     }
+    usleep(100000);
   }
   handles.clear();
 
