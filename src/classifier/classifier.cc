@@ -133,7 +133,15 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
   unsigned int count = 0;
   unsigned int count_temp = 0;
   Corpus corpus;
+
+  int i = rand() % handles.size();
+  int j = 0;
   for (handle_iter = handles.begin(); handle_iter != handles.end(); handle_iter++) {
+    if (i==j)
+      break;
+    j++;
+  }
+  for (; handle_iter != handles.end(); handle_iter++) {
     if (twitter_searcher.GetTweetsFromUser(*handle_iter, tweets) > 0) {
       num_tweets += tweets.size();
       std::set<std::string>::iterator set_iter;
@@ -149,6 +157,7 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
       tweets.clear();
     }
     usleep(100000);
+    break;
   }
   handles.clear();
 
