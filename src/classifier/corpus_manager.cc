@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <sys/stat.h>
 
 namespace inagist_classifiers {
 
@@ -23,6 +24,12 @@ int CorpusManager::PrintCorpus(Corpus& corpus) {
 }
 
 int CorpusManager::UpdateCorpusFile(Corpus& corpus, const std::string& file_name) {
+
+  struct stat stat_struct;
+  if (stat(file_name.c_str(), &stat_struct) != 0) {
+    std::cout << "WARNING: output file " << file_name << " not found. writing a new one\n";
+    return WriteCorpusToFile(corpus, file_name);
+  }
 
   Corpus temp_corpus;
   if (LoadCorpus(file_name, temp_corpus) < 0) {
