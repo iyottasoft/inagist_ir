@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
       if (argc == 4) {
         inagist_api::TwitterAPI tapi;
         if ((tapi.GetPublicTimeLine(tweets)) < 0) {
-          std::cout << "Error: could not get trending tweets from inagist\n";
+          std::cout << "Error: could not get public timeline from twitter\n";
           return -1;
         }
         for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
         }
       } else {
         if ((count = tc.GetTrainingData(handle, corpus)) < 0) {
-          std::cerr << "ERROR: could not get training data for lang detection\n";
+          std::cerr << "ERROR: could not get training data for handle: " << handle << std::endl;
         } else {
           std::cout << "Corpus of size " << count << " generated for " << handle << std::endl;
         }

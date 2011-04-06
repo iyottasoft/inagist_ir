@@ -143,6 +143,7 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
   }
   for (; handle_iter != handles.end(); handle_iter++) {
     count_temp = GetTrainingData(*handle_iter, corpus);
+    count += count_temp;
     usleep(100000);
     if (count_temp < 0) {
       std::cerr << "ERROR: could not get training data for handle: " << *handle_iter << std::endl;
