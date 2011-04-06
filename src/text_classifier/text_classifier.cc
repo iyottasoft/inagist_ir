@@ -250,41 +250,59 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   std::set<std::string> corpus_set;
 
   if (keywords_set.size() > 0) {
+#ifdef TC_DEBUG
     std::cout << "keywords:\n";
+#endif
     for (set_iter = keywords_set.begin(); set_iter != keywords_set.end(); set_iter++) {
       corpus_set.insert(*set_iter);
+#ifdef TC_DEBUG
       std::cout << *set_iter << std::endl;
+#endif
+/*
       if (inagist_utils::Tokenize(*set_iter, words) > 1) {
         for (words_iter = words.begin(); words_iter != words.end(); words_iter++) {
           corpus_set.insert(*words_iter);
         }
       }
+*/
     }
     keywords_set.clear();
   }
   if (hashtags_set.size() > 0) {
+#ifdef TC_DEBUG
     std::cout << "hashtags:\n";
+#endif
     for (set_iter = hashtags_set.begin(); set_iter != hashtags_set.end(); set_iter++) {
       corpus_set.insert(*set_iter);
+#ifdef TC_DEBUG
       std::cout << *set_iter << std::endl;
+#endif
+/*
       if (inagist_utils::Tokenize(*set_iter, words) > 1) {
         for (words_iter = words.begin(); words_iter != words.end(); words_iter++) {
           corpus_set.insert(*words_iter);
         }
       }
+*/
     }
     hashtags_set.clear();
   }
   if (keyphrases_set.size() > 0) {
+#ifdef TC_DEBUG
     std::cout << "keyphrases:\n";
+#endif
     for (set_iter = keyphrases_set.begin(); set_iter != keyphrases_set.end(); set_iter++) {
       corpus_set.insert(*set_iter);
+#ifdef TC_DEBUG
       std::cout << *set_iter << std::endl;
+#endif
+/*
       if (inagist_utils::Tokenize(*set_iter, words) > 1) {
         for (words_iter = words.begin(); words_iter != words.end(); words_iter++) {
           corpus_set.insert(*words_iter);
         }
       }
+*/
     }
     keyphrases_set.clear();
   }

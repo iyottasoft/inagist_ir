@@ -129,11 +129,11 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
   inagist_api::TwitterSearcher twitter_searcher;
 
   std::set<std::string>::iterator handle_iter;
-  unsigned int num_tweets = 0;
   unsigned int count = 0;
   unsigned int count_temp = 0;
   Corpus corpus;
 
+  // the following code is to randomly pick one handle and get tweets from it
   int i = rand() % handles.size();
   int j = 0;
   for (handle_iter = handles.begin(); handle_iter != handles.end(); handle_iter++) {
@@ -142,26 +142,19 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
     j++;
   }
   for (; handle_iter != handles.end(); handle_iter++) {
-    if (twitter_searcher.GetTweetsFromUser(*handle_iter, tweets) > 0) {
-      num_tweets += tweets.size();
-      std::set<std::string>::iterator set_iter;
-      for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
-        // this GetCorpus is a pure virtual function
-        // ensure your derivation of this classifier provides this function
-        if ((count_temp = GetCorpus(*set_iter, corpus)) < 0) {
-          std::cerr << "ERROR: could not find ngrams from tweet: " << *set_iter << std::endl;
-        } else {
-          count += count_temp;
-        }
-      }
-      tweets.clear();
-    }
+    count_temp = GetTrainingData(*handle_iter, corpus);
     usleep(100000);
-    break;
+    if (count_temp < 0) {
+      std::cerr << "ERROR: could not get training data for handle: " << *handle_iter << std::endl;
+    } else if (0 == count_temp) {
+      continue;
+    } else {
+      break;
+    }
   }
   handles.clear();
 
-  if (num_tweets == 0) {
+  if (count == 0) {
     std::cout << "No tweets found for handles in file " << twitter_handles_file_name << std::endl;
     return 0;
   } else {
