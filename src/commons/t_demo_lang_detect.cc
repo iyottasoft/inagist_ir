@@ -256,9 +256,17 @@ int main(int argc, char* argv[]) {
       continue;
     } else {
 
+      std::string line;
+      std::string::size_type loc;
       std::string handle;
-      while (getline(hfs, handle)) {
-        handles_set.insert(handle);
+      while (getline(hfs, line)) {
+        loc = line.find("=", 0);
+        if (loc != std::string::npos) {
+          handle.assign(line, 0, loc);
+          handles_set.insert(handle);
+        } else {
+          std::cerr << "ERROR: ill-written handles file\n";
+        }
       }
       hfs.close();
 
