@@ -20,7 +20,7 @@
 
 #define MAX_BUFFER_LEN 1024
 
-inagist_trends::KeywordsExtract g_ke;
+inagist_trends::KeyTuplesExtracter g_kt;
 
 int Init(std::string& root_dir) {
 
@@ -30,7 +30,7 @@ int Init(std::string& root_dir) {
   std::string lang_detect_config_file = root_dir + "/configs/language_detection.config";
   std::string channels_dictionary_file = root_dir + "/data/static_data/channels_dictionary.txt";
 
-  if (Init(stopwords_file.c_str(),
+  if (g_kt.Init(stopwords_file.c_str(),
            dictionary_file.c_str(),
            unsafe_dictionary_file.c_str(),
            lang_detect_config_file.c_str(),
@@ -71,7 +71,9 @@ int GetLangTestData(inagist_classifiers::Corpus& test_data_map,
   unsigned int tweet_len = 0;
 
   char safe_status[10];
+  unsigned int safe_status_buffer_len = 10;
   char script[4];
+  unsigned int script_buffer_len = 4;
   unsigned char keywords[MAX_BUFFER_LEN];
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
@@ -85,6 +87,7 @@ int GetLangTestData(inagist_classifiers::Corpus& test_data_map,
   char buffer2[MAX_BUFFER_LEN];
   char buffer3[MAX_BUFFER_LEN];
   char buffer4[MAX_BUFFER_LEN];
+  unsigned int buffer_len = MAX_BUFFER_LEN;
 
   std::set<std::string>::iterator set_iter;
   for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
@@ -107,19 +110,19 @@ int GetLangTestData(inagist_classifiers::Corpus& test_data_map,
     buffer3[0] = '\0';
     buffer4[0] = '\0';
     int ret_value = 0;
-    if ((ret_value = SubmitTweet((const unsigned char*) tweet_buffer, tweet_len,
-                    (char *) safe_status, 10,
-                    (char *) script, 4,
-                    keywords, MAX_BUFFER_LEN,
-                    &keywords_len, &keywords_count,
-                    hashtags, MAX_BUFFER_LEN,
-                    &hashtags_len, &hashtags_count,
-                    keyphrases, MAX_BUFFER_LEN,
-                    &keyphrases_len, &keyphrases_count,
-                    (char *) buffer1, MAX_BUFFER_LEN,
-                    (char *) buffer2, MAX_BUFFER_LEN,
-                    (char *) buffer3, MAX_BUFFER_LEN,
-                    (char *) buffer4, MAX_BUFFER_LEN)) < 0) {
+    if ((ret_value = g_kt.GetKeyTuples((unsigned char *) tweet_buffer, tweet_len,
+                    (char *) safe_status, safe_status_buffer_len,
+                    (char *) script, script_buffer_len,
+                    (unsigned char*) keywords, buffer_len,
+                    keywords_len, keywords_count,
+                    (unsigned char*) hashtags, buffer_len,
+                    hashtags_len, hashtags_count,
+                    (unsigned char*) keyphrases, buffer_len,
+                    keyphrases_len, keyphrases_count,
+                    (char *) buffer1, buffer_len,
+                    (char *) buffer2, buffer_len,
+                    (char *) buffer3, buffer_len,
+                    (char *) buffer4, buffer_len)) < 0) {
       std::cout << "ERROR: submit tweet failed\n";
       tweets.clear();
       return -1;

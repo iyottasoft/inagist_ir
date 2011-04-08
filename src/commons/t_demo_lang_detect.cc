@@ -2,14 +2,14 @@
 #include <fstream>
 #include <cstdlib>
 #include <string>
+#include <set>
 #include <cstring>
 #include "language_detector.h"
-#include "trends_manager.h"
+#include "keytuples_extracter.h"
+#include "twitter_searcher.h"
 #include "config_reader.h"
 
-#define MAX_BUFFER_LEN 10240
-
-inagist_trends::KeywordsExtract g_ke;
+inagist_trends::KeyTuplesExtracter g_kt;
 
 int Init(std::string& root_dir) {
 
@@ -19,7 +19,7 @@ int Init(std::string& root_dir) {
   std::string lang_detect_config_file = root_dir + "/configs/language_detection.config";
   std::string channels_dictionary_file = root_dir + "/data/static_data/channels_dictionary.txt";
 
-  if (Init(stopwords_file.c_str(),
+  if (g_kt.Init(stopwords_file.c_str(),
            dictionary_file.c_str(),
            unsafe_dictionary_file.c_str(),
            lang_detect_config_file.c_str(),
@@ -44,17 +44,22 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
   if (output_type == 1)
     ostream_ptr << "</td></tr>" << std::endl;
 
-  char tweets_buffer[MAX_BUFFER_LEN];
-  unsigned int tweets_len = 0;
-  if (GetTestTweets(handle.c_str(), MAX_BUFFER_LEN, tweets_buffer, &tweets_len) < 0) {
-    std::cout << "ERROR: could not get tweets for handle: " << handle << std::endl;
-    ostream_ptr << "<tr><td>ERROR: could not get tweets for handle: " << handle << "</td></tr>" << std::endl;
-    ostream_ptr << "</table>" << std::endl;
+  std::set<std::string> tweets;
+  std::set<std::string>::iterator tweet_iter;
+
+  inagist_api::TwitterSearcher twitter_searcher;
+  if (twitter_searcher.GetTweetsFromUser(handle, tweets) <= 0) {
+    std::cerr << "ERROR: could not get tweets for handle: " << handle << std::endl;
     return -1;
   }
 
+  char tweet_buffer[MAX_BUFFER_LEN];
+  unsigned int tweet_len = 0;
+
   char safe_status[10];
+  unsigned int safe_status_buffer_len = 10;
   char script[4];
+  unsigned int script_buffer_len = 4;
   unsigned char keywords[MAX_BUFFER_LEN];
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
@@ -68,23 +73,16 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
   char buffer2[MAX_BUFFER_LEN];
   char buffer3[MAX_BUFFER_LEN];
   char buffer4[MAX_BUFFER_LEN];
-
-  char *tweet_start = tweets_buffer;
-  char *tweet_end = strstr(tweet_start, "|");
-  unsigned int tweet_len = 0;
+  unsigned int buffer_len = MAX_BUFFER_LEN;
   int flag = 0;
 
-  while (tweet_start && tweet_end && *tweet_end != '\0') {
-
-    tweet_end = strstr(tweet_start, "|");
-    if (!tweet_end)
-      break;
-    *tweet_end = '\0';
-    tweet_len = tweet_end - tweet_start;
-
+  for (tweet_iter = tweets.begin(); tweet_iter != tweets.end(); tweet_iter++) {
+    tweet_len = (*tweet_iter).length();
     if (tweet_len <= 0 || tweet_len >= MAX_BUFFER_LEN) {
       std::cout << "ERROR: invalid tweet\n";
     }
+
+    strcpy(tweet_buffer, (*tweet_iter).c_str());
 
     memset(safe_status, 0, 10);
     memset(script, 0, 4);
@@ -97,19 +95,19 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
     buffer4[0] = '\0';
     int ret_value = 0;
     tweets_num++;
-    if ((ret_value = SubmitTweet((const unsigned char *) tweet_start, tweet_len,
-                    (char *) safe_status, 10,
-                    (char *) script, 4,
-                    keywords, MAX_BUFFER_LEN,
-                    &keywords_len, &keywords_count,
-                    hashtags, MAX_BUFFER_LEN,
-                    &hashtags_len, &hashtags_count,
-                    keyphrases, MAX_BUFFER_LEN,
-                    &keyphrases_len, &keyphrases_count,
-                    (char *) buffer1, MAX_BUFFER_LEN,
-                    (char *) buffer2, MAX_BUFFER_LEN,
-                    (char *) buffer3, MAX_BUFFER_LEN,
-                    (char *) buffer4, MAX_BUFFER_LEN)) < 0) {
+    if ((ret_value = g_kt.GetKeyTuples((unsigned char *) tweet_buffer, tweet_len,
+                    (char *) safe_status, safe_status_buffer_len,
+                    (char *) script, script_buffer_len,
+                    (unsigned char*) keywords, buffer_len,
+                    keywords_len, keywords_count,
+                    (unsigned char*) hashtags, buffer_len,
+                    hashtags_len, hashtags_count,
+                    (unsigned char*) keyphrases, buffer_len,
+                    keyphrases_len, keyphrases_count,
+                    (char *) buffer1, buffer_len,
+                    (char *) buffer2, buffer_len,
+                    (char *) buffer3, buffer_len,
+                    (char *) buffer4, buffer_len)) < 0) {
       if (output_type == 1)
         ostream_ptr << "</table>" << std::endl;
       return -1;
@@ -147,21 +145,17 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
       } else if (-2 == flag) {
         ostream_ptr << "<tr><td bgcolor=#FF0000>";
       }
-      ostream_ptr << "<br/>" << tweet_start << "<br/>expected: " << expected_lang << "<br/>script: " << script << "<br/>guess 1: " << buffer1 << "<br/>guess 2: " << buffer2 << std::endl;
+      ostream_ptr << "<br/>" << tweet_buffer << "<br/>expected: " << expected_lang << "<br/>script: " << script << "<br/>guess 1: " << buffer1 << "<br/>guess 2: " << buffer2 << std::endl;
       ostream_ptr << "</td></tr>\n" << std::endl;
     } else {
-      ostream_ptr << "Tweet: " << tweet_start << std::endl;
+      ostream_ptr << "Tweet: " << tweet_buffer << std::endl;
       ostream_ptr << "expected lang: " << expected_lang << std::endl;
       ostream_ptr << "script: " << script << std::endl;
       ostream_ptr << "lang guess 1: " << buffer1 << std::endl;
       ostream_ptr << "lang guess 2: " << buffer2 << std::endl;
     }
-
-    *tweet_end = '|';
-    tweet_start = tweet_end + 1;
   }
-  tweet_start = NULL;
-  tweet_end = NULL;
+  tweets.clear();
 
   if (output_type == 1)
     ostream_ptr << "<tr><td>" << std::endl;

@@ -12,8 +12,7 @@ LIBS = -ltrendsmanager -lkeytuplesextracter -llanguagedetector -lclassifier -lng
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
 
-BINS = ${BIN_DIR}/t_show_unsafe_trends \
-       ${BIN_DIR}/t_lang_detect \
+BINS = ${BIN_DIR}/t_demo_lang_detect \
        ${BIN_DIR}/x_lang_test_data_generator
 
 all: ${BINS}
@@ -28,14 +27,9 @@ clean:
 	@echo "compiling ..." $< "..."
 	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
-${BIN_DIR}/t_show_unsafe_trends: t_show_unsafe_trends.o
+${BIN_DIR}/t_demo_lang_detect: t_demo_lang_detect.o
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_show_unsafe_trends
-	@echo "done!"
-
-${BIN_DIR}/t_lang_detect: t_lang_detect.o
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_lang_detect
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_demo_lang_detect
 	@echo "done!"
 
 ${BIN_DIR}/x_lang_test_data_generator: x_lang_test_data_generator.o
