@@ -53,7 +53,7 @@ int Classifier::GetTrainingData(const char* config_file_name) {
     if ((count_temp = GetTrainingData(config.iter->handles_file,
                                  config.iter->tweets_file,
                                  config.iter->corpus_file)) < 0) {
-      std::cout << "ERROR: could not get training data for handles in file: " \
+      std::cerr << "ERROR: could not get training data for handles in file: " \
                 << config.iter->handles_file << std::endl; 
     } else {
       std::cout << "Corpus of size " << count_temp << " generated for " << config.iter->name << std::endl;
@@ -66,7 +66,7 @@ int Classifier::GetTrainingData(const char* config_file_name) {
     if ((count_temp = GetTrainingData(config.iter->handles_file,
                                  config.iter->tweets_file,
                                  config.iter->corpus_file)) < 0) {
-      std::cout << "ERROR: could not get training data for handles in file: " \
+      std::cerr << "ERROR: could not get training data for handles in file: " \
                 << config.iter->handles_file << std::endl; 
     } else {
       std::cout << "Corpus of size " << count_temp << " generated for " << config.iter->name << std::endl;
@@ -108,27 +108,44 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
                                 const std::string& output_corpus_file_name) {
 
   std::ifstream ifs(twitter_handles_file_name.c_str());
-  if (!ifs) {
-    std::cout << "ERROR: could not open file " << twitter_handles_file_name << std::endl;
+  if (!ifs.is_open()) {
+    std::cerr << "ERROR: could not open file " << twitter_handles_file_name << std::endl;
     return -1;
   }
 
+  std::string line;
   std::string handle;
-  std::set<std::string> handles;
-  while(getline(ifs, handle)) {
-    handles.insert(handle);
+  std::string flag_str;
+  std::string::size_type loc;
+  unsigned int flag = 0;
+  std::map<std::string, unsigned int> handles;
+  std::map<std::string, unsigned int>::iterator handle_iter;
+
+  while(getline(ifs, line)) {
+    if (line.length() <= 1) {
+      continue;
+    }
+    loc = line.find("=", 0);
+    if (loc == std::string::npos) {
+      handle.assign(line);
+      flag = 0;
+    } else {
+      handle.assign(line, 0, loc);
+      flag_str.assign(line, loc+1, line.length()-loc-1);
+      flag = atoi((char *) flag_str.c_str());
+    }
+    handles[handle] = flag;
   }
   ifs.close();
 
   if (handles.size() < 1) {
-    std::cout << "ERROR: no handles found in file " << twitter_handles_file_name << std::endl;
+    std::cerr << "ERROR: no handles found in file " << twitter_handles_file_name << std::endl;
     return 0;
   }
 
   std::set<std::string> tweets;
   inagist_api::TwitterSearcher twitter_searcher;
 
-  std::set<std::string>::iterator handle_iter;
   unsigned int count = 0;
   unsigned int count_temp = 0;
   Corpus corpus;
@@ -141,26 +158,99 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
       break;
     j++;
   }
+
+  flag = 0;
+  bool no_new_handle = true;
   for (; handle_iter != handles.end(); handle_iter++) {
-    count_temp = GetTrainingData(*handle_iter, corpus);
+    if (handle_iter->second == 1)
+      continue;
+    no_new_handle = false;
+    handle = handle_iter->first;
+    count_temp = GetTrainingData(handle, corpus);
     count += count_temp;
     usleep(100000);
     if (count_temp < 0) {
-      std::cerr << "ERROR: could not get training data for handle: " << *handle_iter << std::endl;
+      std::cerr << "ERROR: could not get training data for handle: " << handle << std::endl;
     } else if (0 == count_temp) {
       continue;
     } else {
+      handles[handle] = 1;
+      flag = 1;
       break;
     }
   }
+
+  if (0 == flag) {
+    j = 0;
+    for (handle_iter = handles.begin(); handle_iter != handles.end(); handle_iter++) {
+      if (i==j)
+        break;
+      j++;
+      if (handle_iter->second == 1)
+        continue;
+      no_new_handle = false;
+      handle = handle_iter->first;
+      count_temp = GetTrainingData(handle, corpus);
+      count += count_temp;
+      usleep(100000);
+      if (count_temp < 0) {
+        std::cerr << "ERROR: could not get training data for handle: " << handle << std::endl;
+      } else {
+        handles[handle] = 1;
+        flag = 1;
+      }
+      if (0 == count_temp) {
+        continue;
+      } else {
+        break;
+      }
+    }
+  }
+
+  if (no_new_handle) {
+    // all the entries in the handles file may have been examined and hence have "1".
+    // lets flip them all to 0.
+    for (handle_iter = handles.begin(); handle_iter != handles.end(); handle_iter++) {
+      if (handle_iter->second == 1) {
+        handle = handle_iter->first;
+        handles[handle] = 0;
+        flag = 1;
+      } else {
+        std::cerr << "ERROR: ill-maintained traning data state or unexplained error\n";
+        handles.clear();
+        return -1;
+      }
+    }
+  }
+
+  if (1 == flag) {
+    std::ofstream ofs(twitter_handles_file_name.c_str());
+    if (!ofs.is_open()) {
+      std::cerr << "ERROR: handles file: " << twitter_handles_file_name << " could not be opened for write.\n";
+      return -1;
+    } else {
+      for (handle_iter = handles.begin(); handle_iter != handles.end(); handle_iter++) {
+         ofs << handle_iter->first << "=" << handle_iter->second << std::endl;
+      }
+      ofs.close();
+    }
+  }
+
   handles.clear();
+
+  if (no_new_handle) {
+    // recursive call
+    return GetTrainingData(twitter_handles_file_name,
+                           output_corpus_file_name,
+                           output_tweets_file_name);
+  }
 
   if (count == 0) {
     std::cout << "No tweets found for handles in file " << twitter_handles_file_name << std::endl;
     return 0;
   } else {
     if (CorpusManager::UpdateCorpusFile(corpus, output_corpus_file_name) < 0) {
-      std::cout << "ERROR: could not update features to output file " << output_corpus_file_name << std::endl;
+      std::cerr << "ERROR: could not update features to output file " << output_corpus_file_name << std::endl;
     }
   }
 
