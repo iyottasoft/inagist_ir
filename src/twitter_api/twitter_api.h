@@ -20,6 +20,8 @@ class TwitterAPI {
                             std::set<std::string>& members);
   static int GetLists(const std::string& user_name,
                       std::map<std::string, std::string>& list_id_name_map);
+
+  static int GetUserInfo(const std::string& handle, std::string& info);
 };
 
 }

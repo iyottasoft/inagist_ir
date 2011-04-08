@@ -59,7 +59,6 @@ int TwitterAPI::GetLists(const std::string& user_name,
 
   inagist_api::CurlRequestMaker curl_request_maker;
 
-  std::string temp_str;
   std::string reply_message;
   std::string cursor = "-1";
 
@@ -130,7 +129,6 @@ int TwitterAPI::GetListMembers(const std::string& user_name,
 
   inagist_api::CurlRequestMaker curl_request_maker;
 
-  std::string temp_str;
   std::string reply_message;
   std::string cursor = "-1";
 
@@ -187,13 +185,49 @@ int TwitterAPI::GetListMembers(const std::string& user_name,
   return members.size();
 }
 
+int TwitterAPI::GetUserInfo(const std::string& handle, std::string& info) {
+
+  inagist_api::CurlRequestMaker curl_request_maker;
+
+  std::string reply_message;
+  std::string cursor = "-1";
+
+  bool ret_value = true;
+  std::string url = "http://api.twitter.com/1/users/show.json?screen_name=" + handle;
+  ret_value = curl_request_maker.GetTweets(url.c_str());
+  if (ret_value) {
+    curl_request_maker.GetLastWebResponse(reply_message);
+    if (reply_message.size() > 0) {
+      JSONValue* json_value = JSON::Parse(reply_message.c_str());
+      if (false == json_value->IsObject()) {
+        std::cout << "ERROR: json value obtained for user info not an object\n";
+      } else {
+        JSONObject json_object = json_value->AsObject();
+        if (json_object.find("name") != json_object.end() && json_object["name"]->IsString()) {
+          info = json_object["name"]->AsString();
+          info += ". ";
+        }
+        if (json_object.find("description") != json_object.end() && json_object["description"]->IsString()) {
+          info += json_object["description"]->AsString();
+          info += ". ";
+        }
+        if (json_object.find("url") != json_object.end() && json_object["url"]->IsString()) {
+          info += json_object["url"]->AsString();
+          info += " ";
+        }
+      }
+    }
+  }
+
+  return 0;
+}
+
 int TwitterAPI::GetListStatuses(const std::string& user_name,
                                 const std::string& list_name,
                                 std::set<std::string>& tweets) {
 
   inagist_api::CurlRequestMaker curl_request_maker;
 
-  std::string temp_str;
   std::string reply_message;
   std::string cursor = "-1";
 
