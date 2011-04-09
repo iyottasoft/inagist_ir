@@ -121,6 +121,9 @@ int TwitterSearcher::GetTweetsFromSearchUrl(const std::string& url, std::set<std
             std::cout << "max id value is empty\n";
         } else {
           std::cout << "max id field not found in twitter response\n";
+          std::cout << tweet << std::endl;
+          delete json_value;
+          return num_docs;
         }
       }
       delete json_value;

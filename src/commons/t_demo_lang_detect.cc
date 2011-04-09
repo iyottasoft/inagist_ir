@@ -40,7 +40,8 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
     ostream_ptr << "<table width=100%>" << std::endl;
     ostream_ptr << "<tr width=100%><td width=100%>" << std::endl;
   }
-  ostream_ptr << "handle: " << handle << std::endl;
+  ostream_ptr << "handle: " << handle << "<br/>" << std::endl;
+  ostream_ptr << "lang: " << expected_lang << std::endl;
   if (output_type == 1)
     ostream_ptr << "</td></tr>" << std::endl;
 
@@ -296,7 +297,7 @@ int main(int argc, char* argv[]) {
                             tweets_num, detected_num, undefined_num,
                             output_type, *ostream_ptr) < 0) {
         std::cout << "ERROR: TestLangForHandle failed for lang: " \
-                  << lang << "on handle: " << handle << std::endl;
+                  << lang << " on handle: " << handle << std::endl;
       }
       if (output_type == 1) {
         *ostream_ptr << "</td></tr>" << std::endl;

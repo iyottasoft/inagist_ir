@@ -21,7 +21,9 @@ class Classifier {
   int GetTrainingData(const std::string& twitter_handles_file_name,
                       const std::string& output_tweets_file_name,
                       const std::string& output_corpus_file_name);
-  int GetTrainingData(const std::string& handle, Corpus& corpus);
+  int GetTrainingData(const std::string& handle,
+                      Corpus& corpus,
+                      bool get_user_info=false);
   int GetTestData();
 
  private:

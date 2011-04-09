@@ -5,6 +5,7 @@
 #include "corpus_manager.h"
 #include "config_reader.h"
 #include "twitter_searcher.h"
+#include "twitter_api.h"
 
 #ifdef DEBUG
 #if DEBUG>0
@@ -79,13 +80,27 @@ int Classifier::GetTrainingData(const char* config_file_name) {
   return count;
 }
 
-int Classifier::GetTrainingData(const std::string& handle, Corpus& corpus) {
+int Classifier::GetTrainingData(const std::string& handle, Corpus& corpus, bool get_user_info) {
 
   std::set<std::string> tweets;
   inagist_api::TwitterSearcher twitter_searcher;
 
   unsigned int count = 0;
   unsigned int count_temp = 0;
+
+  if (get_user_info) {
+    std::string user_info;
+    if (inagist_api::TwitterAPI::GetUserInfo(handle, user_info) < 0) {
+      std::cerr << "ERROR: could not get user info for handle: " << handle << std::endl;
+    } else {
+      if (user_info.length() > 0 && (count_temp = GetCorpus(user_info, corpus)) < 0) {
+        std::cerr << "ERROR: could not find ngrams for user info string: " << user_info << std::endl;
+      } else {
+        count += count_temp;
+      }
+    }
+  }
+
   if (twitter_searcher.GetTweetsFromUser(handle, tweets) > 0) {
     std::set<std::string>::iterator set_iter;
     for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
@@ -115,9 +130,10 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
 
   std::string line;
   std::string handle;
-  std::string flag_str;
   std::string::size_type loc;
   unsigned int flag = 0;
+  unsigned int exe_count = 0;
+  std::string exe_count_str;
   std::map<std::string, unsigned int> handles;
   std::map<std::string, unsigned int>::iterator handle_iter;
 
@@ -128,13 +144,13 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
     loc = line.find("=", 0);
     if (loc == std::string::npos) {
       handle.assign(line);
-      flag = 0;
+      exe_count = 0;
     } else {
       handle.assign(line, 0, loc);
-      flag_str.assign(line, loc+1, line.length()-loc-1);
-      flag = atoi((char *) flag_str.c_str());
+      exe_count_str.assign(line, loc+1, line.length()-loc-1);
+      exe_count = atoi((char *) exe_count_str.c_str());
     }
-    handles[handle] = flag;
+    handles[handle] = exe_count;
   }
   ifs.close();
 
@@ -159,6 +175,7 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
     j++;
   }
 
+  // this flag indicates a flip in state and hence needs to be committed to file
   flag = 0;
   bool no_new_handle = true;
   for (; handle_iter != handles.end(); handle_iter++) {
@@ -166,16 +183,26 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
       continue;
     no_new_handle = false;
     handle = handle_iter->first;
-    count_temp = GetTrainingData(handle, corpus);
-    count += count_temp;
+
+    // need user info. 0 indicates its the first time this handles is being processed
+    if (handle_iter->second == 0) {
+      count_temp = GetTrainingData(handle, corpus, true);
+    } else {
+      count_temp = GetTrainingData(handle, corpus, false);
+    }
     usleep(100000);
+
     if (count_temp < 0) {
       std::cerr << "ERROR: could not get training data for handle: " << handle << std::endl;
-    } else if (0 == count_temp) {
+    } else {
+      handles[handle] += 1;
+      handles[handle] %= 2;
+      flag = 1;
+    }
+    if (0 == count_temp) {
       continue;
     } else {
-      handles[handle] = 1;
-      flag = 1;
+      count += count_temp;
       break;
     }
   }
@@ -183,25 +210,31 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
   if (0 == flag) {
     j = 0;
     for (handle_iter = handles.begin(); handle_iter != handles.end(); handle_iter++) {
-      if (i==j)
-        break;
-      j++;
+      if (i==j) break; j++;
       if (handle_iter->second == 1)
         continue;
       no_new_handle = false;
       handle = handle_iter->first;
-      count_temp = GetTrainingData(handle, corpus);
-      count += count_temp;
+
+      // need user info
+      if (handle_iter->second == 0) {
+        count_temp = GetTrainingData(handle, corpus, true);
+      } else {
+        count_temp = GetTrainingData(handle, corpus, false);
+      }
       usleep(100000);
+
       if (count_temp < 0) {
         std::cerr << "ERROR: could not get training data for handle: " << handle << std::endl;
       } else {
-        handles[handle] = 1;
+        handles[handle] += 1;
+        handles[handle] %= 2;
         flag = 1;
       }
       if (0 == count_temp) {
         continue;
       } else {
+        count += count_temp;
         break;
       }
     }
@@ -213,7 +246,7 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
     for (handle_iter = handles.begin(); handle_iter != handles.end(); handle_iter++) {
       if (handle_iter->second == 1) {
         handle = handle_iter->first;
-        handles[handle] = 0;
+        handles[handle] = 2;
         flag = 1;
       } else {
         std::cerr << "ERROR: ill-maintained traning data state or unexplained error\n";
