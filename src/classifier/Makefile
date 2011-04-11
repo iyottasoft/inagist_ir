@@ -16,7 +16,8 @@ BIN_DIR = ../../bin
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_corpus_manager \
-       ${BIN_DIR}/t_config_reader
+       ${BIN_DIR}/t_config_reader \
+       ${BIN_DIR}/t_setup_classifier
 
 OBJS = config_reader.o corpus_manager.o naive_bayes_classifier.o classifier.o
 
@@ -46,6 +47,11 @@ ${BIN_DIR}/t_corpus_manager: t_corpus_manager.o ${LIB}
 ${BIN_DIR}/t_config_reader: t_config_reader.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_config_reader
+	@echo "done!"
+
+${BIN_DIR}/t_setup_classifier: t_setup_classifier.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_setup_classifier
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE
