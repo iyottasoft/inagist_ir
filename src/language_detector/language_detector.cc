@@ -108,7 +108,8 @@ int LanguageDetector::DetectLanguage(const std::string& text,
   if (m_naive_bayes_classifier.GuessClass(m_corpus_manager.m_corpus_map,
                                           m_corpus_manager.m_classes_freq_map,
                                           test_corpus,
-                                          guess_lang_output) < 0) {
+                                          guess_lang_output,
+                                          m_debug_level) < 0) {
     std::cout << "ERROR: naive bayes classifiers could not guess the language\n";
     test_corpus.clear();
     return -1;
@@ -147,7 +148,8 @@ int LanguageDetector::DetectLanguage(std::set<std::string>& words_set,
   if (m_naive_bayes_classifier.GuessClass(m_corpus_manager.m_corpus_map,
                                           m_corpus_manager.m_classes_freq_map,
                                           test_corpus,
-                                          guess_lang_output) < 0) {
+                                          guess_lang_output,
+                                          m_debug_level) < 0) {
     std::cout << "ERROR: naive bayes classifiers could not guess the language\n";
     test_corpus.clear();
     return -1;

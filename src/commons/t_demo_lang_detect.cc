@@ -11,26 +11,6 @@
 
 inagist_trends::KeyTuplesExtracter g_kt;
 
-int Init(std::string& root_dir) {
-
-  std::string stopwords_file = root_dir + "/data/static_data/stopwords.txt";
-  std::string dictionary_file = root_dir + "/data/static_data/dictionary.txt";
-  std::string unsafe_dictionary_file = root_dir + "/data/static_data/unsafe_dictionary.txt";
-  std::string lang_detect_config_file = root_dir + "/configs/language_detection.config";
-  std::string channels_dictionary_file = root_dir + "/data/static_data/channels_dictionary.txt";
-
-  if (g_kt.Init(stopwords_file.c_str(),
-           dictionary_file.c_str(),
-           unsafe_dictionary_file.c_str(),
-           lang_detect_config_file.c_str(),
-           channels_dictionary_file.c_str()) < 0) {
-    std::cout << "ERROR: could not initialize keywords extract\n";
-    return -1;
-  }
-
-  return 0;
-}
-
 int TestLangForHandle(std::string& handle, const char* expected_lang,
                       unsigned int& tweets_num, unsigned int& detected_num,
                       unsigned int& undefined_num,
@@ -178,12 +158,13 @@ int TestLangForHandle(std::string& handle, const char* expected_lang,
 
 int main(int argc, char* argv[]) {
 
-  if (argc != 2 && argc != 3) {
-    std::cout << "Usage: " << argv[0] << " <config_file_name> [output_html_file]\n";
+  if (argc != 3 && argc != 4) {
+    std::cout << "Usage: " << argv[0] << " <config_file_name> <keytuples_config> [output_html_file]\n";
     return -1;
   }
 
   std::string config_file_name = argv[1];
+  std::string keytuples_config_file_name = argv[2];
 
   std::ifstream ifs(config_file_name.c_str());
   if (!ifs.is_open()) {
@@ -195,8 +176,8 @@ int main(int argc, char* argv[]) {
   std::ostream* ostream_ptr;
   std::string output_html_file_name;
   unsigned int output_type = 0;
-  if (argc == 3) {
-    output_html_file_name = std::string(argv[2]);
+  if (argc == 4) {
+    output_html_file_name = std::string(argv[3]);
     ofs.open(output_html_file_name.c_str());
     output_type = 1;
     ostream_ptr = &ofs;
@@ -220,8 +201,8 @@ int main(int argc, char* argv[]) {
     root_dir.assign(argv[0], loc);
   }
 
-  if (Init(root_dir) < 0) {
-    std::cout << "ERROR: could not initialize keywords extract\n";
+  if (g_kt.Init(keytuples_config_file_name) < 0) {
+    std::cout << "ERROR: could not initialize keytuples extracter\n";
     return -1;
   }
 
