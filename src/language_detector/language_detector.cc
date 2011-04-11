@@ -83,6 +83,12 @@ int LanguageDetector::DetectLanguage(const std::string& text,
   if ((num_ngrams = m_ngrams_generator.GetNgramsFromTweet(text, test_corpus, ignore_case)) < 0) {
     std::cerr << "ERROR: m_ngrams_generator returned -1" << std::endl;
     return -1;
+  } else {
+#ifdef LD_DEBUG
+    if (m_corpus_manager.PrintCorpus(test_corpus) < 0) {
+      std::cerr << "ERROR: could not print corpus in DetectLanguage" << std::endl;
+    }
+#endif
   }
 
   if (num_ngrams == 0) {
