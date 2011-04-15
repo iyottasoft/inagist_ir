@@ -32,51 +32,11 @@ int LanguageDetector::SetDebugLevel(unsigned int debug_level) {
   m_naive_bayes_classifier.SetDebugLevel(debug_level);
   return 0;
 }
-
-int LanguageDetector::Init(std::string config_file_name) {
-
-  // this config file name should have corpus files
-  // and the strings with which the corpus contents can be uniquely identified
-
-  inagist_classifiers::Config config;
-  if (inagist_classifiers::ConfigReader::Read(config_file_name.c_str(), config) < 0) {
-    std::cerr << "ERROR: could not read config file: " << config_file_name << std::endl;
-    return -1;
-  }
-
-  if (config.classes.empty()) {
-    std::cerr << "ERROR: class structs could not be read from config file: " << config_file_name << std::endl;
-    return -1;
-  }
-
-  std::map<std::string, std::string> lang_class_map;
-  for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
-    lang_class_map[config.iter->name] = config.iter->training_data_file;
-  }
-
-  if (m_corpus_manager.LoadCorpus(config.test_data_file,
-                                  m_corpus_manager.m_classes_freq_map) < 0) {
-    std::cerr << "ERROR: could not load the lang classes freq file (test data)\n";
-    std::cout << "WARNING: continuing with the lang classes freq data\n";
-  }
-
-  inagist_classifiers::ConfigReader::Clear(config);
-
-  if (!lang_class_map.empty()) {
-    if (m_corpus_manager.LoadCorpusMap(lang_class_map) < 0) {
-      std::cerr << "ERROR: could not load Corpus Map\n";
-      return -1;
-    }
-  }
-  lang_class_map.clear();
-
-  return 0;
-}
  
-int LanguageDetector::DetectLanguage(const std::string& text,
-                                     const unsigned int& text_len,
-                                     std::string& guess_lang_output,
-                                     bool ignore_case) {
+int LanguageDetector::Classify(const std::string& text,
+                                 const unsigned int& text_len,
+                                 std::string& guess_lang_output,
+                                 bool ignore_case) {
   int num_ngrams = 0;
   Corpus test_corpus;
 
@@ -218,6 +178,14 @@ int LanguageDetector::Clear() {
   } catch (...) {
     std::cerr << "ERROR: Corpus Manager throws exception" << std::endl;
   }
+  return 0;
+}
+
+int LanguageDetector::InitDependencies(int argc, char* argv[]) {
+  return 0;
+}
+
+int LanguageDetector::ClearDependencies() {
   return 0;
 }
 

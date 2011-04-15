@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
 
   inagist_classifiers::TextClassifier tc;
   if (tc.Init(corpus_config_file_name) < 0) {
-    std::cout << "ERROR: could not initialize language detector\n";
+    std::cout << "ERROR: could not initialize text classifier\n";
     return -1;
   }
 
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
       if (line.compare("exit") == 0 || line.compare("quit") == 0) {
         break;
       }
-      if (tc.GuessClass(line, line.length(), text_class) < 0) {
+      if (tc.Classify(line, line.length(), text_class) < 0) {
         std::cerr << "ERROR: could not find text class: " << line << std::endl;
       } else {
         std::cout << text_class << std::endl;
@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
   for (set_iter = lines.begin(); set_iter != lines.end(); set_iter++) {
     line = *set_iter;
     std::cout << line << std::endl;
-    if (tc.GuessClass(line, line.length(), text_class) < 0) {
+    if (tc.Classify(line, line.length(), text_class) < 0) {
       std::cout << "ERROR: could not find text class\n";
     } else {
 #ifdef TC_DEBUG

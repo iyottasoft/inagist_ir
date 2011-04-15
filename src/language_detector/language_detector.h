@@ -21,11 +21,20 @@ class LanguageDetector : public Classifier {
  public:
   LanguageDetector();
   ~LanguageDetector();
-  int Init(std::string config_file_name);
-  int DetectLanguage(const std::string& text,
-                     const unsigned int& text_len,
-                     std::string& guess_lang_output,
-                     bool ignore_case=false);
+
+  // inherited from classifier
+  // int Init(std::string config_file_name);
+
+  /* implementation of pure virtual functions from classifier.h */
+  int InitDependencies(int argc=0, char* argv[]=NULL);
+  int Classify(const std::string& text,
+                 const unsigned int& text_len,
+                 std::string& guess_lang_output,
+                 bool ignore_case=false);
+  int GetCorpus(const std::string& text, Corpus& corpus);
+  int ClearDependencies();
+  /* end */
+
   int DetectLanguage(std::set<std::string>& words_set,
                      std::string& guess_lang_output,
                      bool ignore_case=false);
@@ -38,7 +47,6 @@ class LanguageDetector : public Classifier {
                           Corpus& corpus);
   int Clear();
   int SetDebugLevel(unsigned int debug_level);
-  int GetCorpus(const std::string& text, Corpus& corpus);
   
  private:
   NgramsGenerator m_ngrams_generator;

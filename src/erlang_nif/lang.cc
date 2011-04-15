@@ -38,7 +38,7 @@ int DetectLanguage(const char* tweet, const unsigned int tweet_len,
 #endif
   std::string lang;
   int ret_value = 0;
-  if ((ret_value = g_language_detector.DetectLanguage(std::string(tweet), tweet_len, lang)) < 0) {
+  if ((ret_value = g_language_detector.Classify(std::string(tweet), tweet_len, lang)) < 0) {
     strcpy(lang_buffer, "ERR");
     return -1;
   }

@@ -25,6 +25,7 @@ using std::endl;
 using std::string;
 
 KeyTuplesExtracter::KeyTuplesExtracter() {
+  m_language_detector = (inagist_classifiers::LanguageDetector*) new inagist_classifiers::LanguageDetector;
 }
 
 KeyTuplesExtracter::~KeyTuplesExtracter() {
@@ -124,7 +125,7 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
       std::cout << "Info: initialising lang detect with config file - " << lang_detect_config_file << std::endl;
     }
 #endif
-    if (m_language_detector.Init(std::string(lang_detect_config_file)) < 0) {
+    if (m_language_detector->Init(std::string(lang_detect_config_file)) < 0) {
       std::cerr << "ERROR: could not initialize lang detect\n";
       return -1;
     }
@@ -173,6 +174,9 @@ int KeyTuplesExtracter::DeInit() {
   if (m_out_stream && m_out_stream.is_open())
     m_out_stream.close();
 
+  if (m_language_detector) {
+    delete m_language_detector;
+  }
   //std::cout << "deinit done\n";
   return 0;
 }
@@ -1886,12 +1890,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
   // language detection
   if (detect_lang) {
     std::string lang;
-    if (m_language_detector.DetectLanguage(words_set, lang, true) < 0) {
+    if (m_language_detector->DetectLanguage(words_set, lang, true) < 0) {
       std::cout << "ERROR: language detection failed\n";
     } else {
       strcpy(buffer1, lang.c_str());
     }
-    if (m_language_detector.DetectLanguage(std::string((char *) buffer), buffer_len, lang) < 0) {
+    if (m_language_detector->Classify(std::string((char *) buffer), buffer_len, lang) < 0) {
       std::cout << "ERROR: language detection failed\n";
     } else {
       strcpy(buffer2, lang.c_str());

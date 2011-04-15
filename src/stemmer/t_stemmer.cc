@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cstring>
 #include <set>
 #include "twitter_api.h"
 #include "twitter_searcher.h"

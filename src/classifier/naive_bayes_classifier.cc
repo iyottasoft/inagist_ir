@@ -104,7 +104,7 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   }
 
   if (!entry_found) {
-    guess_class_output = "RR";
+    guess_class_output = "XX";
     return 0;
   }
 
@@ -139,10 +139,12 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   }
 #endif
 
-  if (0 == max_duplicate_count)
+  if (0 == max_duplicate_count) {
     guess_class_output = classes[max_index];
-  else
-    guess_class_output = "xx";
+    return 1;
+  } else {
+    guess_class_output = "UU";
+  }
 
   return 0;
 }

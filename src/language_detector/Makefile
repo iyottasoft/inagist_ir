@@ -16,7 +16,8 @@ BIN_DIR = ../../bin
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_language_detector \
-       ${BIN_DIR}/x_lang_training_data
+       ${BIN_DIR}/x_language_detector_training_data \
+       ${BIN_DIR}/t_language_detector_test_data
 
 OBJS = language_detector.o
 
@@ -43,9 +44,14 @@ ${BIN_DIR}/t_language_detector: t_language_detector.o ${LIB}
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_language_detector
 	@echo "done!"
 
-${BIN_DIR}/x_lang_training_data: x_lang_training_data.o ${LIB}
+${BIN_DIR}/x_language_detector_training_data: x_language_detector_training_data.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_lang_training_data
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_language_detector_training_data
+	@echo "done!"
+
+${BIN_DIR}/t_language_detector_test_data: t_language_detector_test_data.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_language_detector_test_data
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

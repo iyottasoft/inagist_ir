@@ -4,11 +4,11 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../inagist_api -I../script_detector -I../utils -I../classifier -I../ngrams_generator -I../language_detector -I../keytuples_extracter
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../inagist_api -I../script_detector -I../utils -I../test_utils -I../classifier -I../ngrams_generator -I../language_detector -I../keytuples_extracter
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -lkeytuplesextracter -llanguagedetector -lngramsgenerator -lclassifier -lutils -lscriptdetector -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+LIBS = -l${PROJECT} -lkeytuplesextracter -llanguagedetector -lngramsgenerator -lclassifier -ltestutils -lutils -lscriptdetector -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
@@ -16,8 +16,9 @@ BIN_DIR = ../../bin
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_text_classifier \
-       ${BIN_DIR}/x_textclass_training_data \
-       ${BIN_DIR}/t_textclass_training_data
+       ${BIN_DIR}/x_text_classifier_training_data \
+       ${BIN_DIR}/t_text_classifier_training_data \
+       ${BIN_DIR}/t_text_classifier_test_data
 
 OBJS = text_classifier.o
 
@@ -44,14 +45,19 @@ ${BIN_DIR}/t_text_classifier: t_text_classifier.o ${LIB}
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_text_classifier
 	@echo "done!"
 
-${BIN_DIR}/x_textclass_training_data: x_textclass_training_data.o ${LIB}
+${BIN_DIR}/x_text_classifier_training_data: x_text_classifier_training_data.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_textclass_training_data
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_text_classifier_training_data
 	@echo "done!"
 
-${BIN_DIR}/t_textclass_training_data: t_textclass_training_data.o ${LIB}
+${BIN_DIR}/t_text_classifier_training_data: t_text_classifier_training_data.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_textclass_training_data
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_text_classifier_training_data
+	@echo "done!"
+
+${BIN_DIR}/t_text_classifier_test_data: t_text_classifier_test_data.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_text_classifier_test_data
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

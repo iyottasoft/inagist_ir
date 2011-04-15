@@ -1,0 +1,2 @@
+RR=20
+all_classes=20

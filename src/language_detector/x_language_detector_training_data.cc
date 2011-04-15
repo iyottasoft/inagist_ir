@@ -1,6 +1,8 @@
 #include "language_detector.h"
 #include <iostream>
 
+using namespace inagist_classifiers;
+
 int main(int argc, char* argv[]) {
 
   if (argc != 2) {
@@ -9,13 +11,14 @@ int main(int argc, char* argv[]) {
   }
 
   std::string config_file_name = argv[1];
-  inagist_classifiers::LanguageDetector ld;
+  LanguageDetector* ld = (LanguageDetector*) new LanguageDetector();
 
-  if (ld.GetTrainingData(config_file_name.c_str()) < 0) {
+  if (ld->GetTrainingData(config_file_name.c_str()) < 0) {
     std::cout << "ERROR: could not get training data for lang detection\n";
   }
 
-  ld.Clear();
+  ld->Clear();
+  delete ld;
 
   return 0;
 }

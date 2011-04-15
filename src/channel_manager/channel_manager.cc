@@ -1,6 +1,7 @@
 #include "channel_manager.h"
 #include <iostream>
 #include <fstream>
+#include <cstring>
 #include "twitter_searcher.h"
 #include "string_utils.h"
 

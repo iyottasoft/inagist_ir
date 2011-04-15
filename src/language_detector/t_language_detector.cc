@@ -7,6 +7,8 @@
 #include "twitter_api.h"
 #include "twitter_searcher.h"
 
+using namespace inagist_classifiers;
+
 int main(int argc, char* argv[]) {
 
   if (argc < 3 || argc > 5) {
@@ -16,12 +18,6 @@ int main(int argc, char* argv[]) {
 
   std::string corpus_config_file_name = std::string(argv[1]);
 
-  inagist_classifiers::LanguageDetector ld;
-  if (ld.Init(corpus_config_file_name) < 0) {
-    std::cout << "ERROR: could not initialize language detector\n";
-    return -1;
-  }
-
   int input_type = atoi(argv[2]);
   assert((input_type >= 0 && input_type <= 3));
 
@@ -29,23 +25,9 @@ int main(int argc, char* argv[]) {
   if (argc >= 4) {
     debug_level = atoi(argv[3]);
   }
-  ld.SetDebugLevel(debug_level);
 
   std::string line;
   std::string lang;
-  if (0 == input_type) {
-    while (getline(std::cin, line)) {
-      if (line.compare("exit") == 0 || line.compare("quit") == 0) {
-        break;
-      }
-      if (ld.DetectLanguage(line, line.length(), lang) < 0) {
-        std::cout << "ERROR: could not find language\n";
-      } else {
-        std::cout << lang << std::endl;
-      }
-    }
-    return 0;
-  }
 
   std::set<std::string> lines;
   int num_docs = 0;
@@ -90,11 +72,33 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  LanguageDetector* ld = (LanguageDetector*) new LanguageDetector();
+  if (ld->Init(corpus_config_file_name) < 0) {
+    std::cout << "ERROR: could not initialize language detector\n";
+    return -1;
+  }
+  ld->SetDebugLevel(debug_level);
+
+  if (0 == input_type) {
+    while (getline(std::cin, line)) {
+      if (line.compare("exit") == 0 || line.compare("quit") == 0) {
+        break;
+      }
+      if (ld->Classify(line, line.length(), lang) < 0) {
+        std::cout << "ERROR: could not find language\n";
+      } else {
+        std::cout << lang << std::endl;
+      }
+    }
+    delete ld;
+    return 0;
+  }
+
   std::set<std::string>::iterator set_iter;
   for (set_iter = lines.begin(); set_iter != lines.end(); set_iter++) {
     line = *set_iter;
     std::cout << line << std::endl;
-    if (ld.DetectLanguage(line, line.length(), lang) < 0) {
+    if (ld->Classify(line, line.length(), lang) < 0) {
       std::cout << "ERROR: could not find language\n";
     } else {
 #ifdef LD_DEBUG
@@ -103,7 +107,7 @@ int main(int argc, char* argv[]) {
       }
 #endif
       std::cout << lang << std::endl;
-      if (ld.DetectLanguage(line, line.length(), lang, true) < 0) {
+      if (ld->Classify(line, line.length(), lang, true) < 0) {
         std::cout << "ERROR: could not find language after ToLower\n";
       }
       std::cout << "ignoring case: " << lang << std::endl;
@@ -113,6 +117,8 @@ int main(int argc, char* argv[]) {
   }
 
   lines.clear();
+
+  delete ld;
 
   return 0;
 }

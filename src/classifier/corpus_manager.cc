@@ -154,15 +154,30 @@ int CorpusManager::LoadCorpus(const std::string corpus_file_name, Corpus& corpus
   return 0;
 }
 
+// this is a map of class name and corresponding file names.
+// for example for language detection an entry will look like
+// <en, /path/to/file/name/file.txt>
+
 int CorpusManager::LoadCorpusMap(std::map<std::string, std::string> corpus_class_files_map) {
 
-  std::map<std::string, std::string>::iterator cfile_iter;
+  std::map<std::string, std::string>::iterator map_iter;
   Corpus corpus;
-  for (cfile_iter = corpus_class_files_map.begin(); cfile_iter != corpus_class_files_map.end(); cfile_iter++) {
-    if (LoadCorpus((*cfile_iter).second, corpus) < 0) {
-      std::cout << "ERROR: could not load corpus from file " << (*cfile_iter).second << std::endl;
+  std::string class_name;
+  std::string corpus_file;
+  for (map_iter = corpus_class_files_map.begin();
+       map_iter != corpus_class_files_map.end();
+       map_iter++) {
+    class_name = map_iter->first;
+    corpus_file = map_iter->second;
+    if (class_name.empty() || corpus_file.empty()) {
+      std::cerr << "ERROR: invalid corpus information.\n";
+      return -1;
+    }
+    if (LoadCorpus(corpus_file, corpus) < 0) {
+      std::cout << "ERROR: could not load corpus from file " << corpus_file << std::endl;
+      return -1;
     } else {
-      m_corpus_map.insert(std::pair<std::string, Corpus> ((*cfile_iter).first, corpus));
+      m_corpus_map.insert(std::pair<std::string, Corpus> (class_name, corpus));
     }
   }
 
@@ -194,6 +209,7 @@ int CorpusManager::LoadCorpusMap(const std::string config_file_name) {
       file_name = std::string(line, loc+1, line.length() - loc); 
       if (LoadCorpus(file_name, corpus) < 0) {
         std::cout << "ERROR: could not load corpus from file " << file_name << std::endl;
+        return -1;
       } else {
         m_corpus_map.insert(std::pair<std::string, Corpus> (class_name, corpus));
       }

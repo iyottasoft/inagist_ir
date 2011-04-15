@@ -161,7 +161,7 @@ class KeyTuplesExtracter {
   inagist_utils::DictionarySet m_stopwords_dictionary;
   inagist_utils::DictionarySet m_unsafe_dictionary;
 #ifdef LANG_DETECT
-  inagist_classifiers::LanguageDetector m_language_detector;
+  inagist_classifiers::LanguageDetector* m_language_detector;
 #endif
 /*
   inagist_utils::DictionaryMap m_channels_dictionary_map;

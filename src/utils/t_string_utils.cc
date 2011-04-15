@@ -1,6 +1,7 @@
 #include "string_utils.h"
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <set>
 #include <cassert>
 #include <cstdlib>

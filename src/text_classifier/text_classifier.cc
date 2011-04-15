@@ -1,6 +1,7 @@
 #include "text_classifier.h"
 #include <iostream>
 #include <fstream>
+#include <cstring>
 #include "twitter_searcher.h"
 #include "string_utils.h"
 #include "config_reader.h"
@@ -32,47 +33,14 @@ int TextClassifier::SetDebugLevel(unsigned int debug_level) {
   return 0;
 }
 
-int TextClassifier::Init(std::string config_file_name) {
+int TextClassifier::InitDependencies(int argc, char* argv[]) {
 
-  // this config file name should have corpus files
-  // and the strings with which the corpus contents can be uniquely identified
-
-  inagist_classifiers::Config config;
-  if (inagist_classifiers::ConfigReader::Read(config_file_name.c_str(), config) < 0) {
-    std::cerr << "ERROR: could not read config file: " << config_file_name << std::endl;
+  if (argc != 1) {
+    std::cerr << "ERROR: text classifier needs keytuples config file\n";
     return -1;
   }
 
-  if (config.classes.empty()) {
-    std::cerr << "ERROR: class structs could not be read from config file: " << config_file_name << std::endl;
-    return -1;
-  }
-
-  std::map<std::string, std::string> text_class_map;
-  for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
-    text_class_map[config.iter->name] = config.iter->training_data_file;
-  }
-
-  if (m_corpus_manager.LoadCorpus(config.test_data_file,
-                                  m_corpus_manager.m_classes_freq_map) < 0) {
-    std::cerr << "ERROR: could not load the text classes freq file (test data)\n";
-    std::cout << "WARNING: continuing with the text classes freq data\n";
-  }
-
-  inagist_classifiers::ConfigReader::Clear(config);
-
-  if (!text_class_map.empty()) {
-    if (m_corpus_manager.LoadCorpusMap(text_class_map) < 0) {
-      std::cerr << "ERROR: could not load Corpus Map\n";
-      return -1;
-    }
-  }
-  text_class_map.clear();
-
-  return 0;
-}
-
-int TextClassifier::InitTraining(const char* keytuples_config_file) {
+  const char* keytuples_config_file = argv[1];
 
   if (m_keytuples_extracter.Init(keytuples_config_file) < 0) {
     std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
@@ -107,10 +75,10 @@ int TextClassifier::LoadKeyTuplesDictionary(const char* dictionary_file) {
   return 0;
 }
 
-int TextClassifier::GuessClass(const std::string& text,
-                               const unsigned int& text_len,
-                               std::string& text_class,
-                               bool ignore_case) {
+int TextClassifier::Classify(const std::string& text,
+                             const unsigned int& text_len,
+                             std::string& text_class,
+                             bool ignore_case) {
   int num_words = 0;
   Corpus test_corpus;
 
@@ -152,7 +120,7 @@ int TextClassifier::GuessClass(const std::string& text,
   return 1;
 }
 
-int TextClassifier::GuessClass(std::set<std::string>& words_set,
+int TextClassifier::Classify(std::set<std::string>& words_set,
                                      std::string& text_class,
                                      bool ignore_case) {
 
@@ -326,7 +294,7 @@ int TextClassifier::Clear() {
   return 0;
 }
 
-int TextClassifier::ClearTraining() {
+int TextClassifier::ClearDependencies() {
   try {
     m_keytuples_extracter.DeInit();
   } catch (...) {

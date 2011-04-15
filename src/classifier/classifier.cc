@@ -1,9 +1,6 @@
 #include "classifier.h"
 #include <iostream>
-#include <fstream>
 #include <cstdlib>
-#include "corpus_manager.h"
-#include "config_reader.h"
 #include "twitter_searcher.h"
 #include "twitter_api.h"
 
@@ -20,8 +17,56 @@ Classifier::Classifier() {
 }
 
 Classifier::~Classifier() {
+
+  if (ConfigReader::Clear(m_config) < 0) {
+    std::cerr << "ERROR: could not clear config\n";
+  }
+
 }
 
+int Classifier::Init(std::string config_file_name) {
+
+  // this config file name should have corpus files
+  // and the strings with which the corpus contents can be uniquely identified
+
+  if (ConfigReader::Read(config_file_name.c_str(), m_config) < 0) {
+    std::cerr << "ERROR: could not read config file: " << config_file_name << std::endl;
+    return -1;
+  }
+
+  if (m_config.classes.empty()) {
+    std::cerr << "ERROR: class structs could not be read from config file: " \
+              << config_file_name << std::endl;
+    return -1;
+  }
+
+  std::map<std::string, std::string> class_name_file_map;
+  for (m_config.iter = m_config.classes.begin();
+       m_config.iter != m_config.classes.end();
+       m_config.iter++) {
+    class_name_file_map[m_config.iter->name] = m_config.iter->training_data_file;
+  }
+  if (class_name_file_map.empty()) {
+    std::cerr << "ERROR: class_name_file_map cannot be empty\n";
+    return -1;
+  }
+
+  if (m_corpus_manager.LoadCorpus(m_config.test_data_file,
+                                  m_corpus_manager.m_classes_freq_map) < 0) {
+    std::cerr << "ERROR: could not load the text classes freq file (test data)\n";
+    std::cout << "WARNING: continuing without the text classes freq data\n";
+  }
+
+  if (m_corpus_manager.LoadCorpusMap(class_name_file_map) < 0) {
+    std::cerr << "ERROR: could not load Corpus Map\n";
+    return -1;
+  }
+
+  return 0;
+}
+
+// this functioin uses round robin to get training data.
+// TODO (balaji) - handle rate limiting and get data from all sources
 int Classifier::GetTrainingData(const char* config_file_name) {
 
   if (!config_file_name) {
@@ -292,7 +337,268 @@ int Classifier::GetTrainingData(const std::string& twitter_handles_file_name,
   return count;
 }
 
-int Classifier::GetTestData() {
+int Classifier::WriteTestData(Corpus& corpus, const char* classes_freq_file) {
+
+  if (corpus.empty() || !classes_freq_file) {
+    std::cerr << "ERROR: invalid input. could not write test data\n";
+    return -1;
+  }
+
+  inagist_classifiers::CorpusIter corpus_iter;
+  unsigned int sum = 0;
+  for (corpus_iter = corpus.begin(); corpus_iter != corpus.end(); corpus_iter++) {
+    if (corpus_iter->first.compare("all_classes") != 0) {
+      sum += corpus_iter->second;
+    }
+  }
+  if ((corpus_iter = corpus.find("all_classes")) != corpus.end()) {
+    corpus_iter->second = sum;
+  } else {
+    corpus.insert(std::pair<std::string, unsigned int> ("all_classes", sum));
+  }
+
+  if (m_corpus_manager.UpdateCorpusFile(corpus, classes_freq_file) < 0) {
+    std::cerr << "ERROR: could not update corpus file\n";
+    return -1;
+  }
+
+  return corpus.size();
+}
+
+// this function assumes that the classifier is already initialized.
+// and also assumes that the GetCorpus implementation by the derived class
+// will work fine with its dependencies already initalized
+//
+// input_type:
+//          0 - twitter timeline
+//          1 - random selection of training sources
+//          2 - all training sources (all handles)
+// output_type:
+//          0 - stdout
+//          1 - class frequency file
+//          2 - html version
+//
+// Note: the output file is to write texts that contributed to the class frequenceies.
+//
+int Classifier::GetTestData(const unsigned int& input_type,
+                            const unsigned int& output_type,
+                            const char* output_file) {
+
+  if (output_type > 0 && !output_file) {
+    std::cerr << "ERROR: invalid output file\n";
+    return -1;
+  }
+
+  std::ofstream ofs;
+  std::ostream* output_stream; // note ostream not ofstream
+
+  if (0 == output_type) {
+    output_stream = &std::cout;
+  } else {
+    ofs.open(output_file);
+    if (!ofs.is_open()) {
+      std::cerr << "ERROR: could not open output file: " << output_file << std::endl;
+      return -1;
+    }
+    output_stream = &ofs;
+  }
+
+  Corpus class_freq_map;
+  bool random_selection = false;
+  std::string handle;
+  std::string expected_lang;
+  TestResult test_result;
+  test_result.clear();
+  switch (input_type) {
+    case 0:
+      // send empty handle and expected class_name to test public timeline
+      if (TestTwitterTimeline(handle, expected_lang, class_freq_map, test_result, *output_stream) < 0) {
+        std::cerr << "ERROR: could not test twitter timeline\n";
+        ofs.close();
+        return -1;
+      }
+      break;
+    case 1:
+      if (TestTrainingSources(class_freq_map, test_result, *output_stream, random_selection = true) < 0) {
+        std::cerr << "ERROR: could not test training sources at random\n";
+        ofs.close();
+        return -1;
+      }
+      break;
+    case 2:
+      if (TestTrainingSources(class_freq_map, test_result, *output_stream, random_selection = false) < 0) {
+        std::cerr << "ERROR: could not test training sources at random\n";
+        ofs.close();
+        return -1;
+      }
+      break;
+    default:
+      break;
+  }
+
+  if (class_freq_map.empty()) {
+    std::cout << "WARNING: no test data found\n";
+    ofs.close();
+    return 0;
+  }
+
+  int ret_val = 0;
+  switch (output_type) {
+    case 0:
+      if (CorpusManager::PrintCorpus(class_freq_map) < 0) {
+        std::cerr << "ERROR: could not print corpus\n";
+        ret_val = -1;
+      }
+      break;
+    case 1:
+      if (WriteTestData(class_freq_map, m_config.test_data_file.c_str()) < 0) {
+        std::cerr << "ERROR: could not write test data to file: " \
+                  << m_config.test_data_file << std::endl;
+        ret_val = -1;
+      }
+      break;
+    case 2:
+      break;
+    default:
+      break;
+  }
+
+  ofs.close();
+  class_freq_map.clear();
+
+  std::cout << "Total: " << test_result.total << std::endl;
+  std::cout << "Undefined: " << test_result.undefined << std::endl;
+  std::cout << "Correct: " << test_result.correct << std::endl;
+  std::cout << "Wrong: " << test_result.wrong << std::endl;
+
+  return ret_val;
+
+}
+
+int Classifier::TestTwitterTimeline(const std::string& handle,
+                                    const std::string& expected_class_name,
+                                    Corpus& class_freq_map,
+                                    TestResult& test_result,
+                                    std::ostream &output_stream) {
+
+  std::set<std::string> tweets;
+
+  if (handle.empty()) {
+    if (inagist_api::TwitterAPI::GetPublicTimeLine(tweets) < 0) {
+      std::cout << "ERROR: could not get twitter's public timeline\n";
+      return -1;
+    }
+  } else {
+    if (inagist_api::TwitterSearcher::GetTweetsFromUser(handle, tweets) < 0) {
+      std::cout << "ERROR: could not search twitter for user handle: " << handle << std::endl;
+      return -1;
+    }
+  }
+
+  if (tweets.empty()) {
+    return 0;
+  }
+
+  std::set<std::string>::iterator set_iter;
+  std::string tweet;
+  std::string output_class;
+  int ret_val = 0;
+  for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
+    test_result.total++;
+    tweet = *set_iter;
+    if ((ret_val = Classify(tweet, tweet.length(), output_class)) < 0) {
+      std::cerr << "ERROR: could not find class\n";
+      test_result.undefined++;
+    } else if (ret_val == 0) {
+      if (output_stream) {
+        output_stream << expected_class_name << "|" << output_class << "|" << tweet << std::endl;
+      }
+      test_result.undefined++;
+    } else {
+      if (output_stream) {
+        output_stream << expected_class_name << "|" << output_class << "|" << tweet << std::endl;
+      }
+      if (expected_class_name.compare(output_class) == 0) {
+        test_result.correct++;
+      } else {
+        test_result.wrong++;
+      }
+      if (class_freq_map.find(output_class) != class_freq_map.end()) {
+        class_freq_map[output_class] += 1;
+      } else {
+        class_freq_map[output_class] = 1;
+      }
+    }
+  }
+
+  tweets.clear();
+
+  return class_freq_map.size();
+}
+
+int Classifier::TestTrainingSources(Corpus& class_freq_map,
+                                    TestResult& test_result,
+                                    std::ostream &output_stream,
+                                    bool random_selection) {
+
+  std::set<std::string> handles_set;
+  std::set<std::string>::iterator set_iter;
+  for (m_config.iter = m_config.classes.begin();
+       m_config.iter != m_config.classes.end();
+       m_config.iter++) {
+
+    std::string class_name = m_config.iter->name;
+    std::ifstream hfs(m_config.iter->handles_file.c_str());
+
+    if (!hfs.is_open()) {
+      std::cout << "ERROR: could not open handles file: " << m_config.iter->handles_file \
+                << " for class: " << class_name << std::endl;
+      continue;
+    }
+
+    std::string line;
+    std::string::size_type loc;
+    std::string handle;
+    while (getline(hfs, line)) {
+      loc = line.find("=", 0);
+      if (loc != std::string::npos) {
+        handle.assign(line, 0, loc);
+        handles_set.insert(handle);
+      } else {
+        std::cerr << "ERROR: ill-written handles file\n";
+      }
+    }
+    hfs.close();
+
+    unsigned int index = rand();
+    index = index % handles_set.size();
+    if (index > 0 && index >= handles_set.size()) {
+      continue;
+    }
+
+    unsigned int temp_index = 0;
+    for (set_iter = handles_set.begin(); set_iter != handles_set.end(); set_iter++) {
+      if (temp_index == index) {
+        handle = *set_iter;
+        break;
+      }
+      temp_index++;
+    }
+    handles_set.clear();
+
+    if (TestTwitterTimeline(handle, class_name, class_freq_map, test_result, output_stream) < 0) {
+      std::cout << "ERROR: TestTwitterTimeline failed for class: " \
+                << class_name << " on handle: " << handle << std::endl;
+    }
+
+/*
+    if (CorpusManager::PrintCorpus(class_freq_map) < 0) {
+      std::cerr << "ERROR: could not print corpus\n";
+      break;
+    }
+*/
+  } // end of for loop
+
   return 0;
 }
 

@@ -1,4 +1,5 @@
 #include "twitter_searcher.h"
+#include "curl_request_maker.h"
 
 #include <iostream>
 #include <fstream>
@@ -72,14 +73,15 @@ int TwitterSearcher::GetTweetsFromSearchUrl(const std::string& url, std::set<std
   int num_docs = 0;
 
   bool ret_value;
-  ret_value = m_curl_request_maker.GetTweets(url.c_str());
+  CurlRequestMaker curl_request_maker;
+  ret_value = curl_request_maker.GetTweets(url.c_str());
 
   if (ret_value) {
     std::string reply_message;
-    m_curl_request_maker.GetLastWebResponse(reply_message);
+    curl_request_maker.GetLastWebResponse(reply_message);
 
     if (reply_message.size() <= 0) {
-      m_curl_request_maker.GetLastCurlError(reply_message);
+      curl_request_maker.GetLastCurlError(reply_message);
     }
 
     if (reply_message.size() > 0) {
@@ -149,14 +151,15 @@ int TwitterSearcher::Search(const std::string& url,
   int num_docs = 0;
 
   bool ret_value;
-  ret_value = m_curl_request_maker.GetTweets(temp_url.c_str());
+  CurlRequestMaker curl_request_maker;
+  ret_value = curl_request_maker.GetTweets(temp_url.c_str());
 
   if (ret_value) {
     std::string reply_message;
-    m_curl_request_maker.GetLastWebResponse(reply_message);
+    curl_request_maker.GetLastWebResponse(reply_message);
 
     if (reply_message.size() <= 0) {
-      m_curl_request_maker.GetLastCurlError(reply_message);
+      curl_request_maker.GetLastCurlError(reply_message);
     }
 
     if (reply_message.size() > 0) {

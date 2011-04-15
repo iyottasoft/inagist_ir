@@ -87,8 +87,6 @@ int main(int argc, char* argv[]) {
     for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
       text = *set_iter;
       GetNgrams(test_type, text, words_set, features_map);
-      if (2 == input_type)
-        getchar();
     }
     tweets.clear();
   }
