@@ -50,7 +50,6 @@ class LanguageDetector : public Classifier {
   
  private:
   NgramsGenerator m_ngrams_generator;
-  CorpusManager m_corpus_manager;
   NaiveBayesClassifier m_naive_bayes_classifier;
 
   unsigned int m_debug_level;

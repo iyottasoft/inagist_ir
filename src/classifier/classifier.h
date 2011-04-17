@@ -78,8 +78,9 @@ class Classifier {
 
   int WriteTestData(Corpus& corpus, const char* classes_freq_file);
 
- private:
+ protected:
   CorpusManager m_corpus_manager;
+ private:
   Config m_config;
 };
 

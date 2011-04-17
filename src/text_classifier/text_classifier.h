@@ -41,7 +41,6 @@ class TextClassifier : public Classifier {
   int ClearDependencies();
 
  private:
-  CorpusManager m_corpus_manager;
   inagist_trends::KeyTuplesExtracter m_keytuples_extracter;
 
   unsigned int m_debug_level;
