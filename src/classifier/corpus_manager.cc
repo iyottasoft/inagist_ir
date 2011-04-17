@@ -4,6 +4,13 @@
 #include <cstdlib>
 #include <sys/stat.h>
 
+#ifdef DEBUG
+#if DEBUG>0
+#define CORPUS_MANAGER_DEBUG DEBUG
+#endif
+#endif
+//#define CORPUS_MANAGER_DEBUG 5
+
 namespace inagist_classifiers {
 
 CorpusManager::CorpusManager() {
@@ -169,6 +176,11 @@ int CorpusManager::LoadCorpusMap(std::map<std::string, std::string> corpus_class
        map_iter++) {
     class_name = map_iter->first;
     corpus_file = map_iter->second;
+#ifdef CORPUS_MANAGER_DEBUG
+    if (CORPUS_MANAGER_DEBUG > 4) {
+      std::cout << class_name << " = " << corpus_file << std::endl;
+    }
+#endif
     if (class_name.empty() || corpus_file.empty()) {
       std::cerr << "ERROR: invalid corpus information.\n";
       return -1;
@@ -179,6 +191,7 @@ int CorpusManager::LoadCorpusMap(std::map<std::string, std::string> corpus_class
     } else {
       m_corpus_map.insert(std::pair<std::string, Corpus> (class_name, corpus));
     }
+    corpus.clear();
   }
 
   return 0;
@@ -213,6 +226,7 @@ int CorpusManager::LoadCorpusMap(const std::string config_file_name) {
       } else {
         m_corpus_map.insert(std::pair<std::string, Corpus> (class_name, corpus));
       }
+      corpus.clear();
     } else {
       std::cout << "ERROR: malformed config entry on line number " << num_docs+1 \
                 << " in " << file_name << std::endl;
