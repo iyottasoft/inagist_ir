@@ -30,6 +30,14 @@ int CorpusManager::PrintCorpus(Corpus& corpus) {
   return 0;
 }
 
+int CorpusManager::PrintCorpusMap(CorpusMap& corpus_map) {
+  CorpusMapIter corpus_map_iter;
+  for (corpus_map_iter = corpus_map.begin(); corpus_map_iter != corpus_map.end(); corpus_map_iter++) {
+    std::cout << corpus_map_iter->first << " corpus of size " << corpus_map_iter->second.size() << std::endl;
+  }
+  return 0;
+}
+
 int CorpusManager::UpdateCorpusFile(Corpus& corpus, const std::string& file_name) {
 
   struct stat stat_struct;
@@ -190,6 +198,11 @@ int CorpusManager::LoadCorpusMap(std::map<std::string, std::string> corpus_class
       return -1;
     } else {
       m_corpus_map.insert(std::pair<std::string, Corpus> (class_name, corpus));
+#ifdef CORPUS_MANAGER_DEBUG
+      if (CORPUS_MANAGER_DEBUG > 4) {
+        std::cout << "corpus of size " << corpus.size() << " loaded for " << class_name << std::endl;
+      }
+#endif
     }
     corpus.clear();
   }

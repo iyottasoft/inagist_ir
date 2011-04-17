@@ -23,6 +23,7 @@ class CorpusManager {
   int LoadCorpusMap(std::map<std::string, std::string> corpus_class_file_map);
   int LookUp(const std::string& entry);
   static int PrintCorpus(Corpus& corpus);
+  static int PrintCorpusMap(CorpusMap& corpus_map);
   static int WriteCorpusToFile(Corpus& corpus, const std::string& file_name);
   static int UpdateCorpusFile(Corpus& corpus, const std::string& file_name);
   int Clear();

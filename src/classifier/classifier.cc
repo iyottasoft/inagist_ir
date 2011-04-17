@@ -504,8 +504,9 @@ int Classifier::TestTwitterTimeline(const std::string& handle,
   std::string output_class;
   int ret_val = 0;
 #ifdef CLASSIFIER_DEBUG
-  if (CLASSIFIER_DEBUG > 0) {
-    PrintCorpusMap(m_corpus_manager.m_corpus_map);
+  if (CLASSIFIER_DEBUG > 2) {
+    std::cout << "check corpus map" << std::endl;
+    CorpusManager::PrintCorpusMap(m_corpus_manager.m_corpus_map);
   }
 #endif
   for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
