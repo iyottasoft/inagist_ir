@@ -503,6 +503,11 @@ int Classifier::TestTwitterTimeline(const std::string& handle,
   std::string tweet;
   std::string output_class;
   int ret_val = 0;
+#ifdef CLASSIFIER_DEBUG
+  if (CLASSIFIER_DEBUG > 0) {
+    PrintCorpusMap(m_corpus_manager.m_corpus_map);
+  }
+#endif
   for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
     test_result.total++;
     tweet = *set_iter;
