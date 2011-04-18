@@ -50,7 +50,9 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   CorpusMapIter corpus_map_iter;
   CorpusIter test_corpus_iter;
   CorpusIter corpus_iter;
+  CorpusIter class_freq_iter;
   CorpusIter loc;
+  Corpus* corpus_ptr;
 
   double freqs[MAX_CORPUS_NUMBER];
   double temp_freq = 0;
@@ -59,25 +61,46 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   double prior_total_entries = 0;
   unsigned int i = 0;
   std::string classes[MAX_CORPUS_NUMBER];
- 
+  std::string class_name;
+  std::string test_element;
+
   if ((corpus_iter = classes_freq_map.find("all_classes")) != classes_freq_map.end()) {
     prior_total_entries = (*corpus_iter).second;
   }
   bool entry_found = false;
   for (corpus_map_iter = corpus_map.begin(); corpus_map_iter != corpus_map.end(); corpus_map_iter++) {
-    classes[i] = (*corpus_map_iter).first;
-    if ((corpus_iter = classes_freq_map.find(classes[i])) != classes_freq_map.end()) {
-      prior_entry_for_class = (*corpus_iter).second;
+
+    // for this iteration, what is the class name and corpus?
+    class_name = corpus_map_iter->first;
+    if (class_name.empty()) {
+      std::cerr << "ERROR: invalid class name. fatal error\n";
+      break;
     }
+    classes[i] = class_name;
+    corpus_ptr = &(corpus_map_iter->second);
+    if (corpus_ptr->empty()) {
+      std::cout << "WARNING: no entries found in corpus for class: " << class_name << std::endl;
+      continue;
+    }
+
+    // now that we know the classes, do we have its previous frequency?
+    // lets get it from classes_freq_map
+    if ((class_freq_iter = classes_freq_map.find(class_name)) != classes_freq_map.end()) {
+      prior_entry_for_class = class_freq_iter->second;
+    }
+
+    // now lets pit this corpus with the test corpus
     freqs[i] = 0;
     temp_freq = 0;
     temp_total_freq = 0;
     for (test_corpus_iter = test_corpus.begin(); test_corpus_iter != test_corpus.end(); test_corpus_iter++) {
-      corpus_iter = ((*corpus_map_iter).second).find((*test_corpus_iter).first); 
-      if (corpus_iter != ((*corpus_map_iter).second).end()) {
+      test_element = test_corpus_iter->first; 
+      // see if this element in the test corpus is present in the current corpus
+      corpus_iter = corpus_ptr->find(test_element); 
+      if (corpus_iter != corpus_ptr->end()) {
 #ifdef NBC_DEBUG
         if (debug_level > 4) {
-          std::cout << (*corpus_iter).first << " : " << (*corpus_iter).second << " in " << (*corpus_map_iter).first << std::endl;
+          std::cout << (*corpus_iter).first << " : " << (*corpus_iter).second << " in " << class_name << std::endl;
         }
 #endif
         temp_freq = (double) (*corpus_iter).second;
