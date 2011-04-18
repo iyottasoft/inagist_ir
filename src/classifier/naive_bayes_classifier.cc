@@ -64,6 +64,11 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   std::string class_name;
   std::string test_element;
 
+  if (corpus_map.size() > MAX_CORPUS_NUMBER) {
+    std::cerr << "ERROR: exceeds max classes that this classifier can handle\n";
+    return -1;
+  }
+
   if ((corpus_iter = classes_freq_map.find("all_classes")) != classes_freq_map.end()) {
     prior_total_entries = (*corpus_iter).second;
   }

@@ -6,7 +6,7 @@
 
 namespace inagist_classifiers {
 
-#define MAX_CORPUS_NUMBER 20
+#define MAX_CORPUS_NUMBER 64
 
 typedef std::map<std::string, int> Corpus;
 typedef std::map<std::string, int>::iterator CorpusIter;
