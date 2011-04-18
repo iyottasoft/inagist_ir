@@ -576,6 +576,10 @@ int Classifier::TestTrainingSources(Corpus& class_freq_map,
     }
     hfs.close();
 
+    if (handles_set.size() <= 1) {
+      continue;
+    }
+
     unsigned int index = rand();
     index = index % handles_set.size();
     if (index > 0 && index >= handles_set.size()) {
