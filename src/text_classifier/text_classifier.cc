@@ -41,9 +41,13 @@ int TextClassifier::InitDependencies(int argc, char* argv[]) {
   }
 
   const char* keytuples_config_file = argv[1];
+  if (!keytuples_config_file || strlen(keytuples_config_file) < 4) {
+    std::cerr << "ERROR: invalid keytuples config file name\n";
+  }
 
   if (m_keytuples_extracter.Init(keytuples_config_file) < 0) {
-    std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
+    std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter from file:" \
+              << keytuples_config_file << std::endl;
     return -1;
   }
 
