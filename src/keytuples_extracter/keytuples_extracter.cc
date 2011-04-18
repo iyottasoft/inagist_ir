@@ -176,6 +176,7 @@ int KeyTuplesExtracter::DeInit() {
 
   if (m_language_detector) {
     delete m_language_detector;
+    m_language_detector = NULL;
   }
   //std::cout << "deinit done\n";
   return 0;
