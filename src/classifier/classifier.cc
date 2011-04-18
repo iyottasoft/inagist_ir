@@ -22,6 +22,12 @@ Classifier::~Classifier() {
     std::cerr << "ERROR: could not clear config\n";
   }
 
+  try {
+    m_corpus_manager.Clear();
+  } catch (...) {
+    std::cerr << "ERROR: Corpus Manager throws exception" << std::endl;
+  }
+
 }
 
 int Classifier::Init(std::string config_file_name) {

@@ -173,11 +173,6 @@ int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
 }
 
 int LanguageDetector::Clear() {
-  try {
-    m_corpus_manager.Clear();
-  } catch (...) {
-    std::cerr << "ERROR: Corpus Manager throws exception" << std::endl;
-  }
   return 0;
 }
 
