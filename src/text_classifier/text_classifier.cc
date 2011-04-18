@@ -40,7 +40,7 @@ int TextClassifier::InitDependencies(int argc, char* argv[]) {
     return -1;
   }
 
-  const char* keytuples_config_file = argv[1];
+  const char* keytuples_config_file = argv[0];
   if (!keytuples_config_file || strlen(keytuples_config_file) < 4) {
     std::cerr << "ERROR: invalid keytuples config file name\n";
   }

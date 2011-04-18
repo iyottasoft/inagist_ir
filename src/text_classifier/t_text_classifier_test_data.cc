@@ -31,6 +31,7 @@ int main(int argc, char* argv[]) {
 
   int my_argc = 1;
   char my_argv[1][255];
+  memset(my_argv, '\0', 255);
   strcpy((char *) my_argv[0], keytuples_config_file);
   if (tc->InitDependencies(my_argc, (char **) my_argv) < 0) {
     std::cerr << "ERROR: could not initialize dependencies for text classifier\n";
