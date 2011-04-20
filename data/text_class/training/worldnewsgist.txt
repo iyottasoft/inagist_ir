@@ -1,0 +1,9 @@
+#Libya=1
+Bahrain=1
+Gadhafi=1
+Hamas=1
+Israel=1
+Libya=1
+NATO=1
+WaPo=1
+Yemen=1

@@ -1,0 +1,8 @@
+UU=1863
+XX=8647
+all_classes=10533
+balajiworld=2
+francegist=1
+healthgist=16
+jebui=2
+ngogist=2

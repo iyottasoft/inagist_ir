@@ -1,0 +1,7 @@
+CRN=1
+Channel=1
+Gamers=1
+IPv6=1
+NETGEAR MBR1210 HSPA=1
+ProSupport=1
+VAR=1

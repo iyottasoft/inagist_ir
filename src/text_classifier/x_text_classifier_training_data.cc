@@ -1,6 +1,7 @@
 #include "text_classifier.h"
 #include <iostream>
 #include <cstring>
+#include <cstdlib>
 
 int main(int argc, char* argv[]) {
 
@@ -16,13 +17,19 @@ int main(int argc, char* argv[]) {
   inagist_classifiers::TextClassifier tc;
 
   int my_argc = 1;
-  char my_argv[1][255];
-  strcpy((char *) my_argv[0], keytuples_config.c_str());
+  //char my_argv[1][255];
+  //strcpy((char *) my_argv[0], keytuples_config.c_str());
+  char* my_argv[1];
+  char* temp_location = (char*) malloc(255);
+  my_argv[0] = temp_location;
+  memset(temp_location, '\0', 255);
+  strcpy(temp_location, keytuples_config.c_str());
   if (tc.InitDependencies(my_argc, (char**) my_argv) < 0) {
     std::cerr << "ERROR: could not init keytuples extracter" \
               << " for training. config_file: " << keytuples_config << std::endl;
     return -1;
   }
+  free(temp_location);
 
   if (tc.LoadKeyTuplesDictionary(dictionary_file.c_str()) < 0) {
     tc.Clear();

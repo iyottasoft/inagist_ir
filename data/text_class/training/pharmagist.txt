@@ -1,0 +1,8 @@
+Merck &amp=1
+PhRMA11=1
+confuciussay=1
+ff=1
+followfriday=1
+humor=1
+insight=1
+wisdom=1

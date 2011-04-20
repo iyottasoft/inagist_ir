@@ -1,0 +1,5 @@
+AUS=1
+IPL=1
+KKR11=1
+ipl=1
+kkr11=1

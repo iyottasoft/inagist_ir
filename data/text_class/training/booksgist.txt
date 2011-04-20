@@ -1,0 +1,7 @@
+Coe &amp=1
+JordanCon=1
+Lovecraft=1
+SF=1
+TGS=1
+ToM=1
+jordancon=1
