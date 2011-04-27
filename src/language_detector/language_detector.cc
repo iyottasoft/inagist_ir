@@ -1,6 +1,7 @@
 #include "language_detector.h"
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
 #include "twitter_searcher.h"
 #include "string_utils.h"
 #include "config_reader.h"
@@ -34,9 +35,9 @@ int LanguageDetector::SetDebugLevel(unsigned int debug_level) {
 }
  
 int LanguageDetector::Classify(const std::string& text,
-                                 const unsigned int& text_len,
-                                 std::string& guess_lang_output,
-                                 bool ignore_case) {
+                               const unsigned int& text_len,
+                               std::string& guess_lang_output,
+                               bool ignore_case) {
   int num_ngrams = 0;
   Corpus test_corpus;
 
@@ -125,6 +126,7 @@ int LanguageDetector::DetectLanguage(std::set<std::string>& words_set,
   return 1;
 }
 
+// not sure if this is used anymore
 int LanguageDetector::GetNgramFrequencies(const std::string& input_file_name,
                                           Corpus& corpus) {
 

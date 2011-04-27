@@ -36,7 +36,7 @@ class Classifier {
   Classifier();
   virtual ~Classifier();
   // classification functions
-  int Init(std::string config_file_name);
+  int Init(std::string config_file_name, bool ignore_history=false);
   virtual int GetCorpus(const std::string& text, Corpus& corpus)=0;
   virtual int Classify(const std::string& text,
                          const unsigned int& text_len,
@@ -67,12 +67,14 @@ class Classifier {
                           TestResult& test_result,
                           std::ostream& output_stream);
 
-  int TestTrainingSources(Corpus& class_freq_map,
+  int TestTrainingSources(const char* training_class,
+                          Corpus& class_freq_map,
                           TestResult& test_result,
                           std::ostream& output_stream,
                           bool random_selection=false);
 
   int GetTestData(const unsigned int& input_type,
+                  const char* input_value,
                   const unsigned int& output_type,
                   const char* output_file);
 

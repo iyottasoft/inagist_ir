@@ -4,10 +4,11 @@
 
 #ifdef DEBUG
 #if DEBUG>0
-#define NBC_DEBUG DEBUG
+//#define NBC_DEBUG DEBUG
 #endif
 #endif
-//#define NBC_DEBUG 5
+
+#define NBC_DEBUG 5
 
 namespace inagist_classifiers {
 
@@ -27,15 +28,23 @@ NaiveBayesClassifier::~NaiveBayesClassifier() {
 
 int NaiveBayesClassifier::SetDebugLevel(unsigned int debug_level) {
   m_debug_level = debug_level;
-  if (m_debug_level > 1) {
-    std::cout << "NBC debug level: " << m_debug_level << std::endl;
-  }
+#ifdef NBC_DEBUG
+  std::cout << "setting NBC debug level to " << m_debug_level << std::endl;
+#endif
   return 0;
+}
+
+void inline Initialize(double array[], unsigned int size) {
+  for (unsigned int i=0; i<size; i++)
+    array[i] = 0;
 }
 
 // this is pretty naive!
 // TODO (balaji) need to build a hash map with (say) ngram as key and
 // a list of structs with frequency and corpus as keys
+//
+// note: while testing to create the prior frequencies, don't send the classes_freq_map.
+//
 int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
                                      Corpus& classes_freq_map,
                                      Corpus& test_corpus,
@@ -54,7 +63,10 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   CorpusIter loc;
   Corpus* corpus_ptr;
 
+  double prior_freqs[MAX_CORPUS_NUMBER];
+  Initialize(prior_freqs, MAX_CORPUS_NUMBER);
   double freqs[MAX_CORPUS_NUMBER];
+  Initialize(freqs, MAX_CORPUS_NUMBER);
   double temp_freq = 0;
   double temp_total_freq = 0;
   double prior_entry_for_class = 0;
@@ -90,12 +102,18 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
 
     // now that we know the classes, do we have its previous frequency?
     // lets get it from classes_freq_map
-    if ((class_freq_iter = classes_freq_map.find(class_name)) != classes_freq_map.end()) {
-      prior_entry_for_class = class_freq_iter->second;
+    if (!classes_freq_map.empty()) {
+      if ((class_freq_iter = classes_freq_map.find(class_name)) != classes_freq_map.end()) {
+        prior_entry_for_class = class_freq_iter->second;
+      }
+      if (prior_entry_for_class > 0 && prior_total_entries) {
+        prior_freqs[i] += log(prior_entry_for_class/prior_total_entries);
+      }
     }
 
     // now lets pit this corpus with the test corpus
     freqs[i] = 0;
+    prior_freqs[i] = 0;
     temp_freq = 0;
     temp_total_freq = 0;
     for (test_corpus_iter = test_corpus.begin(); test_corpus_iter != test_corpus.end(); test_corpus_iter++) {
@@ -104,7 +122,7 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
       corpus_iter = corpus_ptr->find(test_element); 
       if (corpus_iter != corpus_ptr->end()) {
 #ifdef NBC_DEBUG
-        if (debug_level > 4) {
+        if (debug_level > 4 || NBC_DEBUG > 4) {
           std::cout << (*corpus_iter).first << " : " << (*corpus_iter).second << " in " << class_name << std::endl;
         }
 #endif
@@ -119,21 +137,31 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
     if (temp_total_freq > 0) {
       freqs[i] += log(temp_total_freq/test_corpus.size());
     }
-#ifdef NBC_DEBUG
-    if (debug_level > 3) {
-      std::cout << classes[i] << ": " << freqs[i] << " where prior record is (" \
-                << prior_entry_for_class << " / " << prior_total_entries << ")" << std::endl;
-    }
-#endif
-    if (prior_entry_for_class > 0 && prior_total_entries) {
-      freqs[i] += log(prior_entry_for_class/prior_total_entries);
-    }
     i++;
   }
 
   if (!entry_found) {
     guess_class_output = "XX";
     return 0;
+  }
+
+  if (!classes_freq_map.empty()) {
+    for (unsigned int i=0; i<classes_freq_map.size(); i++) {
+#ifdef NBC_DEBUG
+      if (debug_level > 3 || NBC_DEBUG > 3) {
+        std::cout << classes[i] << ": " << freqs[i] << " where prior freq is " << prior_freqs[i] << " (" \
+                  << prior_entry_for_class << " / " << prior_total_entries << ")" << std::endl;
+      }
+#endif
+      // note this is a crucial step. don't think this is a debug code
+      freqs[i] += prior_freqs[i];
+    }
+  } else {
+#ifdef NBC_DEBUG
+    if (debug_level > 3 || NBC_DEBUG > 3) {
+      std::cout << classes[i] << ": " << freqs[i] << std::endl;
+    }
+#endif
   }
 
   double max_freq = 0;
@@ -145,7 +173,7 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   for (unsigned int j=1; j<i; j++) {
     freqs[j] = exp(freqs[j]);
 #ifdef NBC_DEBUG
-    if (debug_level > 2) {
+    if (debug_level > 2 || NBC_DEBUG > 2) {
       std::cout << classes[j] << " freqs: " << freqs[j] << std::endl;
     }
 #endif
@@ -159,7 +187,7 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   }
 
 #ifdef NBC_DEBUG
-  if (debug_level > 1) {
+  if (debug_level > 1 || NBC_DEBUG > 1) {
     std::cout << "max freq: " << max_freq << std::endl;
     std::cout << "max index: " << max_index << std::endl;
     std::cout << "guess_class_output: " << classes[max_index] << std::endl;

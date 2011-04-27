@@ -6,6 +6,7 @@
 namespace inagist_classifiers {
 
 int DetectScript(int code_point, std::string &script);
+int ExtendedAsciiText(int code_point);
 
 } // namespace
 

@@ -555,7 +555,9 @@ int NgramsGenerator::GetNgramsFromWord(const unsigned char* word_str,
   std::string ngram;
   int count = 0;
 
-  ngram.assign((char *) word_str, word_len);
+  ngram = " ";
+  ngram += std::string((char *) word_str);
+  ngram += " ";
   if (features_map.find(ngram) != features_map.end()) {
     features_map[ngram] += 1;
   } else {

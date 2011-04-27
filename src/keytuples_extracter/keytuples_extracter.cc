@@ -674,8 +674,8 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
   //std::map<std::string, int> script_map;
   unsigned int script_count = 0;
   unsigned int english_count = 0;
-  bool current_word_english = false;
-  bool next_word_english = false;
+  bool current_word_ascii = false;
+  bool next_word_ascii = false;
 
 /*
   // channel classification
@@ -833,14 +833,16 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
 #ifndef I18N_ENABLED
   code_point = *current_word_start;
   if (code_point > 0x40 && code_point < 0x7B) {
-    current_word_english = true;
+    current_word_ascii = true;
   } else if (code_point == 0x23) {
     code_point = *(current_word_start+1);
     if (code_point > 0x40 && code_point < 0x7B)
-      current_word_english = true;
+      current_word_ascii = true;
+  } else if (inagist_classifiers::ExtendedAsciiText(code_point)) {
+    next_word_ascii = true;
   }
 
-  if (current_word_english) {
+  if (current_word_ascii) {
 #endif
     // stop words
     if (m_stopwords_dictionary.Find(current_word_start) == 1) {
@@ -1062,13 +1064,16 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
 #ifndef I18N_ENABLED
         code_point = *next_word_start;
         if (code_point > 0x40 && code_point < 0x7B) {
-          next_word_english = true;
+          next_word_ascii = true;
         } else if (code_point == 0x23) {
           code_point = *(next_word_start+1);
           if (code_point > 0x40 && code_point < 0x7B)
-            next_word_english = true;
+            next_word_ascii = true;
+        } else if (inagist_classifiers::ExtendedAsciiText(code_point)) {
+          next_word_ascii = true;
         }
-        if (next_word_english) {
+
+        if (next_word_ascii) {
 #endif
         // stop words
         if (m_stopwords_dictionary.Find(next_word_start) == 1) {
@@ -1120,7 +1125,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
         *prev_word_end = prev_word_delimiter;
 
 #ifndef I18N_ENABLED
-      if (current_word_english) {
+      if (current_word_ascii) {
 #endif
       if (!current_word_stop && !current_word_dict && !current_word_caps &&
           !current_word_starts_num && !current_word_has_mixed_case &&
@@ -1254,7 +1259,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
       if (NULL == stopwords_keyphrase_start) {
         if ('\0' != current_word_delimiter &&
 #ifndef I18N_ENABLED
-            current_word_english &&
+            current_word_ascii &&
 #endif
             !current_word_stop &&
             !current_word_dict &&
@@ -1670,7 +1675,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
       current_word_precedes_ignore_word = next_word_precedes_ignore_word;
       current_word_precedes_punct = next_word_precedes_punct;
       current_word_len = next_word_len;
-      current_word_english = next_word_english;
+      current_word_ascii = next_word_ascii;
 
       next_word_start = NULL;
       next_word_end = NULL;
@@ -1683,7 +1688,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
       next_word_delimiter = '\0';
       next_word_precedes_ignore_word = false;
       next_word_precedes_punct = false;
-      next_word_english = false;
+      next_word_ascii = false;
 
       // BE CAREFUL ABOUT WHAT IS NEXT WORD OR CURRENT WORD NOW
 

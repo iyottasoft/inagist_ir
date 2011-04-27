@@ -199,4 +199,27 @@ int DetectScript(int code_point, std::string &script) {
   return 1;
 }
 
+int ExtendedAsciiText(int code_point) {
+
+  if (code_point < 128 || code_point > 255)
+    return 0;
+
+  if (code_point > 127 && code_point < 155)
+    return 1;
+
+  if (code_point > 159 && code_point < 166)
+    return 1;
+
+  if (code_point > 180 && code_point < 184)
+    return 1;
+
+  if (code_point > 209 && code_point < 213)
+    return 1;
+
+  if (code_point > 223 && code_point < 237)
+    return 1;
+
+  return 0;
+}
+
 } // namespace

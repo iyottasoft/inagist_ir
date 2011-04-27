@@ -86,7 +86,11 @@ int main(int argc, char* argv[]) {
     std::set<std::string>::iterator set_iter;
     for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
       text = *set_iter;
-      GetNgrams(test_type, text, words_set, features_map);
+      std::cout << text << std::endl;
+      if (GetNgrams(test_type, text, words_set, features_map) > 0)
+        std::cout << text << std::endl;
+      if (2 == input_type)
+        break;
     }
     tweets.clear();
   }

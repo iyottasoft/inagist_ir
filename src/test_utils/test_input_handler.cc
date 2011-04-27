@@ -9,6 +9,12 @@
 
 namespace inagist_test_utils {
 
+TestInputHandler::TestInputHandler() {
+}
+
+TestInputHandler::~TestInputHandler() {
+}
+
 int TestInputHandler::ReadArgs(int argc, char* argv[], TestInput& test_input) {
 
   if (1 == argc) {
@@ -44,11 +50,16 @@ int TestInputHandler::ReadArgs(int argc, char* argv[], TestInput& test_input) {
     unsigned int output_type = atoi(argv[4]);
     assert(output_type >=0 && output_type <=2);
     test_input.output_type = output_type;
+  } else {
+    test_input.output_type = 0;
   }
 
   if (argc >= 6) {
     unsigned int debug_level = atoi(argv[5]);
     assert(debug_level >=0 && debug_level <=5);
+    test_input.debug_level = debug_level;
+  } else {
+    test_input.debug_level = 0;
   }
 
   std::string handle;
@@ -57,18 +68,23 @@ int TestInputHandler::ReadArgs(int argc, char* argv[], TestInput& test_input) {
   if (7 == argc) {
     if (input_type >= 2) {
       handle = std::string(argv[6]);
-      test_input.input_type_value.assign(handle);
+      test_input.input_value.assign(handle);
     } else {
       input_file_name = std::string(argv[6]);
-      test_input.input_type_value.assign(input_file_name);
+      test_input.input_value.assign(input_file_name);
     }
   }
+
+  return 0;
+}
+
+int TestInputHandler::Test(const TestInput& test_input) {
 
   std::string text;
   std::set<std::string> tweets;
   std::set<std::string>::iterator set_iter;
   std::ifstream ifs;
-  switch (input_type) {
+  switch (test_input.input_type) {
     case 0:
       while (getline(std::cin, text)) {
         if (text.compare("exit") == 0 || text.compare("quit") == 0)
@@ -77,23 +93,25 @@ int TestInputHandler::ReadArgs(int argc, char* argv[], TestInput& test_input) {
       }
       break;
     case 1:
-      ifs.open(input_file_name.c_str());
+      ifs.open(test_input.input_value.c_str());
       if (!ifs.is_open()) {
-        std::cout << "ERROR: could not open input file: " << input_file_name << std::endl;
+        std::cout << "ERROR: could not open input file: " << test_input.input_value << std::endl;
       }
       while (getline(ifs, text)) {
         tweets.insert(text);
       }
       ifs.close();
       for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
-        TestFunction(*set_iter);
+        text.assign(*set_iter);
+        TestFunction(text);
+        text.clear();
       }
       break;
     case 2:
       // fall through
     case 3:
       // get top tweets from twitter api
-      if (argc == 7) {
+      if (!test_input.input_value.empty()) {
         std::cout << "this feature has not been implemented yet\n";
         return -1;
       } else {
@@ -104,15 +122,17 @@ int TestInputHandler::ReadArgs(int argc, char* argv[], TestInput& test_input) {
         }
       }
       for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
-        TestFunction(*set_iter);
-        if (2 == input_type)
+        text.assign(*set_iter);
+        TestFunction(text);
+        text.clear();
+        if (2 == test_input.input_type)
           break;
       }
       break;
     case 4:
-      if (argc == 7) {
+      if (!test_input.input_value.empty()) {
         inagist_api::InagistAPI ia;
-        if ((ia.GetTrendingTweets(handle, tweets)) < 0) {
+        if ((ia.GetTrendingTweets(test_input.input_value, tweets)) < 0) {
           std::cout << "ERROR: could not get trending tweets from inagist\n";
           return -1;
         }
@@ -121,7 +141,9 @@ int TestInputHandler::ReadArgs(int argc, char* argv[], TestInput& test_input) {
         return -1;
       }
       for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
-        TestFunction(*set_iter);
+        text.assign(*set_iter);
+        TestFunction(text);
+        text.clear();
       }
       // get tweets from inagist api
       break;
@@ -141,9 +163,9 @@ int TestInputHandler::PrintArgs(const TestInput& test_input) {
   std::cout << "output_type: " << test_input.output_type << std::endl;
   std::cout << "debug_level: " << test_input.debug_level << std::endl;
   if (1 == test_input.input_type)
-    std::cout << "handle: " << test_input.input_type_value << std::endl;
+    std::cout << "handle: " << test_input.input_value << std::endl;
   else
-    std::cout << "input_file_name: " << test_input.input_type_value << std::endl;
+    std::cout << "input_file_name: " << test_input.input_value << std::endl;
 
   return 0;
 }

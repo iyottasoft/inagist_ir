@@ -1,6 +1,7 @@
 #include "classifier.h"
 #include <iostream>
 #include <cstdlib>
+#include <cstring>
 #include "twitter_searcher.h"
 #include "twitter_api.h"
 
@@ -30,7 +31,7 @@ Classifier::~Classifier() {
 
 }
 
-int Classifier::Init(std::string config_file_name) {
+int Classifier::Init(std::string config_file_name, bool ignore_history) {
 
   // this config file name should have corpus files
   // and the strings with which the corpus contents can be uniquely identified
@@ -57,10 +58,14 @@ int Classifier::Init(std::string config_file_name) {
     return -1;
   }
 
-  if (m_corpus_manager.LoadCorpus(m_config.test_data_file,
-                                  m_corpus_manager.m_classes_freq_map) < 0) {
-    std::cerr << "ERROR: could not load the text classes freq file (test data)\n";
-    std::cout << "WARNING: continuing without the text classes freq data\n";
+  if (!ignore_history) {
+    if (m_corpus_manager.LoadCorpus(m_config.test_data_file,
+                                    m_corpus_manager.m_classes_freq_map) < 0) {
+      std::cerr << "ERROR: could not load the text classes freq file (test data)\n";
+      std::cout << "WARNING: continuing without the text classes freq data\n";
+    }
+  } else {
+    std::cout << "INFO: ignoring historical data. plain vanilla classification\n";
   }
 
   if (m_corpus_manager.LoadCorpusMap(class_name_file_map) < 0) {
@@ -387,11 +392,17 @@ int Classifier::WriteTestData(Corpus& corpus, const char* classes_freq_file) {
 // Note: the output file is to write texts that contributed to the class frequenceies.
 //
 int Classifier::GetTestData(const unsigned int& input_type,
+                            const char* input_value,
                             const unsigned int& output_type,
                             const char* output_file) {
 
-  if (output_type > 0 && !output_file) {
-    std::cerr << "ERROR: invalid output file\n";
+  if (NULL == input_value && 3 == input_type) {
+    std::cerr << "ERROR: invalid input value. cannot get test data.\n";
+    return -1;
+  }
+
+  if (output_type > 0 && NULL == output_file) {
+    std::cerr << "ERROR: invalid output file. cannot get test data.\n";
     return -1;
   }
 
@@ -411,6 +422,7 @@ int Classifier::GetTestData(const unsigned int& input_type,
 
   Corpus class_freq_map;
   bool random_selection = false;
+  const char* training_class = NULL;
   std::string handle;
   std::string expected_lang;
   TestResult test_result;
@@ -418,26 +430,48 @@ int Classifier::GetTestData(const unsigned int& input_type,
   switch (input_type) {
     case 0:
       // send empty handle and expected class_name to test public timeline
-      if (TestTwitterTimeline(handle, expected_lang, class_freq_map, test_result, *output_stream) < 0) {
+      if (TestTwitterTimeline(handle,
+                              expected_lang,
+                              class_freq_map,
+                              test_result,
+                              *output_stream) < 0) {
         std::cerr << "ERROR: could not test twitter timeline\n";
         ofs.close();
         return -1;
       }
       break;
     case 1:
-      if (TestTrainingSources(class_freq_map, test_result, *output_stream, random_selection = true) < 0) {
+      if (TestTrainingSources(training_class=NULL,
+                              class_freq_map,
+                              test_result,
+                              *output_stream,
+                              random_selection = true) < 0) {
         std::cerr << "ERROR: could not test training sources at random\n";
         ofs.close();
         return -1;
       }
       break;
     case 2:
-      if (TestTrainingSources(class_freq_map, test_result, *output_stream, random_selection = false) < 0) {
+      if (TestTrainingSources(training_class=NULL,
+                              class_freq_map,
+                              test_result,
+                              *output_stream,
+                              random_selection = false) < 0) {
         std::cerr << "ERROR: could not test training sources at random\n";
         ofs.close();
         return -1;
       }
       break;
+    case 3:
+      if (TestTrainingSources(training_class=input_value,
+                              class_freq_map,
+                              test_result,
+                              *output_stream,
+                              random_selection = true) < 0) {
+        std::cerr << "ERROR: could not test training sources at random\n";
+        ofs.close();
+        return -1;
+      }
     default:
       break;
   }
@@ -548,7 +582,13 @@ int Classifier::TestTwitterTimeline(const std::string& handle,
   return class_freq_map.size();
 }
 
-int Classifier::TestTrainingSources(Corpus& class_freq_map,
+// training_class - this can be null. when not null, only the handles in the given class will be tested
+// class_freq_map - output parameter for returning classes and their frequencies
+// test_result - test result is a typedef to return the results of this testing exercise
+// output_stream - if an output file is given, its fstream will be pointed by output_stream or else stdout
+// random_selection - while choosing input from training sources, whether to randomly select classes and handles
+int Classifier::TestTrainingSources(const char* training_class,
+                                    Corpus& class_freq_map,
                                     TestResult& test_result,
                                     std::ostream &output_stream,
                                     bool random_selection) {
@@ -560,6 +600,13 @@ int Classifier::TestTrainingSources(Corpus& class_freq_map,
        m_config.iter++) {
 
     std::string class_name = m_config.iter->name;
+
+    if (NULL != training_class) {
+      if (class_name.compare(0, strlen(training_class), training_class) != 0) {
+        continue;
+      }
+    }
+
     std::ifstream hfs(m_config.iter->handles_file.c_str());
 
     if (!hfs.is_open()) {
@@ -586,25 +633,35 @@ int Classifier::TestTrainingSources(Corpus& class_freq_map,
       continue;
     }
 
-    unsigned int index = rand();
-    index = index % handles_set.size();
-    if (index > 0 && index >= handles_set.size()) {
-      continue;
-    }
-
-    unsigned int temp_index = 0;
-    for (set_iter = handles_set.begin(); set_iter != handles_set.end(); set_iter++) {
-      if (temp_index == index) {
-        handle = *set_iter;
-        break;
+    if (random_selection) {
+      unsigned int index = rand();
+      index = index % handles_set.size();
+      if (index > 0 && index >= handles_set.size()) {
+        continue;
       }
-      temp_index++;
-    }
-    handles_set.clear();
 
-    if (TestTwitterTimeline(handle, class_name, class_freq_map, test_result, output_stream) < 0) {
-      std::cout << "ERROR: TestTwitterTimeline failed for class: " \
-                << class_name << " on handle: " << handle << std::endl;
+      unsigned int temp_index = 0;
+      for (set_iter = handles_set.begin(); set_iter != handles_set.end(); set_iter++) {
+        if (temp_index == index) {
+          handle = *set_iter;
+          break;
+        }
+        temp_index++;
+      }
+      handles_set.clear();
+
+      if (TestTwitterTimeline(handle, class_name, class_freq_map, test_result, output_stream) < 0) {
+        std::cout << "ERROR: TestTwitterTimeline failed for class: " \
+                  << class_name << " on handle: " << handle << std::endl;
+      }
+    } else {
+      for (set_iter = handles_set.begin(); set_iter != handles_set.end(); set_iter++) {
+        handle = *set_iter;
+        if (TestTwitterTimeline(handle, class_name, class_freq_map, test_result, output_stream) < 0) {
+          std::cout << "ERROR: TestTwitterTimeline failed for class: " \
+                    << class_name << " on handle: " << handle << std::endl;
+        }
+      }
     }
 
 /*

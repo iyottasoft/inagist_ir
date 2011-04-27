@@ -11,7 +11,7 @@ typedef struct _test_input {
   unsigned int input_type;
   unsigned int output_type;
   unsigned int debug_level;
-  std::string input_type_value;
+  std::string input_value;
 } TestInput;
 
 class TestInputHandler {
@@ -20,7 +20,8 @@ class TestInputHandler {
   ~TestInputHandler();
   int ReadArgs(int argc, char* argv[], TestInput& test_input);
   int PrintArgs(const TestInput& test_input);
-  virtual int TestFunction(std::string text)=0;
+  int Test(const TestInput& test_input);
+  virtual int TestFunction(std::string& text)=0;
  private:
 };
 

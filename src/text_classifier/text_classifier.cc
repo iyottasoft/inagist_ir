@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <cstdlib>
 #include "twitter_searcher.h"
 #include "string_utils.h"
 #include "config_reader.h"
@@ -53,6 +54,7 @@ int TextClassifier::InitDependencies(int argc, char* argv[]) {
 
   return 0;
 } 
+
 // 
 int TextClassifier::InitTraining(const char* stopwords_file,
                                  const char* dictionary_file,
