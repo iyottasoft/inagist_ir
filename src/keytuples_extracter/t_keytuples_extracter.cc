@@ -17,13 +17,12 @@ int GetKeyTuples(std::string text) {
   char buffer[1024];
   std::string safe_status;
   std::string script;
-  std::string lang;
   std::set<std::string> keywords_set;
   std::set<std::string> hashtags_set;
   std::set<std::string> keyphrases_set;
 
   strcpy(buffer, text.c_str()); 
-  if (g_ke.GetKeyTuples(buffer, safe_status, script, lang, keywords_set, hashtags_set, keyphrases_set) < 0) {
+  if (g_ke.GetKeyTuples(buffer, safe_status, script, keywords_set, hashtags_set, keyphrases_set) < 0) {
     std::cout << "ERROR: could not get keytuples\n";
     return -1;
   }

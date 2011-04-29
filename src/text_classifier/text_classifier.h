@@ -20,25 +20,25 @@ class TextClassifier : public Classifier {
  public:
   TextClassifier();
   ~TextClassifier();
+
+  /* implementation of pure virtual functions from classifier.h */
+  int InitDependencies(int argc=0, char* argv[]=NULL);
   int Classify(const std::string& text,
                  const unsigned int& text_len,
                  std::string& text_class,
                  bool ignore_case=false);
+  int GetCorpus(const std::string& text, Corpus& corpus);
+  int ClearDependencies();
+  /* end */
+
   int Classify(std::set<std::string>& words_set,
                  std::string& text_class,
                  bool ignore_case=false);
   int Clear();
   int SetDebugLevel(unsigned int debug_level);
-  int GetCorpus(const std::string& text, Corpus& corpus);
   int GetWordFrequencies(const std::string& input_file_name,
                          Corpus& corpus);
-  int InitTraining(const char *stopwords_file,
-                   const char *dictionary_file,
-                   const char *unsafe_dictionary_file);
   int LoadKeyTuplesDictionary(const char* dictionary_file);
-
-  int InitDependencies(int argc=0, char* argv[]=NULL);
-  int ClearDependencies();
 
  private:
   inagist_trends::KeyTuplesExtracter m_keytuples_extracter;

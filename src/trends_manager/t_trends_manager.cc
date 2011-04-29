@@ -61,6 +61,8 @@ int main(int argc, char *argv[]) {
   std::string stopwords_file = root_dir + "/data/static_data/stopwords.txt";
   std::string dictionary_file = root_dir + "/data/static_data/dictionary.txt";
   std::string unsafe_dictionary_file = root_dir + "/data/static_data/unsafe_dictionary.txt";
+
+  // these two are currently not used
   std::string lang_detect_config_file = root_dir + "/configs/language_detection.config";
   std::string channels_dictionary_file = root_dir + "/data/static_data/channels_dictionary.txt";
 

@@ -10,7 +10,7 @@
 #define MAX_BUFFER_LEN 1024
 #define MAX_NAME_LEN 255
 #define MAX_LIST_BUFFER_LEN 20480
-#define CM_DEBUG 2
+//#define CM_DEBUG 2
 #define ERLANG_R14B02 1
 
 ERL_NIF_TERM nif_find_channels(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {

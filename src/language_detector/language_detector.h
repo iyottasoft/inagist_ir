@@ -14,6 +14,7 @@
 #include "ngrams_generator.h"
 #include "corpus_manager.h"
 #include "naive_bayes_classifier.h"
+#include "keytuples_extracter.h"
 
 namespace inagist_classifiers {
 
@@ -35,6 +36,9 @@ class LanguageDetector : public Classifier {
   int ClearDependencies();
   /* end */
 
+  int InitTraining(const char *stopwords_file,
+                   const char *dictionary_file,
+                   const char *unsafe_dictionary_file);
   int DetectLanguage(std::set<std::string>& words_set,
                      std::string& guess_lang_output,
                      bool ignore_case=false);
@@ -51,6 +55,7 @@ class LanguageDetector : public Classifier {
  private:
   NgramsGenerator m_ngrams_generator;
   NaiveBayesClassifier m_naive_bayes_classifier;
+  inagist_trends::KeyTuplesExtracter m_keytuples_extracter;
 
   unsigned int m_debug_level;
 

@@ -25,8 +25,6 @@ int main(int argc, char *argv[]) {
   std::string stopwords_file = data_dir + "static_data/stopwords.txt";
   std::string dictionary_file = data_dir + "static_data/dictionary.txt";
   std::string unsafe_dictionary_file = data_dir + "static_data/unsafe_dictionary.txt";
-  std::string lang_detect_config_file = root_dir + "configs/language_detection.config";
-  std::string channels_dictionary_file = root_dir + "static_data/channels_dictionary.txt";
   std::string input_file = data_dir + "tweets.txt";
   std::string output_file = data_dir + "static_data/output.txt";
 
@@ -34,8 +32,6 @@ int main(int argc, char *argv[]) {
   if (ke.Init(stopwords_file.c_str(),
               dictionary_file.c_str(),
               unsafe_dictionary_file.c_str(),
-              lang_detect_config_file.c_str(),
-              channels_dictionary_file.c_str(),
               NULL,
               input_file.c_str(),
               output_file.c_str()) < 0) {

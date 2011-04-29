@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
   const char* keytuples_config_file = argv[2];
   unsigned int input_type = atoi(argv[3]);
   unsigned int output_type = atoi(argv[4]);
-  char* output_file = NULL;
+  const char* output_file = NULL;
   const char* class_name = NULL;
 
   if (6 == argc) {

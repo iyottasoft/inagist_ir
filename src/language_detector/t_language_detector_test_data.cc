@@ -7,15 +7,16 @@ using namespace inagist_classifiers;
 
 int main(int argc, char* argv[]) {
 
-  if (argc != 4 && argc != 5) {
-    std::cout << "Usage: " << argv[0] << " <classifier_config> <input_type> <output_type> [class_name] [output_file]\n";
+  if (argc != 5 && argc != 6) {
+    std::cout << "Usage: " << argv[0] << " <classifier_config> <keytuples_config> <input_type> <output_type> [class_name] [output_file]\n";
     std::cout << "input_type:\n\t0 - twitter timeline\n\t1 - random selection of handles from training sources\n\t2 - all training sources (all handles)\n\t3 - given class(random handles)\noutput_type:\n\t0 - stdout\n\t1 - class frequency file\n\t2 - html version\n";
     return -1;
   }
 
   const char* config_file = argv[1];
-  unsigned int input_type = atoi(argv[2]);
-  unsigned int output_type = atoi(argv[3]);
+  const char* keytuples_config_file = argv[2];
+  unsigned int input_type = atoi(argv[3]);
+  unsigned int output_type = atoi(argv[4]);
   const char* output_file = NULL;
   const char* class_name = NULL;
 
@@ -43,10 +44,10 @@ int main(int argc, char* argv[]) {
 
   int my_argc = 1;
   char* my_argv[1];
-  char* temp_location = (char *) malloc(4);
+  char* temp_location = (char *) malloc(255);
   my_argv[0] = temp_location; 
-  memset(temp_location, '\0', 4);
-  strcpy(temp_location, "1");
+  memset(temp_location, '\0', 255);
+  strcpy(temp_location, keytuples_config_file);
   if (ld->InitDependencies(my_argc, (char **) my_argv) < 0) {
     std::cerr << "ERROR: could not initialize dependencies for language detection\n";
     return -1;

@@ -4,11 +4,11 @@
 
 #ifdef DEBUG
 #if DEBUG>0
-//#define NBC_DEBUG DEBUG
+#define NBC_DEBUG DEBUG
 #endif
 #endif
 
-#define NBC_DEBUG 5
+//#define NBC_DEBUG 5
 
 namespace inagist_classifiers {
 

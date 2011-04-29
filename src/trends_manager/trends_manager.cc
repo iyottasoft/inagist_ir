@@ -42,9 +42,7 @@ int TrendsManager::Init(const char* stopwords_file_path,
 
   if (m_keytuples_extracter.Init(stopwords_file_path,
                               dictionary_file_path,
-                              unsafe_dictionary_file_path,
-                              lang_detect_config_file_path,
-                              channels_dictionary_file_path) < 0) {
+                              unsafe_dictionary_file_path) < 0) {
 #ifdef TRENDS_DEBUG
     std::cerr << "ERROR: could not initialize KeyTuplesExtracter\n";
 #endif
@@ -54,9 +52,13 @@ int TrendsManager::Init(const char* stopwords_file_path,
   return 0;
 }
 
-int TrendsManager::GetKeyTuples(const std::string& text, std::string& safe_status,
-                  std::string& script, std::string& lang, std::set<std::string>& keywords,
-                  std::set<std::string>& hashtags, std::set<std::string>& keyphrases) {
+int TrendsManager::GetKeyTuples(const std::string& text,
+                                std::string& safe_status,
+                                std::string& script,
+                                std::string& lang,
+                                std::set<std::string>& keywords,
+                                std::set<std::string>& hashtags,
+                                std::set<std::string>& keyphrases) {
 
   if (text.length() < 1) {
     std::cerr << "ERROR: invalid input\n";
@@ -69,6 +71,8 @@ int TrendsManager::GetKeyTuples(const std::string& text, std::string& safe_statu
   memset(safe_status_buffer, 0, 10);
   char script_buffer[4];
   memset(script_buffer, 0, 4);
+  char lang_buffer[4];
+  memset(lang_buffer, 0, 4);
   unsigned char keywords_buffer[MAX_BUFFER_LEN];
   memset(keywords_buffer, 0, MAX_BUFFER_LEN);
   unsigned int keywords_len = 0;
@@ -87,29 +91,27 @@ int TrendsManager::GetKeyTuples(const std::string& text, std::string& safe_statu
   memset(buffer2, 0, 4);
   char buffer3[4];
   memset(buffer3, 0, 4);
-  char buffer4[4];
-  memset(buffer4, 0, 4);
 
   strcpy((char *) buffer, text.c_str());
   int ret_value = 0;
   if ((ret_value = GetKeyTuples((const unsigned char*) buffer, strlen((char *) buffer),
                 safe_status_buffer, 10,
                 script_buffer, 4,
+                lang_buffer, 4,
                 (unsigned char*) keywords_buffer, MAX_BUFFER_LEN,
                 &keywords_len, &keywords_count,
                 (unsigned char*) hashtags_buffer, MAX_BUFFER_LEN,
                 &hashtags_len, &hashtags_count,
                 (unsigned char*) keyphrases_buffer, MAX_BUFFER_LEN,
                 &keyphrases_len, &keyphrases_count,
-                buffer1, 4,
-                buffer2, 4,
-                buffer3, 4,
-                buffer4, 4)) < 0) {
+                (char *) buffer1, 4,
+                (char *) buffer2, 4,
+                (char *) buffer3, 4)) < 0) {
     std::cerr << "ERROR: could not get keywords\n";
   } else {
     safe_status = std::string(safe_status_buffer);
     script = std::string(script_buffer);
-    lang = std::string(buffer1);
+    lang = std::string(lang_buffer);
   }
 
   return ret_value;
@@ -119,6 +121,7 @@ int TrendsManager::GetKeyTuples(const std::string& text, std::string& safe_statu
 int TrendsManager::GetKeyTuples(const unsigned char* tweet, const unsigned int tweet_len,
                 char* safe_status_buffer, const unsigned int safe_status_buffer_len,
                 char* script_buffer, const unsigned int script_buffer_len,
+                char* lang_buffer, const unsigned int lang_buffer_len,
                 unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
                 unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr,
                 unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
@@ -127,8 +130,7 @@ int TrendsManager::GetKeyTuples(const unsigned char* tweet, const unsigned int t
                 unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr,
                 char* buffer1, const unsigned int buffer1_len,
                 char* buffer2, const unsigned int buffer2_len,
-                char* buffer3, const unsigned int buffer3_len,
-                char* buffer4, const unsigned int buffer4_len) {
+                char* buffer3, const unsigned int buffer3_len) {
 
 #ifdef TRENDS_DEBUG
   std::cout << tweet << std::endl;
@@ -143,6 +145,7 @@ int TrendsManager::GetKeyTuples(const unsigned char* tweet, const unsigned int t
 #ifdef TRENDS_DEBUG
     strcpy(safe_status_buffer, "errST");
     strcpy(script_buffer,"rr");
+    strcpy(lang_buffer,"rr");
     strcpy((char *) keywords_buffer, "error_submit_tweet_invalid_len");
     *keywords_len_ptr = strlen((char *) keywords_buffer);
     *keywords_count_ptr = 1;
@@ -152,6 +155,9 @@ int TrendsManager::GetKeyTuples(const unsigned char* tweet, const unsigned int t
     strcpy((char *) keyphrases_buffer, "error_submit_tweet_invalid_len");
     *keyphrases_len_ptr = strlen((char *) keyphrases_buffer);
     *keyphrases_count_ptr = 1;
+    strcpy(buffer1,"rr");
+    strcpy(buffer2,"rr");
+    strcpy(buffer3,"rr");
 #endif
     memset(buffer, '\0', MAX_BUFFER_LEN);
     return -1;
@@ -165,13 +171,22 @@ int TrendsManager::GetKeyTuples(const unsigned char* tweet, const unsigned int t
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
 
+  unsigned char lang_words_buffer[MAX_BUFFER_LEN];
+  lang_words_buffer[0] = '\0';
+  unsigned int lang_words_buffer_len = MAX_BUFFER_LEN;
+  unsigned int lang_words_len = 0;
+  unsigned int lang_words_count = 0;
+
   ret_value = m_keytuples_extracter.GetKeyTuples(buffer, tweet_len,
-                   safe_status_buffer, safe_status_buffer_len, script_buffer, script_buffer_len,
+                   safe_status_buffer, safe_status_buffer_len,
+                   script_buffer, script_buffer_len,
                    keywords_buffer, keywords_buffer_len, keywords_len, keywords_count,
                    hashtags_buffer, hashtags_buffer_len, hashtags_len, hashtags_count,
                    keyphrases_buffer, keyphrases_buffer_len, keyphrases_len, keyphrases_count,
-                   buffer1, buffer1_len, buffer2, buffer2_len,
-                   buffer3, buffer3_len, buffer4, buffer4_len);
+                   lang_words_buffer, lang_words_buffer_len, lang_words_len, lang_words_count,
+                   buffer1, buffer1_len,
+                   buffer2, buffer2_len,
+                   buffer3, buffer3_len);
   if (ret_value <= 0) {
     if (ret_value < 0 ) {
 #ifdef TRENDS_DEBUG
@@ -196,9 +211,9 @@ int TrendsManager::GetKeyTuples(const unsigned char* tweet, const unsigned int t
     *buffer1 = '\0';
     *buffer2 = '\0';
     *buffer3 = '\0';
-    *buffer4 = '\0';
   }
   buffer[0] = '\0';
+  lang_words_buffer[0] = '\0';
   *keywords_len_ptr = keywords_len;
   *keywords_count_ptr = keywords_count;
   *hashtags_len_ptr = hashtags_len;

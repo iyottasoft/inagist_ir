@@ -4,11 +4,11 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../utils -I../inagist_api -I../test_utils -I../curl_request_maker -I../twitter_api -I../script_detector -I../ngrams_generator -I../classifier
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../utils -I../inagist_api -I../test_utils -I../curl_request_maker -I../twitter_api -I../script_detector -I../keytuples_extracter -I../ngrams_generator -I../classifier
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -lclassifier -lngramsgenerator -lscriptdetector -lutils -ltestutils -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+LIBS = -l${PROJECT} -lclassifier -lngramsgenerator -lkeytuplesextracter -lscriptdetector -lutils -ltestutils -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
@@ -18,7 +18,7 @@ LIB = ${LIB_DIR}/lib${PROJECT}.so
 BINS = ${BIN_DIR}/t_language_detector \
        ${BIN_DIR}/x_language_detector_training_data \
        ${BIN_DIR}/t_language_detector_test_data \
-       ${BIN_DIR}/t_get_corpus
+       ${BIN_DIR}/t_get_lang_corpus
 
 OBJS = language_detector.o
 
@@ -55,9 +55,9 @@ ${BIN_DIR}/t_language_detector_test_data: t_language_detector_test_data.o ${LIB}
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_language_detector_test_data
 	@echo "done!"
 
-${BIN_DIR}/t_get_corpus: t_get_corpus.o ${LIB}
+${BIN_DIR}/t_get_lang_corpus: t_get_lang_corpus.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_get_corpus
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_get_lang_corpus
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

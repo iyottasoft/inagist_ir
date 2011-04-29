@@ -11,7 +11,7 @@
 #define MAX_BUFFER_LEN 1024
 #define MAX_NAME_LEN 255
 #define MAX_LIST_BUFFER_LEN 20480
-#define LD_DEBUG 1
+//#define LD_DEBUG 1
 #define ERLANG_R14B02 1
 
 ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {

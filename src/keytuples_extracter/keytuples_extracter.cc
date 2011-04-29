@@ -25,7 +25,6 @@ using std::endl;
 using std::string;
 
 KeyTuplesExtracter::KeyTuplesExtracter() {
-  m_language_detector = (inagist_classifiers::LanguageDetector*) new inagist_classifiers::LanguageDetector;
 }
 
 KeyTuplesExtracter::~KeyTuplesExtracter() {
@@ -49,7 +48,6 @@ int KeyTuplesExtracter::Init(std::string config_file) {
   if (Init(config.stopwords_file.c_str(),
            config.dictionary_file.c_str(),
            config.unsafe_dictionary_file.c_str(),
-           config.lang_detect_config_file.c_str(),
            NULL,
            config.stemmer_dictionary_file.c_str()) < 0) {
     std::cerr << "ERROR: could not initialize KeyTuplesExtracter\n";
@@ -72,8 +70,6 @@ int KeyTuplesExtracter::Init(std::string config_file) {
 int KeyTuplesExtracter::Init(const char *stopwords_file,
     const char *dictionary_file,
     const char *unsafe_dictionary_file,
-    const char *lang_detect_config_file,
-    const char *channels_dictionary_file,
     const char *stemmer_dictionary_file,
     const char *input_file,
     const char *output_file) {
@@ -118,35 +114,6 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
     }
   }
 
-#ifdef LANG_DETECT
-  if (lang_detect_config_file) {
-#ifdef KE_DEBUG
-    if (KE_DEBUG > 3) {
-      std::cout << "Info: initialising lang detect with config file - " << lang_detect_config_file << std::endl;
-    }
-#endif
-    if (m_language_detector->Init(std::string(lang_detect_config_file)) < 0) {
-      std::cerr << "ERROR: could not initialize lang detect\n";
-      return -1;
-    }
-  }
-#endif
-
-/*
-  if (channels_dictionary_file) {
-#ifdef KE_DEBUG
-    if (KE_DEBUG > 3) {
-      std::cout << "Info: loading channels dictionary file - " << channels_dictionary_file << std::endl;
-    }
-#endif
-    int ret = m_channels_dictionary_map.Load(channels_dictionary_file);
-    if (ret < 0) {
-      std::cerr << "ERROR: could not load channels file into dictionary\n";
-      return -1;
-    }
-  }
-*/
-
   if (input_file) {
     m_tweet_stream.open(input_file, std::ifstream::in);
 
@@ -174,10 +141,6 @@ int KeyTuplesExtracter::DeInit() {
   if (m_out_stream && m_out_stream.is_open())
     m_out_stream.close();
 
-  if (m_language_detector) {
-    delete m_language_detector;
-    m_language_detector = NULL;
-  }
   //std::cout << "deinit done\n";
   return 0;
 }
@@ -278,12 +241,11 @@ int KeyTuplesExtracter::GetKeywords(char* str, std::set<std::string>& keywords_s
   std::set<std::string> keyphrases_set;
   std::string safe_status;
   std::string script;
-  std::string lang;
 #ifndef HASHTAGS_ENABLED
-  return GetKeyTuples(str, safe_status, script, lang, keywords_set, keyphrases_set);
+  return GetKeyTuples(str, safe_status, script, keywords_set, keyphrases_set);
 #else
   std::set<std::string> hashtags_set;
-  return GetKeyTuples(str, safe_status, script, lang, keywords_set, hashtags_set, keyphrases_set);
+  return GetKeyTuples(str, safe_status, script, keywords_set, hashtags_set, keyphrases_set);
 #endif
 }
 
@@ -292,13 +254,12 @@ int KeyTuplesExtracter::GetKeywords(char* str,
                                   std::string& safe_status,
                                   std::string& script,
                                   std::set<std::string>& keywords_set) {
-  std::string lang;
   std::set<std::string> keyphrases_set;
 #ifndef HASHTAGS_ENABLED
-  return GetKeyTuples(str, safe_status, script, lang, keywords_set, keyphrases_set);
+  return GetKeyTuples(str, safe_status, script, keywords_set, keyphrases_set);
 #else
   std::set<std::string> hashtags_set;
-  return GetKeyTuples(str, safe_status, script, lang, keywords_set, hashtags_set, keyphrases_set);
+  return GetKeyTuples(str, safe_status, script, keywords_set, hashtags_set, keyphrases_set);
 #endif
 }
 #endif
@@ -341,10 +302,9 @@ int KeyTuplesExtracter::GetKeywords(char* str,
                                  std::set<std::string>& keywords_set) {
   std::set<std::string> keyphrases_set;
   std::string safe_status;
-  std::string lang;
   int ret_value = 0;
 #ifndef HASHTAGS_ENABLED
-  GetKeyTuples(str, safe_status, script, lang, keywords_set, keyphrases_set);
+  GetKeyTuples(str, safe_status, script, keywords_set, keyphrases_set);
 #endif
   keyphrases_set.clear();
   return ret_value;
@@ -356,15 +316,39 @@ int KeyTuplesExtracter::GetKeywords(char* str,
 int KeyTuplesExtracter::GetKeyTuples(char* str, 
                                    std::string& safe_status,
                                    std::string& script,
-                                   std::string& lang,
                                    std::set<std::string>& keywords_set,
                                    std::set<std::string>& hashtags_set,
                                    std::set<std::string>& keyphrases_set) {
+  std::set<std::string> lang_words_set;
+  if (GetKeyTuples(str, safe_status, script,
+                   keywords_set, hashtags_set, keyphrases_set,
+                   lang_words_set) < 0) {
+    keywords_set.clear();
+    hashtags_set.clear();
+    keyphrases_set.clear();
+    lang_words_set.clear();
+    return -1;
+  }
+  lang_words_set.clear();
+
+  return 0;
+}
+#endif
+#endif
+
+#ifdef KEYPHRASE_ENABLED
+#ifdef HASHTAGS_ENABLED
+int KeyTuplesExtracter::GetKeyTuples(char* str, 
+                                   std::string& safe_status,
+                                   std::string& script,
+                                   std::set<std::string>& keywords_set,
+                                   std::set<std::string>& hashtags_set,
+                                   std::set<std::string>& keyphrases_set,
+                                   std::set<std::string>& lang_words_set) {
 #else
 int KeyTuplesExtracter::GetKeyTuples(char* str, 
                                    std::string& safe_status,
                                    std::string& script,
-                                   std::string& lang,
                                    std::set<std::string>& keywords_set,
                                    std::set<std::string>& keyphrases_set) {
   std::set<std::string> hashtags_set;
@@ -374,7 +358,6 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
 int KeyTuplesExtracter::GetKeyTuples(char* str, 
                                    std::string& safe_status,
                                    std::string& script,
-                                   std::string& lang,
                                    std::set<std::string>& keywords_set,
                                    std::set<std::string>& hashtags_set) {
   std::set<std::string> keyphrases_set;
@@ -382,7 +365,6 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
 int KeyTuplesExtracter::GetKeyTuples(char* str, 
                                    std::string& safe_status,
                                    std::string& script,
-                                   std::string& lang,
                                    std::set<std::string>& keywords_set) {
   std::set<std::string> hashtags_set;
   std::set<std::string> keyphrases_set;
@@ -413,12 +395,17 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
   unsigned char keyphrases_buffer[MAX_DEBUG_BUFFER_LEN];
   memset(keyphrases_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
   unsigned int keyphrases_buffer_len = MAX_DEBUG_BUFFER_LEN;
+  unsigned char lang_words_buffer[MAX_DEBUG_BUFFER_LEN];
+  unsigned int lang_words_buffer_len = MAX_DEBUG_BUFFER_LEN;
+  memset(lang_words_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
   unsigned int hashtags_len = 0;
   unsigned int hashtags_count = 0;
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
+  unsigned int lang_words_len = 0;
+  unsigned int lang_words_count = 0;
   char buffer1[4];
   unsigned int buffer1_len = 4;
   memset(buffer1, '\0', 4);
@@ -428,9 +415,6 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
   char buffer3[4];
   unsigned int buffer3_len = 4;
   memset(buffer3, '\0', 4);
-  char buffer4[4];
-  unsigned int buffer4_len = 4;
-  memset(buffer4, '\0', 4);
 
   int count = 0;
 
@@ -443,26 +427,26 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
                   hashtags_len, hashtags_count,
                   keyphrases_buffer, keyphrases_buffer_len,
                   keyphrases_len, keyphrases_count,
+                  lang_words_buffer, lang_words_buffer_len,
+                  lang_words_len, lang_words_count,
                   buffer1, buffer1_len,
                   buffer2, buffer2_len,
-                  buffer3, buffer3_len,
-                  buffer4, buffer4_len)) < 0) {
+                  buffer3, buffer3_len)) < 0) {
     std::cout << "ERROR: could not get keywords\n";
     buffer[0] = '\0';
     keywords_buffer[0] = '\0';
     hashtags_buffer[0] = '\0';
     keyphrases_buffer[0] = '\0';
+    lang_words_buffer[0] = '\0';
     buffer1[0] = '\0';
     buffer2[0] = '\0';
     buffer3[0] = '\0';
-    buffer4[0] = '\0';
     return -1;
   }
 
   buffer[0] = '\0';
 
   script.assign(script_buffer, script_buffer_len);
-  lang.assign(buffer1, buffer1_len);
   safe_status.assign(safe_status_buffer, safe_status_buffer_len);
 
   unsigned char* pch1 = NULL;
@@ -510,13 +494,27 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
     }
   }
 
+  if (lang_words_buffer > 0) {
+    pch1 = lang_words_buffer;
+    pch2 = pch1;
+    pch1 = (unsigned char*) strchr((char *) pch2, '|');
+    while (pch1 && pch1 != '\0') {
+      ch = *pch1;
+      *pch1 = '\0';
+      lang_words_set.insert((char *) pch2);
+      *pch1 = ch;
+      pch2 = pch1 + 1;
+      pch1 = (unsigned char*) strchr((char *) pch2, '|');
+    }
+  }
+
   keywords_buffer[0] = '\0';
   hashtags_buffer[0] = '\0';
   keyphrases_buffer[0] = '\0';
+  lang_words_buffer[0] = '\0';
   buffer1[0] = '\0';
   buffer2[0] = '\0';
   buffer3[0] = '\0';
-  buffer4[0] = '\0';
 
   return count;
 }
@@ -531,10 +529,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
                                    unsigned int& hashtags_len, unsigned int& hashtags_count,
                                    unsigned char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
                                    unsigned int& keyphrases_len, unsigned int& keyphrases_count,
+                                   unsigned char* lang_words_buffer, const unsigned int& lang_words_buffer_len,
+                                   unsigned int& lang_words_len, unsigned int& lang_words_count,
                                    char* buffer1, const unsigned int& buffer1_len,
                                    char* buffer2, const unsigned int& buffer2_len,
-                                   char* buffer3, const unsigned int& buffer3_len,
-                                   char* buffer4, const unsigned int& buffer4_len) {
+                                   char* buffer3, const unsigned int& buffer3_len) {
 
   // initialize output parameters
   *safe_status_buffer = '\0';
@@ -548,13 +547,13 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
   *keyphrases_buffer = '\0';
   keyphrases_len = 0;
   keyphrases_count = 0;
+  *lang_words_buffer = '\0';
   *buffer1 = '\0';
   *buffer2 = '\0';
   *buffer3 = '\0';
-  *buffer4 = '\0';
 
   if (!buffer || buffer_len < 1 || !script_buffer || !keywords_buffer ||
-      !hashtags_buffer || !keyphrases_buffer || !buffer1 || !buffer2 || !buffer3 || !buffer4) {
+      !hashtags_buffer || !keyphrases_buffer || !lang_words_buffer || !buffer1 || !buffer2 || !buffer3) {
     std::cout << "ERROR: invalid buffer(s) at input\n";
     return -1;
   }
@@ -564,23 +563,24 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
                                    char* script_buffer, const unsigned int& script_buffer_len,
                                    unsigned char* keywords_buffer, const unsigned int& keywords_buffer_len,
                                    unsigned int& keywords_len, unsigned int& keywords_count,
+                                   unsigned char* lang_words_buffer, const unsigned int& lang_words_buffer_len,
+                                   unsigned int& lang_words_len, unsigned int& lang_words_count,
                                    char* buffer1, const unsigned int& buffer1_len,
                                    char* buffer2, const unsigned int& buffer2_len,
-                                   char* buffer3, const unsigned int& buffer3_len,
-                                   char* buffer4, const unsigned int& buffer4_len) {
+                                   char* buffer3, const unsigned int& buffer3_len) {
 
   *safe_status_buffer = '\0';
   *script_buffer = '\0';
   *keywords_buffer = '\0';
   keywords_len = 0;
   keywords_count = 0;
+  *lang_words_buffer = '\0';
   *buffer1 = '\0';
   *buffer2 = '\0';
   *buffer3 = '\0';
-  *buffer4 = '\0';
 
   if (!buffer || buffer_len < 1 || !script_buffer || !keywords_buffer ||
-      !buffer1 || !buffer2 || !buffer3 || !buffer4) {
+      !lang_words_buffer || !buffer1 || !buffer2 || !buffer3) {
     std::cout << "ERROR: invalid buffer(s) at input\n";
     return -1;
   }
@@ -606,7 +606,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
   int num_dict_words = 0;
   int num_numeric_words = 0;
   int num_normal_words = 0; // not caps or stop or dict or numeric
-  std::set<std::string> words_set;
+  std::set<std::string> lang_words_set;
 
   unsigned char *current_word_start = NULL;
   unsigned char *current_word_end = NULL;
@@ -676,13 +676,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
   unsigned int english_count = 0;
   bool current_word_ascii = false;
   bool next_word_ascii = false;
-
-/*
-  // channel classification
-  unsigned int channels_count = 0;
-  unsigned int channels_len = 0;
-  std::string channel;
-*/
 
   // the whole thing starts here
   ptr = buffer;
@@ -848,7 +841,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
     if (m_stopwords_dictionary.Find(current_word_start) == 1) {
       current_word_stop = true;
       num_stop_words++;
-      words_set.insert(std::string((char *) current_word_start));
+      lang_words_set.insert(std::string((char *) current_word_start));
 #ifdef KE_DEBUG
       if (KE_DEBUG > 5) {
         cout << "current word: " << current_word_start << " :stopword" << endl;
@@ -862,7 +855,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
     if (m_dictionary.Find(current_word_start) == 1) {
       current_word_dict = true;
       num_dict_words++;
-      words_set.insert(std::string((char *) current_word_start));
+      lang_words_set.insert(std::string((char *) current_word_start));
 #ifdef KE_DEBUG
       if (KE_DEBUG > 5) {
         cout << "current word: " << current_word_start << " :dictionary word" << endl;
@@ -876,12 +869,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
     if (m_unsafe_dictionary.Find(current_word_start) == 1) {
       text_has_unsafe_words = true;
     }
-  
-/*
-    if (m_channels_dictionary_map.FindPart(current_word_start, channel) == 1) {
-      Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
-    }
-*/
+
 #ifndef I18N_ENABLED
   }
 #endif
@@ -1015,6 +1003,25 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
         next_word_len = next_word_end - next_word_start;
       }
 
+      if (current_word_start == sentence_start &&
+          current_word_caps &&
+          (!next_word_start || !next_word_caps)) {
+        *current_word_start += 32;
+        lang_words_set.insert(std::string((char *) current_word_start));
+        *current_word_start -= 32;
+      }
+
+      if (!next_word_start) {
+        if (!current_word_caps) {
+          lang_words_set.insert(std::string((char *) current_word_start));
+        }
+        if (current_word_caps && current_word_start == sentence_start) {
+          *current_word_start += 32;
+          lang_words_set.insert(std::string((char *) current_word_start));
+          *current_word_start -= 32;
+        }
+      }
+
 #ifdef KE_DEBUG
       if (KE_DEBUG > 5) {
         cout << endl;
@@ -1079,7 +1086,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
         if (m_stopwords_dictionary.Find(next_word_start) == 1) {
           next_word_stop = true;
           num_stop_words++;
-          words_set.insert(std::string((char *) next_word_start));
+          lang_words_set.insert(std::string((char *) next_word_start));
 #ifdef KE_DEBUG
           score--;
           if (KE_DEBUG > 5) {
@@ -1094,7 +1101,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
         if (m_dictionary.Find(next_word_start) == 1) {
           next_word_dict = true;
           num_dict_words++;
-          words_set.insert(std::string((char *) next_word_start));
+          lang_words_set.insert(std::string((char *) next_word_start));
 #ifdef KE_DEBUG
           score--;
           if (KE_DEBUG > 5) {
@@ -1110,12 +1117,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
           text_has_unsafe_words = true;
         }
 
-/*
-        // channels
-        if (m_channels_dictionary_map.FindPart(next_word_start, channel) == 1) {
-          Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
-        }
-*/
 #ifndef I18N_ENABLED
         }
 #endif
@@ -1136,7 +1137,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
         }
 #endif
         num_normal_words++;
-        words_set.insert(std::string((char *) current_word_start));
+        lang_words_set.insert(std::string((char *) current_word_start));
       }
       if (current_word_has_mixed_case)
         num_mixed_words++;
@@ -1226,13 +1227,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
           cout << "stopword entity candidate: " << stopwords_entity_start << endl;
         }
 #endif
-
-/*
-        // each candidate should be checked against channel dictionary
-        if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
-          Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
-        }
-*/
 
         if (!current_word_caps || current_word_stop || current_word_dict || current_word_starts_num) {
           if (stopwords_entity_start != prev_word_start) {
@@ -1338,12 +1332,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
           cout << "caps entity candidate: " << caps_entity_start << endl;
         }
 #endif
-/*
-        // each candidate should be checked against channel dictionary
-        if (m_channels_dictionary_map.FindPart(caps_entity_start, channel) == 1) {
-          Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
-        }
-*/
 
         if (current_word_stop ||
             !current_word_caps ||
@@ -1457,12 +1445,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
               keywords_count++;
             }
 
-/*
-            if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
-              Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
-            }
-*/
-
             *(stopwords_entity_end-2) = ch;
           }
           else if ((pch = (unsigned char*) strstr((char *) stopwords_entity_start, "\'s")) && (pch < stopwords_entity_end)) {
@@ -1484,12 +1466,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
               }
             }
 
-/*
-            if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
-              Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
-            }
-*/
-
             *pch = ch;
             temp_len = stopwords_entity_end - stopwords_entity_start;
             if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
@@ -1508,12 +1484,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
               keywords_len += 1;
               keywords_count++;
             }
-
-/*
-            if (m_channels_dictionary_map.FindPart(stopwords_entity_start, channel) == 1) {
-              Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
-            }
-*/
           }
         } else {
           cout << "ERROR: stopwords entity markers are wrong\n";
@@ -1544,12 +1514,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
               keywords_count++;
             }
 
-/*
-            if (m_channels_dictionary_map.FindPart(caps_entity_start, channel) == 1) {
-              Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
-            }
-*/
-
             *(caps_entity_end-2) = ch;
           }
           else if ((pch = (unsigned char*) strstr((char *) caps_entity_start, "\'s")) && (pch < caps_entity_end)) {
@@ -1574,12 +1538,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
               hashtags_count++;
             }
 
-/*
-            if (m_channels_dictionary_map.FindPart(caps_entity_start, channel) == 1) {
-              Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
-            }
-*/
-
             *pch = ch;
             temp_len = caps_entity_end - caps_entity_start;
             if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
@@ -1600,12 +1558,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
               keywords_count++;
             }
 
-/*
-            if (m_channels_dictionary_map.FindPart(caps_entity_start, channel) == 1) {
-              Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
-            }
-*/
-
           }
         } else {
           cout << "ERROR: caps entity markers are wrong\n";
@@ -1623,11 +1575,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
           hashtags_len += 1;
           hashtags_count++;
         }
-/*
-        if (m_channels_dictionary_map.FindPart(current_word_start+1, channel) == 1) {
-          Insert((unsigned char*) buffer3, channels_len, channel, channels_count);
-        }
-*/
       }
 
 #ifndef I18N_ENABLED
@@ -1881,52 +1828,28 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer, const unsigned int& 
   else
     strcpy(safe_status_buffer, "safe");
 
-  bool detect_lang = false;
   if (script_count == 0 && english_count > 10) {
     script = "en";
-    detect_lang = true;
   } else if (script_count > 0 && (script_count < 11 || script_count < english_count)) {
     script = "uu";
-    detect_lang = true;
   }
 
   strcpy(script_buffer, script.c_str());
 
-#ifdef LANG_DETECT
-  // language detection
-  if (detect_lang) {
-    std::string lang;
-    if (m_language_detector->DetectLanguage(words_set, lang, true) < 0) {
-      std::cout << "ERROR: language detection failed\n";
-    } else {
-      strcpy(buffer1, lang.c_str());
-    }
-    if (m_language_detector->Classify(std::string((char *) buffer), buffer_len, lang) < 0) {
-      std::cout << "ERROR: language detection failed\n";
-    } else {
-      strcpy(buffer2, lang.c_str());
-    }
-/*
-    if (lang.compare(0,2,"en") != 0) {
-#ifdef KEYPHRASE_ENABLED
-#ifdef KE_DEBUG
-      std::cout << "Non-english: no keyphrases selected\n";
-#endif
-      *keyphrases_buffer = '\0';
-      keyphrases_len = 0;
-      keyphrases_count = 0;
-#endif
-    }
-*/
+  std::set<std::string>::iterator words_iter;
+  std::string word;
+  for (words_iter = lang_words_set.begin(); words_iter != lang_words_set.end(); words_iter++) {
+    word.assign(*words_iter);
+    Insert(lang_words_buffer, lang_words_len, word, lang_words_count);
+    word.clear();
   }
-#endif
 
 #ifdef KE_DEBUG
   if (KE_DEBUG > 1) {
-    std::cout << "\nbuffer1: " << buffer1 << std::endl;
+    std::cout << "\nlang_words_buffer: " << lang_words_buffer << std::endl;
+    std::cout << "buffer1: " << buffer1 << std::endl;
     std::cout << "buffer2: " << buffer2 << std::endl;
     std::cout << "buffer3: " << buffer3 << std::endl;
-    std::cout << "buffer4: " << buffer4 << std::endl;
   }
 #endif
 #ifdef KE_DEBUG

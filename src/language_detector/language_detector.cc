@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <cstring>
 #include "twitter_searcher.h"
 #include "string_utils.h"
 #include "config_reader.h"
@@ -167,11 +168,46 @@ int LanguageDetector::GenerateLangModel(const std::string& input_file_name,
 }
 
 int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
+
+  if (text.length() < 1) {
+    std::cerr << "ERROR: empty string. cannot get corpus\n";
+    return -1;
+  }
+
+  char buffer[MAX_BUFFER_LEN];
+  strcpy((char *) buffer, text.c_str());
+
+  std::set<std::string> keywords_set;
+  std::set<std::string> hashtags_set;
+  std::set<std::string> keyphrases_set;
+  std::set<std::string> lang_words_set;
+  std::string safe_status;
+  std::string script;
+
+  int ret_val = 0;
+  ret_val = m_keytuples_extracter.GetKeyTuples(buffer,
+                                         safe_status, script,
+                                         keywords_set, hashtags_set, keyphrases_set, lang_words_set);
+
+  keywords_set.clear();
+  hashtags_set.clear();
+  keyphrases_set.clear();
+
+  if (ret_val < 0) {
+    std::cerr << "ERROR: could not get words for: " << text << std::endl;
+    lang_words_set.clear();
+    return -1;
+  }
+
   int ngrams_count = 0;
-  if ((ngrams_count = m_ngrams_generator.GetNgramsFromTweet(text, corpus)) < 0) {
+  if ((ngrams_count = m_ngrams_generator.GetNgramsFromWords(lang_words_set, corpus)) < 0) {
     std::cerr << "ERROR: could not find ngrams from tweet: " << text << std::endl;
   }
+
+  lang_words_set.clear();
+
   return ngrams_count;
+
 }
 
 int LanguageDetector::Clear() {
@@ -179,10 +215,32 @@ int LanguageDetector::Clear() {
 }
 
 int LanguageDetector::InitDependencies(int argc, char* argv[]) {
+
+  if (argc != 1) {
+    std::cerr << "ERROR: text classifier needs keytuples config file\n";
+    return -1;
+  }
+
+  const char* keytuples_config_file = argv[0];
+  if (!keytuples_config_file || strlen(keytuples_config_file) < 4) {
+    std::cerr << "ERROR: invalid keytuples config file name\n";
+  }
+
+  if (m_keytuples_extracter.Init(keytuples_config_file) < 0) {
+    std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter from file:" \
+              << keytuples_config_file << std::endl;
+    return -1;
+  }
+
   return 0;
 }
 
 int LanguageDetector::ClearDependencies() {
+  try {
+    m_keytuples_extracter.DeInit();
+  } catch (...) {
+    std::cerr << "ERROR: KeyTuples Extracter throws exception" << std::endl;
+  }
   return 0;
 }
 

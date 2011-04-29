@@ -15,12 +15,6 @@
 #include "dictionary_set.h"
 #include "dictionary_map.h"
 
-#define LANG_DETECT 0
-
-#ifdef LANG_DETECT
-#include "language_detector.h"
-#endif
-
 #ifndef HASHTAGS_ENABLED
 #define HASHTAGS_ENABLED 1
 #endif
@@ -43,8 +37,6 @@ class KeyTuplesExtracter {
   int Init(const char* stopwords_file,
            const char* dictionary_file,
            const char* unsafe_dictionary_file,
-           const char* lang_detect_config_file=NULL,
-           const char* channels_dictionary_file=NULL,
            const char* stemmer_dictionary_file=NULL,
            const char* input_file=NULL,
            const char* output_file=NULL);
@@ -53,7 +45,6 @@ class KeyTuplesExtracter {
   int GetKeyTuples(char* str,
                   std::string& safe_status,
                   std::string& script,
-                  std::string& lang,
                   std::set<std::string>& keywords_set,
                   std::set<std::string>& keyphrases_set);
   int GetKeywords(char* str,
@@ -76,10 +67,16 @@ class KeyTuplesExtracter {
   int GetKeyTuples(char* str,
                  std::string& safe_status,
                  std::string& script,
-                 std::string& lang,
                  std::set<std::string>& keywords_set,
                  std::set<std::string>& hashtags_set,
                  std::set<std::string>& keyphrases_set);
+  int GetKeyTuples(char* str,
+                 std::string& safe_status,
+                 std::string& script,
+                 std::set<std::string>& keywords_set,
+                 std::set<std::string>& hashtags_set,
+                 std::set<std::string>& keyphrases_set,
+                 std::set<std::string>& lang_words_set);
 #endif
 #endif
 
@@ -88,7 +85,6 @@ class KeyTuplesExtracter {
   int GetKeyTuples(char* str,
                  std::string& safe_status,
                  std::string& script,
-                 std::string& lang,
                  std::set<std::string>& keywords_set,
                  std::set<std::string>& keyphrases_set);
 #endif
@@ -99,7 +95,6 @@ class KeyTuplesExtracter {
   int GetKeyTuples(char* str,
                  std::string& safe_status,
                  std::string& script,
-                 std::string& lang,
                  std::set<std::string>& keywords_set,
                  std::set<std::string>& hashtags_set);
 #endif
@@ -124,10 +119,11 @@ class KeyTuplesExtracter {
                   unsigned int& hashtags_len, unsigned int& hashtags_count,
                   unsigned char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
                   unsigned int& keyphrases_len, unsigned int& keyphrases_count,
+                  unsigned char* lang_words_buffer, const unsigned int& lang_words_buffer_len,
+                  unsigned int& lang_words_len, unsigned int& lang_words_count,
                   char* buffer1, const unsigned int& buffer1_len,
                   char* buffer2, const unsigned int& buffer2_len,
-                  char* buffer3, const unsigned int& buffer3_len,
-                  char* buffer4, const unsigned int& buffer4_len);
+                  char* buffer3, const unsigned int& buffer3_len);
 
   int GetKeyTuples(unsigned char* buffer, const unsigned int buffer_len,
                   char* safe_status_buffer, const unsigned int safe_status_buffer_len,
@@ -146,10 +142,11 @@ class KeyTuplesExtracter {
                   char* script_buffer, const unsigned int& script_buffer_len,
                   char* keywords_buffer, const unsigned int& keywords_buffer_len,
                   unsigned int& keywords_len, unsigned int& keywords_count,
+                  unsigned char* lang_words_buffer, const unsigned int& lang_words_buffer_len,
+                  unsigned int& lang_words_len, unsigned int& lang_words_count,
                   char* buffer1, const unsigned int& buffer1_len,
                   char* buffer2, const unsigned int& buffer2_len,
-                  char* buffer3, const unsigned int& buffer3_len,
-                  char* buffer4, const unsigned int& buffer4_len);
+                  char* buffer3, const unsigned int& buffer3_len);
 
   void printKeywords(); // not implemented yet, to be used for testing
   void PrintKeywords(std::set<std::string> &keywords_set);
@@ -160,12 +157,6 @@ class KeyTuplesExtracter {
   std::ofstream m_out_stream;
   inagist_utils::DictionarySet m_stopwords_dictionary;
   inagist_utils::DictionarySet m_unsafe_dictionary;
-#ifdef LANG_DETECT
-  inagist_classifiers::LanguageDetector* m_language_detector;
-#endif
-/*
-  inagist_utils::DictionaryMap m_channels_dictionary_map;
-*/
 
   DISALLOW_COPY_AND_ASSIGN(KeyTuplesExtracter);
   bool IsPunct(char *ptr, char *prev=NULL, char *next=NULL);

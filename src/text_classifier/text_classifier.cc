@@ -55,21 +55,6 @@ int TextClassifier::InitDependencies(int argc, char* argv[]) {
   return 0;
 } 
 
-// 
-int TextClassifier::InitTraining(const char* stopwords_file,
-                                 const char* dictionary_file,
-                                 const char* unsafe_dictionary_file) {
-
-  if (m_keytuples_extracter.Init(stopwords_file,
-                                 dictionary_file,
-                                 unsafe_dictionary_file) < 0) {
-    std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
-    return -1;
-  }
-
-  return 0;
-}
-
 int TextClassifier::LoadKeyTuplesDictionary(const char* dictionary_file) {
 
   m_keytuples_extracter.m_dictionary.Clear();
@@ -199,16 +184,14 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   std::set<std::string> keyphrases_set;
   std::string safe_status;
   std::string script;
-  std::string lang;
   if (m_keytuples_extracter.GetKeyTuples(buffer,
-                                         safe_status, script, lang,
+                                         safe_status, script,
                                          keywords_set, hashtags_set, keyphrases_set) < 0) {
     std::cerr << "ERROR: could not get words for: " << text << std::endl;
     return -1;
   }
 
-  if ((script.compare(0, 2, "en")) != 0) {
-     // || (lang.compare(0, 2, "en")) != 0) {
+  if (script.compare(0, 2, "en") != 0) {
 #ifndef TC_DEBUG
     // std::cout << buffer << "\nnon-english tweet. no keytuples." << std::endl;
 #endif
@@ -232,13 +215,6 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
 #ifdef TC_DEBUG
       std::cout << *set_iter << std::endl;
 #endif
-/*
-      if (inagist_utils::Tokenize(*set_iter, words) > 1) {
-        for (words_iter = words.begin(); words_iter != words.end(); words_iter++) {
-          corpus_set.insert(*words_iter);
-        }
-      }
-*/
     }
     keywords_set.clear();
   }
@@ -251,13 +227,6 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
 #ifdef TC_DEBUG
       std::cout << *set_iter << std::endl;
 #endif
-/*
-      if (inagist_utils::Tokenize(*set_iter, words) > 1) {
-        for (words_iter = words.begin(); words_iter != words.end(); words_iter++) {
-          corpus_set.insert(*words_iter);
-        }
-      }
-*/
     }
     hashtags_set.clear();
   }
