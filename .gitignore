@@ -18,7 +18,7 @@ data/lang/test/test.txt
 data/text_class/tweetsource/tweets/*.txt
 data/text_class/tweetsource/corpus/*.txt
 data/text_class/tweetsource/handles/[^.]*
-data/lang/test/test.txt
+data/text_class/test/test.txt
 data/ipl/tweetsource/tweets/[^.]*
 data/ipl/tweetsource/corpus/[^.]*
 data/ipl/tweetsource/handles/[^.]*
