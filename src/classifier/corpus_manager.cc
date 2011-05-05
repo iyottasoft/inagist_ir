@@ -160,6 +160,7 @@ int CorpusManager::LoadCorpus(const std::string corpus_file_name, Corpus& corpus
     } else {
       std::cout << "ERROR: malformed corpus entry on line number " << num_docs \
                 << " in " << corpus_file_name << std::endl;
+      std::cout << "ERROR: malformed entry: \"" << line << "\"" << std::endl;
       ifs.close();
       return -1;
     }
@@ -212,6 +213,12 @@ int CorpusManager::LoadCorpusMap(std::map<std::string, std::string> corpus_class
 
 int CorpusManager::LoadCorpusMap(const std::string config_file_name) {
 
+#ifdef CORPUS_MANAGER_DEBUG
+  if (CORPUS_MANAGER_DEBUG > 3) {
+    std::cout << "INFO: loading corpus map using config file:" << config_file_name << std::endl;
+  }
+#endif
+
   if (config_file_name.length() < 1) {
     std::cerr << "ERROR: invalid file name for corpus map config\n";
     return -1;
@@ -225,16 +232,16 @@ int CorpusManager::LoadCorpusMap(const std::string config_file_name) {
 
   std::string line;
   std::string class_name; 
-  std::string file_name;
+  std::string corpus_file_name;
   std::string::size_type loc = 0;
   int num_docs = 0;
   Corpus corpus;
   while (getline(ifs, line)) {
     if ((loc = line.find("=", 0)) != std::string::npos) {
       class_name = std::string(line, 0, loc);
-      file_name = std::string(line, loc+1, line.length() - loc); 
-      if (LoadCorpus(file_name, corpus) < 0) {
-        std::cout << "ERROR: could not load corpus from file " << file_name << std::endl;
+      corpus_file_name = std::string(line, loc+1, line.length() - loc); 
+      if (LoadCorpus(corpus_file_name, corpus) < 0) {
+        std::cout << "ERROR: could not load corpus from file " << corpus_file_name << std::endl;
         return -1;
       } else {
         m_corpus_map.insert(std::pair<std::string, Corpus> (class_name, corpus));
@@ -242,7 +249,8 @@ int CorpusManager::LoadCorpusMap(const std::string config_file_name) {
       corpus.clear();
     } else {
       std::cout << "ERROR: malformed config entry on line number " << num_docs+1 \
-                << " in " << file_name << std::endl;
+                << " in " << config_file_name << std::endl;
+      std::cout << "ERROR: malformed entry: \"" << line << "\"" << std::endl;
       ifs.close();
       return -1;
     }

@@ -75,8 +75,15 @@ class Classifier {
 
   int GetTestData(const unsigned int& input_type,
                   const char* input_value,
+                  const std::string& expected_class_name,
                   const unsigned int& output_type,
                   const char* output_file);
+
+  int TestTrainingTexts(const char* training_texts_file,
+                        const std::string& expected_class_name,
+                        Corpus& class_freq_map,
+                        TestResult& test_result,
+                        std::ostream &output_stream);
 
   int WriteTestData(Corpus& corpus, const char* classes_freq_file);
 

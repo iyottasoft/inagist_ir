@@ -72,9 +72,12 @@ int TwitterSearcher::GetTweetsFromSearchUrl(const std::string& url, std::set<std
 #endif
   int num_docs = 0;
 
-  bool ret_value;
+  bool ret_value = false;
   CurlRequestMaker curl_request_maker;
-  ret_value = curl_request_maker.GetTweets(url.c_str());
+  if ((ret_value = curl_request_maker.GetTweets(url.c_str())) == false) {
+    std::cout << "ERROR: couldn't get tweets for url: " << url << std::endl;
+    return -1;
+  }
 
   if (ret_value) {
     std::string reply_message;
@@ -130,9 +133,6 @@ int TwitterSearcher::GetTweetsFromSearchUrl(const std::string& url, std::set<std
       }
       delete json_value;
     }
-  } else {
-    std::cout << "ERROR: couldn't get tweets" << std::endl;
-    return 0;
   }
 
   return num_docs;
