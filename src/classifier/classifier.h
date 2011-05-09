@@ -74,7 +74,8 @@ class Classifier {
                           bool random_selection=false);
 
   int GetTestData(const unsigned int& input_type,
-                  const char* input_value,
+                  const char* input_file,
+                  const char* input_handle,
                   const std::string& expected_class_name,
                   const unsigned int& output_type,
                   const char* output_file);

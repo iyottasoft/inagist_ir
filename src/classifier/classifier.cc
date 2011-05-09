@@ -84,7 +84,7 @@ int Classifier::Init(std::string config_file_name, bool ignore_history) {
 int Classifier::GetTrainingData(const char* config_file_name) {
 
   if (!config_file_name) {
-    std::cerr << "ERROR: invalid input\n";
+    std::cerr << "ERROR: invalid config file name\n";
     return -1;
   }
 
@@ -450,13 +450,24 @@ int Classifier::WriteTestData(Corpus& corpus, const char* classes_freq_file) {
 // Note: the output file is to write texts that contributed to the class frequenceies.
 //
 int Classifier::GetTestData(const unsigned int& input_type,
-                            const char* input_value,
+                            const char* input_file,
+                            const char* input_handle,
                             const std::string& expected_class_name,
                             const unsigned int& output_type,
                             const char* output_file) {
 
-  if (NULL == input_value && input_type >= 3) {
-    std::cerr << "ERROR: invalid input value. cannot get test data.\n";
+  if (NULL == input_file && 4 == input_type) {
+    std::cerr << "ERROR: invalid input file. cannot get test data.\n";
+    return -1;
+  }
+
+  if (NULL == input_handle && 5 == input_type) {
+    std::cerr << "ERROR: invalid input handle. cannot get test data.\n";
+    return -1;
+  }
+
+  if (expected_class_name.empty() && 3 == input_type) {
+    std::cerr << "ERROR: invalid expected class name. cannot get test data.\n";
     return -1;
   }
 
@@ -485,6 +496,7 @@ int Classifier::GetTestData(const unsigned int& input_type,
   std::string handle;
   TestResult test_result;
   test_result.clear();
+  const char* training_texts_file = NULL;
 
   switch (input_type) {
     case 0:
@@ -522,7 +534,7 @@ int Classifier::GetTestData(const unsigned int& input_type,
       }
       break;
     case 3:
-      if (TestTrainingSources(training_class=input_value,
+      if (TestTrainingSources(training_class=expected_class_name.c_str(),
                               class_freq_map,
                               test_result,
                               *output_stream,
@@ -531,10 +543,9 @@ int Classifier::GetTestData(const unsigned int& input_type,
         ofs.close();
         return -1;
       }
+      break;
     case 4:
-      {
-        const char* training_texts_file = NULL;
-        if (TestTrainingTexts(training_texts_file=input_value,
+        if (TestTrainingTexts(training_texts_file=input_file,
                               expected_class_name,
                               class_freq_map,
                               test_result,
@@ -543,10 +554,10 @@ int Classifier::GetTestData(const unsigned int& input_type,
                     << training_texts_file << std::endl;
           return -1;
         }
-      }
+      break;
     case 5:
-      if (input_value)
-        handle = std::string(input_value);
+      if (input_handle)
+        handle.assign(input_handle);
       if (TestTwitterTimeline(handle,
                               expected_class_name,
                               class_freq_map,
@@ -591,13 +602,13 @@ int Classifier::GetTestData(const unsigned int& input_type,
   ofs.close();
   class_freq_map.clear();
 
-  std::cout << "Total: " << test_result.total << std::endl;
-  std::cout << "Undefined: " << test_result.undefined << std::endl;
+  std::cout << "Total text: " << test_result.total << std::endl;
   if (!expected_class_name.empty()) {
     std::cout << "Expected Class: " << expected_class_name << std::endl;
   }
   std::cout << "Correct: " << test_result.correct << std::endl;
   std::cout << "Wrong: " << test_result.wrong << std::endl;
+  std::cout << "Undefined: " << test_result.undefined << std::endl;
 
   return ret_val;
 
@@ -610,7 +621,7 @@ int Classifier::TestTrainingTexts(const char* training_texts_file,
                                   std::ostream &output_stream) {
 
   if (!training_texts_file) {
-    std::cerr << "ERROR: invalid input\n";
+    std::cerr << "ERROR: invalid input training texts file\n";
     return -1;
   }
 
@@ -656,14 +667,16 @@ int Classifier::TestTrainingTexts(const char* training_texts_file,
       if (output_stream) {
         output_stream << expected_class_name << "|" << output_class << "|" << tweet << std::endl;
       }
-      if (expected_class_name.compare(output_class) == 0) {
-        test_result.correct++;
-      } else if ((output_class.compare(0,2,"UU") == 0) ||
-                 (output_class.compare(0,2,"XX") == 0) ||
-                 (output_class.compare(0,2,"RR") == 0)) {
-         test_result.undefined++;
-      } else {
-        test_result.wrong++;
+      if (!expected_class_name.empty()) {
+        if (expected_class_name.compare(output_class) == 0) {
+          test_result.correct++;
+        } else if ((output_class.compare(0,2,"UU") == 0) ||
+                   (output_class.compare(0,2,"XX") == 0) ||
+                   (output_class.compare(0,2,"RR") == 0)) {
+           test_result.undefined++;
+        } else {
+          test_result.wrong++;
+        }
       }
       if (class_freq_map.find(output_class) != class_freq_map.end()) {
         class_freq_map[output_class] += 1;
@@ -727,14 +740,16 @@ int Classifier::TestTwitterTimeline(const std::string& handle,
       if (output_stream) {
         output_stream << expected_class_name << "|" << output_class << "|" << tweet << std::endl;
       }
-      if (expected_class_name.compare(output_class) == 0) {
-        test_result.correct++;
-      } else if ((output_class.compare(0,2,"UU") == 0) ||
-                 (output_class.compare(0,2,"XX") == 0) ||
-                 (output_class.compare(0,2,"RR") == 0)) {
-         test_result.undefined++;
-      } else {
-        test_result.wrong++;
+      if (!expected_class_name.empty()) {
+        if (expected_class_name.compare(output_class) == 0) {
+          test_result.correct++;
+        } else if ((output_class.compare(0,2,"UU") == 0) ||
+                   (output_class.compare(0,2,"XX") == 0) ||
+                   (output_class.compare(0,2,"RR") == 0)) {
+           test_result.undefined++;
+        } else {
+          test_result.wrong++;
+        }
       }
       if (class_freq_map.find(output_class) != class_freq_map.end()) {
         class_freq_map[output_class] += 1;
