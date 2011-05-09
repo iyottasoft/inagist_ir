@@ -857,4 +857,120 @@ int Classifier::TestTrainingSources(const char* training_class,
   return 0;
 }
 
+int Classifier::ValidateTestDataInput(int argc, char* argv[],
+                                      const char* &config_file,
+                                      const char* &keytuples_config_file,
+                                      unsigned int &input_type,
+                                      unsigned int &output_type,
+                                      const char* &input_file,
+                                      const char* &output_file,
+                                      const char* &input_handle,
+                                      std::string &class_name) {
+
+  config_file = argv[1];
+  keytuples_config_file = argv[2];
+  input_type = atoi(argv[3]);
+  output_type = atoi(argv[4]);
+
+  if (8 == argc) {
+    if (4 == input_type)
+      input_file = argv[7];
+    else if (5 == input_type)
+      input_handle = argv[7];
+    output_file = argv[6];
+
+    if ((3 == input_type || 4 == input_type) &&
+        (argv[5] && strlen(argv[5]) > 0))
+      class_name = std::string(argv[5]);
+  }
+
+  if (7 == argc) {
+    if (input_type == 4)
+      input_file = argv[6];
+    else if (input_type == 5)
+      input_handle = argv[6];
+    else if (output_type > 0)
+      output_file = argv[6];
+
+    if ((3 == input_type || 4 == input_type) &&
+        (argv[5] && strlen(argv[5]) > 0))
+      class_name = std::string(argv[5]);
+  }
+
+  if (6 == argc) {
+    if (argv[5] && strlen(argv[5]) > 0) {
+      if (3 == input_type || 4 == input_type) {
+        class_name = argv[5];
+      } else {
+        output_file = argv[5];
+      }
+    }
+  }
+
+// validate inputs and assign inputs
+  if (3 == input_type) {
+    if (class_name.empty()) {
+      std::cout << "class_name is required for input_type: " << input_type << std::endl;
+      return -1;
+    }
+  } else if (4 == input_type) {
+    if (!input_file) {
+      std::cout << "input file required for input_type: " << input_type << std::endl;
+      return -1;
+    }
+  } else if (5 == input_type) {
+    if (!input_handle) {
+      std::cout << "input handle required for input_type: " << input_type << std::endl;
+      return -1;
+    }
+  }
+
+  if (output_type < 0 || output_type > 2) {
+    std::cout << "invalid output type: " << output_type << std::endl;
+    return -1;
+  }
+
+  if (1 == output_type) {
+    if (!output_file) {
+      std::cout << "output file required for output_type: " << output_type << std::endl;
+      return -1;
+    }
+    if (strlen(output_file) < 4) {
+      std::cout << "invalide output file name: " << output_file << std::endl;
+      return -1;
+    }
+  }
+
+  std::cout << "config_file: ";
+  if (config_file)
+    std::cout << config_file;
+  std::cout << std::endl;
+
+  std::cout << "keytuples_config: ";
+  if (keytuples_config_file)
+    std::cout << keytuples_config_file;
+  std::cout << std::endl;
+
+  std::cout << "input_type: " << input_type << std::endl;
+  std::cout << "output_type: " << output_type << std::endl;
+  std::cout << "class_name: " << class_name << std::endl;
+
+  std::cout << "input_file: ";
+  if (input_file)
+    std::cout << input_file;
+  std::cout << std::endl;
+
+  std::cout << "output_file: ";
+  if (output_file)
+    std::cout << output_file;
+  std::cout << std::endl;
+
+  std::cout << "input_handle: ";
+  if (input_handle)
+    std::cout << input_handle;
+  std::cout << std::endl;
+
+  return 0;
+}
+
 } // namespace inagist_classifiers

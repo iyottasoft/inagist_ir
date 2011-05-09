@@ -88,6 +88,16 @@ class Classifier {
 
   int WriteTestData(Corpus& corpus, const char* classes_freq_file);
 
+  static int ValidateTestDataInput(int argc, char* argv[],
+                            const char* &config_file,
+                            const char* &keytuples_config_file,
+                            unsigned int &input_type,
+                            unsigned int &output_type,
+                            const char* &input_file,
+                            const char* &output_file,
+                            const char* &input_handle,
+                            std::string &class_name);
+
  protected:
   CorpusManager m_corpus_manager;
  private:
