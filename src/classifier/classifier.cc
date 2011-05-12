@@ -460,16 +460,28 @@ int Classifier::WriteTestData(Corpus& corpus, const char* classes_freq_file) {
   inagist_classifiers::CorpusIter corpus_iter;
   unsigned int sum = 0;
   for (corpus_iter = corpus.begin(); corpus_iter != corpus.end(); corpus_iter++) {
-    if (corpus_iter->first.compare("all_classes") != 0) {
+    std::cout << corpus_iter->first << ":" << corpus_iter->second << std::endl;
+    if ((corpus_iter->first.compare("UU") == 0) ||
+        (corpus_iter->first.compare("XX") == 0) ||
+        (corpus_iter->first.compare("RR") == 0)) {
+      std::cout << "deleting" << std::endl;
+      corpus.erase(corpus_iter);
+      continue;
+    } else if (corpus_iter->first.compare("all_classes") != 0) {
       sum += corpus_iter->second;
+    } else {
+      std::cout << "all_classes. hence ignoring" << std::endl;
     }
   }
+
+  // update the all_classes value
   if ((corpus_iter = corpus.find("all_classes")) != corpus.end()) {
     corpus_iter->second = sum;
   } else {
     corpus.insert(std::pair<std::string, unsigned int> ("all_classes", sum));
   }
 
+  // write to classes_freq file
   if (m_corpus_manager.UpdateCorpusFile(corpus, classes_freq_file) < 0) {
     std::cerr << "ERROR: could not update corpus file\n";
     return -1;
