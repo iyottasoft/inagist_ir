@@ -26,22 +26,28 @@ def main():
     line = line.strip()
     tokens = line.split('|')
     if len(tokens) < 3:
+      f.write('<tr><td><h3>')
+      f.write('Error')
+      f.write('</h3></td></tr>')
       print "error"
       break
-    if (expected_class_name != tokens[0]):
-      expected_class_name = tokens[0]
-      f.write('<tr><td><hr/>')
-      f.write(expected_class_name)
-      f.write('<hr/></td></tr>')
-    output_class_name = tokens[1]
-    if (output_class_name == "XX" or 
-        output_class_name == "UU" or
-        output_class_name == "RR"):
+    if len(tokens[0]) < 1:
       f.write('<tr><td bgcolor=#FFFFFF>')
-    elif (expected_class_name != output_class_name):
-      f.write('<tr><td bgcolor=#FF0000>\n')
     else:
-      f.write('<tr><td bgcolor=#07B133>\n')
+      if (expected_class_name != tokens[0]):
+        expected_class_name = tokens[0]
+        f.write('<tr><td><hr/>')
+        f.write(expected_class_name)
+        f.write('<hr/></td></tr>')
+      output_class_name = tokens[1]
+      if (output_class_name == "XX" or 
+          output_class_name == "UU" or
+          output_class_name == "RR"):
+        f.write('<tr><td bgcolor=#FFFFFF>')
+      elif (expected_class_name != output_class_name):
+        f.write('<tr><td bgcolor=#FF0000>\n')
+      else:
+        f.write('<tr><td bgcolor=#07B133>\n')
     f.write(line)
     f.write('</td></tr>\n')
   f.write('</table>\n')

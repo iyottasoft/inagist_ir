@@ -1,4 +1,13 @@
-Ali Murtuza=1
-IPL=1
-MI&quot=1
-Wankhede=1
+Ali Murtuza=31
+All-Rounder=45
+IPL=425
+MI&quot=31
+MIPaltan=196
+MIpaltan=195
+Malinga Malinga Malinga Malinga=197
+Mumbai=2
+Mumbai &amp; Rajasthan=138
+Mumbai 1 Pune 0=195
+Mumbai 4 Punjab 4=52
+Wankhede=144
+newbies Kochi=2

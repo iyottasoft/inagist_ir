@@ -25,3 +25,5 @@ data/ipl/tweetsource/handles/[^.]*
 data/ipl/test/test.txt
 data/trends/[^.]*
 data/test/[^.]*
+configs/test_lang.config
+test_data/[^.]*
