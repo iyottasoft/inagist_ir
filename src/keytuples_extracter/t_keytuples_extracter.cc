@@ -20,9 +20,20 @@ int GetKeyTuples(std::string text) {
   std::set<std::string> keywords_set;
   std::set<std::string> hashtags_set;
   std::set<std::string> keyphrases_set;
+  std::set<std::string> lang_words_set;
 
   strcpy(buffer, text.c_str()); 
-  if (g_ke.GetKeyTuples(buffer, safe_status, script, keywords_set, hashtags_set, keyphrases_set) < 0) {
+  if (g_ke.GetKeyTuples(buffer, safe_status, script, keywords_set
+#ifdef HASHTAGS_ENABLED
+                        , hashtags_set
+#endif
+#ifdef KEYPHRASE_ENABLED
+                        , keyphrases_set
+#endif
+#ifdef LANG_WORDS_ENABLED
+                        , lang_words_set
+#endif
+                       ) < 0) {
     std::cout << "ERROR: could not get keytuples\n";
     return -1;
   }
@@ -48,6 +59,11 @@ int GetKeyTuples(std::string text) {
     std::cout << "keyphrases:\n";
     g_ke.PrintKeywords(keyphrases_set);
     keyphrases_set.clear();
+  }
+  if (lang_words_set.size() > 0) {
+    std::cout << "langwords:\n";
+    g_ke.PrintKeywords(lang_words_set);
+    lang_words_set.clear();
   }
 
   return 0;

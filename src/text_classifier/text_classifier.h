@@ -34,6 +34,14 @@ class TextClassifier : public Classifier {
   int Classify(std::set<std::string>& words_set,
                  std::string& text_class,
                  bool ignore_case=false);
+
+  int Classify(const unsigned char* text_word_list,
+               const unsigned int& list_len,
+               const unsigned int& word_count,
+               char* guess_text_class_buffer,
+               const unsigned int& guess_text_class_buffer_len,
+               bool ignore_case=false);
+
   int Clear();
   int SetDebugLevel(unsigned int debug_level);
   int GetWordFrequencies(const std::string& input_file_name,

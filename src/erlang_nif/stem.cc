@@ -31,9 +31,6 @@ extern "C"
 #endif
 int Stem(const unsigned char* text, const unsigned int tweet_len,
          unsigned char* stem_buffer, const unsigned int stems_buffer_len) {
-#ifdef DEBUG
-  std::cout << text << std::endl;
-#endif
   return g_stemmer.Stem(text, stems_buffer_len, stem_buffer); 
 }
 

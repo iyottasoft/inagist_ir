@@ -542,6 +542,37 @@ int NgramsGenerator::GetNgramsFromWords(std::set<std::string>& words_set,
   return features_map.size();
 }
 
+int NgramsGenerator::GetNgramsFromWords(const unsigned char* text_word_list,
+                                        const unsigned int& list_len,
+                                        const unsigned int& word_count, 
+                                        std::map<std::string, int>& features_map,
+                                        bool ignore_case) {
+
+  if (!text_word_list || list_len <= 0 || word_count <= 0) {
+    return -1;
+  }
+
+  int num_ngrams = 0;
+  int ret_val = 0;
+  unsigned char* start = (unsigned char*) text_word_list;
+  unsigned char* end = (unsigned char*) strchr((char *) start, '|');
+  unsigned int word_len = 0;
+  while (start && end && *start != '\0') {
+    word_len = end - start; 
+    if ((ret_val = GetNgramsFromWord(start, word_len, features_map)) < 0) {
+      std::cerr << "ERROR: could not get ngrams" << std::endl;
+      return ret_val;
+    } else {
+      num_ngrams += ret_val;
+    }
+    start = end + 1;
+    end = (unsigned char*) strchr((char *) start, '|');
+  }
+  start = NULL;
+  end = NULL;
+
+  return num_ngrams;
+}
 
 int NgramsGenerator::GetNgramsFromWord(const unsigned char* word_str,
                                        unsigned int word_len,
@@ -556,7 +587,7 @@ int NgramsGenerator::GetNgramsFromWord(const unsigned char* word_str,
   int count = 0;
 
   ngram = " ";
-  ngram += std::string((char *) word_str);
+  ngram += std::string((char *) word_str, word_len);
   ngram += " ";
   if (features_map.find(ngram) != features_map.end()) {
     features_map[ngram] += 1;

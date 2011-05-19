@@ -1925,7 +1925,7 @@
  zweite =1
  zweiten =2
  zweites =1
- ü 48
+ ü =48
  üä =4
  üü=2
  üü =2

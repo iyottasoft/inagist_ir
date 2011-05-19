@@ -3,7 +3,6 @@
 #include <fstream>
 #include <cstring>
 #include <cstdlib>
-#include "twitter_searcher.h"
 #include "string_utils.h"
 #include "config_reader.h"
 #include "naive_bayes_classifier.h"
@@ -14,6 +13,8 @@
 #endif
 #endif
 //#define TC_DEBUG 5
+
+#define MAX_BUFFER_LEN 1024
 
 namespace inagist_classifiers {
 
@@ -111,6 +112,59 @@ int TextClassifier::Classify(const std::string& text,
   return 1;
 }
 
+int TextClassifier::Classify(const unsigned char* text_word_list,
+                               const unsigned int& list_len,
+                               const unsigned int& word_count, 
+                               char* guess_text_class_buffer,
+                               const unsigned int& guess_text_class_buffer_len,
+                               bool ignore_case) {
+
+  if (!text_word_list || list_len <= 0 || word_count <= 0) {
+    return -1;
+  }
+
+  Corpus test_corpus;
+
+  unsigned char* start = (unsigned char*) text_word_list;
+  unsigned char* end = (unsigned char*) strchr((char *) start, '|');
+  unsigned int word_len = 0;
+  std::string word;
+  while (start && end && *start != '\0') {
+    word_len = end - start; 
+    word.clear();
+    word.assign((char *) start, word_len);
+    test_corpus[word] = 1;
+    start = end + 1;
+    end = (unsigned char*) strchr((char *) start, '|');
+  }
+  start = NULL;
+  end = NULL;
+
+  if (test_corpus.empty()) {
+    return 0;
+  }
+
+  std::string text_class;
+  if (NaiveBayesClassifier::GuessClass(m_corpus_manager.m_corpus_map,
+                                       m_corpus_manager.m_classes_freq_map,
+                                       test_corpus,
+                                       text_class) < 0) {
+    std::cout << "ERROR: naive bayes classifiers could not guess the text class\n";
+    test_corpus.clear();
+    return -1;
+  }
+
+#ifdef TC_DEBUG
+  if (m_debug_level > 1)
+    std::cout << "guess_class: " << text_class << std::endl;
+#endif
+
+  test_corpus.clear();
+  strcpy(guess_text_class_buffer, text_class.c_str());
+
+  return 1;
+}
+
 int TextClassifier::Classify(std::set<std::string>& words_set,
                                      std::string& text_class,
                                      bool ignore_case) {
@@ -182,11 +236,19 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   std::set<std::string> keywords_set;
   std::set<std::string> hashtags_set;
   std::set<std::string> keyphrases_set;
+  std::set<std::string> lang_words_set;
   std::string safe_status;
   std::string script;
   if (m_keytuples_extracter.GetKeyTuples(buffer,
-                                         safe_status, script,
-                                         keywords_set, hashtags_set, keyphrases_set) < 0) {
+                                         safe_status,
+                                         script,
+                                         keywords_set,
+                                         hashtags_set,
+                                         keyphrases_set
+#ifdef LANG_WORDS_ENABLED
+                                         , lang_words_set
+#endif
+                                        ) < 0) {
     std::cerr << "ERROR: could not get words for: " << text << std::endl;
     return -1;
   }

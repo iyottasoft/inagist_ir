@@ -10,11 +10,9 @@
 #ifdef _CPLUSPLUS
 extern "C" {
 #endif
-int InitKeyTuplesExtracter(const char* stopwords_file_path,
-         const char* dictionary_file_path,
-         const char* unsafe_dictionary_file_path);
+int InitKeyTuplesExtracter(const char* keytuples_config);
 
-int GetKeyTuples(unsigned char* tweet, const unsigned int tweet_len,
+int GetKeyTuples(unsigned char* text, const unsigned int text_len,
                  char* safe_status_buffer, const unsigned int safe_status_buffer_len,
                  char* script_buffer, const unsigned int script_buffer_len,
                  unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,

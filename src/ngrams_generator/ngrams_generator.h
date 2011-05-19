@@ -36,6 +36,11 @@ class NgramsGenerator {
   int GetNgramsFromWords(std::set<std::string>& words_set,
                          std::map<std::string, int>& features_map,
                          bool ignore_case=false);
+  int GetNgramsFromWords(const unsigned char* text_word_list,
+                         const unsigned int& list_len,
+                         const unsigned int& word_count, 
+                         std::map<std::string, int>& features_map,
+                         bool ignore_case=false);
   int GetNgramsFromWord(const unsigned char* word_str,
                         unsigned int word_len,
                         std::map<std::string, int>& features_map);

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include "tweets.h"
 #include "stem.h"
 
 #define MAX_BUFFER_LEN 1024
@@ -248,4 +249,4 @@ static ErlNifFunc nif_funcs[] =
   {"test_twitter_timeline", 0, nif_test_twitter_timeline},
   {"test_twitter_timeline", 1, nif_test_twitter_timeline},
 };
-ERL_NIF_INIT(stemmer, nif_funcs, NULL, NULL, NULL, NULL)
+ERL_NIF_INIT(stem, nif_funcs, NULL, NULL, NULL, NULL)

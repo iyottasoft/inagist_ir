@@ -3,7 +3,6 @@
 #include <fstream>
 #include <cstdlib>
 #include <cstring>
-#include "twitter_searcher.h"
 #include "string_utils.h"
 #include "config_reader.h"
 
@@ -13,6 +12,8 @@
 #endif
 #endif
 //#define LD_DEBUG 5
+
+#define MAX_BUFFER_LEN 1024
 
 namespace inagist_classifiers {
 
@@ -83,6 +84,57 @@ int LanguageDetector::Classify(const std::string& text,
 #endif
 
   test_corpus.clear();
+
+  return 1;
+}
+
+int LanguageDetector::Classify(const unsigned char* text_word_list,
+                               const unsigned int& list_len,
+                               const unsigned int& word_count, 
+                               char* guess_lang_buffer,
+                               const unsigned int& guess_lang_buffer_len,
+                               bool ignore_case) {
+
+  int num_ngrams = 0;
+  Corpus test_corpus;
+
+  if ((num_ngrams = m_ngrams_generator.GetNgramsFromWords(text_word_list,
+                                                          list_len,
+                                                          word_count,
+                                                          test_corpus,
+                                                          ignore_case)) < 0) {
+    std::cerr << "ERROR: m_ngrams_generator returned -1" << std::endl;
+    return -1;
+  }
+
+  if (num_ngrams == 0) {
+#ifdef LD_DEBUG
+    if (m_debug_level > 0)
+      std::cout << "no ngrams found for the given word set" << std::endl;
+#endif
+    strcpy(guess_lang_buffer, "RR");
+    return 0;
+  }
+
+  std::string guess_lang_output;
+  if (m_naive_bayes_classifier.GuessClass(m_corpus_manager.m_corpus_map,
+                                          m_corpus_manager.m_classes_freq_map,
+                                          test_corpus,
+                                          guess_lang_output,
+                                          m_debug_level) < 0) {
+    std::cout << "ERROR: naive bayes classifiers could not guess the language\n";
+    test_corpus.clear();
+    strcpy(guess_lang_buffer, "RR");
+    return -1;
+  }
+
+#ifdef LD_DEBUG
+  if (m_debug_level > 1)
+    std::cout << "guess_lang: " << guess_lang_output << std::endl;
+#endif
+
+  test_corpus.clear();
+  strcpy(guess_lang_buffer, guess_lang_output.c_str());
 
   return 1;
 }

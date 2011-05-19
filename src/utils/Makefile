@@ -4,11 +4,11 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../twitter_api -I../script_detector
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../twitter_api -I../inagist_api -I../script_detector
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -lscriptdetector -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+LIBS = -l${PROJECT} -lscriptdetector -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
@@ -17,9 +17,10 @@ LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_string_utils \
        ${BIN_DIR}/t_dictionary_set \
-       ${BIN_DIR}/t_dictionary_map
+       ${BIN_DIR}/t_dictionary_map \
+       ${BIN_DIR}/t_test_utils
 
-OBJS = string_utils.o dictionary_set.o dictionary_map.o
+OBJS = string_utils.o dictionary_set.o dictionary_map.o test_utils.o
 
 all: ${LIB} ${BINS}
 	@echo "build done!"
@@ -52,6 +53,11 @@ ${BIN_DIR}/t_dictionary_set: t_dictionary_set.o ${LIB}
 ${BIN_DIR}/t_dictionary_map: t_dictionary_map.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_dictionary_map
+	@echo "done!"
+
+${BIN_DIR}/t_test_utils: t_test_utils.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_test_utils
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

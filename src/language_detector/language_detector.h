@@ -29,12 +29,19 @@ class LanguageDetector : public Classifier {
   /* implementation of pure virtual functions from classifier.h */
   int InitDependencies(int argc=0, char* argv[]=NULL);
   int Classify(const std::string& text,
-                 const unsigned int& text_len,
-                 std::string& guess_lang_output,
-                 bool ignore_case=false);
+               const unsigned int& text_len,
+               std::string& guess_lang_output,
+               bool ignore_case=false);
   int GetCorpus(const std::string& text, Corpus& corpus);
   int ClearDependencies();
   /* end */
+
+  int Classify(const unsigned char* text_word_list,
+               const unsigned int& list_len,
+               const unsigned int& word_count,
+               char* guess_lang_buffer,
+               const unsigned int& guess_lang_buffer_len,
+               bool ignore_case=false);
 
   int InitTraining(const char *stopwords_file,
                    const char *dictionary_file,

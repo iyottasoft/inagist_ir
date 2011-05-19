@@ -42,6 +42,8 @@ int main(int argc, char *argv[]) {
   inagist_trends::KeywordsManager km;
 
   std::string line;
+  std::string script;
+  std::string safe_status;
   std::set<std::string> keywords_set;
   char input[255];
   
@@ -53,7 +55,7 @@ int main(int argc, char *argv[]) {
   while (num_docs < count && getline(std::cin, line)) {
     memset(input, 0, 255);
     strcpy(input, (char *) line.c_str());
-    ke.GetKeywords(input, keywords_set);
+    ke.GetKeywords(input, safe_status, script, keywords_set);
     ke.PrintKeywords(keywords_set);
     km.PopulateFreqMap(keywords_set);
     ++num_docs;

@@ -5,18 +5,18 @@
 #include <string.h>
 #include <stdbool.h>
 #include "tweets.h"
-#include "keytuples.h"
+#include "keywords.h"
 
 #define MAX_BUFFER_LEN 1024
 #define MAX_NAME_LEN 255
 #define MAX_LIST_BUFFER_LEN 20480
-//#define KEYTUPLES_DEBUG 1
+//#define KEYWORDS_DEBUG 1
 #define ERLANG_R14B02 1
 
 ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   if (argc != 1) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_invalid_argc");
@@ -41,7 +41,7 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #else
     enif_release_binary(env, &file_path);
 #endif
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_config_file_path_inspect_bin");
@@ -49,7 +49,7 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   }
 
   if (InitKeyTuplesExtracter(config_file_path) < 0) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_init_keytuples_extracter");
@@ -59,10 +59,10 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   return enif_make_atom(env, "ok");
 }
 
-ERL_NIF_TERM nif_get_keytuples(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+ERL_NIF_TERM nif_get_keywords(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   if (argc != 1) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_invalid_argc");
@@ -71,7 +71,7 @@ ERL_NIF_TERM nif_get_keytuples(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
 
   ErlNifBinary text;
   unsigned char text_str[MAX_BUFFER_LEN];
-  memset((char *) text_str, 0, MAX_BUFFER_LEN);
+  memset(text_str, 0, MAX_BUFFER_LEN);
 
   bool success = enif_inspect_binary(env, argv[0], &text);
   int text_len = text.size;
@@ -89,7 +89,7 @@ ERL_NIF_TERM nif_get_keytuples(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
 #else
     enif_release_binary(env, &text);
 #endif
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_invalid_tweet_len");
@@ -104,29 +104,17 @@ ERL_NIF_TERM nif_get_keytuples(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
   keywords[0] = '\0';
   int keywords_len = 0;
   int keywords_count = 0;
-  char hashtags[MAX_BUFFER_LEN];
-  hashtags[0] = '\0';
-  int hashtags_len = 0;
-  int hashtags_count = 0;
-  char keyphrases[MAX_BUFFER_LEN];
-  keyphrases[0] = '\0';
-  int keyphrases_len = 0;
-  int keyphrases_count = 0;
 
   int ret_value = 0;
-  if ((ret_value = GetKeyTuples((unsigned char *) text_str, text_len,
+  if ((ret_value = GetKeywords((unsigned char *) text_str, text_len,
                   (char *) safe_status, 10,
                   (char *) script, 4,
                   (char *) keywords, MAX_BUFFER_LEN,
-                  &keywords_len, &keywords_count,
-                  (char *) hashtags, MAX_BUFFER_LEN,
-                  &hashtags_len, &hashtags_count,
-                  (char *) keyphrases, MAX_BUFFER_LEN,
-                  &keyphrases_len, &keyphrases_count)) < 0) {
-#ifndef KEYTUPLES_DEBUG
+                  &keywords_len, &keywords_count)) < 0) {
+#ifndef KEYWORDS_DEBUG
     return enif_make_atom(env, "error");
 #else
-    return enif_make_atom(env, "error_GetKeyTuples");
+    return enif_make_atom(env, "error_GetKeywords");
 #endif
   }
   
@@ -136,8 +124,6 @@ ERL_NIF_TERM nif_get_keytuples(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
   ErlNifBinary safe_status_bin;
   ErlNifBinary script_bin;
   ErlNifBinary keywords_bin;
-  ErlNifBinary hashtags_bin;
-  ErlNifBinary keyphrases_bin;
   ERL_NIF_TERM safe_status_term; 
   ERL_NIF_TERM script_term; 
 
@@ -152,7 +138,7 @@ ERL_NIF_TERM nif_get_keytuples(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
   ret_val = enif_alloc_binary(env, len, &safe_status_bin);
 #endif
   if (ret_val < 0) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_safe_status_bin_alloc");
@@ -174,7 +160,7 @@ ERL_NIF_TERM nif_get_keytuples(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
   ret_val = enif_alloc_binary(env, len, &script_bin);
 #endif
   if (ret_val < 0) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_script_bin_alloc");
@@ -202,7 +188,7 @@ ERL_NIF_TERM nif_get_keytuples(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
       ret_val = enif_alloc_binary(env, len, &keywords_bin);
 #endif
       if (ret_val < 0) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
         return enif_make_atom(env, "error");
 #else
         return enif_make_atom(env, "error_keywords_bin_alloc");
@@ -218,75 +204,7 @@ ERL_NIF_TERM nif_get_keytuples(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
     }
   }
 
-  start = hashtags;
-  end = strstr(start, "|");
-  len = 0;
-
-  ERL_NIF_TERM hashtags_list = enif_make_list(env, 0);
-  if (hashtags_count > 0) {
-    while (start && end && *end != '\0') {
-      end = strstr(start, "|");
-      if (!end)
-        break;
-      *end = '\0';
-      len = end - start;
-#ifdef ERLANG_R14B02 
-      ret_val = enif_alloc_binary(len, &hashtags_bin);
-#else
-      ret_val = enif_alloc_binary(env, len, &hashtags_bin);
-#endif
-      if (ret_val < 0) {
-#ifndef KEYTUPLES_DEBUG
-        return enif_make_atom(env, "error");
-#else
-        return enif_make_atom(env, "error_hashtags_bin_alloc");
-#endif
-      }
-      for (i=0; i<len; i++) {
-        hashtags_bin.data[i] = *(start + i);
-      }
-      hashtags_list = enif_make_list_cell(env, enif_make_binary(env, &hashtags_bin), hashtags_list);
-
-      *end = '|';
-      start = end + 1;
-    }
-  }
-
-  start = keyphrases;
-  end = strstr(start, "|");
-  len = 0;
-
-  ERL_NIF_TERM keyphrases_list = enif_make_list(env, 0);
-  if (keyphrases_count > 0) {
-    while (start && end && *end != '\0') {
-      end = strstr(start, "|");
-      if (!end)
-        break;
-      *end = '\0';
-      len = end - start;
-#ifdef ERLANG_R14B02 
-      ret_val = enif_alloc_binary(len, &keyphrases_bin);
-#else
-      ret_val = enif_alloc_binary(env, len, &keyphrases_bin);
-#endif
-      if (ret_val < 0) {
-#ifndef KEYTUPLES_DEBUG
-        return enif_make_atom(env, "error");
-#else
-        return enif_make_atom(env, "error_keyphrases_bin_alloc");
-#endif
-      }
-      for (i=0; i<len; i++) {
-        keyphrases_bin.data[i] = *(start + i);
-      }
-      keyphrases_list = enif_make_list_cell(env, enif_make_binary(env, &keyphrases_bin), keyphrases_list);
-
-      *end = '|';
-      start = end + 1;
-    }
-  }
-
-  return enif_make_tuple5(env, safe_status_term, script_term, keywords_list, hashtags_list, keyphrases_list);
+  return enif_make_tuple3(env, safe_status_term, script_term, keywords_list);
 
 }
 
@@ -315,7 +233,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 #else
       enif_release_binary(env, &user_name);
 #endif
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_user_name");
@@ -323,7 +241,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     }
 
     if (GetTestTweets(user_name_str, MAX_LIST_BUFFER_LEN, tweets_buffer, &out_length) < 0) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_get_test_tweets_for_user");
@@ -331,7 +249,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     }
   } else {
     if (GetTestTweets(NULL, MAX_LIST_BUFFER_LEN, tweets_buffer, &out_length) < 0) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_get_test_tweets_for_null_user");
@@ -340,7 +258,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   }
 
   if (0 == out_length || out_length > MAX_LIST_BUFFER_LEN) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_out_length");
@@ -354,8 +272,8 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   unsigned int i = 0;
   unsigned int tweet_len = 0;
   ERL_NIF_TERM arg_array[1]; 
-  ERL_NIF_TERM tuple5;
-  ERL_NIF_TERM tuple5_list = enif_make_list(env, 0);
+  ERL_NIF_TERM tuple6;
+  ERL_NIF_TERM tuple6_list = enif_make_list(env, 0);
   unsigned int error_count = 0;
 
   while (tweet_start && tweet_end && *tweet_end != '\0') {
@@ -367,7 +285,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     tweet_len = tweet_end - tweet_start;
 
     if (tweet_len <= 0 || tweet_len >= MAX_BUFFER_LEN) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_out_length");
@@ -381,7 +299,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 #endif
 
     if (ret_val < 0) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_tweet_len");
@@ -392,11 +310,11 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     }
 
     arg_array[0] = enif_make_binary(env, &tweet);
-    tuple5 = nif_get_keytuples(env, 1, arg_array);
-    if (enif_is_atom(env, tuple5)) {
+    tuple6 = nif_get_keywords(env, 1, arg_array);
+    if (enif_is_atom(env, tuple6)) {
       error_count++;
     } else {
-      tuple5_list = enif_make_list_cell(env, tuple5, tuple5_list);
+      tuple6_list = enif_make_list_cell(env, tuple6, tuple6_list);
     }
     *tweet_end = '|';
     tweet_start = tweet_end + 1;
@@ -404,7 +322,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   tweet_start = NULL;
   tweet_end = NULL;
 
-  return tuple5_list;
+  return tuple6_list;
 }
 
 ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
@@ -414,7 +332,7 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
 
   int out_length = 0;
   if (argc != 1) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
      return enif_make_atom(env, "error"); 
 #else
      return enif_make_atom(env, "error_invalid_argc"); 
@@ -438,7 +356,7 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
 #else
       enif_release_binary(env, &file_name);
 #endif
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_file_name");
@@ -446,7 +364,7 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
     }
 
     if (GetTestTweetsFromFile(file_name_str, MAX_LIST_BUFFER_LEN, tweets_buffer, &out_length) < 0) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_get_test_tweets_for_user");
@@ -455,7 +373,7 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
   }
 
   if (0 == out_length || out_length > MAX_LIST_BUFFER_LEN) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
     return enif_make_atom(env, "error");
 #else
     return enif_make_atom(env, "error_out_length");
@@ -469,8 +387,8 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
   unsigned int i = 0;
   unsigned int tweet_len = 0;
   ERL_NIF_TERM arg_array[1]; 
-  ERL_NIF_TERM tuple5;
-  ERL_NIF_TERM tuple5_list = enif_make_list(env, 0);
+  ERL_NIF_TERM tuple6;
+  ERL_NIF_TERM tuple6_list = enif_make_list(env, 0);
   unsigned int error_count = 0;
 
   while (tweet_start && tweet_end && *tweet_end != '\0') {
@@ -482,7 +400,7 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
     tweet_len = tweet_end - tweet_start;
 
     if (tweet_len <= 0 || tweet_len >= MAX_BUFFER_LEN) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_out_length");
@@ -496,7 +414,7 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
 #endif
 
     if (ret_val < 0) {
-#ifndef KEYTUPLES_DEBUG
+#ifndef KEYWORDS_DEBUG
       return enif_make_atom(env, "error");
 #else
       return enif_make_atom(env, "error_tweet_len");
@@ -507,11 +425,11 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
     }
 
     arg_array[0] = enif_make_binary(env, &tweet);
-    tuple5 = nif_get_keytuples(env, 1, arg_array);
-    if (enif_is_atom(env, tuple5)) {
+    tuple6 = nif_get_keywords(env, 1, arg_array);
+    if (enif_is_atom(env, tuple6)) {
       error_count++;
     } else {
-      tuple5_list = enif_make_list_cell(env, tuple5, tuple5_list);
+      tuple6_list = enif_make_list_cell(env, tuple6, tuple6_list);
     }
     *tweet_end = '|';
     tweet_start = tweet_end + 1;
@@ -519,15 +437,15 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
   tweet_start = NULL;
   tweet_end = NULL;
 
-  return tuple5_list;
+  return tuple6_list;
 }
 
 static ErlNifFunc nif_funcs[] =
 {
   {"init_c", 1, nif_init_c},
-  {"get_keytuples", 1, nif_get_keytuples},
-  {"test_keytuples_twitter_timeline", 0, nif_test_twitter_timeline},
-  {"test_keytuples_twitter_timeline", 1, nif_test_twitter_timeline},
-  {"test_keytuples_file", 1, nif_test_from_file},
+  {"get_keywords", 1, nif_get_keywords},
+  {"test_keywords_twitter_timeline", 0, nif_test_twitter_timeline},
+  {"test_keywords_twitter_timeline", 1, nif_test_twitter_timeline},
+  {"test_keywords_file", 1, nif_test_from_file},
 };
-ERL_NIF_INIT(keytuples, nif_funcs, NULL, NULL, NULL, NULL)
+ERL_NIF_INIT(keywords, nif_funcs, NULL, NULL, NULL, NULL)

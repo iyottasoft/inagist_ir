@@ -1,30 +1,32 @@
--module(keytuples).
+-module(gist).
 
--export([init/0, init_c/1, get_keytuples/1, test_init/0, test/0, test_user/1, test_file/0, test_keytuples_twitter_timeline/0, test_keytuples_twitter_timeline/1, stress_test_keytuples/1]).
+-export([init/0, init_c/3, get_gist/1, test_init/0, test/0, test_user/1, test_file/1, test_gist_twitter_timeline/0, test_gist_twitter_timeline/1, stress_test_gist/1]).
 
 init() ->
-  erlang:load_nif("../../lib/libkeytuples_erl", 0).
+  erlang:load_nif("../../lib/libgist_erl", 0).
 
-init_c(_config_file_path) ->
+init_c(_keytuples_extracter_config_file_path, _lang_detect_config_file_path, _text_classifier_config_file_path) ->
   "NIF library not loaded".
 
-get_keytuples(_tweet) ->
+get_gist(_text) ->
   "NIF library not loaded".
 
-test_keytuples_twitter_timeline() ->
+test_gist_twitter_timeline() ->
   "NIF library not loaded".
 
-test_keytuples_twitter_timeline(_user) ->
+test_gist_twitter_timeline(_user) ->
   "NIF library not loaded".
 
-test_keytuples_file(_file_name) ->
-  "NIF library not loaded for test_from_lang_file".
+test_gist_file(_file_name) ->
+  "NIF library not loaded for test_gist_file".
 
 test_init() ->
-  init_c(<<"../../configs/keytuples_extracter.config">>).
+  init_c(<<"../../configs/keytuples_extracter.config">>,
+         <<"../../configs/language_detection.config">>,
+         <<"../../configs/text_classifier.config">>).
 
 test() ->
-  Tuples_list = test_keytuples_twitter_timeline(),
+  Tuples_list = test_gist_twitter_timeline(),
   case is_atom(Tuples_list) of
     false -> false;
     true -> io:format("error")
@@ -35,14 +37,14 @@ test() ->
   end.
 
 test_user(_user) ->
-  Tuples_list = test_keytuples_twitter_timeline(_user),
+  Tuples_list = test_gist_twitter_timeline(_user),
   case is_list(Tuples_list) of
     false -> false;
     true -> [io:format("~p~n",[X]) || X <- Tuples_list]
   end.
 
-test_file() ->
-  Tuple2_list = test_keytuples_file(<<"../../data/lang/tweetsource/tweets/english.txt">>),
+test_file(_file) ->
+  Tuple2_list = test_gist_file(_file),
   case is_atom(Tuple2_list) of
     false -> false;
     true -> io:format("error")
@@ -52,6 +54,6 @@ test_file() ->
     true -> [io:format("~p~n",[X]) || X <- Tuple2_list]
   end.
 
-stress_test_keytuples([N]) ->
+stress_test_gist([N]) ->
   Number = list_to_integer(atom_to_list(N)),
   lists:foreach(fun(X) -> timer:sleep(500), test(), io:format("~p requests done~n",[X]) end, lists:seq(1,Number)).

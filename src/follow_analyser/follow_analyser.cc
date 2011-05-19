@@ -78,9 +78,10 @@ int FollowAnalyser::GetKeywords(const std::string& handle,
 
   std::multimap<std::string, std::string>::iterator multimap_iter;
   std::string script;
+  std::string safe_status;
   for (multimap_iter = tweets_map.begin(); multimap_iter != tweets_map.end(); multimap_iter++) {
     strcpy(m_buffer, (char *) multimap_iter->second.c_str());
-    if (m_keytuples_extracter.GetKeywords((char *) m_buffer, script, keywords_set) < 0) {
+    if (m_keytuples_extracter.GetKeywords((char *) m_buffer, safe_status, script, keywords_set) < 0) {
       std::cout << "ERROR: could not get keywords for\n" << m_buffer << std::endl;
     }
   }

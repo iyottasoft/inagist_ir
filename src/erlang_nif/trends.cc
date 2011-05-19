@@ -1,5 +1,7 @@
 #ifdef _CPLUSPLUS
 #include <cstring>
+#include <iostream>
+#include <fstream>
 #else
 #include <string.h>
 #endif
@@ -12,17 +14,9 @@ inagist_trends::TrendsManager g_tm;
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int InitTrendsManager(const char* stopwords_file_path,
-         const char* dictionary_file_path,
-         const char* unsafe_dictionary_file_path,
-         const char* lang_detect_config_file_path,
-         const char* channels_dictionary_file_path) {
+int InitTrendsManager(const char* keytuples_config_file) {
 
-  if (g_tm.Init(stopwords_file_path,
-           dictionary_file_path,
-           unsafe_dictionary_file_path,
-           lang_detect_config_file_path,
-           channels_dictionary_file_path) < 0) {
+  if (g_tm.Init(keytuples_config_file) < 0) {
     std::cerr << "ERROR: could not initialize trends manager\n";
     return -1;
   }
@@ -30,47 +24,25 @@ int InitTrendsManager(const char* stopwords_file_path,
   return 0;
 }
 
-#ifdef _CPLUSPLUS
-extern "C"
-#endif
-int GetKeywords(const unsigned char* text, const unsigned int text_len,
-                char* safe_status_buffer, const unsigned int safe_status_buffer_len,
-                char* script_buffer, const unsigned int script_buffer_len,
-                unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
-                unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr,
-                unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
-                unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
-                unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
-                unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr,
-                char* buffer1, const unsigned int buffer1_len,
-                char* buffer2, const unsigned int buffer2_len,
-                char* buffer3, const unsigned int buffer3_len,
-                char* buffer4, const unsigned int buffer4_len) {
+// takes a pipe separated list of tweets and returns a list of trends
+int GetTrends(char* docs_buffer, unsigned int docs_len, unsigned int docs_count,
+              char* trends_buffer, unsigned int* trends_len_ptr, unsigned int* trends_count_ptr) {
 
-  int ret_value = 0;
-  if ((ret_value = g_tm.GetKeyTuples(text, text_len,
-                safe_status_buffer, safe_status_buffer_len,
-                script_buffer, script_buffer_len,
-                buffer1, buffer1_len,
-                (unsigned char*) keywords_buffer, keywords_buffer_len,
-                keywords_len_ptr, keywords_count_ptr,
-                (unsigned char*) hashtags_buffer, hashtags_buffer_len,
-                hashtags_len_ptr, hashtags_count_ptr,
-                (unsigned char*) keyphrases_buffer, keyphrases_buffer_len,
-                keyphrases_len_ptr, keyphrases_count_ptr,
-                buffer2, buffer2_len,
-                buffer3, buffer3_len,
-                buffer4, buffer4_len)) < 0) {
-    std::cerr << "ERROR: could not get keywords\n";
+  if (!docs_buffer || docs_len <= 0 || !trends_buffer) {
+    std::cout << "ERROR: invalid input for GetTrends\n";
     return -1;
   }
-  
-  return ret_value;
+
+  strcpy(trends_buffer, "Not Implemented Yet");
+  *trends_len_ptr = strlen(trends_buffer);
+  *trends_count_ptr = 1;
+
+  return *trends_count_ptr;
 }
 
 // takes a pipe separated list of the structs
 // <keywords, count, handle, class> and returns a purged list of the same
-int GetTrends(char* trends_buffer, unsigned int* trends_len_ptr, unsigned int* trends_count_ptr) {
+int ProcessTrends(char* trends_buffer, unsigned int* trends_len_ptr, unsigned int* trends_count_ptr) {
 
   if (!trends_buffer || *trends_len_ptr < 7) {
     std::cout << "ERROR: invalid input for GetTrends\n";
@@ -87,7 +59,9 @@ int GetTrends(char* trends_buffer, unsigned int* trends_len_ptr, unsigned int* t
   return 0;
 }
 
-int GetTestTrends(const char* trends_file_path,
+// this returns a pipe separated list of trends from a file.
+// these trends can then be sent to GetTrends to purge
+int GetTestTrendsFromFile(const char* trends_file_path,
                   unsigned char* trends_buffer, const unsigned int trends_buffer_len,
                   unsigned int *trends_len_ptr, unsigned int *trends_count_ptr) {
 

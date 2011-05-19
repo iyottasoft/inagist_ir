@@ -6,7 +6,7 @@
 #include "erl_driver.h"
 
 #include "tweets.h"
-#include "lang.h"
+#include "text_class.h"
 
 #define MAX_BUFFER_LEN 1024
 #define MAX_NAME_LEN 255
@@ -14,7 +14,7 @@
 //#define LD_DEBUG 1
 #define ERLANG_R14B02 1
 
-ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+ERL_NIF_TERM nif_classify_text(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   if (argc != 1) {
 #ifndef LD_DEBUG
@@ -24,22 +24,22 @@ ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 #endif
   }
 
-  ErlNifBinary tweet_bin;
-  char tweet_str[MAX_BUFFER_LEN];
-  ERL_NIF_TERM tweet_term;
+  ErlNifBinary text_bin;
+  char text_str[MAX_BUFFER_LEN];
+  ERL_NIF_TERM text_term;
  
-  bool success = enif_inspect_binary(env, argv[0], &tweet_bin);
-  int tweet_len = tweet_bin.size;
-  if (success && tweet_len > 1 && tweet_len < MAX_BUFFER_LEN) {
-    memcpy(tweet_str, tweet_bin.data, tweet_len);
-    tweet_str[tweet_len] = '\0';
-    tweet_term = enif_make_binary(env, &tweet_bin);
-    //enif_release_binary(env, &tweet_bin);
+  bool success = enif_inspect_binary(env, argv[0], &text_bin);
+  int text_len = text_bin.size;
+  if (success && text_len > 1 && text_len < MAX_BUFFER_LEN) {
+    memcpy(text_str, text_bin.data, text_len);
+    text_str[text_len] = '\0';
+    text_term = enif_make_binary(env, &text_bin);
+    //enif_release_binary(env, &text_bin);
   } else {
 #ifdef ERLANG_R14B02
-    enif_release_binary(&tweet_bin);
+    enif_release_binary(&text_bin);
 #else
-    enif_release_binary(env, &tweet_bin);
+    enif_release_binary(env, &text_bin);
 #endif
 #ifndef LD_DEBUG
     return enif_make_atom(env, "error");
@@ -48,48 +48,48 @@ ERL_NIF_TERM nif_detect_lang(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 #endif
   }
 
-  char lang_buffer[MAX_BUFFER_LEN];
-  lang_buffer[0] = '\0';
-  if (DetectLanguage(tweet_str, tweet_len, lang_buffer, MAX_BUFFER_LEN) < 0) { 
+  char text_class_buffer[MAX_BUFFER_LEN];
+  text_class_buffer[0] = '\0';
+  if (ClassifyText(text_str, text_len, text_class_buffer, MAX_BUFFER_LEN) < 0) { 
 #ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
-    return enif_make_atom(env, "error_detect_language_failed");
+    return enif_make_atom(env, "error_classify_text_failed");
 #endif
   }
 
   unsigned int len = 0;
   unsigned int i = 0;
   int ret_val = 0;
-  ErlNifBinary lang_bin;
-  ERL_NIF_TERM lang_term;
+  ErlNifBinary text_class_bin;
+  ERL_NIF_TERM text_class_term;
 
-  len = strlen(lang_buffer);
-  if (len < 2) {
-    strcpy(lang_buffer, "00");
+  len = strlen(text_class_buffer);
+  if (len <= 0) {
+    strcpy(text_class_buffer, "00");
     len = 2;
-    lang_buffer[2] = '\0';
+    text_class_buffer[2] = '\0';
   }
 
 #ifdef ERLANG_R14B02
-  ret_val = enif_alloc_binary(len, &lang_bin);
+  ret_val = enif_alloc_binary(len, &text_class_bin);
 #else
-  ret_val = enif_alloc_binary(env, len, &lang_bin);
+  ret_val = enif_alloc_binary(env, len, &text_class_bin);
 #endif
   if (ret_val < 0) {
 #ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
-    return enif_make_atom(env, "error_lang_bin_alloc");
+    return enif_make_atom(env, "error_text_class_bin_alloc");
 #endif
   }
 
   for (i=0; i<len; i++) {
-    lang_bin.data[i] = *(lang_buffer + i);
+    text_class_bin.data[i] = *(text_class_buffer + i);
   }
-  lang_term = enif_make_binary(env, &lang_bin);
+  text_class_term = enif_make_binary(env, &text_class_bin);
 
-  return enif_make_tuple2(env, tweet_term, lang_term);
+  return enif_make_tuple2(env, text_term, text_class_term);
 }
 
 ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
@@ -127,11 +127,11 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #endif
   }
 
-  if (InitLanguageDetector(config_file) < 0) {
+  if (InitTextClassifier(config_file) < 0) {
 #ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
-    return enif_make_atom(env, "error_InitLanguageDetector_failed");
+    return enif_make_atom(env, "error_init_text_classifier_failed");
 #endif
   }
 
@@ -237,7 +237,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     }
 
     arg_array[0] = enif_make_binary(env, &tweet);
-    ERL_NIF_TERM tuple2 = nif_detect_lang(env, 1, arg_array);
+    ERL_NIF_TERM tuple2 = nif_classify_text(env, 1, arg_array);
     if (enif_is_atom(env, tuple2)) {
 #ifndef LD_DEBUG
       return enif_make_atom(env, "error");
@@ -251,7 +251,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 #ifndef LD_DEBUG
       return enif_make_atom(env, "error");
 #else
-      return enif_make_atom(env, "error_undefined_detect_lang_output");
+      return enif_make_atom(env, "error_undefined_text_classifier_output");
 #endif
 */
     }
@@ -362,7 +362,7 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
     }
 
     arg_array[0] = enif_make_binary(env, &tweet);
-    ERL_NIF_TERM tuple2 = nif_detect_lang(env, 1, arg_array);
+    ERL_NIF_TERM tuple2 = nif_classify_text(env, 1, arg_array);
     if (enif_is_atom(env, tuple2)) {
 #ifndef LD_DEBUG
       return enif_make_atom(env, "error");
@@ -385,9 +385,9 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
 static ErlNifFunc nif_funcs[] =
 {
   {"init_c", 1, nif_init_c},
-  {"detect_lang", 1, nif_detect_lang},
+  {"classify_text", 1, nif_classify_text},
   {"test_twitter_timeline", 0, nif_test_twitter_timeline},
   {"test_twitter_timeline", 1, nif_test_twitter_timeline},
   {"test_from_file", 1, nif_test_from_file},
 };
-ERL_NIF_INIT(lang, nif_funcs, NULL, NULL, NULL, NULL)
+ERL_NIF_INIT(text_class, nif_funcs, NULL, NULL, NULL, NULL)

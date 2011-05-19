@@ -11,7 +11,7 @@
 int main(int argc, char* argv[]) {
 
   if (argc != 3 && argc != 4) {
-    std::cout << "Usage:\t" << argv[0] << " \n\t<input_type (0 - interactive, 1 - file_input, 2 - tweet, 3 - many_tweets) \n\t<test_type (0 - test_utils, 1 - tokenize, 2 - tolower)> \n\t<input/file_name/handle>\n";
+    std::cout << "Usage:\t" << argv[0] << " \n\t<input_type (0 - interactive, 1 - file_input, 2 - tweet, 3 - many_tweets) \n\t<test_type (0 - test, 1 - tokenize, 2 - tolower)> \n\t<input/file_name/handle>\n";
     return -1;
   }
 

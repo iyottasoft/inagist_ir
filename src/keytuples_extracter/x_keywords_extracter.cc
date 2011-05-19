@@ -55,12 +55,13 @@ int main(int argc, char *argv[]) {
 
   char buffer[1024];
   std::string script;
+  std::string safe_status;
   std::set<std::string> keywords_set;
 
   std::set<std::string>::iterator tweets_iter;
   for (tweets_iter = tweets.begin(); tweets_iter != tweets.end(); tweets_iter++) {
     strcpy(buffer, (char *) (*tweets_iter).c_str());
-    ke.GetKeywords(buffer, keywords_set);
+    ke.GetKeywords(buffer, safe_status, script, keywords_set);
     km.PopulateFreqMap(keywords_set);
     keywords_set.clear();
     memset(buffer, 0, 1024);
