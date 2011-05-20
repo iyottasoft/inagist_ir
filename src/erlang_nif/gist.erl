@@ -1,6 +1,6 @@
 -module(gist).
 
--export([init/0, init_c/3, get_gist/1, test_init/0, test/0, test_user/1, test_file/1, test_gist_twitter_timeline/0, test_gist_twitter_timeline/1, stress_test_gist/1]).
+-export([init/0, init_c/3, get_gist/1, test_init/0, test/0, test_user/1, test_file/1, test_gist_twitter_timeline/0, test_gist_twitter_timeline/1, stress_test/1]).
 
 init() ->
   erlang:load_nif("../../lib/libgist_erl", 0).
@@ -54,6 +54,6 @@ test_file(_file) ->
     true -> [io:format("~p~n",[X]) || X <- Tuple2_list]
   end.
 
-stress_test_gist([N]) ->
+stress_test([N]) ->
   Number = list_to_integer(atom_to_list(N)),
   lists:foreach(fun(X) -> timer:sleep(500), test(), io:format("~p requests done~n",[X]) end, lists:seq(1,Number)).
