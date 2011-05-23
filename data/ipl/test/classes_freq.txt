@@ -1,3 +1,4 @@
-all_classes=2
-delhidaredevils=1
+KKRiders=1
+all_classes=4
+delhidaredevils=2
 rajasthanroyals=1

@@ -1,0 +1,17 @@
+AdIQuity=2
+AlanTuringYear=2
+TechCrunch=2
+UofA=1
+careercup=1
+cstheory=1
+googleos=1
+hackernewsbot=1
+hasgeek=1
+howtogeek=1
+jackerhack=1
+medianama=1
+noufalibrahim=1
+pluggdin=1
+slashdot=1
+swaroopch=1
+ydn=1
