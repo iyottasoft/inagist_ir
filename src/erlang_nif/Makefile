@@ -15,7 +15,7 @@ ERL_LIBS = -lstdc++ -lei -lerl_interface
 
 LIBS = ${LIB_DIR}/libstem_nif.a ${LIB_DIR}/libstem_erl.so ${LIB_DIR}/libkeytuples_nif.a ${LIB_DIR}/libkeytuples_erl.so ${LIB_DIR}/libtrends_erl.so ${LIB_DIR}/libtext_class_erl.so ${LIB_DIR}/liblang_erl.so ${LIB_DIR}/libgist_erl.so ${LIB_DIR}/libchannels_erl.so
 
-all: stem keytuples trends lang text_class gist channels
+all: tweets stem keytuples trends lang text_class gist channels
 	@echo "build done!"
 
 clean:
