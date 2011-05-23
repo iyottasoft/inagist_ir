@@ -52,6 +52,9 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
+  cmd = "touch " + config.freqs_file;
+  system(cmd.c_str());
+
   if (config.classes.empty()) {
     std::cerr << "ERROR: class structs could not be read from config file: " << config_file_name << std::endl;
   } else {

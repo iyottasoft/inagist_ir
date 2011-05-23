@@ -19,6 +19,7 @@ typedef struct _class_struct {
 
 typedef struct _config_struct {
   std::string test_data_file;
+  std::string freqs_file; // this is same data as test_data expect this file is updated repeatedly
   std::set<ClassStruct> classes;
   std::set<ClassStruct>::iterator iter;
 } Config;

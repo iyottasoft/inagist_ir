@@ -12,6 +12,7 @@ ConfigReader::~ConfigReader() {
 
 int ConfigReader::Clear(Config& config) {
   config.test_data_file.clear();
+  config.freqs_file.clear();
   if (!config.classes.empty()) {
     config.classes.clear();
   }
@@ -55,6 +56,8 @@ int ConfigReader::Read(const char* config_file_name, Config& config) {
       //std::cout << value << std::endl;
       if (key.compare(0, 8, "testdata") == 0) {
         config.test_data_file = value;
+      } else if (key.compare(0, 11, "frequencies") == 0) {
+        config.freqs_file = value;
       } else {
         line_count++;
         if (key.compare(0, 5, "class") == 0) {

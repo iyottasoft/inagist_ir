@@ -645,9 +645,9 @@ int Classifier::GetTestData(const unsigned int& input_type,
       }
       break;
     case 1:
-      if (WriteTestData(class_freq_map, m_config.test_data_file.c_str()) < 0) {
+      if (WriteTestData(class_freq_map, m_config.freqs_file.c_str()) < 0) {
         std::cerr << "ERROR: could not write test data to file: " \
-                  << m_config.test_data_file << std::endl;
+                  << m_config.freqs_file << std::endl;
         ret_val = -1;
       }
       break;
