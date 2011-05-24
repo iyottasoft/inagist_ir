@@ -1,24 +1,26 @@
 include ../Makefile.incl
-PROJECT = followanalyser
+PROJECT = profiler
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL}
+CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../utils -I../keytuples_extracter -I../language_detector -I../ngrams_generator -I../classifier -I../script_detector
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../utils -I../script_detector -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -lkeytuplesextracter -llanguagedetector -lngramsgenerator -lclassifier -lutils -lscriptdetector -ltwitterapi -lcurlrequestmaker -ljsonparser -lcurl
+LIBS = -l${PROJECT} -ltextclassifier -llanguagedetector -lclassifier -lngramsgenerator -lkeytuplesextracter -lutils -lscriptdetector -linagistapi -ltwitterapi -lcurlrequestmaker -ljsonparser -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
-BINS = ${BIN_DIR}/x_dashboard_populater \
-       ${BIN_DIR}/t_get_followers
+BINS = ${BIN_DIR}/x_profiler
+#${BIN_DIR}/x_dashboard_populater \
+#${BIN_DIR}/t_get_followers
 
-OBJS = follow_analyser.o
+#OBJS = profiler.o follow_analyser.o
+OBJS = profiler.o
 
 all: ${LIB} ${BINS}
 	@echo "copying dashboard_generator.py to ${BIN_DIR}"
@@ -43,14 +45,19 @@ ${LIB}: ${OBJS}
 	@echo "compiling ..." $< "..."
 	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
-${BIN_DIR}/x_dashboard_populater: x_dashboard_populater.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_dashboard_populater
-	@echo "done!"
+#${BIN_DIR}/x_dashboard_populater: x_dashboard_populater.o ${LIB}
+#	@echo "creating binary:" $@
+#	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_dashboard_populater
+#	@echo "done!"
 
-${BIN_DIR}/t_get_followers: t_get_followers.o ${LIB}
+#${BIN_DIR}/t_get_followers: t_get_followers.o ${LIB}
+#	@echo "creating binary:" $@
+#	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_get_followers
+#	@echo "done!"
+
+${BIN_DIR}/x_profiler: x_profiler.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_get_followers
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_profiler
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

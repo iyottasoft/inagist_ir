@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  cmd = "touch " + config.freqs_file;
+  std::string cmd = "touch " + config.freqs_file;
   system(cmd.c_str());
 
   if (config.classes.empty()) {

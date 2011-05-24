@@ -4,6 +4,7 @@
 #include <cstring>
 #include "twitter_searcher.h"
 #include "twitter_api.h"
+#include "inagist_api.h"
 
 #ifdef DEBUG
 #if DEBUG>0
@@ -67,7 +68,11 @@ int Classifier::Init(std::string config_file_name, bool ignore_history) {
       std::cout << "WARNING: continuing without the text classes freq data\n";
     }
   } else {
-    std::cout << "INFO: ignoring historical data. plain vanilla classification\n";
+#ifdef CLASSIFIER_DEBUG
+    if (CLASSIFIER_DEBUG > 1) {
+      std::cout << "INFO: ignoring historical data. plain vanilla classification\n";
+    }
+#endif
   }
 
   if (m_corpus_manager.LoadCorpusMap(class_name_file_map) < 0) {
@@ -402,6 +407,7 @@ int Classifier::GetTrainingData(const std::string& handle,
   unsigned int count_temp = 0;
 
   if (get_user_info) {
+    /*
     std::string user_info;
     if (inagist_api::TwitterAPI::GetUserInfo(handle, user_info) < 0) {
       std::cerr << "ERROR: could not get user info for handle: " << handle << std::endl;
@@ -410,6 +416,20 @@ int Classifier::GetTrainingData(const std::string& handle,
         std::cerr << "ERROR: could not find ngrams for user info string: " << user_info << std::endl;
       } else {
         count += user_info_count;
+      }
+    }
+    */
+    std::set<std::string> user_info_tokens;
+    if (inagist_api::TwitterAPI::GetUserInfo(handle, user_info_tokens) < 0) {
+      std::cerr << "ERROR: could not get user info token for handle: " << handle << std::endl;
+    } else {
+      std::set<std::string>::iterator tokens_iter;
+      for (tokens_iter = user_info_tokens.begin(); tokens_iter != user_info_tokens.end(); tokens_iter++) {
+        if (corpus.find(*tokens_iter) != corpus.end()) {
+          corpus[*tokens_iter] += 1;
+        } else {
+          corpus[*tokens_iter] = 1;
+        }
       }
     }
   }
@@ -421,9 +441,25 @@ int Classifier::GetTrainingData(const std::string& handle,
     if (0 == user_info_count) {
       return -1;
     } else {
+#ifdef CLASSIFIER_DEBUG
+    if (CLASSIFIER_DEBUG > 1) {
       std::cout << "INFO: corpus of size " << count \
                 << " generated from user info of handle: " << handle << std::endl;
+    }
+#endif
       return user_info_count;
+    }
+  }
+
+  if (get_user_info) {
+    if (inagist_api::InagistAPI::GetTrendingTweets(handle, tweets) < 0) {
+      std::cerr << "WARNING: could not get inagist trending tweets for user: " \
+                << handle << std::endl;
+    }
+
+    if (inagist_api::InagistAPI::GetArchievedTweets(handle, tweets) < 0) {
+      std::cerr << "WARNING: could not get inagist trending tweets for user: " \
+                << handle << std::endl;
     }
   }
 
@@ -439,9 +475,13 @@ int Classifier::GetTrainingData(const std::string& handle,
       }
     }
     output_num_docs += tweets.size();
-    std::cout << "corpus of size " << count \
-              << " generated from " << tweets.size() \
-              << " tweets of handle: " << handle << std::endl;
+#ifdef CLASSIFIER_DEBUG
+    if (CLASSIFIER_DEBUG > 1) {
+      std::cout << "corpus of size " << count \
+                << " generated from " << tweets.size() \
+                << " tweets of handle: " << handle << std::endl;
+    }
+#endif
     tweets.clear();
   }
 

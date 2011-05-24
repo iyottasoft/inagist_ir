@@ -31,6 +31,8 @@ class TextClassifier : public Classifier {
   int ClearDependencies();
   /* end */
 
+  int Classify(Corpus& corpus, std::string& text_class);
+
   int Classify(std::set<std::string>& words_set,
                  std::string& text_class,
                  bool ignore_case=false);

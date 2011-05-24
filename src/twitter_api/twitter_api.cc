@@ -185,7 +185,29 @@ int TwitterAPI::GetListMembers(const std::string& user_name,
   return members.size();
 }
 
-int TwitterAPI::GetUserInfo(const std::string& handle, std::string& info) {
+int TwitterAPI::GetUserInfo(const std::string& handle, std::string& user_info) {
+
+  std::set<std::string> user_info_tokens;
+  if (GetUserInfo(handle, user_info_tokens) < 0) {
+    std::cerr << "ERROR: could not get user info tokens for: " << handle << std::endl;
+    return -1;
+  } else {
+    if (user_info_tokens.empty())
+      return 0;
+    std::set<std::string>::iterator set_iter;
+    set_iter = user_info_tokens.begin();
+    user_info.assign(*set_iter);
+    set_iter++;
+    for (; set_iter != user_info_tokens.end(); set_iter++) {
+      user_info += " ";
+      user_info += *set_iter;
+    }
+  }
+
+  return 0;
+}
+
+int TwitterAPI::GetUserInfo(const std::string& handle, std::set<std::string>& user_info_tokens) {
 
   inagist_api::CurlRequestMaker curl_request_maker;
 
@@ -204,18 +226,16 @@ int TwitterAPI::GetUserInfo(const std::string& handle, std::string& info) {
       } else {
         JSONObject json_object = json_value->AsObject();
         if (json_object.find("name") != json_object.end() && json_object["name"]->IsString()) {
-          info = json_object["name"]->AsString();
-          info += ". ";
+          user_info_tokens.insert(json_object["name"]->AsString());
         }
         if (json_object.find("description") != json_object.end() && json_object["description"]->IsString()) {
-          info += json_object["description"]->AsString();
-          info += ". ";
+          user_info_tokens.insert(json_object["description"]->AsString());
         }
         if (json_object.find("url") != json_object.end() && json_object["url"]->IsString()) {
-          info += json_object["url"]->AsString();
-          info += " ";
+          user_info_tokens.insert(json_object["url"]->AsString());
         }
       }
+      delete json_value;
     }
   }
 

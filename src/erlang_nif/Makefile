@@ -15,7 +15,7 @@ ERL_LIBS = -lstdc++ -lei -lerl_interface
 
 LIBS = ${LIB_DIR}/libstem_nif.a ${LIB_DIR}/libstem_erl.so ${LIB_DIR}/libkeytuples_nif.a ${LIB_DIR}/libkeytuples_erl.so ${LIB_DIR}/libtrends_erl.so ${LIB_DIR}/libtext_class_erl.so ${LIB_DIR}/liblang_erl.so ${LIB_DIR}/libgist_erl.so ${LIB_DIR}/libchannels_erl.so
 
-all: tweets stem keytuples trends lang text_class gist channels
+all: tweets stem keytuples trends lang text_class gist channels profile
 	@echo "build done!"
 
 clean:
@@ -134,4 +134,17 @@ gist:
 	@echo "done!"
 	@echo "compiling gist.erl"
 	@erlc gist.erl
+	@echo "done!" 
+
+profile:
+	@echo "creating library ${LIB_DIR}/libprofile_nif.a ..."
+	@g++ ${CXXFLAGS} -fPIC -shared -c -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc ../language_detector/language_detector.cc ../text_classifier/text_classifier.cc ../profiler/profiler.cc profile.cc -I../../include/utfcpp -I../script_detector -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../profiler
+	@ar -r ${LIB_DIR}/libprofile_nif.a keytuples_config.o keytuples_extracter.o language_detector.o text_classifier.o profiler.o profile.o
+	@ranlib ${LIB_DIR}/libprofile_nif.a
+	@echo "done!"
+	@echo "creating erlang library file libprofile_erl.so ..."
+	@gcc -fPIC -shared -o ../../lib/libprofile_erl.so profile_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L ${LIB_DIR} -lprofile_nif -lclassifier -lngramsgenerator -linagistapi -ltwitterapi -lutils -lscriptdetector -lcurlrequestmaker -ljsonparser -lcurl
+	@echo "done!"
+	@echo "compiling profile.erl"
+	@erlc profile.erl
 	@echo "done!" 

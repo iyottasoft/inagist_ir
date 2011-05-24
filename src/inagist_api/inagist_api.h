@@ -15,14 +15,14 @@ namespace inagist_api {
 class InagistAPI {
  public:
   InagistAPI();
-  ~InagistAPI();
-  int GetTrendingTweets(const std::string& handle, std::set<std::string>& tweets);
-  int GetArchievedTweets(const std::string& handle, std::set<std::string>& tweets);
-  int GetTweetsFromUrl(const std::string& url, std::set<std::string>& tweets);
+  virtual ~InagistAPI();
+  static int GetTrendingTweets(const std::string& handle, std::set<std::string>& tweets);
+  static int GetArchievedTweets(const std::string& handle, std::set<std::string>& tweets);
+  static int GetTweetsFromUrl(const std::string& url, std::set<std::string>& tweets);
 
  private:
 
-  DISALLOW_COPY_AND_ASSIGN(InagistAPI); 
+  //DISALLOW_COPY_AND_ASSIGN(InagistAPI);
 };
 
 } // inagist_api

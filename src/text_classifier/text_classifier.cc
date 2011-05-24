@@ -181,12 +181,24 @@ int TextClassifier::Classify(std::set<std::string>& words_set,
     test_corpus[*set_iter] = 1;
   }
 
-  if (NaiveBayesClassifier::GuessClass(m_corpus_manager.m_corpus_map,
+  int ret_value = 0;
+  if ((ret_value = Classify(test_corpus, text_class)) < 0) {
+    std::cerr << "ERROR: could not classify the given corpus\n";
+  }
+
+  test_corpus.clear();
+
+  return ret_value;
+}
+
+int TextClassifier::Classify(Corpus& corpus, std::string& text_class) {
+
+  int ret_value = 0;
+  if ((ret_value = NaiveBayesClassifier::GuessClass(m_corpus_manager.m_corpus_map,
                                        m_corpus_manager.m_classes_freq_map,
-                                       test_corpus,
-                                       text_class) < 0) {
+                                       corpus,
+                                       text_class)) < 0) {
     std::cout << "ERROR: naive bayes classifiers could not guess the text class\n";
-    test_corpus.clear();
     return -1;
   }
 
@@ -195,9 +207,7 @@ int TextClassifier::Classify(std::set<std::string>& words_set,
     std::cout << "guess_class: " << text_class << std::endl;
 #endif
 
-  test_corpus.clear();
-
-  return 1;
+  return ret_value;
 }
 
 int TextClassifier::GetWordFrequencies(const std::string& input_file_name,
@@ -292,6 +302,7 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
     }
     hashtags_set.clear();
   }
+/*
   if (keyphrases_set.size() > 0) {
 #ifdef TC_DEBUG
     std::cout << "keyphrases:\n";
@@ -301,16 +312,17 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
 #ifdef TC_DEBUG
       std::cout << *set_iter << std::endl;
 #endif
-/*
+*//*
       if (inagist_utils::Tokenize(*set_iter, words) > 1) {
         for (words_iter = words.begin(); words_iter != words.end(); words_iter++) {
           corpus_set.insert(*words_iter);
         }
       }
-*/
+*//*
     }
     keyphrases_set.clear();
   }
+*/
   buffer[0] = '\0';
 
   int words_count = corpus_set.size();
