@@ -5,7 +5,7 @@
 init() ->
   erlang:load_nif("../../lib/libprofile_erl", 0).
 
-init_c(_keytuples_extracter_config_file_path, _lang_detect_config_file_path, _text_classifier_config_file_path) ->
+init_c(_keytuples_extracter_config_file_path, _lang_detect_config_file_path, _channels_classifier_config_file_path) ->
   "NIF library not loaded".
 
 profile(_twitter_handle) ->
@@ -17,7 +17,7 @@ profile(_twitter_handle, _output_file_name) ->
 test_init() ->
   init_c(<<"../../configs/keytuples_extracter.config">>,
          <<"../../configs/language_detection.config">>,
-         <<"../../configs/text_classifier.config">>).
+         <<"../../configs/channels_classifier.config">>).
 
 test() ->
   Tuples_list = profile(<<"balajiworld">>),

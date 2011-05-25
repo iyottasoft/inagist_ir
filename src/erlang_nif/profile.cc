@@ -53,7 +53,7 @@ int Profile(const char* twitter_handle,
   std::string twitter_handle_str = std::string(twitter_handle);
   std::string class_names_str;
   //std::string profile_name_str = std::string(profile_name);
-  std::string profile_name_str = std::string("/tmp/1");
+  std::string profile_name_str = std::string("/home/balaji/ir_cpp/data/profile.txt");
   int ret_value = 0;
   if ((ret_value = g_profiler.Profile(twitter_handle_str,
                          class_names_str,
