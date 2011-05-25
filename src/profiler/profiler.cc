@@ -22,6 +22,13 @@ int Profiler::Init(const std::string &keytuples_extracter_config,
                    const std::string &text_classifier_config,
                    const std::string &language_detection_config) {
 
+  bool ignore_history = false;
+  if (m_text_classifier.Init(text_classifier_config, ignore_history=false) < 0) {
+    std::cerr << "ERROR: could not initialize text classifier with config: " \
+              << text_classifier_config << std::endl;
+    return -1;
+  }
+
   int my_argc = 1;
   char* my_argv[1];
   char* temp_location = (char*) malloc(255);
