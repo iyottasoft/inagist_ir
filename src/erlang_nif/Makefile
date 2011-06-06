@@ -5,17 +5,15 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../include/porter_stemmer -I../curl_request_maker -I../twitter_api/ -I../utils -I../stemmer -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../keytuples_extracter -I../trends_manager -I../channel_manager -I../gist_maker -I.
-
 LIB_DIR = ../../lib
 
 ERL_INCLUDE_DIR = -I/usr/local/lib/erlang/usr/include/ -I/usr/local/lib/erlang/lib/erl_interface-3.6.5/include
 ERL_LIB_DIR = -L/usr/local/lib/erlang/lib/erl_interface-3.6.5/lib
 ERL_LIBS = -lstdc++ -lei -lerl_interface
 
-LIBS = ${LIB_DIR}/libstem_nif.a ${LIB_DIR}/libstem_erl.so ${LIB_DIR}/libkeytuples_nif.a ${LIB_DIR}/libkeytuples_erl.so ${LIB_DIR}/libtrends_erl.so ${LIB_DIR}/libtext_class_erl.so ${LIB_DIR}/liblang_erl.so ${LIB_DIR}/libgist_erl.so ${LIB_DIR}/libchannels_erl.so
+LIBS = ${LIB_DIR}/libtweets.a ${LIB_DIR}/libstem_nif.a ${LIB_DIR}/libstem_erl.so ${LIB_DIR}/libkeytuples_nif.a ${LIB_DIR}/libkeytuples_erl.so ${LIB_DIR}/libtrends_nif.a ${LIB_DIR}/libtrends_erl.so ${LIB_DIR}/liblang_nif.a ${LIB_DIR}/liblang_erl.so ${LIB_DIR}/libtext_class_nif.a ${LIB_DIR}/libtext_class_erl.so ${LIB_DIR}/libgist_nif.a ${LIB_DIR}/libgist_erl.so ${LIB_DIR}/libchannels_nif.a ${LIB_DIR}/libchannels_erl.so ${LIB_DIR}/libprofile_nif.a ${LIB_DIR}/libprofile_nif.so
 
-all: tweets stem keytuples trends lang text_class gist channels profile
+all: tweets stem keywords keytuples trends lang text_class gist channels profile
 	@echo "build done!"
 
 clean:
@@ -38,10 +36,10 @@ stem:
 	@echo "done!"
 	@echo "creating erlang library file ${LIB_DIR}/libstem_erl.so ..."
 	@gcc -fPIC -shared -o ${LIB_DIR}/libstem_erl.so stem_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I../../include/json_parser -I../../include/porter_stemmer -I../../include/utfcpp -I../stemmer -I../script_detector -I../utils -I../curl_request_maker -I../twitter_api -I. -L${LIB_DIR} -lstem_nif -lstemmer -lporterstemmer -ltweets -ltwitterapi -lutils -lscriptdetector -ljsonparser -lcurlrequestmaker -lcurl
-	@echo "done!" 
+	@echo "done!"
 	@echo "compiling stem.erl"
 	@erlc stem.erl
-	@echo "done!" 
+	@echo "done!"
 
 keywords:
 	@echo "creating library ${LIB_DIR}/libkeywords_nif.a ..."
@@ -55,7 +53,7 @@ keywords:
 	@echo "done!"
 	@echo "compiling keywords.erl"
 	@erlc keywords.erl
-	@echo "done!" 
+	@echo "done!"
 
 keytuples:
 	@echo "creating library ${LIB_DIR}/libkeytuples_nif.a ..."
@@ -69,7 +67,7 @@ keytuples:
 	@echo "done!"
 	@echo "compiling keytuples.erl"
 	@erlc keytuples.erl
-	@echo "done!" 
+	@echo "done!"
 
 trends:
 	@echo "creating library ${LIB_DIR}/libtrends_nif.a ..."
@@ -82,7 +80,7 @@ trends:
 	@echo "done!"
 	@echo "compiling trends.erl"
 	@erlc trends.erl
-	@echo "done!" 
+	@echo "done!"
 
 lang:
 	@echo "creating library ${LIB_DIR}/liblang_nif.a ..."
@@ -91,11 +89,11 @@ lang:
 	@ranlib ${LIB_DIR}/liblang_nif.a
 	@echo "done!"
 	@echo "creating erlang library file ${LIB_DIR}/liblang_erl.so ..."
-	@gcc -fPIC -shared -o ${LIB_DIR}/liblang_erl.so lang_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L${LIB_DIR} -llang_nif -lclassifier -lngramsgenerator -lutils -lscriptdetector -ltweets -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
-	@echo "done!" 
+	@gcc -fPIC -shared -o ${LIB_DIR}/liblang_erl.so lang_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L${LIB_DIR} -llang_nif -lclassifier -lngramsgenerator -lutils -lscriptdetector -ltweets -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+	@echo "done!"
 	@echo "compiling lang.erl"
 	@erlc lang.erl
-	@echo "done!" 
+	@echo "done!"
 
 text_class:
 	@echo "creating library ${LIB_DIR}/libtext_class_nif.a ..."
@@ -104,11 +102,11 @@ text_class:
 	@ranlib ${LIB_DIR}/libtext_class_nif.a
 	@echo "done!"
 	@echo "creating erlang library file ${LIB_DIR}/libtext_class_erl.so ..."
-	@gcc -fPIC -shared -o ../../lib/libtext_class_erl.so text_class_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L ${LIB_DIR} -ltext_class_nif -lclassifier -lutils -lscriptdetector -ltweets -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
-	@echo "done!" 
+	@gcc -fPIC -shared -o ../../lib/libtext_class_erl.so text_class_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L ${LIB_DIR} -ltext_class_nif -lclassifier -lutils -lscriptdetector -ltweets -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+	@echo "done!"
 	@echo "compiling text_class.erl"
 	@erlc text_class.erl
-	@echo "done!" 
+	@echo "done!"
 
 channels:
 	@echo "creating library ${LIB_DIR}/libchannels_nif.a ..."
@@ -118,10 +116,10 @@ channels:
 	@echo "done!"
 	@echo "creating erlang library file libchannels_erl.so ..."
 	@gcc -fPIC -shared -o ${LIB_DIR}/libchannels_erl.so channels_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L ${LIB_DIR} -lchannels_nif -lchannelmanager -lutils -lscriptdetector -ltweets -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
-	@echo "done!" 
+	@echo "done!"
 	@echo "compiling channels.erl"
 	@erlc channels.erl
-	@echo "done!" 
+	@echo "done!"
 
 gist:
 	@echo "creating library ${LIB_DIR}/libgist_nif.a ..."
@@ -130,21 +128,21 @@ gist:
 	@ranlib ${LIB_DIR}/libgist_nif.a
 	@echo "done!"
 	@echo "creating erlang library file libgist_erl.so ..."
-	@gcc -fPIC -shared -o ../../lib/libgist_erl.so gist_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L ${LIB_DIR} -lgist_nif -lclassifier -lngramsgenerator -ltweets -ltwitterapi -lutils -lscriptdetector -lcurlrequestmaker -ljsonparser -lcurl
+	@gcc -fPIC -shared -o ../../lib/libgist_erl.so gist_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L ${LIB_DIR} -lgist_nif -lclassifier -lngramsgenerator -ltweets -ltwitterapi -linagistapi -lutils -lscriptdetector -lcurlrequestmaker -ljsonparser -lcurl
 	@echo "done!"
 	@echo "compiling gist.erl"
 	@erlc gist.erl
-	@echo "done!" 
+	@echo "done!"
 
 profile:
 	@echo "creating library ${LIB_DIR}/libprofile_nif.a ..."
-	@g++ ${CXXFLAGS} -fPIC -shared -c -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc ../language_detector/language_detector.cc ../text_classifier/text_classifier.cc ../profiler/profiler.cc profile.cc -I../../include/utfcpp -I../script_detector -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../profiler
-	@ar -r ${LIB_DIR}/libprofile_nif.a keytuples_config.o keytuples_extracter.o language_detector.o text_classifier.o profiler.o profile.o
+	@g++ ${CXXFLAGS} -fPIC -shared -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../gist_maker -I../profiler -c profile.cc
+	@ar -r ${LIB_DIR}/libprofile_nif.a profile.o
 	@ranlib ${LIB_DIR}/libprofile_nif.a
 	@echo "done!"
 	@echo "creating erlang library file libprofile_erl.so ..."
-	@gcc -fPIC -shared -o ../../lib/libprofile_erl.so profile_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L ${LIB_DIR} -lprofile_nif -lclassifier -lngramsgenerator -linagistapi -ltwitterapi -lutils -lscriptdetector -lcurlrequestmaker -ljsonparser -lcurl
+	@gcc -fPIC -shared -o ../../lib/libprofile_erl.so profile_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L ${LIB_DIR} -lprofile_nif -lprofiler -lgistmaker -lclassifier -lngramsgenerator -linagistapi -ltwitterapi -lutils -lscriptdetector -lcurlrequestmaker -ljsonparser -lcurl
 	@echo "done!"
 	@echo "compiling profile.erl"
 	@erlc profile.erl
-	@echo "done!" 
+	@echo "done!"

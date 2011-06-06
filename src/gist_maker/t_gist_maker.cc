@@ -58,6 +58,11 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  if (docs.empty()) {
+    std::cerr << "WARNING: no input text found\n";
+    return 0;
+  }
+
   std::set<std::string>::iterator doc_iter;
   for (doc_iter = docs.begin(); doc_iter != docs.end(); doc_iter++) {
     doc = *doc_iter;

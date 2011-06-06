@@ -247,6 +247,7 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   std::set<std::string> hashtags_set;
   std::set<std::string> keyphrases_set;
   std::set<std::string> lang_words_set;
+  std::set<std::string> text_class_words_set;
   std::string safe_status;
   std::string script;
   if (m_keytuples_extracter.GetKeyTuples(buffer,

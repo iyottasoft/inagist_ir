@@ -8,6 +8,7 @@
 #endif
 
 #include <string>
+#include <map>
 #include <set>
 
 namespace inagist_utils {
@@ -21,6 +22,14 @@ namespace inagist_utils {
   int TestUtils(const std::string& text, unsigned int text_len);
   int Tokenize(const std::string& text, std::set<std::string>& tokens);
   int ToLower(const char* input, char* output);
+  int PipeListToMap(unsigned char* buffer, std::map<std::string, int>& map);
+  int MapToPipeList(std::map<std::string, int>& map,
+                    unsigned char* buffer, unsigned int buffer_len,
+                    unsigned int& list_len, unsigned int& list_count);
+  int PipeListToSet(unsigned char* buffer, std::set<std::string>& set);
+  int SetToPipeList(std::set<std::string>& set,
+                    unsigned char* buffer, unsigned int buffer_len,
+                    unsigned int& list_len, unsigned int& list_count);
 
  //private:
   //DISALLOW_COPY_AND_ASSIGN(StringUtils);

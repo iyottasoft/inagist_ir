@@ -21,7 +21,7 @@ test_from_file(_file_name) ->
   "NIF library not loaded for test_from_file".
 
 test_init() ->
-  init_c(<<"../../configs/text_classifier.config">>).
+  init_c(<<"../../configs/channels_classifier.config">>).
 
 test() ->
   Tuple2_list = test_twitter_timeline(),

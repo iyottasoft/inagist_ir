@@ -138,6 +138,12 @@ int CorpusManager::LoadCorpus(const std::string corpus_file_name, Corpus& corpus
     return -1;
   }
 
+  struct stat stat_struct;
+  if (stat(corpus_file_name.c_str(), &stat_struct) != 0) {
+    std::cerr << "Warning: corpus file: " << corpus_file_name << " doesn't exist\n";
+    return 0;
+  }
+
   std::ifstream ifs(corpus_file_name.c_str());
   if (!ifs) {
     std::cout << "ERROR: could not open corpus file " << corpus_file_name << std::endl;
@@ -167,7 +173,7 @@ int CorpusManager::LoadCorpus(const std::string corpus_file_name, Corpus& corpus
   }
   ifs.close();
 
-  return 0;
+  return num_docs;
 }
 
 // this is a map of class name and corresponding file names.

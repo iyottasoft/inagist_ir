@@ -181,10 +181,10 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   keyphrases[0] = '\0';
   int keyphrases_len = 0;
   int keyphrases_count = 0;
-  char text_class_buffer[MAX_CLASS_NAME];
-  text_class_buffer[0] = '\0';
-  char sub_class_buffer[MAX_CLASS_NAME];
-  sub_class_buffer[0] = '\0';
+  char text_classes_buffer[MAX_CLASS_NAME];
+  text_classes_buffer[0] = '\0';
+  int text_classes_len = 0;
+  int text_classes_count = 0;
   char sentiment_buffer[MAX_CLASS_NAME];
   sentiment_buffer[0] = '\0';
 
@@ -199,8 +199,8 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
                   &hashtags_len, &hashtags_count,
                   (char *) keyphrases, MAX_BUFFER_LEN,
                   &keyphrases_len, &keyphrases_count,
-                  (char *) text_class_buffer, MAX_BUFFER_LEN,
-                  (char *) sub_class_buffer, MAX_BUFFER_LEN,
+                  (char *) text_classes_buffer, MAX_BUFFER_LEN,
+                  &text_classes_len, &text_classes_count,
                   (char *) sentiment_buffer, MAX_BUFFER_LEN)) < 0) {
 #ifndef GIST_DEBUG
     return enif_make_atom(env, "error");
@@ -219,13 +219,11 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary hashtags_bin;
   ErlNifBinary keyphrases_bin;
   ErlNifBinary text_class_bin;
-  ErlNifBinary sub_class_bin;
   ErlNifBinary sentiment_bin;
   ERL_NIF_TERM safe_status_term; 
   ERL_NIF_TERM script_term; 
   ERL_NIF_TERM lang_term; 
   ERL_NIF_TERM text_class_term; 
-  ERL_NIF_TERM sub_class_term; 
   ERL_NIF_TERM sentiment_term; 
 
   len = strlen(safe_status);
@@ -395,9 +393,9 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     }
   }
 
-  len = strlen(text_class_buffer);
+  len = strlen(text_classes_buffer);
   if (len < 1) {
-    strcpy(text_class_buffer, "00");
+    strcpy(text_classes_buffer, "00");
     len = 2;
   }
 #ifdef ERLANG_R14B02 
@@ -413,31 +411,9 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #endif
   }
   for (i=0; i<len; i++) {
-    text_class_bin.data[i] = *(text_class_buffer + i);
+    text_class_bin.data[i] = *(text_classes_buffer + i);
   }
   text_class_term = enif_make_binary(env, &text_class_bin);
-
-  len = strlen(sub_class_buffer);
-  if (len < 1) {
-    strcpy(sub_class_buffer, "00");
-    len = 2;
-  }
-#ifdef ERLANG_R14B02
-  ret_val = enif_alloc_binary(len, &sub_class_bin);
-#else
-  ret_val = enif_alloc_binary(env, len, &sub_class_bin);
-#endif
-  if (ret_val < 0) {
-#ifndef GIST_DEBUG
-    return enif_make_atom(env, "error");
-#else
-    return enif_make_atom(env, "error_sub_class_bin_alloc");
-#endif
-  }
-  for (i=0; i<len; i++) {
-    sub_class_bin.data[i] = *(sub_class_buffer + i);
-  }
-  sub_class_term = enif_make_binary(env, &sub_class_bin);
 
   start = sentiment_buffer;
   end = strstr(start, "|");
@@ -465,7 +441,7 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   }
   sentiment_term = enif_make_binary(env, &sentiment_bin);
 
-  return enif_make_tuple9(env, safe_status_term, script_term, lang_term, keywords_list, hashtags_list, keyphrases_list, text_class_term, sub_class_term, sentiment_term);
+  return enif_make_tuple8(env, safe_status_term, script_term, lang_term, keywords_list, hashtags_list, keyphrases_list, text_class_term, sentiment_term);
 
 }
 
@@ -532,8 +508,8 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   unsigned int i = 0;
   unsigned int tweet_len = 0;
   ERL_NIF_TERM arg_array[1]; 
-  ERL_NIF_TERM tuple9;
-  ERL_NIF_TERM tuple9_list = enif_make_list(env, 0);
+  ERL_NIF_TERM tuple8;
+  ERL_NIF_TERM tuple8_list = enif_make_list(env, 0);
   unsigned int error_count = 0;
 
   while (tweet_start && tweet_end && *tweet_end != '\0') {
@@ -570,11 +546,11 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     }
 
     arg_array[0] = enif_make_binary(env, &tweet);
-    tuple9 = nif_get_gist(env, 1, arg_array);
-    if (enif_is_atom(env, tuple9)) {
+    tuple8 = nif_get_gist(env, 1, arg_array);
+    if (enif_is_atom(env, tuple8)) {
       error_count++;
     } else {
-      tuple9_list = enif_make_list_cell(env, tuple9, tuple9_list);
+      tuple8_list = enif_make_list_cell(env, tuple8, tuple8_list);
     }
     *tweet_end = '|';
     tweet_start = tweet_end + 1;
@@ -582,7 +558,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   tweet_start = NULL;
   tweet_end = NULL;
 
-  return tuple9_list;
+  return tuple8_list;
 }
 
 ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
@@ -647,8 +623,8 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
   unsigned int i = 0;
   unsigned int tweet_len = 0;
   ERL_NIF_TERM arg_array[1]; 
-  ERL_NIF_TERM tuple9;
-  ERL_NIF_TERM tuple9_list = enif_make_list(env, 0);
+  ERL_NIF_TERM tuple8;
+  ERL_NIF_TERM tuple8_list = enif_make_list(env, 0);
   unsigned int error_count = 0;
 
   while (tweet_start && tweet_end && *tweet_end != '\0') {
@@ -685,11 +661,11 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
     }
 
     arg_array[0] = enif_make_binary(env, &tweet);
-    tuple9 = nif_get_gist(env, 1, arg_array);
-    if (enif_is_atom(env, tuple9)) {
+    tuple8 = nif_get_gist(env, 1, arg_array);
+    if (enif_is_atom(env, tuple8)) {
       error_count++;
     } else {
-      tuple9_list = enif_make_list_cell(env, tuple9, tuple9_list);
+      tuple8_list = enif_make_list_cell(env, tuple8, tuple8_list);
     }
     *tweet_end = '|';
     tweet_start = tweet_end + 1;
@@ -697,7 +673,7 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
   tweet_start = NULL;
   tweet_end = NULL;
 
-  return tuple9_list;
+  return tuple8_list;
 }
 
 static ErlNifFunc nif_funcs[] =

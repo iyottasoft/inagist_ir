@@ -149,7 +149,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
     return -1;
   }
 
-  std::string script = "uu";
+  std::string script = "UU";
   int code_point = 0;
   std::string script_temp;
   int script_count = 0;

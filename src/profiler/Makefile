@@ -4,11 +4,11 @@ CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../utils -I../script_detector -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../inagist_api -I../utils -I../script_detector -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../gist_maker
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -ltextclassifier -llanguagedetector -lclassifier -lngramsgenerator -lkeytuplesextracter -lutils -lscriptdetector -linagistapi -ltwitterapi -lcurlrequestmaker -ljsonparser -lcurl
+LIBS = -l${PROJECT} -lgistmaker -lclassifier -lngramsgenerator -lutils -lscriptdetector -linagistapi -ltwitterapi -lcurlrequestmaker -ljsonparser -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
@@ -18,6 +18,10 @@ LIB = ${LIB_DIR}/lib${PROJECT}.so
 BINS = ${BIN_DIR}/x_profiler
 #${BIN_DIR}/x_dashboard_populater \
 #${BIN_DIR}/t_get_followers
+
+#keytuples = keytuples_config.o keytuples_extracter.o
+#text = text_classifier.o
+#lang = language_detector.o
 
 #OBJS = profiler.o follow_analyser.o
 OBJS = profiler.o
@@ -35,11 +39,27 @@ clean:
 	@rm ${BIN_DIR}/dashboard_generator.py
 	@echo "done!"
 
+#${LIB}: ${keytuples} ${text} ${lang} ${OBJS}
 ${LIB}: ${OBJS}
 	@echo "creating library file ..."
+#	@${ARCHIVE} ${LIB} ${keytuples} ${text} ${lang} ${OBJS}
 	@${ARCHIVE} ${LIB} ${OBJS}
 	@ranlib ${LIB}
 	@echo "done!"
+
+#${keytuples}:
+#	@echo "compiling ../keytuples_extracter/keytuples_config.cc ..."
+#	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_config.cc
+#	@echo "compiling ../keytuples_extracter/keytuples_extracter.cc ..."
+#	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_extracter.cc
+#
+#${text}:
+#	@echo "compiling ../text_classifier/text_classifier.cc"
+#	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../text_classifier/text_classifier.cc
+#
+#${lang}:
+#	@echo "compiling ../language_detector/language_detector.cc"
+#	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../language_detector/language_detector.cc
 
 .cc.o:
 	@echo "compiling ..." $< "..."

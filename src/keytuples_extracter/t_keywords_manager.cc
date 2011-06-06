@@ -7,15 +7,20 @@
 int main(int argc, char *argv[]) {
 
   if (argc != 2) {
-    std::cout << "Usage: " << argv[0] << " <count>\n";
+    std::cerr << "Usage: " << argv[0] << " <count>\n";
     return -1;
   }
+
+#ifdef KEYWORDS_DISABLED
+    std::cerr << "KEYWORDS_DISABLED. nothing to be done.\n";
+    return -1;
+#endif // KEYWORDS_DISABLED
 
   std::string bin_location = std::string(argv[0]);
   std::string::size_type loc = bin_location.find("bin", 0);
   std::string root_dir;
   if (loc == std::string::npos) {
-    std::cout << "ERROR: could not find bin location\n" << std::endl;
+    std::cerr << "ERROR: could not find bin location\n" << std::endl;
     return -1;
   } else {
     root_dir = std::string(bin_location, 0, loc);
@@ -55,7 +60,9 @@ int main(int argc, char *argv[]) {
   while (num_docs < count && getline(std::cin, line)) {
     memset(input, 0, 255);
     strcpy(input, (char *) line.c_str());
+#ifndef KEYWORDS_DISABLED
     ke.GetKeywords(input, safe_status, script, keywords_set);
+#endif // KEYWORDS_DISABLED
     ke.PrintKeywords(keywords_set);
     km.PopulateFreqMap(keywords_set);
     ++num_docs;

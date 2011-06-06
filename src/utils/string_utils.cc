@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
+#include <cstdio>
 #include <iostream>
 #include "utf8.h"
 #include "script_detector_utils.h"
@@ -170,6 +171,138 @@ int ToLower(const char* input, char* output) {
   return 0;
 }
 
+int PipeListToMap(unsigned char* buffer, std::map<std::string, int>& map) {
+
+  if (!buffer) {
+    std::cerr << "ERROR: invalid input\n";
+    return -1;
+  }
+
+  unsigned char* start = NULL; 
+  unsigned char* end = NULL; 
+  unsigned int word_len = 0;
+  unsigned int count = 0;
+
+  start = buffer;
+  end = (unsigned char*) strchr((char*) start, '|');
+  word_len = 0;
+  std::string word;
+  while (start && end && *start != '\0') {
+    word_len = end - start; 
+    word.clear();
+    word.assign((char *) start, word_len);
+    if (map.find(word) != map.end()) {
+      map[word] += 1;
+    } else {
+      map[word] = 1;
+    }
+    count++;
+    start = end + 1;
+    end = (unsigned char*) strchr((char*) start, '|');
+  }
+  start = NULL;
+  end = NULL;
+
+  return count; 
+}
+
+// copy elements of a set to a buffer, each element separated by a '|'
+int MapToPipeList(std::map<std::string, int>& map,
+                  unsigned char* buffer, unsigned int buffer_len,
+                  unsigned int& list_len, unsigned int& list_count) {
+
+  if (!buffer) {
+    std::cerr << "ERROR: invalid input\n";
+    return -1;
+  }
+
+  if (map.empty()) {
+    return 0;
+  }
+
+  list_len = 0;
+  list_count = 0;
+  std::map<std::string, int>::iterator map_iter;
+  unsigned char* ptr = buffer;
+  std::string element;
+  for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
+    element.assign((*map_iter).first);
+    element += ",";
+    strcpy((char *) ptr, element.c_str()); 
+    ptr += element.length();
+    ptr += sprintf((char *) ptr, "%d", (*map_iter).second);
+    strcpy((char *) ptr, "|");
+    ptr += 1;
+    list_count++;
+  }
+  list_len = ptr - buffer;
+
+  return 0;
+}
+
+int PipeListToSet(unsigned char* buffer, std::set<std::string>& set) {
+
+  if (!buffer) {
+    std::cerr << "ERROR: invalid input\n";
+    return -1;
+  }
+
+  unsigned char* start = NULL; 
+  unsigned char* end = NULL; 
+  unsigned int word_len = 0;
+  unsigned int count = 0;
+
+  start = buffer;
+  end = (unsigned char*) strchr((char*) start, '|');
+  word_len = 0;
+  std::string word;
+  while (start && end && *start != '\0') {
+    word_len = end - start; 
+    word.clear();
+    word.assign((char *) start, word_len);
+    set.insert(word);
+    count++;
+    start = end + 1;
+    end = (unsigned char*) strchr((char*) start, '|');
+  }
+  start = NULL;
+  end = NULL;
+
+  return count; 
+}
+
+// copy elements of a set to a buffer, each element separated by a '|'
+int SetToPipeList(std::set<std::string>& set,
+                  unsigned char* buffer, unsigned int buffer_len,
+                  unsigned int& list_len, unsigned int& list_count) {
+
+  if (!buffer) {
+    std::cerr << "ERROR: invalid input\n";
+    return -1;
+  }
+
+  if (set.empty()) {
+    return 0;
+  }
+
+  list_len = 0;
+  list_count = 0;
+  std::set<std::string>::iterator set_iter;
+  unsigned char* ptr = buffer;
+  std::string element;
+  for (set_iter = set.begin(); set_iter != set.end(); set_iter++) {
+    element.assign(*set_iter);
+    strcpy((char *) ptr, element.c_str()); 
+    ptr += element.length();
+    strcpy((char *) ptr, "|");
+    ptr += 1;
+    list_count++;
+  }
+  list_len = ptr - buffer;
+
+  return 0;
+}
+
 // TODO (balaji) this code is long winded becos its copied from keyword_extract.cc
 // need to write a simple version of this code
 //int StringUtils::TestUtils(const std::string& text, unsigned int text_len) {
@@ -197,7 +330,7 @@ int TestUtils(const std::string& text, unsigned int text_len) {
 
   // script detection
   char *end = strchr(str, '\0');
-  std::string script = "uu";
+  std::string script = "UU";
   int code_point = 0;
   std::string script_temp;
   int script_count = 0;

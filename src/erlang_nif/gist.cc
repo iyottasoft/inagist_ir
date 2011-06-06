@@ -41,8 +41,8 @@ int GetGist(const unsigned char* text, const unsigned int text_len,
                 unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
                 unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
                 unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr,
-                char* text_class_buffer, const unsigned int text_class_buffer_len,
-                char* sub_class_buffer, const unsigned int sub_class_buffer_len,
+                char* text_classes_buffer, const unsigned int text_classes_buffer_len,
+                unsigned int* text_classes_len_ptr, unsigned int* text_classes_count_ptr,
                 char* sentiment_buffer, const unsigned int sentiment_buffer_len) {
 
   int ret_value = 0;
@@ -56,8 +56,8 @@ int GetGist(const unsigned char* text, const unsigned int text_len,
                 hashtags_len_ptr, hashtags_count_ptr,
                 (unsigned char*) keyphrases_buffer, keyphrases_buffer_len,
                 keyphrases_len_ptr, keyphrases_count_ptr,
-                text_class_buffer, text_class_buffer_len,
-                sub_class_buffer, sub_class_buffer_len,
+                text_classes_buffer, text_classes_buffer_len,
+                text_classes_len_ptr, text_classes_count_ptr,
                 sentiment_buffer, sentiment_buffer_len)) < 0) {
     std::cerr << "ERROR: could not get gist for: " << text << std::endl;
     return -1;

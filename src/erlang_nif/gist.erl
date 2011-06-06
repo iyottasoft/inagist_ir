@@ -23,7 +23,7 @@ test_gist_file(_file_name) ->
 test_init() ->
   init_c(<<"../../configs/keytuples_extracter.config">>,
          <<"../../configs/language_detection.config">>,
-         <<"../../configs/text_classifier.config">>).
+         <<"../../configs/channels_classifier.config">>).
 
 test() ->
   Tuples_list = test_gist_twitter_timeline(),

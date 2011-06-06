@@ -35,6 +35,7 @@ class KeyTuplesExtracter {
            const char* output_file=NULL);
   int DeInit();
 
+#ifndef KEYWORDS_DISABLED
   int GetKeywords(char* str,
                   std::string& safe_status,
                   std::string& script,
@@ -45,40 +46,52 @@ class KeyTuplesExtracter {
                   std::set<std::string>& keywords_set,
                   std::map<std::string, std::string>& script_user_map,
                   std::map<std::string, std::string>& keyword_user_map);
+#endif // KEYWORDS_DISABLED
 
   int GetKeyTuples(char* str,
                    std::string& safe_status,
-                   std::string& script,
-                   std::set<std::string>& keywords_set
+                   std::string& script
+#ifndef KEYWORDS_DISABLED
+                   , std::set<std::string>& keywords_set
+#endif // KEYWORDS_DISABLED
 #ifdef HASHTAGS_ENABLED
                    , std::set<std::string>& hashtags_set
-#endif
+#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                    , std::set<std::string>& keyphrases_set
-#endif
+#endif // KEYPHRASE_ENABLED
 #ifdef LANG_WORDS_ENABLED
                    , std::set<std::string>& lang_words_set
-#endif
+#endif // LANG_WORDS_ENABLED
+#ifdef TEXT_CLASS_WORDS_ENABLED
+                   , std::set<std::string>& text_class_words_set
+#endif // TEXT_CLASS_WORDS_ENABLED
                   );
 
   // directly writing to an output buffer instead of a set
   int GetKeyTuples(unsigned char* buffer, const unsigned int& buffer_len,
                    char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
-                   char* script_buffer, const unsigned int& script_buffer_len,
-                   unsigned char* keywords_buffer, const unsigned int& keywords_buffer_len,
+                   char* script_buffer, const unsigned int& script_buffer_len
+#ifndef KEYWORDS_DISABLED
+                   , unsigned char* keywords_buffer, const unsigned int& keywords_buffer_len,
                    unsigned int& keywords_len, unsigned int& keywords_count
+#endif // KEYWORDS_DISABLED
 #ifdef HASHTAGS_ENABLED
                    , unsigned char* hashtags_buffer, const unsigned int& hashtags_buffer_len,
                    unsigned int& hashtags_len, unsigned int& hashtags_count
-#endif
+#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                    , unsigned char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
                    unsigned int& keyphrases_len, unsigned int& keyphrases_count
-#endif
+#endif // KEYPHRASE_ENABLED
 #ifdef LANG_WORDS_ENABLED
                    , unsigned char* lang_words_buffer, const unsigned int& lang_words_buffer_len,
                    unsigned int& lang_words_len, unsigned int& lang_words_count
-#endif
+#endif // LANG_WORDS_ENABLED
+#ifdef TEXT_CLASS_WORDS_ENABLED
+                   , unsigned char* text_class_words_buffer, const unsigned int& text_class_words_buffer_len,
+                   unsigned int& text_class_words_len, unsigned int& text_class_words_count
+#endif // TEXT_CLASS_WORDS_ENABLED
                   );
 
   void PrintKeywords(std::set<std::string> &keywords_set);
