@@ -232,7 +232,8 @@ bool KeyTuplesExtracter::IsIgnore(char *&ptr) {
   // anyword with starts with punct (except #) is ignore word
   if ((ispunct(*ptr) && '#' != *ptr && ' ' != *(ptr+1)) ||
       !strncmp(ptr, "http://", 7) ||
-      !strncmp(ptr, "www.", 4)) {
+      !strncmp(ptr, "www.", 4) ||
+      !strncmp(ptr, "RT ", 3)) {
     while (' ' != *(ptr+1) && '\0' != *(ptr+1)) {
       ptr++;
     }
@@ -249,35 +250,44 @@ int KeyTuplesExtracter::GetKeywords(char* str,
 
 #ifdef KEYPHRASE_ENABLED
   std::set<std::string> keyphrases_set;
-#endif
+#endif // KEYPHRASE_ENABLED
 #ifdef HASHTAGS_ENABLED
   std::set<std::string> hashtags_set;
-#endif
+#endif // HASHTAGS_ENABLED
 #ifdef LANG_WORDS_ENABLED
   std::set<std::string> lang_words_set;
-#endif
+#endif // LANG_WORDS_ENABLED
+#ifdef TEXT_CLASS_WORDS_ENABLED
+  std::set<std::string> text_class_words_set;
+#endif // TEXT_CLASS_WORDS_ENABLED
 
   int ret_val = GetKeyTuples(str, safe_status, script, keywords_set
 #ifdef HASHTAGS_ENABLED
                              , hashtags_set
-#endif
+#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                              , keyphrases_set
-#endif
+#endif // KEYPHRASE_ENABLED
 #ifdef LANG_WORDS_ENABLED
                              , lang_words_set
-#endif
+#endif // LANG_WORDS_ENABLED
+#ifdef TEXT_CLASS_WORDS_ENABLED
+                             , text_class_words_set
+#endif // TEXT_CLASS_WORDS_ENABLED
                             );
 
 #ifdef KEYPHRASE_ENABLED
   keyphrases_set.clear();
-#endif
+#endif // KEYPHRASE_ENABLED
 #ifdef HASHTAGS_ENABLED
   hashtags_set.clear();
-#endif
+#endif // HASHTAGS_ENABLED
 #ifdef LANG_WORDS_ENABLED
   lang_words_set.clear();
-#endif
+#endif // LANG_WORDS_ENABLED
+#ifdef TEXT_CLASS_WORDS_ENABLED
+  text_class_words_set.clear();
+#endif // TEXT_CLASS_WORDS_ENABLED
 
   return ret_val;
 
@@ -503,8 +513,8 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
   keyphrases_buffer[0] = '\0';
 #endif // KEYPHRASE_ENABLED
 
-#ifdef LANG_WORDS_BUFFER
-  if (lang_words_buffer > 0) {
+#ifdef LANG_WORDS_ENABLED
+  if (lang_words_len > 0) {
     pch1 = lang_words_buffer;
     pch2 = pch1;
     pch1 = (unsigned char*) strchr((char *) pch2, '|');
@@ -518,10 +528,10 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
     }
   }
   lang_words_buffer[0] = '\0';
-#endif // LANG_WORDS_BUFFER
+#endif // LANG_WORDS_ENABLED
 
-#ifdef TEXT_CLASS_WORDS_BUFFER
-  if (text_class_words_buffer > 0) {
+#ifdef TEXT_CLASS_WORDS_ENABLED
+  if (text_class_words_len > 0) {
     pch1 = text_class_words_buffer;
     pch2 = pch1;
     pch1 = (unsigned char*) strchr((char *) pch2, '|');
@@ -535,7 +545,7 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
     }
   }
   text_class_words_buffer[0] = '\0';
-#endif // TEXT_CLASS_WORDS_BUFFER
+#endif // TEXT_CLASS_WORDS_ENABLED
 
   return count;
 }
@@ -664,9 +674,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
 
   unsigned int current_word_len = 0;
   unsigned int next_word_len = 0;
-#ifdef KE_DEBUG
-  int score = 0;
-#endif // KE_DEBUG
   int num_mixed_words = 0;
   int num_caps_words = 0;
   int num_words = 0;
@@ -727,8 +734,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
 
   // misc
   unsigned char *pch = NULL;
-  unsigned char ch;
-  unsigned int temp_len = 0;
 
   // unsafe
   strcpy(safe_status_buffer, "safe");
@@ -909,9 +914,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
     if (m_stopwords_dictionary.Find(current_word_start) == 1) {
       current_word_stop = true;
       num_stop_words++;
-#ifdef LANG_WORDS_ENABLED
-      lang_words_set.insert(std::string((char *) current_word_start));
-#endif // LANG_WORDS_ENABLED
 #ifdef KE_DEBUG
       if (KE_DEBUG > 5) {
         cout << "current word: " << current_word_start << " :stopword" << endl;
@@ -925,9 +927,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
     if (m_dictionary.Find(current_word_start) == 1) {
       current_word_dict = true;
       num_dict_words++;
-#ifdef LANG_WORDS_ENABLED
-      lang_words_set.insert(std::string((char *) current_word_start));
-#endif // LANG_WORDS_ENABLED
 #ifdef KE_DEBUG
       if (KE_DEBUG > 5) {
         cout << "current word: " << current_word_start << " :dictionary word" << endl;
@@ -977,23 +976,40 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
     return -1;
   }
 
+#ifdef LANG_WORDS_ENABLED
+  if (current_word_start &&
+      (current_word_stop || current_word_dict) &&
+      *current_word_start != '#') {
+    lang_words_set.insert(std::string((char *) current_word_start));
+  }
+#endif // LANG_WORDS_ENABLED
+
 #ifdef TEXT_CLASS_WORDS_ENABLED
-      if (!current_word_stop && !current_word_dict && !current_word_starts_num) {
-        if (!current_word_caps) {
-          text_class_words_set.insert(std::string((char *) current_word_start));
-        }
-        if (current_word_caps && current_word_start == sentence_start) {
-          *current_word_start += 32;
-          text_class_words_set.insert(std::string((char *) current_word_start));
-          *current_word_start -= 32;
-        }
-      }
+  if (current_word_start &&
+      !current_word_stop &&
+      !current_word_dict &&
+      !current_word_starts_num &&
+      *current_word_start != '#') {
+    if (!current_word_caps) {
+      text_class_words_set.insert(std::string((char *) current_word_start));
+    } else if (current_word_all_caps) {
+      text_class_words_set.insert(std::string((char *) current_word_start));
+    } else { 
+      *current_word_start += 32;
+      text_class_words_set.insert(std::string((char *) current_word_start));
+      *current_word_start -= 32;
+    }
+  }
 #endif // TEXT_CLASS_WORDS_ENABLED
 
   is_ignore_word = false;
   is_punct = false;
   while ('\0' != *ptr &&
-         (' ' == *ptr || (ispunct(*ptr) && (is_punct = IsPunct((char *) ptr, (char *) ptr-1, (char *) ptr+1))) || (is_ignore_word = IsIgnore((char *&) ptr)))) {
+         (' ' == *ptr ||
+          (ispunct(*ptr) && (is_punct = IsPunct((char *) ptr, (char *) ptr-1, (char *) ptr+1))) ||
+          (is_ignore_word = IsIgnore((char *&) ptr))
+         )
+        ) {
     current_word_precedes_ignore_word |= is_ignore_word;
     current_word_precedes_punct |= is_punct;
     ptr++;
@@ -1068,17 +1084,13 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
 #ifdef KE_DEBUG
       if (KE_DEBUG > 5) {
         if (NULL != stopwords_entity_end)
-          cout << "ERROR: stopswords entity end is not null. did you not write it before?" << endl;
+          cout << "ERROR: stopswords entity end is not null." << endl;
         if (NULL != caps_entity_end)
-          cout << "ERROR: caps entity end is not null. did you not write it before?" << endl;
+          cout << "ERROR: caps entity end is not null." << endl;
       }
 #endif // KE_DEBUG
 
       // word boundary
-#ifdef KE_DEBUG
-      score = 0;
-#endif // KE_DEBUG
-
       if (next_word_start) {
         if (is_punct)
           next_word_precedes_punct = true;
@@ -1089,6 +1101,8 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
       }
 
 #ifdef LANG_WORDS_ENABLED
+      // TODO (balaji) - not sure what is being tried here!
+      /*
       if (current_word_start == sentence_start &&
           current_word_caps &&
           (!next_word_start || !next_word_caps)) {
@@ -1107,20 +1121,8 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
           *current_word_start -= 32;
         }
       }
+      */
 #endif // LANG_WORDS_ENABLED
-
-#ifdef TEXT_CLASS_WORDS_ENABLED
-      if (!current_word_stop && !current_word_dict && !current_word_starts_num) {
-        if (!current_word_caps) {
-          text_class_words_set.insert(std::string((char *) current_word_start));
-        }
-        if (current_word_caps && current_word_start == sentence_start) {
-          *current_word_start += 32;
-          text_class_words_set.insert(std::string((char *) current_word_start));
-          *current_word_start -= 32;
-        }
-      }
-#endif // TEXT_CLASS_WORDS_ENABLED
 
 #ifdef KE_DEBUG
       if (KE_DEBUG > 5) {
@@ -1135,15 +1137,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
         else
           cout << "next word: NULL" << endl;
         cout << endl;
-      }
-#endif // KE_DEBUG
-
-#ifdef KE_DEBUG
-      if ((current_word_len < 2) && !isdigit(*current_word_start))
-        score-=5;
-
-      if ('#' == *current_word_start) {
-        score++;
       }
 #endif // KE_DEBUG
 
@@ -1186,11 +1179,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
         if (m_stopwords_dictionary.Find(next_word_start) == 1) {
           next_word_stop = true;
           num_stop_words++;
-#ifdef LANG_WORDS_ENABLED
-          lang_words_set.insert(std::string((char *) next_word_start));
-#endif // LANG_WORDS_ENABLED
 #ifdef KE_DEBUG
-          score--;
           if (KE_DEBUG > 5) {
             cout << "next word: " << next_word_start << " :stopword" << endl;
           }
@@ -1203,11 +1192,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
         if (m_dictionary.Find(next_word_start) == 1) {
           next_word_dict = true;
           num_dict_words++;
-#ifdef LANG_WORDS_ENABLED
-          lang_words_set.insert(std::string((char *) next_word_start));
-#endif // LANG_WORDS_ENABLED
 #ifdef KE_DEBUG
-          score--;
           if (KE_DEBUG > 5) {
             cout << "next word: " << next_word_start << " :dictionary word" << endl;
           }
@@ -1221,6 +1206,31 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
           text_has_unsafe_words = true;
         }
 
+#ifdef LANG_WORDS_ENABLED
+        if ((next_word_stop ||
+             next_word_dict) &&
+             *next_word_start != '#') {
+          lang_words_set.insert(std::string((char *) next_word_start));
+        }
+#endif // LANG_WORDS_ENABLED
+
+#ifdef TEXT_CLASS_WORDS_ENABLED
+        if (!next_word_stop &&
+            !next_word_dict &&
+            !next_word_starts_num &&
+            *next_word_start != '#') {
+          if (!next_word_caps) {
+            text_class_words_set.insert(std::string((char *) next_word_start));
+          } else if (next_word_all_caps) {
+            text_class_words_set.insert(std::string((char *) next_word_start));
+          } else {
+            *next_word_start += 32;
+            text_class_words_set.insert(std::string((char *) next_word_start));
+            *next_word_start -= 32;
+          }
+        }
+#endif // TEXT_CLASS_WORDS_ENABLED
+
 #ifndef I18N_ENABLED
         }
 #endif // I18N_ENABLED
@@ -1232,6 +1242,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
 #ifndef I18N_ENABLED
       if (current_word_ascii) {
 #endif // I18N_ENABLED
+
       if (!current_word_stop && !current_word_dict && !current_word_caps &&
           !current_word_starts_num && !current_word_has_mixed_case &&
           (current_word_len > 1) && '#' != *current_word_start) {
@@ -1473,6 +1484,10 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
 #endif // KEYWORDS_DISABLED
 
 #ifdef KEYPHRASE_ENABLED
+
+      unsigned char ch;
+      unsigned int temp_len = 0;
+
       // write keyphrases
       if (NULL != stopwords_keyphrase_start && NULL != stopwords_keyphrase_end) {
 
@@ -1546,6 +1561,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
 #endif // KEYPHRASE_ENABLED
 
 #ifndef KEYWORDS_DISABLED
+
+#ifndef KEYPHRASE_ENABLED
+      unsigned char ch;
+      unsigned int temp_len = 0;
+#endif // KEYPHRASE_ENABLED
+
       // write entities
       if (NULL != stopwords_entity_start && NULL != stopwords_entity_end) {
         if (stopwords_entity_start < stopwords_entity_end) {
@@ -2000,6 +2021,19 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
     Insert(text_class_words_buffer, text_class_words_len, word, text_class_words_count);
     word.clear();
   }
+
+#ifndef KEYWORDS_DISABLED
+  strcpy((char*) (text_class_words_buffer + text_class_words_len), (char *) keywords_buffer);
+  text_class_words_len += keywords_len;
+  text_class_words_count += keywords_count;
+#endif
+
+#ifdef HASHTAGS_ENABLED
+  strcpy((char*) (text_class_words_buffer + text_class_words_len), (char *) hashtags_buffer);
+  text_class_words_len += hashtags_len;
+  text_class_words_count += hashtags_count;
+#endif // HASHTAGS_ENABLED
+
 #ifdef KE_DEBUG
   if (KE_DEBUG > 1) {
     std::cout << "\ntext_class_words_buffer: " << text_class_words_buffer << std::endl;

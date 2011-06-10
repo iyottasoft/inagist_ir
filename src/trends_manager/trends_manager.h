@@ -29,7 +29,6 @@ class TrendsManager {
                     unsigned int& trends_count);
  private:
   KeyTuplesExtracter m_keytuples_extracter;
-  KeywordsManager m_keywords_manager;
   char m_buffer[1024];
 };
 

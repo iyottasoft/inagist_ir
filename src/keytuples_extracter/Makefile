@@ -1,7 +1,7 @@
 include ../Makefile.incl
 PROJECT = keytuplesextracter
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED #-DKEYWORDS_DISABLED
+CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED -DTEXT_CLASS_WORDS_ENABLED #-DKEYWORDS_DISABLED
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../inagist_api -I../twitter_api -I../utils -I../script_detector

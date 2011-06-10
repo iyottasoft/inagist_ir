@@ -98,12 +98,6 @@ int TrendsManager::GetTrends(const unsigned char* text_buffer, const unsigned in
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
 
-  unsigned char lang_words_buffer[MAX_BUFFER_LEN];
-  memset(lang_words_buffer, 0, MAX_BUFFER_LEN);
-  unsigned int lang_words_buffer_len = MAX_BUFFER_LEN;
-  unsigned int lang_words_len = 0;
-  unsigned int lang_words_count = 0;
-
   int ret_value = 0;
 
   ret_value = m_keytuples_extracter.GetKeyTuples((unsigned char*) text_buffer, text_len,
@@ -111,8 +105,7 @@ int TrendsManager::GetTrends(const unsigned char* text_buffer, const unsigned in
                    script_buffer, script_buffer_len,
                    keywords_buffer, keywords_buffer_len, keywords_len, keywords_count,
                    hashtags_buffer, hashtags_buffer_len, hashtags_len, hashtags_count,
-                   keyphrases_buffer, keyphrases_buffer_len, keyphrases_len, keyphrases_count,
-                   lang_words_buffer, lang_words_buffer_len, lang_words_len, lang_words_count);
+                   keyphrases_buffer, keyphrases_buffer_len, keyphrases_len, keyphrases_count);
 
   if (ret_value <= 0) {
     if (ret_value < 0)
@@ -123,7 +116,6 @@ int TrendsManager::GetTrends(const unsigned char* text_buffer, const unsigned in
   keywords_buffer[0] = '\0';
   hashtags_buffer[0] = '\0';
   keyphrases_buffer[0] = '\0';
-  lang_words_buffer[0] = '\0';
 
   return ret_value;
 }

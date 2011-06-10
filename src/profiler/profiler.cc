@@ -149,11 +149,13 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
   inagist_classifiers::Corpus corpus;
 
   unsigned int init_corpus_size = 0;
+  bool get_user_info = true;
   if (profile_name && (strlen(profile_name) > 4)) {
     if ((init_corpus_size = inagist_classifiers::CorpusManager::LoadCorpus(profile_name, corpus)) < 0) {
       std::cerr << "ERROR: could not load corpus from file: " << profile_name << std::endl;
       return -1;
     }
+    get_user_info = false;
   }
 
   std::set<std::string> tweets;
@@ -161,7 +163,6 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
 
   unsigned int count = 0;
   unsigned int user_info_count = 0;
-  bool get_user_info = true;
   unsigned int corpus_size = 0;
   unsigned int output_num_docs = 0;
 
@@ -232,7 +233,7 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
 #endif
     }
   } else {
-    // genrate profile
+    // generate profile
     if ((count += GetGist(tweets,
                           languages_buffer, languages_buffer_len,
                           languages_len, languages_count,

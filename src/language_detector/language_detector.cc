@@ -229,21 +229,34 @@ int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
   char buffer[MAX_BUFFER_LEN];
   strcpy((char *) buffer, text.c_str());
 
+#ifndef KEYWORDS_DISABLED
   std::set<std::string> keywords_set;
-  std::set<std::string> hashtags_set;
+#endif // KEYWORDS_DISABLED
+#ifdef KEYPHRASE_ENABLED
   std::set<std::string> keyphrases_set;
+#endif // KEYPHRASE_ENABLED
+#ifdef HASHTAGS_ENABLED
+  std::set<std::string> hashtags_set;
+#endif // HASHTAGS_ENABLED
+
   std::set<std::string> lang_words_set;
   std::string safe_status;
   std::string script;
 
   int ret_val = 0;
-  ret_val = m_keytuples_extracter.GetKeyTuples(buffer,
-                                         safe_status, script,
-                                         keywords_set, hashtags_set, keyphrases_set, lang_words_set);
-
-  keywords_set.clear();
-  hashtags_set.clear();
-  keyphrases_set.clear();
+  ret_val = m_keytuples_extracter.GetKeyTuples((char *) buffer,
+                                               safe_status,
+                                               script
+#ifndef KEYWORDS_DISABLED
+                                               , keywords_set
+#endif // KEYWORDS_DISABLED
+#ifdef KEYPHRASE_ENABLED
+                                               , keyphrases_set
+#endif // KEYPHRASE_ENABLED
+#ifdef HASHTAGS_ENABLED
+                                               , hashtags_set
+#endif // HASHTAGS_ENABLED
+                                               , lang_words_set);
 
   if (ret_val < 0) {
     std::cerr << "ERROR: could not get words for: " << text << std::endl;
@@ -255,6 +268,16 @@ int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
   if ((ngrams_count = m_ngrams_generator.GetNgramsFromWords(lang_words_set, corpus)) < 0) {
     std::cerr << "ERROR: could not find ngrams from tweet: " << text << std::endl;
   }
+
+#ifndef KEYWORDS_DISABLED
+  keywords_set.clear();
+#endif // KEYWORDS_DISABLED
+#ifdef KEYPHRASE_ENABLED
+  keyphrases_set.clear();
+#endif // KEYPHRASE_ENABLED
+#ifdef HASHTAGS_ENABLED
+  hashtags_set.clear();
+#endif // HASHTAGS_ENABLED
 
   lang_words_set.clear();
 
