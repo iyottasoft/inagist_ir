@@ -50,12 +50,13 @@ int LanguageDetector::Classify(const std::string& text, const unsigned int& text
   Corpus test_corpus;
 
   if ((num_ngrams = m_ngrams_generator.GetNgramsFromTweet(text, test_corpus, ignore_case)) < 0) {
+    top_classes_count = 0;
 #ifdef LD_DEBUG
     std::cerr << "ERROR: m_ngrams_generator returned -1" << std::endl;
-#endif
     guess_lang_output.assign("RR");
     top_classes.assign("RR");
     top_classes_count = 1;
+#endif
     return -1;
   } else {
 #ifdef LD_DEBUG
@@ -66,13 +67,14 @@ int LanguageDetector::Classify(const std::string& text, const unsigned int& text
   }
 
   if (num_ngrams == 0) {
+    top_classes_count = 0;
 #ifdef LD_DEBUG
     if (m_debug_level > 0)
       std::cout << "no ngrams found for ... \n" << text << std::endl;
-#endif
     guess_lang_output.assign("XX");
     top_classes.assign("XX");
     top_classes_count = 1;
+#endif
     return 0;
   }
 
@@ -90,11 +92,14 @@ int LanguageDetector::Classify(const std::string& text, const unsigned int& text
                                            , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
                                            , m_debug_level) < 0) {
-    std::cout << "ERROR: naive bayes classifiers could not guess the language\n";
+    top_classes_count = 0;
+#ifdef LD_DEBUG
+    std::cerr << "ERROR: naive bayes classifiers could not guess the language\n";
     test_corpus.clear();
     guess_lang_output.assign("UU");
     top_classes.assign("UU");
     top_classes_count = 1;
+#endif
     return -1;
   }
 
@@ -145,23 +150,25 @@ int LanguageDetector::Classify(const unsigned char* text_word_list,
                                                           word_count,
                                                           test_corpus,
                                                           ignore_case)) < 0) {
+    top_classes_count = 0;
 #ifdef LD_DEBUG
     std::cerr << "ERROR: m_ngrams_generator returned -1" << std::endl;
-#endif
     strcpy(top_classes_buffer, "RR|");
     top_classes_len = 3;
     top_classes_count = 1;
+#endif
     return -1;
   }
 
   if (num_ngrams == 0) {
+    top_classes_count = 0;
 #ifdef LD_DEBUG
     if (m_debug_level > 0)
       std::cout << "no ngrams found for the given word set" << std::endl;
-#endif
     strcpy(top_classes_buffer, "XX|");
     top_classes_len = 3;
     top_classes_count = 1;
+#endif
     return 0;
   }
 
@@ -181,9 +188,12 @@ int LanguageDetector::Classify(const unsigned char* text_word_list,
                                           , m_debug_level) < 0) {
     std::cout << "ERROR: naive bayes classifiers could not guess the language\n";
     test_corpus.clear();
+    top_classes_count = 0;
+#ifdef LD_DEBUG
     strcpy(top_classes_buffer, "UU|");
     top_classes_len = 3;
     top_classes_count = 1;
+#endif
     return -1;
   }
 #ifdef CLASS_CONTRIBUTORS_ENABLED
@@ -217,18 +227,21 @@ int LanguageDetector::DetectLanguage(std::set<std::string>& words_set,
   Corpus test_corpus;
 
   if ((num_ngrams = m_ngrams_generator.GetNgramsFromWords(words_set, test_corpus, ignore_case)) < 0) {
+#ifdef LD_DEBUG
     std::cerr << "ERROR: m_ngrams_generator returned -1" << std::endl;
+#endif
     return -1;
   }
 
   if (num_ngrams == 0) {
+    top_classes_count = 0;
 #ifdef LD_DEBUG
     if (m_debug_level > 0)
       std::cout << "no ngrams found for the given word set" << std::endl;
-#endif
     guess_lang_output.assign("RR");
     top_classes.assign("RR|");
     top_classes_count = 1;
+#endif
     return 0;
   }
 
@@ -243,9 +256,12 @@ int LanguageDetector::DetectLanguage(std::set<std::string>& words_set,
                                            , m_debug_level) < 0) {
     std::cout << "ERROR: naive bayes classifiers could not guess the language\n";
     test_corpus.clear();
+    top_classes_count = 0;
+#ifdef LD_DEBUG
     guess_lang_output.assign("UU");
     top_classes.assign("UU|");
     top_classes_count = 1;
+#endif
     return -1;
   }
 

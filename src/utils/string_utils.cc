@@ -261,7 +261,7 @@ int StringMapToPipeList(std::map<std::string, std::string>& map,
   std::string element;
   for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
     element.assign((*map_iter).first);
-    element += " : ";
+    element += ":";
     element += (*map_iter).second;
     strcpy((char *) ptr, element.c_str()); 
     ptr += element.length();

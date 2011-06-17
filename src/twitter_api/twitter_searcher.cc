@@ -55,6 +55,16 @@ int TwitterSearcher::DeInit() {
   return 0;
 }
 
+int TwitterSearcher::Get100TweetsFromUser(const std::string& user_name, std::set<std::string>& tweets) {
+  std::string url = "http://search.twitter.com/search.json?q=from:" + user_name + "&rpp=100";
+  int ret_value = 0;
+  if ((ret_value = GetTweetsFromSearchUrl(url, tweets)) < 0) {
+    std::cout << "Error: could not get tweets for " << user_name << std::endl;
+  }
+
+  return ret_value;
+}
+
 int TwitterSearcher::GetTweetsFromUser(const std::string& user_name, std::set<std::string>& tweets) {
   std::string url = "http://search.twitter.com/search.json?q=from:" + user_name;
   int ret_value = 0;

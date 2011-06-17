@@ -12,18 +12,29 @@ int InitProfiler(const char* keytuples_extracter_config,
                  const char* sentiment_analyser_config);
 
 int GetProfile(const char* twitter_handle, unsigned int twitter_handle_len,
-            unsigned char* locations, unsigned int locations_buffer_len,
-            unsigned int* locations_len_ptr, unsigned int* locations_count_ptr,
-            char* languages, unsigned int languages_buffer_len,
-            unsigned int* languages_len_ptr, unsigned int* languages_count_ptr,
-            char* text_classes_buffer, unsigned int text_classes_buffer_len,
-            unsigned int* text_classes_len_ptr, unsigned int* text_classes_count_ptr,
-            char* sub_classes_buffer, unsigned int sub_classes_buffer_len,
-            unsigned int* sub_classes_len_ptr, unsigned int* sub_classes_count_ptr,
-            unsigned char* text_class_contributors_buffer, unsigned int text_class_contributors_buffer_len,
-            unsigned int* text_class_contributors_len_ptr, unsigned int* text_class_contributors_count_ptr,
-            char* sentiment_buffer, unsigned int sentiment_buffer_len,
-            const char* profile_name);
+      unsigned char* locations_buffer, unsigned int locations_buffer_len,
+      unsigned int* locations_len_ptr, unsigned int* locations_count_ptr,
+      char* self_languages_buffer, unsigned int self_languages_buffer_len,
+      unsigned int* self_languages_len_ptr, unsigned int* self_languages_count_ptr,
+      char* self_text_classes_buffer, unsigned int self_text_classes_buffer_len,
+      unsigned int* self_text_classes_len_ptr, unsigned int* self_text_classes_count_ptr,
+      char* self_sub_classes_buffer, unsigned int self_sub_classes_buffer_len,
+      unsigned int* self_sub_classes_len_ptr, unsigned int* self_sub_classes_count_ptr,
+      unsigned char* self_text_class_contributors_buffer, unsigned int self_text_class_contributors_buffer_len,
+      unsigned int* self_text_class_contributors_len_ptr, unsigned int* self_text_class_contributors_count_ptr,
+      char* others_languages_buffer, unsigned int others_languages_buffer_len,
+      unsigned int* others_languages_len_ptr, unsigned int* others_languages_count_ptr,
+      char* others_text_classes_buffer, unsigned int others_text_classes_buffer_len,
+      unsigned int* others_text_classes_len_ptr, unsigned int* others_text_classes_count_ptr,
+      char* others_sub_classes_buffer, unsigned int others_sub_classes_buffer_len,
+      unsigned int* others_sub_classes_len_ptr, unsigned int* others_sub_classes_count_ptr,
+      unsigned char* others_text_class_contributors_buffer, unsigned int others_text_class_contributors_buffer_len,
+      unsigned int* others_text_class_contributors_len_ptr, unsigned int* others_text_class_contributors_count_ptr,
+      char* sentiment_buffer, unsigned int sentiment_buffer_len,
+      unsigned char* recommendations_buffer, unsigned int recommendations_buffer_len,
+      unsigned int* recommendations_len_ptr, unsigned int* recommendations_count_ptr,
+      const char* profile_name);
+
 #ifdef _CPLUSPLUS
 }
 #endif

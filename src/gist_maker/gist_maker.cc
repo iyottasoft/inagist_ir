@@ -376,8 +376,8 @@ int GistMaker::GetGist(const unsigned char* tweet, const unsigned int tweet_len,
                                   ) < 0) {
 #ifdef GIST_DEBUG
     std::cerr << "ERROR: could not detect language. assigning RR\n";
-#endif
     strcpy(lang_buffer, "RR");
+#endif
   }
 
   strcpy((char *) buffer, (char *) keywords_buffer);

@@ -231,6 +231,10 @@ bool KeyTuplesExtracter::IsIgnore(char *&ptr) {
     return false;
   // anyword with starts with punct (except #) is ignore word
   if ((ispunct(*ptr) && '#' != *ptr && ' ' != *(ptr+1)) ||
+      !strncmp(ptr, "#fb", 3) ||
+      !strncmp(ptr, "#FB", 3) ||
+      !strncmp(ptr, "FB ", 3) ||
+      !strncmp(ptr, "fb ", 3) ||
       !strncmp(ptr, "http://", 7) ||
       !strncmp(ptr, "www.", 4) ||
       !strncmp(ptr, "RT ", 3)) {

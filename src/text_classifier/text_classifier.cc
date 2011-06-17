@@ -83,13 +83,14 @@ int TextClassifier::Classify(const std::string& text, const unsigned int& text_l
   }
 
   if (num_words == 0) {
+    top_classes_count = 0;
 #ifdef TC_DEBUG
     if (m_debug_level > 0)
       std::cout << "no ngrams found for ... \n" << text << std::endl;
-#endif
     text_class.assign("RR");
     top_classes.assign("RR");
     top_classes_count = 1;
+#endif
     return 0;
   }
 
@@ -109,9 +110,12 @@ int TextClassifier::Classify(const std::string& text, const unsigned int& text_l
                                        ) < 0) {
     std::cout << "ERROR: naive bayes classifier could not guess the text class\n";
     test_corpus.clear();
+    top_classes_count = 0;
+#ifdef TC_DEBUG
     text_class.assign("RR");
     top_classes.assign("RR");
     top_classes_count = 1;
+#endif
     return -1;
   }
 
@@ -239,9 +243,12 @@ int TextClassifier::Classify(std::set<std::string>& words_set,
                              , bool ignore_case) {
 
   if (words_set.size() <= 0) {
+    top_classes_count = 0;
+#ifdef TC_DEBUG
     text_class.assign("RR");
     top_classes.assign("RR");
     top_classes_count = 1;
+#endif
     return 0;
   }
 

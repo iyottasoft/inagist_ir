@@ -32,6 +32,7 @@ int main(int argc, char* argv[]) {
   std::set<std::string> sub_classes;
   std::map<std::string, std::string> text_class_contributors_map;
   std::string sentiment;
+/*
   if (p.Profile(twitter_handle,
                 locations, languages, text_classes, sub_classes,
                 text_class_contributors_map, sentiment, profile_name) < 0) {
@@ -39,6 +40,7 @@ int main(int argc, char* argv[]) {
               << twitter_handle << std::endl;
     return -1;
   }
+*/
 
   std::cout << "twitter_handle: " << twitter_handle << std::endl;
 

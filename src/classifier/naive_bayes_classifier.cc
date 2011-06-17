@@ -245,6 +245,8 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
   std::string classes[MAX_CORPUS_NUMBER];
   std::string class_name;
   std::string test_element;
+  std::string key_str;
+  std::string value_str;
 
   if (corpus_map.size() > MAX_CORPUS_NUMBER) {
     std::cerr << "ERROR: exceeds max classes that this classifier can handle\n";
@@ -308,10 +310,12 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
         temp_total_freq += temp_freq;
         entry_found = true;
 #ifdef CLASS_CONTRIBUTORS_ENABLED
-        if ((cc_iter = class_contributors.find(class_name)) != class_contributors.end()) {
-          cc_iter->second += "," + test_element;
+        key_str.assign(test_element);
+        value_str = class_name + ";";
+        if ((cc_iter = class_contributors.find(key_str)) != class_contributors.end()) {
+          cc_iter->second += value_str; 
         } else {
-          class_contributors[class_name].assign(test_element);
+          class_contributors[key_str].assign(value_str);
         }
 #endif // CLASS_CONTRIBUTORS_ENABLED
       }

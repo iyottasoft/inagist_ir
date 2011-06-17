@@ -13,6 +13,7 @@ class TwitterAPI {
   TwitterAPI();
   ~TwitterAPI();
   static int GetPublicTimeLine(std::set<std::string>& tweets);
+  static int GetUserTimeLine(const std::string& user_name, std::set<std::string>& tweets);
   static int GetListStatuses(const std::string& user_name,
                              const std::string& list_name,
                              std::set<std::string>& tweets);
