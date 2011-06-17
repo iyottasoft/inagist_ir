@@ -1,5 +1,5 @@
 #include <iostream>
-#include "config_reader.h"
+#include "classifier_config.h"
 
 int main(int argc, char* argv[]) {
 
@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
 
   std::string config_file_name = std::string(argv[1]);
   inagist_classifiers::Config config;
-  if (inagist_classifiers::ConfigReader::Read(config_file_name.c_str(), config) < 0) {
+  if (inagist_classifiers::ClassifierConfig::Read(config_file_name.c_str(), config) < 0) {
     std::cerr << "ERROR: could not read config file: " << config_file_name << std::endl;
     return -1;
   }
@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
       std::cout << config.iter->name << std::endl;
     }
   }
-  inagist_classifiers::ConfigReader::Clear(config);
+  inagist_classifiers::ClassifierConfig::Clear(config);
 
   // TODO (balaji) write code here to read the test data file and ensure that
   // all classes have test data. if not send a message. all check for the all_classes entry

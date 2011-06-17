@@ -8,6 +8,7 @@
 namespace inagist_api {
 
 class TwitterAPI {
+
  public:
   TwitterAPI();
   ~TwitterAPI();
@@ -24,6 +25,26 @@ class TwitterAPI {
   static int GetUserInfo(const std::string& handle, std::string& user_info);
 
   static int GetUserInfo(const std::string& handle, std::set<std::string>& user_info_tokens);
+
+  static int GetUserInfo(const std::string& handle,
+                         std::string& name, std::string& description, std::string& url,
+                         std::string& age, std::string& gender, std::string& language,
+                         std::string& location, std::string& time_zone,
+                         std::string& city, std::string& state, std::string& country,
+                         std::string& user_info);
+
+  static int GetUserInfo(const std::string& handle,
+                         std::string& name, std::string& description, std::string& url,
+                         std::string& age, std::string& gender, std::string& language,
+                         std::string& location, std::string& time_zone,
+                         std::string& city, std::string& state, std::string& country,
+                         std::set<std::string>& user_info_tokens);
+
+  static int GetUserInfo(const std::string& handle,
+                         unsigned char* locations_buffer, const unsigned int locations_buffer_len,
+                         unsigned int& locations_len, unsigned int& locations_count,
+                         std::set<std::string>& user_info_tokens);
+
 };
 
 }

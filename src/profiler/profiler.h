@@ -26,29 +26,39 @@ class Profiler {
            const char* sentiment_analyser_config=NULL);
 
   int Profile(const std::string& twitter_handle,
+              std::set<std::string>& locations,
               std::set<std::string>& languages,
               std::set<std::string>& text_classes,
               std::set<std::string>& sub_classes,
+              std::map<std::string, std::string>& text_class_contributors_map,
               std::string& sentiment,
               const std::string& profile_name);
 
   int Profile(const char* twitter_handle, unsigned int twitter_handle_len,
-              char* languages, const unsigned int languages_buffer_len,
+              unsigned char* locations_buffer, const unsigned int locations_buffer_len,
+              unsigned int& locations_len, unsigned int& locations_count,
+              char* languages_buffer, const unsigned int languages_buffer_len,
               unsigned int& languages_len, unsigned int& languages_count,
               char* text_classes_buffer, const unsigned int text_classes_buffer_len,
               unsigned int& text_classes_len, unsigned int& text_classes_count,
               char* sub_classes_buffer, const unsigned int sub_classes_buffer_len,
               unsigned int& sub_classes_len, unsigned int& sub_classes_count,
+              unsigned char* text_class_contributors_buffer, const unsigned int text_class_contributors_buffer_len,
+              unsigned int& text_class_contributors_len, unsigned int& text_class_contributors_count,
               char* sentiment_buffer, const unsigned int sentiment_buffer_len,
               const char* profile_name);
 
   int ProfileFromFile(const char* docs_file_name, unsigned int docs_file_name_len,
+            unsigned char* locations_buffer, const unsigned int locations_buffer_len,
+            unsigned int& locations_len, unsigned int& locations_count,
             char* languages_buffer, const unsigned int languages_buffer_len,
             unsigned int& languages_len, unsigned int& languages_count,
             char* text_classes_buffer, const unsigned int text_classes_buffer_len,
             unsigned int& text_classes_len, unsigned int& text_classes_count,
             char* sub_classes_buffer, const unsigned int sub_classes_buffer_len,
             unsigned int& sub_classes_len, unsigned int& sub_classes_count,
+            unsigned char* text_class_contributors_buffer, const unsigned int text_class_contributors_buffer_len,
+            unsigned int& text_class_contributors_len, unsigned int& text_class_contributors_count,
             char* sentiment_buffer, const unsigned int sentiment_buffer_len,
             const char* profile_name);
 
@@ -59,6 +69,8 @@ class Profiler {
             unsigned int& text_classes_len, unsigned int& text_classes_count,
             char* sub_classes_buffer, const unsigned int sub_classes_buffer_len,
             unsigned int& sub_classes_len, unsigned int& sub_classes_count,
+            unsigned char* text_class_contributors_buffer, const unsigned int text_class_contributors_buffer_len,
+            unsigned int& text_class_contributors_len, unsigned int& text_class_contributors_count,
             char* sentiment_buffer, const unsigned int sentiment_buffer_len,
             inagist_classifiers::Corpus& corpus, unsigned int& corpus_size);
 

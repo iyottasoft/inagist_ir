@@ -240,6 +240,40 @@ int MapToPipeList(std::map<std::string, int>& map,
   return 0;
 }
 
+// copy elements of a set to a buffer, each element separated by a '|'
+int StringMapToPipeList(std::map<std::string, std::string>& map,
+                  unsigned char* buffer, unsigned int buffer_len,
+                  unsigned int& list_len, unsigned int& list_count) {
+
+  if (!buffer) {
+    std::cerr << "ERROR: invalid input\n";
+    return -1;
+  }
+
+  if (map.empty()) {
+    return 0;
+  }
+
+  list_len = 0;
+  list_count = 0;
+  std::map<std::string, std::string>::iterator map_iter;
+  unsigned char* ptr = buffer;
+  std::string element;
+  for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
+    element.assign((*map_iter).first);
+    element += " : ";
+    element += (*map_iter).second;
+    strcpy((char *) ptr, element.c_str()); 
+    ptr += element.length();
+    strcpy((char *) ptr, "|");
+    ptr += 1;
+    list_count++;
+  }
+  list_len = ptr - buffer;
+
+  return 0;
+}
+
 int PipeListToSet(unsigned char* buffer, std::set<std::string>& set) {
 
   if (!buffer) {

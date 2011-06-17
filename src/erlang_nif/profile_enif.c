@@ -151,6 +151,11 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   char safe_status_buffer[10];
   //memset(safe_status_buffer, 0, 10);
   safe_status_buffer[0] = '\0';
+  unsigned char locations_buffer[MAX_LIST_LEN];
+  //memset(locations_buffer, 0, MAX_LIST_LEN);
+  locations_buffer[0] = '\0';
+  unsigned int locations_len = 0;
+  unsigned int locations_count = 0;
   char languages_buffer[MAX_LIST_LEN];
   //memset(languages_buffer, 0, MAX_LIST_LEN);
   languages_buffer[0] = '\0';
@@ -166,6 +171,11 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   sub_classes_buffer[0] = '\0';
   unsigned int sub_classes_len = 0;
   unsigned int sub_classes_count = 0;
+  char text_class_contributors_buffer[MAX_LIST_LEN];
+  //memset(text_class_contributors_buffer, 0, MAX_LIST_LEN);
+  text_class_contributors_buffer[0] = '\0';
+  unsigned int text_class_contributors_len = 0;
+  unsigned int text_class_contributors_count = 0;
   char sentiment_buffer[MAX_CLASS_NAME];
   //memset(sentiment_buffer, 0, MAX_CLASS_NAME);
   sentiment_buffer[0] = '\0';
@@ -173,12 +183,16 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   int ret_value = 0;
   if ((ret_value = GetProfile(twitter_handle_buffer, twitter_handle_len,
+                           locations_buffer, MAX_LIST_LEN,
+                           &locations_len, &locations_count,
                            languages_buffer, MAX_LIST_LEN,
                            &languages_len, &languages_count,
                            text_classes_buffer, MAX_LIST_LEN,
                            &text_classes_len, &text_classes_count,
                            sub_classes_buffer, MAX_LIST_LEN,
                            &sub_classes_len, &sub_classes_count,
+                           text_class_contributors_buffer, MAX_LIST_LEN,
+                           &text_class_contributors_len, &text_class_contributors_count,
                            sentiment_buffer, MAX_CLASS_NAME,
                            profile_name)) < 0) {
 #ifndef PROFILE_DEBUG
@@ -192,6 +206,42 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   unsigned int i = 0;
   char *start = NULL;
   char *end = NULL; 
+
+  ErlNifBinary locations_bin;
+  ERL_NIF_TERM locations_list = enif_make_list(env, 0);
+
+  if (locations_count > 0) {
+
+    start = locations_buffer;
+    end = strstr(start, "|");
+
+    while (start && end && *end != '\0') {
+      end = strstr(start, "|");
+      if (!end)
+        break;
+      *end = '\0';
+      len = end - start;
+#ifdef ERLANG_R14B02 
+      ret_value = enif_alloc_binary(len, &locations_bin);
+#else
+      ret_value = enif_alloc_binary(env, len, &locations_bin);
+#endif
+      if (ret_value < 0) {
+#ifndef PROFILE_DEBUG
+        return enif_make_atom(env, "error");
+#else
+        return enif_make_atom(env, "error_locations_bin_alloc");
+#endif
+      }
+      for (i=0; i<len; i++) {
+        locations_bin.data[i] = *(start + i);
+      }
+      locations_list = enif_make_list_cell(env, enif_make_binary(env, &locations_bin), locations_list);
+
+      *end = '|';
+      start = end + 1;
+    }
+  }
 
   ErlNifBinary languages_bin;
   ERL_NIF_TERM languages_list = enif_make_list(env, 0);
@@ -305,7 +355,49 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     }
   }
 
-  return enif_make_tuple3(env, languages_list, text_classes_list, sub_classes_list);
+  // text class
+
+  ErlNifBinary text_class_contributors_bin;
+  ERL_NIF_TERM text_class_contributors_list = enif_make_list(env, 0);
+
+  if (text_class_contributors_count > 0) {
+
+    start = text_class_contributors_buffer;
+    end = strstr(start, "|");
+
+    while (start && end && *end != '\0') {
+      end = strstr(start, "|");
+      if (!end)
+        break;
+      *end = '\0';
+      len = end - start;
+#ifdef ERLANG_R14B02 
+      ret_value = enif_alloc_binary(len, &text_class_contributors_bin);
+#else
+      ret_value = enif_alloc_binary(env, len, &text_class_contributors_bin);
+#endif
+      if (ret_value < 0) {
+#ifndef PROFILE_DEBUG
+        return enif_make_atom(env, "error");
+#else
+        return enif_make_atom(env, "error_text_class_contributors_bin_alloc");
+#endif
+      }
+      for (i=0; i<len; i++) {
+        text_class_contributors_bin.data[i] = *(start + i);
+      }
+      text_class_contributors_list = enif_make_list_cell(env, enif_make_binary(env, &text_class_contributors_bin), text_class_contributors_list);
+
+      *end = '|';
+      start = end + 1;
+    }
+  }
+
+  return enif_make_tuple5(env, locations_list,
+                          languages_list,
+                          text_classes_list,
+                          sub_classes_list,
+                          text_class_contributors_list);
 
 }
 

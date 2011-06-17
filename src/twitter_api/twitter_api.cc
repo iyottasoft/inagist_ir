@@ -3,6 +3,13 @@
 #include "JSONValue.h"
 #include <iostream>
 
+#ifdef DEBUG
+#if DEBUG>0
+#define TA_DEBUG DEBUG
+#endif
+#endif
+//#define TA_DEBUG 1
+
 namespace inagist_api {
 
 TwitterAPI::TwitterAPI() {
@@ -207,7 +214,117 @@ int TwitterAPI::GetUserInfo(const std::string& handle, std::string& user_info) {
   return 0;
 }
 
-int TwitterAPI::GetUserInfo(const std::string& handle, std::set<std::string>& user_info_tokens) {
+int TwitterAPI::GetUserInfo(const std::string& handle,
+                            std::string& name, std::string& description, std::string& url,
+                            std::string& age, std::string& gender, std::string& language,
+                            std::string& location, std::string& time_zone,
+                            std::string& city, std::string& state, std::string& country,
+                            std::string& user_info) {
+
+  std::set<std::string> user_info_tokens;
+
+  int num_tokens = 0;
+  if ((num_tokens = GetUserInfo(handle, name, description, url,
+                               age, gender, language,
+                               location, time_zone,
+                               city, state, country,
+                               user_info_tokens) < 0)) {
+    return -1;
+  }
+
+  if (user_info_tokens.empty())
+    return 0;
+
+  std::set<std::string>::iterator set_iter;
+  set_iter = user_info_tokens.begin();
+  user_info.assign(*set_iter);
+  if (user_info_tokens.size() > 1) {
+    set_iter++;
+    for (; set_iter != user_info_tokens.end(); set_iter++) {
+      user_info += " ";
+      user_info += *set_iter;
+    }
+  }
+  user_info_tokens.clear();
+
+  return num_tokens;
+}
+
+int TwitterAPI::GetUserInfo(const std::string& handle,
+                            std::string& name, std::string& description, std::string& url,
+                            std::string& age, std::string& gender, std::string& language,
+                            std::string& location, std::string& time_zone,
+                            std::string& city, std::string& state, std::string& country,
+                            std::set<std::string>& user_info_tokens) {
+
+  inagist_api::CurlRequestMaker curl_request_maker;
+
+  std::string reply_message;
+  std::string cursor = "-1";
+
+  bool ret_value = true;
+  std::string request_url = "http://api.twitter.com/1/users/show.json?screen_name=" + handle;
+  ret_value = curl_request_maker.GetTweets(request_url.c_str());
+  if (ret_value) {
+    curl_request_maker.GetLastWebResponse(reply_message);
+    if (reply_message.size() > 0) {
+
+#ifdef TA_DEBUG
+      if (TA_DEBUG > 4) {
+          std::cout << std::endl;
+          std::cout << reply_message << std::endl;
+          std::cout << std::endl;
+      }
+#endif
+
+      JSONValue* json_value = JSON::Parse(reply_message.c_str());
+      if (false == json_value->IsObject()) {
+        std::cout << "ERROR: json value obtained for user info not an object\n";
+      } else {
+        JSONObject json_object = json_value->AsObject();
+        if (json_object.find("name") != json_object.end() && json_object["name"]->IsString()) {
+          name.assign(json_object["name"]->AsString());
+          user_info_tokens.insert(name);
+        }
+        if (json_object.find("description") != json_object.end() && json_object["description"]->IsString()) {
+          description.assign(json_object["description"]->AsString());
+          user_info_tokens.insert(description);
+        }
+        if (json_object.find("url") != json_object.end() && json_object["url"]->IsString()) {
+          url.assign(json_object["url"]->AsString());
+          user_info_tokens.insert(url);
+        }
+        if (json_object.find("lang") != json_object.end() && json_object["lang"]->IsString()) {
+          language.assign(json_object["lang"]->AsString());
+          user_info_tokens.insert(language);
+        }
+        if (json_object.find("location") != json_object.end() && json_object["location"]->IsString()) {
+          location.assign(json_object["location"]->AsString());
+          user_info_tokens.insert(location);
+        }
+        if (json_object.find("time_zone") != json_object.end() && json_object["time_zone"]->IsString()) {
+          time_zone.assign(json_object["time_zone"]->AsString());
+          user_info_tokens.insert(time_zone);
+        }
+      }
+      delete json_value;
+    }
+  }
+
+#ifdef TA_DEBUG
+  if (TA_DEBUG > 0) {
+    std::set<std::string>::iterator set_iter;
+    for (set_iter = user_info_tokens.begin(); set_iter != user_info_tokens.end(); set_iter++) {
+      std::cout << *set_iter << std::endl;
+    }
+  }
+#endif
+
+  return user_info_tokens.size();
+}
+
+int TwitterAPI::GetUserInfo(const std::string& handle,
+                            std::set<std::string>& user_info_tokens) {
 
   inagist_api::CurlRequestMaker curl_request_maker;
 
@@ -239,7 +356,74 @@ int TwitterAPI::GetUserInfo(const std::string& handle, std::set<std::string>& us
     }
   }
 
-  return 0;
+  return user_info_tokens.size();
+}
+
+int TwitterAPI::GetUserInfo(const std::string& handle,
+                            unsigned char* locations_buffer, const unsigned int locations_buffer_len,
+                            unsigned int& locations_len, unsigned int& locations_count,
+                            std::set<std::string>& user_info_tokens) {
+
+  if (!locations_buffer) {
+    std::cerr << "ERROR: invalid input\n";
+    return -1;
+  }
+
+  locations_buffer[0] = '\0';
+  locations_len = 0;
+  locations_count = 0;
+
+  std::string name;
+  std::string description;
+  std::string url;
+  std::string age;
+  std::string gender;
+  std::string language;
+  std::string location;
+  std::string time_zone;
+  std::string city;
+  std::string state;
+  std::string country;
+
+  int num_tokens = 0;
+  if ((num_tokens = GetUserInfo(handle, name, description, url,
+                               age, gender, language,
+                               location, time_zone,
+                               city, state, country,
+                               user_info_tokens) < 0)) {
+    return -1;
+  }
+
+  if (user_info_tokens.empty())
+    return 0;
+
+  if (!location.empty()) {
+    strcpy((char *) locations_buffer, location.c_str());
+    locations_len += location.size();
+    strcpy((char *) locations_buffer + locations_len, "|");
+    locations_len += 1;
+    locations_count += 1;
+  }
+
+  if (!time_zone.empty()) {
+    strcpy((char *) locations_buffer + locations_len, time_zone.c_str());
+    locations_len += time_zone.size();
+    strcpy((char *) locations_buffer + locations_len, "|");
+    locations_len += 1;
+    locations_count += 1;
+  }
+
+#ifdef TA_DEBUG
+  if (TA_DEBUG > 0) {
+    if (locations_count > 0) {
+      std::cout << "locations: " << locations_buffer << std::endl;
+    } else {
+      std::cout << "WARNING: no location found for user: " << handle << std::endl;
+    }
+  }
+#endif
+
+  return user_info_tokens.size();
 }
 
 int TwitterAPI::GetListStatuses(const std::string& user_name,
@@ -252,7 +436,6 @@ int TwitterAPI::GetListStatuses(const std::string& user_name,
   std::string cursor = "-1";
 
   bool ret_value = true;
-  //while (ret_value) {
     std::string url = "http://api.twitter.com/1/" + user_name + "/lists/" \
                       + list_name + "/statuses.json";
     ret_value = curl_request_maker.GetTweets(url.c_str());
@@ -281,9 +464,8 @@ int TwitterAPI::GetListStatuses(const std::string& user_name,
         delete json_value;
       }
     }
-  //}
 
   return tweets.size();
 }
 
-}
+} // namespace

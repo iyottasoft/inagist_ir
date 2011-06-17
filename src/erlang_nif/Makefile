@@ -97,7 +97,7 @@ lang:
 
 text_class:
 	@echo "creating library ${LIB_DIR}/libtext_class_nif.a ..."
-	@g++ ${CXXFLAGS} -fPIC -shared -c -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc ../text_classifier/text_classifier.cc text_class.cc -I../../include/utfcpp -I../script_detector -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../text_classifier
+	@g++ ${CXXFLAGS} -fPIC -shared -c -DKEYWORDS_DISABLED -DTEXT_CLASS_WORDS_ENABLED ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc ../text_classifier/text_classifier.cc text_class.cc -I../../include/utfcpp -I../script_detector -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../text_classifier
 	@ar -r ${LIB_DIR}/libtext_class_nif.a keytuples_config.o keytuples_extracter.o text_classifier.o text_class.o
 	@ranlib ${LIB_DIR}/libtext_class_nif.a
 	@echo "done!"
@@ -123,12 +123,12 @@ channels:
 
 gist:
 	@echo "creating library ${LIB_DIR}/libgist_nif.a ..."
-	@g++ ${CXXFLAGS} -fPIC -shared -c -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc ../language_detector/language_detector.cc ../text_classifier/text_classifier.cc ../gist_maker/gist_maker.cc gist.cc -I../../include/utfcpp -I../script_detector -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../gist_maker
-	@ar -r ${LIB_DIR}/libgist_nif.a keytuples_config.o keytuples_extracter.o language_detector.o text_classifier.o gist_maker.o gist.o
+	@g++ ${CXXFLAGS} -fPIC -shared -c -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED -DTEXT_CLASS_WORDS_ENABLED -DCLASS_CONTRIBUTORS_ENABLED ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc ../classifier/classifier_config.cc ../classifier/corpus_manager.cc ../classifier/naive_bayes_classifier.cc ../classifier/classifier.cc ../language_detector/language_detector.cc ../text_classifier/text_classifier.cc ../gist_maker/gist_maker.cc gist.cc -I../../include/utfcpp -I../twitter_api -I../inagist_api -I../script_detector -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../gist_maker
+	@ar -r ${LIB_DIR}/libgist_nif.a keytuples_config.o keytuples_extracter.o classifier_config.o corpus_manager.o naive_bayes_classifier.o classifier.o language_detector.o text_classifier.o gist_maker.o gist.o
 	@ranlib ${LIB_DIR}/libgist_nif.a
 	@echo "done!"
 	@echo "creating erlang library file libgist_erl.so ..."
-	@gcc -fPIC -shared -o ../../lib/libgist_erl.so gist_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L ${LIB_DIR} -lgist_nif -lclassifier -lngramsgenerator -ltweets -ltwitterapi -linagistapi -lutils -lscriptdetector -lcurlrequestmaker -ljsonparser -lcurl
+	@gcc -fPIC -shared -o ../../lib/libgist_erl.so gist_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L ${LIB_DIR} -lgist_nif -lngramsgenerator -ltweets -ltwitterapi -linagistapi -lutils -lscriptdetector -lcurlrequestmaker -ljsonparser -lcurl
 	@echo "done!"
 	@echo "compiling gist.erl"
 	@erlc gist.erl
@@ -141,7 +141,7 @@ profile:
 	@ranlib ${LIB_DIR}/libprofile_nif.a
 	@echo "done!"
 	@echo "creating erlang library file libprofile_erl.so ..."
-	@gcc -fPIC -shared -o ../../lib/libprofile_erl.so profile_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L ${LIB_DIR} -lprofile_nif -lprofiler -lgistmaker -lclassifier -lngramsgenerator -linagistapi -ltwitterapi -lutils -lscriptdetector -lcurlrequestmaker -ljsonparser -lcurl
+	@gcc -fPIC -shared -o ../../lib/libprofile_erl.so profile_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L ${LIB_DIR} -lprofile_nif -lprofiler -lgistmaker -lngramsgenerator -linagistapi -ltwitterapi -lutils -lscriptdetector -lcurlrequestmaker -ljsonparser -lcurl
 	@echo "done!"
 	@echo "compiling profile.erl"
 	@erlc profile.erl

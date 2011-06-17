@@ -12,7 +12,8 @@ extern "C" {
 #endif
 int InitTextClassifier(const char* config_file);
 int ClassifyText(const char* text, const unsigned int text_len,
-                 char* text_class_buffer, const unsigned int text_class_buffer_len);
+                 char* text_classes_buffer, const unsigned int text_classes_buffer_len,
+                 unsigned int* text_classes_len_ptr, unsigned int* text_classes_count_ptr);
 #ifdef _CPLUSPLUS
 }
 #endif

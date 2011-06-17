@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
 
   if (argc < 2 || argc > 4) {
     std::cerr << "Usage: " << argv[0] \
-              << "\n\t<0/1/2/3/4, 0-tweets, 1-lists, 2-list_statuses, 3-list_members, 4-userinfo>" \
+              << "\n\t<0/1/2/3/4, 0-tweets, 1-lists, 2-list_statuses, 3-list_members, 4-usersummary, 5-userdetails>" \
               << "\n\t[<user_name>]" \
               << "\n\t[<output_file>]\n";
     return -1;
@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
   inagist_api::TwitterAPI tapi;
   int request_type = atoi(argv[1]);
   std::cout << request_type << std::endl;
-  assert((request_type >= 0) && (request_type <= 4) && (request_type == 0 || argc > 2));
+  assert((request_type >= 0) && (request_type <= 5) && (request_type == 0 || argc > 2));
   std::string user_name;
   std::string output_file_name;
   if (argc > 3) {
@@ -144,6 +144,42 @@ int main(int argc, char* argv[]) {
           return -1;
         } else {
           std::cout << info << std::endl;
+        }
+      }
+      break;
+    case 5:
+      { // scope
+        std::string name;
+        std::string description;
+        std::string url;
+        std::string age;
+        std::string gender;
+        std::string language;
+        std::string location;
+        std::string time_zone;
+        std::string city;
+        std::string state;
+        std::string country;
+        std::string user_info;
+        if (tapi.GetUserInfo(user_name, name, description, url,
+                             age, gender, language,
+                             location, time_zone,
+                             city, state, country,
+                             user_info) < 0) {
+          std::cerr << "ERROR: could not get user info for handle: " << user_name << std::endl;
+          return -1;
+        } else {
+          std::cout << "name: " << name << std::endl;
+          std::cout << "description: " << description << std::endl;
+          std::cout << "url: " << url << std::endl;
+          std::cout << "age: " << age << std::endl;
+          std::cout << "location: " << location << std::endl;
+          std::cout << "time_zone: " << time_zone << std::endl;
+          std::cout << "city: " << city << std::endl;
+          std::cout << "state: " << state << std::endl;
+          std::cout << "country: " << country << std::endl;
+          std::cout << "language: " << language << std::endl;
+          std::cout << "user_info: " << user_info << std::endl;
         }
       }
       break;

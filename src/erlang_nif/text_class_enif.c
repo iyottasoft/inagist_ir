@@ -48,9 +48,13 @@ ERL_NIF_TERM nif_classify_text(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
 #endif
   }
 
-  char text_class_buffer[MAX_BUFFER_LEN];
-  text_class_buffer[0] = '\0';
-  if (ClassifyText(text_str, text_len, text_class_buffer, MAX_BUFFER_LEN) < 0) { 
+  char text_classes_buffer[MAX_BUFFER_LEN];
+  text_classes_buffer[0] = '\0';
+  unsigned text_classes_len = 0;
+  unsigned text_classes_count = 0;
+  if (ClassifyText(text_str, text_len,
+                   text_classes_buffer, MAX_BUFFER_LEN,
+                   &text_classes_len, &text_classes_count) < 0) { 
 #ifndef LD_DEBUG
     return enif_make_atom(env, "error");
 #else
@@ -62,34 +66,48 @@ ERL_NIF_TERM nif_classify_text(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
   unsigned int i = 0;
   int ret_val = 0;
   ErlNifBinary text_class_bin;
-  ERL_NIF_TERM text_class_term;
 
-  len = strlen(text_class_buffer);
+  len = strlen(text_classes_buffer);
   if (len <= 0) {
-    strcpy(text_class_buffer, "00");
-    len = 2;
-    text_class_buffer[2] = '\0';
+    strcpy(text_classes_buffer, "00|");
+    len = 3;
+    text_classes_buffer[3] = '\0';
   }
 
-#ifdef ERLANG_R14B02
-  ret_val = enif_alloc_binary(len, &text_class_bin);
+  char *start = text_classes_buffer;
+  char *end = strstr(start, "|");
+
+  ERL_NIF_TERM text_classes_list = enif_make_list(env, 0);
+  if (text_classes_count > 0) {
+    while (start && end && *end != '\0') {
+      end = strstr(start, "|");
+      if (!end)
+        break;
+      *end = '\0';
+      len = end - start;
+#ifdef ERLANG_R14B02 
+      ret_val = enif_alloc_binary(len, &text_class_bin);
 #else
-  ret_val = enif_alloc_binary(env, len, &text_class_bin);
+      ret_val = enif_alloc_binary(env, len, &text_class_bin);
 #endif
-  if (ret_val < 0) {
+      if (ret_val < 0) {
 #ifndef LD_DEBUG
-    return enif_make_atom(env, "error");
+        return enif_make_atom(env, "error");
 #else
-    return enif_make_atom(env, "error_text_class_bin_alloc");
+        return enif_make_atom(env, "error_text_class_bin_alloc");
 #endif
+      }
+      for (i=0; i<len; i++) {
+        text_class_bin.data[i] = *(start + i);
+      }
+      text_classes_list = enif_make_list_cell(env, enif_make_binary(env, &text_class_bin), text_classes_list);
+
+      *end = '|';
+      start = end + 1;
+    }
   }
 
-  for (i=0; i<len; i++) {
-    text_class_bin.data[i] = *(text_class_buffer + i);
-  }
-  text_class_term = enif_make_binary(env, &text_class_bin);
-
-  return enif_make_tuple2(env, text_term, text_class_term);
+  return enif_make_tuple2(env, text_term, text_classes_list);
 }
 
 ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {

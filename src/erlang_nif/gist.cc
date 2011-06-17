@@ -32,36 +32,42 @@ int InitGistMaker(const char* keytuples_extracter_config_file,
 extern "C"
 #endif
 int GetGist(const unsigned char* text, const unsigned int text_len,
-                char* safe_status_buffer, const unsigned int safe_status_buffer_len,
-                char* script_buffer, const unsigned int script_buffer_len,
-                char* lang_buffer, const unsigned int lang_buffer_len,
-                unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
-                unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr,
-                unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
-                unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
-                unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
-                unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr,
-                char* text_classes_buffer, const unsigned int text_classes_buffer_len,
-                unsigned int* text_classes_len_ptr, unsigned int* text_classes_count_ptr,
-                char* sentiment_buffer, const unsigned int sentiment_buffer_len) {
+            char* safe_status_buffer, const unsigned int safe_status_buffer_len,
+            char* script_buffer, const unsigned int script_buffer_len,
+            char* lang_buffer, const unsigned int lang_buffer_len,
+            unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
+            unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr,
+            unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
+            unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
+            unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
+            unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr,
+            char* text_classes_buffer, const unsigned int text_classes_buffer_len,
+            unsigned int* text_classes_len_ptr, unsigned int* text_classes_count_ptr,
+            unsigned char* text_class_contributors_buffer, const unsigned int text_class_contributors_buffer_len,
+            unsigned int* text_class_contributors_len_ptr, unsigned int* text_class_contributors_count_ptr,
+            char* sentiment_buffer, const unsigned int sentiment_buffer_len) {
 
   int ret_value = 0;
   if ((ret_value = g_gm.GetGist(text, text_len,
-                safe_status_buffer, safe_status_buffer_len,
-                script_buffer, script_buffer_len,
-                lang_buffer, lang_buffer_len,
-                (unsigned char*) keywords_buffer, keywords_buffer_len,
-                keywords_len_ptr, keywords_count_ptr,
-                (unsigned char*) hashtags_buffer, hashtags_buffer_len,
-                hashtags_len_ptr, hashtags_count_ptr,
-                (unsigned char*) keyphrases_buffer, keyphrases_buffer_len,
-                keyphrases_len_ptr, keyphrases_count_ptr,
-                text_classes_buffer, text_classes_buffer_len,
-                text_classes_len_ptr, text_classes_count_ptr,
-                sentiment_buffer, sentiment_buffer_len)) < 0) {
+    safe_status_buffer, safe_status_buffer_len,
+    script_buffer, script_buffer_len,
+    lang_buffer, lang_buffer_len,
+    (unsigned char*) keywords_buffer, keywords_buffer_len,
+    keywords_len_ptr, keywords_count_ptr,
+    (unsigned char*) hashtags_buffer, hashtags_buffer_len,
+    hashtags_len_ptr, hashtags_count_ptr,
+    (unsigned char*) keyphrases_buffer, keyphrases_buffer_len,
+    keyphrases_len_ptr, keyphrases_count_ptr,
+    text_classes_buffer, text_classes_buffer_len,
+    text_classes_len_ptr, text_classes_count_ptr
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+    , (unsigned char*) text_class_contributors_buffer, text_class_contributors_buffer_len,
+    text_class_contributors_len_ptr, text_class_contributors_count_ptr
+#endif // CLASS_CONTRIBUTORS_ENABLED
+    , sentiment_buffer, sentiment_buffer_len)) < 0) {
     std::cerr << "ERROR: could not get gist for: " << text << std::endl;
     return -1;
   }
-  
+
   return ret_value;
 }

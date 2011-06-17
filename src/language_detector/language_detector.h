@@ -28,10 +28,13 @@ class LanguageDetector : public Classifier {
 
   /* implementation of pure virtual functions from classifier.h */
   int InitDependencies(int argc=0, char* argv[]=NULL);
-  int Classify(const std::string& text,
-               const unsigned int& text_len,
+  int Classify(const std::string& text, const unsigned int& text_len,
                std::string& guess_lang_output,
-               bool ignore_case=false);
+               std::string& top_classes, unsigned int& top_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+               , std::map<std::string, std::string>& class_contributors_map
+#endif // CLASS_CONTRIBUTORS_ENABLED
+               , bool ignore_case=false);
   int GetCorpus(const std::string& text, Corpus& corpus);
   int ClearDependencies();
   /* end */
@@ -39,16 +42,28 @@ class LanguageDetector : public Classifier {
   int Classify(const unsigned char* text_word_list,
                const unsigned int& list_len,
                const unsigned int& word_count,
-               char* guess_lang_buffer,
-               const unsigned int& guess_lang_buffer_len,
-               bool ignore_case=false);
+               char* guess_lang_buffer, const unsigned int& guess_lang_buffer_len,
+               char* top_classes_buffer, const unsigned int& top_classes_buffer_len,
+               unsigned int& top_classes_len, unsigned int& top_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+               , unsigned char* class_contributors_buffer,
+               const unsigned int& class_contributors_buffer_len,
+               unsigned int& class_contributors_len,
+               unsigned int& class_contributors_count
+#endif // CLASS_CONTRIBUTORS_ENABLED
+               , bool ignore_case=false);
 
   int InitTraining(const char *stopwords_file,
                    const char *dictionary_file,
                    const char *unsafe_dictionary_file);
   int DetectLanguage(std::set<std::string>& words_set,
                      std::string& guess_lang_output,
-                     bool ignore_case=false);
+                     std::string& top_classes,
+                     unsigned int& top_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+                     , std::map<std::string, std::string>& class_contributors_map
+#endif // CLASS_CONTRIBUTORS_ENABLED
+                     , bool ignore_case=false);
   int GenerateLangModel(const std::string& input_file_name,
                         const std::string& output_file_name);
   int GenerateLangModelFromTweets(const std::string& twitter_handles_file_name,

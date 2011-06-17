@@ -26,11 +26,15 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
+  std::set<std::string> locations;
   std::set<std::string> languages;
   std::set<std::string> text_classes;
   std::set<std::string> sub_classes;
+  std::map<std::string, std::string> text_class_contributors_map;
   std::string sentiment;
-  if (p.Profile(twitter_handle, languages, text_classes, sub_classes, sentiment, profile_name) < 0) {
+  if (p.Profile(twitter_handle,
+                locations, languages, text_classes, sub_classes,
+                text_class_contributors_map, sentiment, profile_name) < 0) {
     std::cerr << "ERROR: could not generate profile for " \
               << twitter_handle << std::endl;
     return -1;
@@ -60,6 +64,14 @@ int main(int argc, char* argv[]) {
     std::cout << " " << *sub_classes_iter; 
   }
   sub_classes.clear();
+  std::cout << std::endl;
+  std::cout << "text_class_contributors:";
+  std::map<std::string, std::string>::iterator map_iter;
+  for (map_iter = text_class_contributors_map.begin();
+       map_iter != text_class_contributors_map.end();
+       map_iter++) {
+    std::cout << map_iter->first << " : " << map_iter->second << " | ";
+  }
   std::cout << std::endl;
 
   return 0;

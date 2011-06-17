@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 #include <cstdlib>
-#include "config_reader.h"
+#include "classifier_config.h"
 
 int CreateDir(std::string file_name) {
 
@@ -41,14 +41,14 @@ int main(int argc, char* argv[]) {
   }
 
   inagist_classifiers::Config config;
-  if (inagist_classifiers::ConfigReader::Read(config_file_name.c_str(), config) < 0) {
+  if (inagist_classifiers::ClassifierConfig::Read(config_file_name.c_str(), config) < 0) {
     std::cerr << "ERROR: could not read config file: " << config_file_name << std::endl;
     return -1;
   }
 
   std::cout << config.test_data_file << std::endl;
   if (CreateDir(config.test_data_file) < 0) {
-    inagist_classifiers::ConfigReader::Clear(config);
+    inagist_classifiers::ClassifierConfig::Clear(config);
     return -1;
   }
 
@@ -66,22 +66,22 @@ int main(int argc, char* argv[]) {
       if (flag) {
         // training data folder
         if (CreateDir(config.iter->training_data_file) < 0) {
-          inagist_classifiers::ConfigReader::Clear(config);
+          inagist_classifiers::ClassifierConfig::Clear(config);
           return -1;
         }
         // handles file folder
         if (CreateDir(config.iter->handles_file) < 0) {
-          inagist_classifiers::ConfigReader::Clear(config);
+          inagist_classifiers::ClassifierConfig::Clear(config);
           return -1;
         }
         // corpus file folder
         if (CreateDir(config.iter->corpus_file) < 0) {
-          inagist_classifiers::ConfigReader::Clear(config);
+          inagist_classifiers::ClassifierConfig::Clear(config);
           return -1;
         }
         // corpus file folder
         if (CreateDir(config.iter->tweets_file) < 0) {
-          inagist_classifiers::ConfigReader::Clear(config);
+          inagist_classifiers::ClassifierConfig::Clear(config);
           return -1;
         }
       }
@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
       system(cmd.c_str());
     }
   }
-  inagist_classifiers::ConfigReader::Clear(config);
+  inagist_classifiers::ClassifierConfig::Clear(config);
 
   return 0;
 }

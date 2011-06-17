@@ -1,16 +1,16 @@
-#include "config_reader.h"
+#include "classifier_config.h"
 #include <iostream>
 #include <fstream>
 
 namespace inagist_classifiers {
 
-ConfigReader::ConfigReader() {
+ClassifierConfig::ClassifierConfig() {
 }
 
-ConfigReader::~ConfigReader() {
+ClassifierConfig::~ClassifierConfig() {
 }
 
-int ConfigReader::Clear(Config& config) {
+int ClassifierConfig::Clear(Config& config) {
   config.test_data_file.clear();
   config.freqs_file.clear();
   if (!config.classes.empty()) {
@@ -19,7 +19,7 @@ int ConfigReader::Clear(Config& config) {
   return 0;
 }
 
-int ConfigReader::Read(const char* config_file_name, Config& config) {
+int ClassifierConfig::Read(const char* config_file_name, Config& config) {
 
   if (!config_file_name) {
     std::cerr << "ERROR: invalid input. can't read config\n";

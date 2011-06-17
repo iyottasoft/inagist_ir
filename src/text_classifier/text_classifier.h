@@ -23,26 +23,49 @@ class TextClassifier : public Classifier {
 
   /* implementation of pure virtual functions from classifier.h */
   int InitDependencies(int argc=0, char* argv[]=NULL);
-  int Classify(const std::string& text,
-                 const unsigned int& text_len,
-                 std::string& text_class,
-                 bool ignore_case=false);
+  int Classify(const std::string& text, const unsigned int& text_len,
+               std::string& text_class,
+               std::string& top_classes, unsigned int& top_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+               , std::map<std::string, std::string>& class_contributors_map
+#endif // CLASS_CONTRIBUTORS_ENABLED
+               , bool ignore_case=false);
   int GetCorpus(const std::string& text, Corpus& corpus);
   int ClearDependencies();
   /* end */
 
-  int Classify(Corpus& corpus, std::string& text_class);
+  int Classify(Corpus& corpus,
+               std::string& text_class,
+               std::string& top_classes, unsigned int& top_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+               , std::map<std::string, std::string>& class_contributors_map
+#endif // CLASS_CONTRIBUTORS_ENABLED
+              );
 
   int Classify(std::set<std::string>& words_set,
                  std::string& text_class,
-                 bool ignore_case=false);
+                 std::string& top_classes, unsigned int& top_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+                 , std::map<std::string, std::string>& class_contributors_map
+#endif // CLASS_CONTRIBUTORS_ENABLED
+                 , bool ignore_case=false);
 
   int Classify(const unsigned char* text_word_list,
                const unsigned int& list_len,
                const unsigned int& word_count,
                char* guess_text_class_buffer,
                const unsigned int& guess_text_class_buffer_len,
-               bool ignore_case=false);
+               char* top_classes_buffer,
+               const unsigned int& top_classes_buffer_len,
+               unsigned int& top_classes_len,
+               unsigned int& top_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+               , unsigned char* class_contributors_buffer,
+               const unsigned int& class_contributors_buffer_len,
+               unsigned int& class_contributors_len,
+               unsigned int& class_contributors_count
+#endif // CLASS_CONTRIBUTORS_ENABLED
+               , bool ignore_case=false);
 
   int Clear();
   int SetDebugLevel(unsigned int debug_level);

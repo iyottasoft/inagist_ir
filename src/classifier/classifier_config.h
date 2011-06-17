@@ -1,5 +1,5 @@
-#ifndef _INAGIST_CLASSIFIERS_CONFIG_READER_H_
-#define _INAGIST_CLASSIFIERS_CONFIG_READER_H_
+#ifndef _INAGIST_CLASSIFIERS_CLASSIFIER_CONFIG_H_
+#define _INAGIST_CLASSIFIERS_CLASSIFIER_CONFIG_H_
 
 #include <string>
 #include <set>
@@ -24,15 +24,15 @@ typedef struct _config_struct {
   std::set<ClassStruct>::iterator iter;
 } Config;
 
-class ConfigReader {
+class ClassifierConfig {
  public:
   // functions
-  ConfigReader();
-  ~ConfigReader();
+  ClassifierConfig();
+  ~ClassifierConfig();
   static int Read(const char* config_file_name, Config& config);
   static int Clear(Config& config);
 };
 
 } // namespace inagist_classifiers
 
-#endif // _INAGIST_CLASSIFIERS_CONFIG_READER_H_
+#endif // _INAGIST_CLASSIFIERS_CLASSIFIER_CONFIG_H_

@@ -1,7 +1,7 @@
 include ../Makefile.incl
 PROJECT = classifier
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL}
+CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} #-DCLASS_CONTRIBUTORS_ENABLED
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../utils -I../curl_request_maker -I../twitter_api -I../inagist_api -I../ngrams_generator
@@ -16,10 +16,10 @@ BIN_DIR = ../../bin
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_corpus_manager \
-       ${BIN_DIR}/t_config_reader \
+       ${BIN_DIR}/t_classifier_config \
        ${BIN_DIR}/t_setup_classifier
 
-OBJS = config_reader.o corpus_manager.o naive_bayes_classifier.o classifier.o
+OBJS = classifier_config.o corpus_manager.o naive_bayes_classifier.o classifier.o #classifier_training.o classifier_testing.o
 
 all: ${LIB} ${BINS}
 	@echo "build done!"
@@ -44,9 +44,9 @@ ${BIN_DIR}/t_corpus_manager: t_corpus_manager.o ${LIB}
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_corpus_manager
 	@echo "done!"
 
-${BIN_DIR}/t_config_reader: t_config_reader.o ${LIB}
+${BIN_DIR}/t_classifier_config: t_classifier_config.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_config_reader
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_classifier_config
 	@echo "done!"
 
 ${BIN_DIR}/t_setup_classifier: t_setup_classifier.o ${LIB}

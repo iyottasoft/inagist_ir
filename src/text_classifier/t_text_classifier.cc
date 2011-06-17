@@ -33,15 +33,18 @@ int main(int argc, char* argv[]) {
 
   std::string line;
   std::string text_class;
+  std::string top_classes;
+  unsigned int top_classes_count = 0;
   if (0 == input_type) {
     while (getline(std::cin, line)) {
       if (line.compare("exit") == 0 || line.compare("quit") == 0) {
         break;
       }
-      if (tc.Classify(line, line.length(), text_class) < 0) {
+      if (tc.Classify(line, line.length(), text_class, top_classes, top_classes_count) < 0) {
         std::cerr << "ERROR: could not find text class: " << line << std::endl;
       } else {
-        std::cout << text_class << std::endl;
+        std::cout << "text_class: " << text_class << std::endl;
+        std::cout << "top_classes: " << top_classes << std::endl;
       }
     }
     return 0;
@@ -94,7 +97,7 @@ int main(int argc, char* argv[]) {
   for (set_iter = lines.begin(); set_iter != lines.end(); set_iter++) {
     line = *set_iter;
     std::cout << line << std::endl;
-    if (tc.Classify(line, line.length(), text_class) < 0) {
+    if (tc.Classify(line, line.length(), text_class, top_classes, top_classes_count) < 0) {
       std::cout << "ERROR: could not find text class\n";
     } else {
 #ifdef TC_DEBUG
@@ -102,7 +105,8 @@ int main(int argc, char* argv[]) {
         std::cout << line << std::endl;
       }
 #endif
-      std::cout << text_class << std::endl;
+      std::cout << "text_class:" << text_class << std::endl;
+      std::cout << "top_classes:" << top_classes << std::endl;
     }
     if (2 == input_type)
       break;
