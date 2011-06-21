@@ -60,8 +60,10 @@ class Classifier {
 
  protected:
   CorpusManager m_corpus_manager;
+  std::map<std::string, std::string> m_class_labels_map;
  private:
   Config m_config;
+
 };
 
 } // namespace inagist_classifiers

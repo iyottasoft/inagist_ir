@@ -8,7 +8,7 @@ INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../../include
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -lgistmaker -lclassifier -lngramsgenerator -lutils -lscriptdetector -linagistapi -ltwitterapi -lcurlrequestmaker -ljsonparser -lcurl
+LIBS = -l${PROJECT} -lgistmaker -lngramsgenerator -lutils -lscriptdetector -linagistapi -ltwitterapi -lcurlrequestmaker -ljsonparser -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin

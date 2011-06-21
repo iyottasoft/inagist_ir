@@ -240,9 +240,50 @@ int MapToPipeList(std::map<std::string, int>& map,
   return 0;
 }
 
+int PipeListToStringMap(unsigned char* buffer, const unsigned int buffer_len,
+                        unsigned int& list_len, unsigned int& list_count,
+                        std::map<std::string, std::string>& map) {
+  // this won't work. abandoning this. will come back later
+  if (!buffer) {
+    std::cerr << "ERROR: invalid input\n";
+    return -1;
+  }
+
+  if (list_len <= 0 || list_count <=0) {
+    return 0;
+  }
+
+  unsigned char* start = NULL;
+  unsigned char* end = NULL; 
+  unsigned int word_len = 0;
+  unsigned int count = 0;
+
+  start = buffer;
+  end = (unsigned char*) strchr((char*) start, '|');
+  word_len = 0;
+  std::string word;
+  while (start && end && *start != '\0') {
+    word_len = end - start; 
+    word.clear();
+    word.assign((char *) start, word_len);
+    if (map.find(word) != map.end()) {
+      map[word] += 1;
+    } else {
+      map[word] = 1;
+    }
+    count++;
+    start = end + 1;
+    end = (unsigned char*) strchr((char*) start, '|');
+  }
+  start = NULL;
+  end = NULL;
+
+  return count;
+}
+
 // copy elements of a set to a buffer, each element separated by a '|'
-int StringMapToPipeList(std::map<std::string, std::string>& map,
-                  unsigned char* buffer, unsigned int buffer_len,
+int StringMapToPipeList(std::map<std::string, std::string> map,
+                  unsigned char* buffer, const unsigned int& buffer_len,
                   unsigned int& list_len, unsigned int& list_count) {
 
   if (!buffer) {

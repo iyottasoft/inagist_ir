@@ -49,6 +49,8 @@ class GistMaker {
         unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
         unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
         unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr,
+        unsigned char* text_class_words_buffer, const unsigned int text_class_words_buffer_len,
+        unsigned int* text_class_words_len_ptr, unsigned int* text_class_words_count_ptr,
         char* text_classes_buffer, const unsigned int text_classes_buffer_len,
         unsigned int* text_classes_len_ptr, unsigned int* text_classes_count_ptr
 #ifdef CLASS_CONTRIBUTORS_ENABLED

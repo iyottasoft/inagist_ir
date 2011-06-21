@@ -8,7 +8,7 @@
 #endif
 #endif
 
-//#define NBC_DEBUG 5
+//#define NBC_DEBUG 3
 
 namespace inagist_classifiers {
 
@@ -74,6 +74,7 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   unsigned int count = 0;
   std::string classes[MAX_CORPUS_NUMBER];
   std::string class_name;
+  std::string class_label;
   std::string test_element;
 
   if (corpus_map.size() > MAX_CORPUS_NUMBER) {
@@ -217,12 +218,59 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
                                       , unsigned int debug_level
                                      ) {
 
-  top_classes_count = 0;
-
   if (test_corpus.size() < 1) {
     guess_class_output = "RR";
     top_classes_output = "RR";
     top_classes_count = 1;
+    return -1;
+  }
+
+  top_classes_count = 0;
+
+  std::set<std::string> top_classes_set;
+  int ret_val = 0;
+  if (GuessClass2(corpus_map,
+                  classes_freq_map,
+                  test_corpus,
+                  guess_class_output,
+                  top_classes_set
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+                  , class_contributors
+#endif // CLASS_CONTRIBUTORS_ENABLED
+                  ) < 0) {
+    std::cerr << "ERROR: could not get top classes set\n";
+    return -1;
+  }
+
+  std::set<std::string>::iterator set_iter;
+  if (!top_classes_set.empty()) {
+    set_iter = top_classes_set.begin();
+    top_classes_output.assign(*set_iter); 
+    top_classes_count++;
+    set_iter++;
+    for (; set_iter != top_classes_set.end(); set_iter++) {
+      top_classes_output += "|" + *set_iter; 
+      top_classes_count++;
+    }
+    top_classes_output += "|";
+  }
+
+  return ret_val;
+}
+
+int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
+                                      Corpus& classes_freq_map,
+                                      Corpus& test_corpus,
+                                      std::string& guess_class_output,
+                                      std::set<std::string>& top_classes_set
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+                                      , std::map<std::string, std::string>& class_contributors
+#endif // CLASS_CONTRIBUTORS_ENABLED
+                                      , unsigned int debug_level
+                                     ) {
+
+  if (test_corpus.size() < 1) {
+    guess_class_output = "RR";
     return -1;
   }
 
@@ -257,34 +305,24 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
     prior_total_entries = (*corpus_iter).second;
   }
   bool entry_found = false;
-  for (corpus_map_iter = corpus_map.begin(); corpus_map_iter != corpus_map.end(); corpus_map_iter++) {
+  double freq = 0;
+  double prior_freq = 0;
+  freqs[count] = 0;
+  prior_freqs[count] = 0;
 
+  for (corpus_map_iter = corpus_map.begin(); corpus_map_iter != corpus_map.end(); corpus_map_iter++) {
+    freq = 0;
+    prior_freq = 0;
     // for this iteration, what is the class name and corpus?
     class_name = corpus_map_iter->first;
     if (class_name.empty()) {
       std::cerr << "ERROR: invalid class name. fatal error\n";
       break;
     }
-    classes[count] = class_name;
     corpus_ptr = &(corpus_map_iter->second);
     if (corpus_ptr->empty()) {
       std::cout << "WARNING: no entries found in corpus for class: " << class_name << std::endl;
       continue;
-    }
-
-    freqs[count] = 0;
-    prior_freqs[count] = 0;
-
-    // now that we know the classes, do we have its previous frequency?
-    // lets get it from classes_freq_map
-    if (!classes_freq_map.empty()) {
-      if ((class_freq_iter = classes_freq_map.find(class_name)) != classes_freq_map.end()) {
-        prior_entry_for_class = class_freq_iter->second;
-      }
-      if (prior_entry_for_class > 0 && prior_total_entries) {
-        prior_freqs[count] += log(prior_entry_for_class/prior_total_entries);
-        freqs[count] = prior_freqs[count];
-      }
     }
 
     // now lets pit this corpus with the test corpus
@@ -293,14 +331,17 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
 #ifdef CLASS_CONTRIBUTORS_ENABLED
     std::map<std::string, std::string>::iterator cc_iter;
 #endif // CLASS_CONTRIBUTORS_ENABLED
-    for (test_corpus_iter = test_corpus.begin(); test_corpus_iter != test_corpus.end(); test_corpus_iter++) {
+    for (test_corpus_iter = test_corpus.begin();
+         test_corpus_iter != test_corpus.end();
+         test_corpus_iter++) {
       test_element = test_corpus_iter->first; 
       // see if this element in the test corpus is present in the current corpus
       corpus_iter = corpus_ptr->find(test_element); 
       if (corpus_iter != corpus_ptr->end()) {
 #ifdef NBC_DEBUG
         if (debug_level > 4 || NBC_DEBUG > 4) {
-          std::cout << (*corpus_iter).first << " : " << (*corpus_iter).second << " in " << class_name << std::endl;
+          std::cout << (*corpus_iter).first << " : " << (*corpus_iter).second \
+                    << " in " << class_name << std::endl;
         }
 #endif
         temp_freq = (double) (*corpus_iter).second;
@@ -320,13 +361,36 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
 #endif // CLASS_CONTRIBUTORS_ENABLED
       }
     }
+    if (!entry_found)
+      continue;
     if (temp_total_freq > 0) {
-      freqs[count] += log(temp_total_freq/test_corpus.size());
+      freq = log(temp_total_freq/test_corpus.size());
     }
-    count++;
+    if (freq <= 0)
+      continue;
+
+    // now that we know the classes, do we have its previous frequency?
+    // lets get it from classes_freq_map
+    if (!classes_freq_map.empty()) {
+      if ((class_freq_iter = classes_freq_map.find(class_name)) != classes_freq_map.end()) {
+        prior_entry_for_class = class_freq_iter->second;
+      }
+      if (prior_entry_for_class > 0 && prior_total_entries) {
+        prior_freq = log(prior_entry_for_class/prior_total_entries);
+      }
+    }
+
+    if (freq > 0) {
+      classes[count] = class_name;
+      prior_freqs[count] = prior_freq;
+      freqs[count] = freq; // + prior_freq; MASSIVE DECISION!
+      count++;
+      freqs[count] = 0;
+      prior_freqs[count] = 0;
+    }
   }
 
-  if (!entry_found) {
+  if (!entry_found || count == 0) {
     guess_class_output = "XX";
     return 0;
   }
@@ -379,7 +443,6 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
   unsigned int top2_index = 0;
   double top3 = 0;
   unsigned int top3_index = 0;
-  double freq = 0;
   if (count > 1) {
     if (freqs[0] > freqs[1]) {
       top1 = freqs[0];
@@ -398,7 +461,7 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
     top3_index = 2;
     Heapify(top1, top1_index, top2, top2_index, top3, top3_index);
   }
-  for (unsigned int j=2; j<count; j++) {
+  for (unsigned int j=3; j<count; j++) {
     freq = freqs[j];
     if (freq > top3) {
       top3 = freq;
@@ -406,16 +469,16 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
       Heapify(top1, top1_index, top2, top2_index, top3, top3_index);
     }
   }
-  if (count > 2) {
-    top_classes_output = classes[top1_index];
-    top_classes_count++;
+
+  top_classes_set.insert(classes[top1_index]);
+  if (count > 1) {
     if (top2 > mean) {
-      top_classes_output += "|" + classes[top2_index];
-      top_classes_count++;
+      top_classes_set.insert(classes[top2_index]);
     }
+  }
+  if (count > 2) {
     if (top3 > mean) {
-      top_classes_output += "|" + classes[top3_index];
-      top_classes_count++;
+      top_classes_set.insert(classes[top3_index]);
     }
   }
 

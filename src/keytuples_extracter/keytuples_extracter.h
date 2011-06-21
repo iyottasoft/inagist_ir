@@ -26,13 +26,15 @@ class KeyTuplesExtracter {
   KeyTuplesExtracter();
   ~KeyTuplesExtracter();
 
-  int Init(std::string config_file);
+  int Init(std::string config_file,
+           bool load_classifier_dictionary=false);
   int Init(const char* stopwords_file,
            const char* dictionary_file,
            const char* unsafe_dictionary_file,
            const char* stemmer_dictionary_file=NULL,
            const char* input_file=NULL,
            const char* output_file=NULL);
+  int LoadClassifierDictionary(const char* classifier_dictionary_file);
   int DeInit();
 
 #ifndef KEYWORDS_DISABLED

@@ -80,6 +80,11 @@ int Classifier::Init(std::string config_file_name, bool ignore_history) {
     return -1;
   }
 
+  if (ClassifierConfig::LoadClassLabelsMap(m_config, m_class_labels_map) < 0) {
+    std::cerr << "ERROR: could not load class labels map\n";
+    return -1;
+  }
+
   return 0;
 }
 

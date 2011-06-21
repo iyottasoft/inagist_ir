@@ -32,7 +32,8 @@ KeyTuplesExtracter::~KeyTuplesExtracter() {
     std::cerr << "ERROR: DeInit() failed\n";
 }
 
-int KeyTuplesExtracter::Init(std::string config_file) {
+int KeyTuplesExtracter::Init(std::string config_file,
+                             bool load_classifier_dictionary) {
 
   if (config_file.size() < 5) {
     std::cerr << "ERROR: invalid config file name\n";
@@ -53,8 +54,23 @@ int KeyTuplesExtracter::Init(std::string config_file) {
     std::cerr << "ERROR: could not initialize KeyTuplesExtracter\n";
     return -1;
   }
+
+  if (load_classifier_dictionary) {
+    LoadClassifierDictionary(config.classifier_dictionary_file.c_str());
+  }
+
   inagist_trends::KeyTuplesConfig::Clear(config);
 
+  return 0;
+}
+
+int KeyTuplesExtracter::LoadClassifierDictionary(const char* classifier_dictionary_file) {
+  int ret = m_dictionary.Load(classifier_dictionary_file);
+  if (ret < 0) {
+    std::cerr << "ERROR: could not load classifier dictionary file: " \
+              << classifier_dictionary_file;
+    return -1;
+  }
   return 0;
 }
 
@@ -738,6 +754,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
 
   // misc
   unsigned char *pch = NULL;
+  unsigned char ch;
 
   // unsafe
   strcpy(safe_status_buffer, "safe");
@@ -988,12 +1005,18 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
   }
 #endif // LANG_WORDS_ENABLED
 
+  bool is_apostrophe = false;
 #ifdef TEXT_CLASS_WORDS_ENABLED
   if (current_word_start &&
       !current_word_stop &&
       !current_word_dict &&
       !current_word_starts_num &&
       *current_word_start != '#') {
+    if (strncmp((char *) current_word_end-2, "\'s", 2) == 0) {
+      is_apostrophe = true;
+      ch = *(current_word_end-2);
+      *(current_word_end-2) = '\0';
+    }
     if (!current_word_caps) {
       text_class_words_set.insert(std::string((char *) current_word_start));
     } else if (current_word_all_caps) {
@@ -1002,6 +1025,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
       *current_word_start += 32;
       text_class_words_set.insert(std::string((char *) current_word_start));
       *current_word_start -= 32;
+    }
+    if (is_apostrophe) {
+      *(current_word_end-2) = ch;
     }
   }
 #endif // TEXT_CLASS_WORDS_ENABLED
@@ -1223,6 +1249,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
             !next_word_dict &&
             !next_word_starts_num &&
             *next_word_start != '#') {
+          if (strncmp((char *) next_word_end-2, "\'s", 2) == 0) {
+            is_apostrophe = true;
+            ch = *(next_word_end-2);
+            *(next_word_end-2) = '\0';
+          }
           if (!next_word_caps) {
             text_class_words_set.insert(std::string((char *) next_word_start));
           } else if (next_word_all_caps) {
@@ -1232,6 +1263,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
             text_class_words_set.insert(std::string((char *) next_word_start));
             *next_word_start -= 32;
           }
+        }
+        if (is_apostrophe) {
+          *(next_word_end-2) = ch;
         }
 #endif // TEXT_CLASS_WORDS_ENABLED
 
@@ -1489,7 +1523,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
 
 #ifdef KEYPHRASE_ENABLED
 
-      unsigned char ch;
       unsigned int temp_len = 0;
 
       // write keyphrases
@@ -1567,7 +1600,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
 #ifndef KEYWORDS_DISABLED
 
 #ifndef KEYPHRASE_ENABLED
-      unsigned char ch;
       unsigned int temp_len = 0;
 #endif // KEYPHRASE_ENABLED
 

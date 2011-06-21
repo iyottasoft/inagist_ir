@@ -26,9 +26,12 @@ namespace inagist_utils {
   int MapToPipeList(std::map<std::string, int>& map,
                     unsigned char* buffer, unsigned int buffer_len,
                     unsigned int& list_len, unsigned int& list_count);
-  int StringMapToPipeList(std::map<std::string, std::string>& map,
-                    unsigned char* buffer, unsigned int buffer_len,
+  int StringMapToPipeList(std::map<std::string, std::string> map,
+                    unsigned char* buffer, const unsigned int& buffer_len,
                     unsigned int& list_len, unsigned int& list_count);
+  int PipeListToStringMap(unsigned char* buffer, const unsigned int buffer_len,
+                        unsigned int& list_len, unsigned int& list_count,
+                        std::map<std::string, std::string>& map);
   int PipeListToSet(unsigned char* buffer, std::set<std::string>& set);
   int SetToPipeList(std::set<std::string>& set,
                     unsigned char* buffer, unsigned int buffer_len,

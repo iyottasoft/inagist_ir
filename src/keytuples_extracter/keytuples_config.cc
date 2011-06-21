@@ -13,6 +13,7 @@ KeyTuplesConfig::~KeyTuplesConfig() {
 int KeyTuplesConfig::Clear(Config& config) {
   config.stopwords_file.clear();
   config.dictionary_file.clear();
+  config.classifier_dictionary_file.clear();
   config.unsafe_dictionary_file.clear();
   config.stemmer_dictionary_file.clear();
   return 0;
@@ -51,6 +52,8 @@ int KeyTuplesConfig::Read(const char* config_file_name, Config& config) {
         config.stopwords_file = value;
       } else if (key.compare(0, 10, "dictionary") == 0) {
         config.dictionary_file = value;
+      } else if (key.compare(0, 21, "classifier_dictionary") == 0) {
+        config.classifier_dictionary_file = value;
       } else if (key.compare(0, 17, "unsafe_dictionary") == 0) {
         config.unsafe_dictionary_file = value;
       } else if (key.compare(0, 18, "stemmer_dictionary") == 0) {

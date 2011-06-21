@@ -8,6 +8,7 @@
 #endif
 
 #include <map>
+#include <set>
 #include "corpus_manager.h"
 
 namespace inagist_classifiers {
@@ -27,6 +28,15 @@ class NaiveBayesClassifier {
                  std::string& guess_class_output,
                  std::string& top_classes_output,
                  unsigned int& top_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+                 , std::map<std::string, std::string>& class_contributors
+#endif // CLASS_CONTRIBUTORS_ENABLED
+                 , unsigned int debug_level=0);
+  static int GuessClass2(CorpusMap& corpus_map,
+                 Corpus& classes_freq_map,
+                 Corpus& test_corpus,
+                 std::string& guess_class_output,
+                 std::set<std::string>& top_classes_set
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                  , std::map<std::string, std::string>& class_contributors
 #endif // CLASS_CONTRIBUTORS_ENABLED

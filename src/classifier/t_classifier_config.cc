@@ -25,6 +25,17 @@ int main(int argc, char* argv[]) {
       std::cout << config.iter->name << std::endl;
     }
   }
+
+  std::map<std::string, std::string> class_labels_map;
+  if (inagist_classifiers::ClassifierConfig::LoadClassLabelsMap(config, class_labels_map) < 0) {
+    std::cerr << "ERROR: could not load class labels map\n";
+  }
+  std::map<std::string, std::string>::iterator label_iter;
+  std::cout << "Class Labels Map:\n";
+  for (label_iter = class_labels_map.begin(); label_iter != class_labels_map.end(); label_iter++) {
+    std::cout << label_iter->first << ":" << label_iter->second << std::endl;
+  }
+
   inagist_classifiers::ClassifierConfig::Clear(config);
 
   // TODO (balaji) write code here to read the test data file and ensure that

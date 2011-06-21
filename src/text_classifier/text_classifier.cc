@@ -99,11 +99,12 @@ int TextClassifier::Classify(const std::string& text, const unsigned int& text_l
     std::cout << "now guessing class for ... \n" << text << std::endl;
 #endif
 
+  std::set<std::string> top_classes_set;
   if (NaiveBayesClassifier::GuessClass2(m_corpus_manager.m_corpus_map,
                                         m_corpus_manager.m_classes_freq_map,
                                         test_corpus,
                                         text_class,
-                                        top_classes, top_classes_count
+                                        top_classes_set
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                                         , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
@@ -117,6 +118,28 @@ int TextClassifier::Classify(const std::string& text, const unsigned int& text_l
     top_classes_count = 1;
 #endif
     return -1;
+  }
+
+  if (m_class_labels_map.empty()) {
+    std::cerr << "ERROR: class labels map empty\n";
+    top_classes.assign("RR|");
+    top_classes_count = 1;
+    return -1;
+  }
+
+  std::set<std::string>::iterator name_set_iter;
+  std::map<std::string, std::string>::iterator label_map_iter;
+  for (name_set_iter = top_classes_set.begin();
+       name_set_iter != top_classes_set.end();
+       name_set_iter++) {
+    if ((label_map_iter = m_class_labels_map.find(*name_set_iter)) != m_class_labels_map.end()) {
+      top_classes += label_map_iter->second;
+    } else {
+      top_classes += *name_set_iter; 
+      std::cerr << "ERROR: no class label found for: " << *name_set_iter << std::endl;
+    }
+    top_classes += "|";
+    top_classes_count++;
   }
 
 #ifdef TC_DEBUG
@@ -148,12 +171,28 @@ int TextClassifier::Classify(const unsigned char* text_word_list,
 #endif // CLASS_CONTRIBUTORS_ENABLED
                              , bool ignore_case) {
 
-  if (!text_word_list || list_len <= 0 || word_count <= 0) {
+  if (list_len <= 0 ||
+      word_count <= 0) {
+#ifdef TC_DEBUG
+    std::cout << "WARNING: empty word list. no classification done\n";
+#endif
+    return 0;
+  }
+
+  if (!text_word_list) {
+    std::cerr << "ERROR: invalid input text word list\n";
+    return -1;
+  }
+
+  if (!guess_text_class_buffer ||
+      !top_classes_buffer) {
+    std::cerr << "ERROR: invalid input text class buffers\n";
     return -1;
   }
 
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   if (!class_contributors_buffer) {
+    std::cerr << "ERROR: invalid class contributors buffer\n";
     return -1;
   }
   class_contributors_len = 0;
@@ -184,6 +223,8 @@ int TextClassifier::Classify(const unsigned char* text_word_list,
 
   std::string text_class;
   std::string top_classes;
+  std::set<std::string> top_classes_set;
+  std::set<std::string> top_classes_labels_set;
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   std::map<std::string, std::string> class_contributors_map;
 #endif // CLASS_CONTRIBUTORS_ENABLED
@@ -191,7 +232,7 @@ int TextClassifier::Classify(const unsigned char* text_word_list,
                                         m_corpus_manager.m_classes_freq_map,
                                         test_corpus,
                                         text_class,
-                                        top_classes, top_classes_count
+                                        top_classes_set
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                                         , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
@@ -201,18 +242,51 @@ int TextClassifier::Classify(const unsigned char* text_word_list,
     top_classes_len = top_classes.length();
     return -1;
   }
+  test_corpus.clear();
 
+  // text class
 #ifdef TC_DEBUG
   if (m_debug_level > 1) {
     std::cout << "guess_class: " << text_class << std::endl;
-    std::cout << "top_classes: " << top_classes << std::endl;
   }
 #endif
-
-  test_corpus.clear();
   strcpy(guess_text_class_buffer, text_class.c_str());
-  strcpy(top_classes_buffer, top_classes.c_str());
-  top_classes_len = top_classes.length();
+  text_class.clear();
+
+  // top classes
+  std::map<std::string, std::string>::iterator label_map_iter;
+  if (m_class_labels_map.empty()) {
+    std::cerr << "ERROR: class labels map empty\n";
+    top_classes_set.clear();
+    strcpy(top_classes_buffer, "RR|");
+    top_classes_count = 1;
+    top_classes_len = 3; 
+    return -1;
+  }
+
+  top_classes_len = 0;
+  top_classes_count = 0;
+  char* ptr = top_classes_buffer;
+  std::set<std::string>::iterator set_iter;
+  std::string element;
+  for (set_iter = top_classes_set.begin(); set_iter != top_classes_set.end(); set_iter++) {
+    if ((label_map_iter = m_class_labels_map.find(*set_iter)) != m_class_labels_map.end()) {
+      element.assign(label_map_iter->second);
+    } else {
+      element.assign(*set_iter); 
+    }
+    strcpy(ptr, element.c_str()); 
+    ptr += element.length();
+    strcpy(ptr, "|");
+    ptr += 1;
+    top_classes_count++;
+  }
+  top_classes_len = ptr - top_classes_buffer;
+  ptr = NULL;
+  top_classes_set.clear();
+  element.clear();
+
+  // class contributors
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   if (class_contributors_map.empty()) {
 #ifdef TC_DEBUG
@@ -284,11 +358,12 @@ int TextClassifier::Classify(Corpus& corpus,
                             ) {
 
   int ret_value = 0;
+  std::set<std::string> top_classes_set;
   if ((ret_value = NaiveBayesClassifier::GuessClass2(m_corpus_manager.m_corpus_map,
                                        m_corpus_manager.m_classes_freq_map,
                                        corpus,
                                        text_class,
-                                       top_classes, top_classes_count
+                                       top_classes_set
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                                        , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
@@ -296,6 +371,29 @@ int TextClassifier::Classify(Corpus& corpus,
     std::cout << "ERROR: naive bayes classifiers could not guess the text class\n";
     return -1;
   }
+
+  if (m_class_labels_map.empty()) {
+    std::cerr << "ERROR: class labels map empty\n";
+    top_classes.assign("RR|");
+    top_classes_count = 1;
+    return -1;
+  }
+
+  std::set<std::string>::iterator name_set_iter;
+  std::map<std::string, std::string>::iterator label_map_iter;
+  for (name_set_iter = top_classes_set.begin();
+       name_set_iter != top_classes_set.end();
+       name_set_iter++) {
+    if ((label_map_iter = m_class_labels_map.find(*name_set_iter)) != m_class_labels_map.end()) {
+      top_classes += label_map_iter->second;
+    } else {
+      top_classes += *name_set_iter; 
+      std::cerr << "no class label found for: " << *name_set_iter << std::endl;
+    }
+    top_classes += "|";
+    top_classes_count++;
+  }
+  top_classes_set.clear();
 
 #ifdef TC_DEBUG
   if (m_debug_level > 1) {

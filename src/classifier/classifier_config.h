@@ -3,11 +3,13 @@
 
 #include <string>
 #include <set>
+#include <map>
 
 namespace inagist_classifiers {
 
 typedef struct _class_struct { 
   std::string name;
+  std::string label;
   std::string training_data_file;
   std::string handles_file;
   std::string corpus_file;
@@ -19,7 +21,7 @@ typedef struct _class_struct {
 
 typedef struct _config_struct {
   std::string test_data_file;
-  std::string freqs_file; // this is same data as test_data expect this file is updated repeatedly
+  std::string freqs_file; // this is same data as test_data except this file is updated repeatedly
   std::set<ClassStruct> classes;
   std::set<ClassStruct>::iterator iter;
 } Config;
@@ -30,6 +32,7 @@ class ClassifierConfig {
   ClassifierConfig();
   ~ClassifierConfig();
   static int Read(const char* config_file_name, Config& config);
+  static int LoadClassLabelsMap(Config& config, std::map<std::string, std::string>& class_labels_map);
   static int Clear(Config& config);
 };
 

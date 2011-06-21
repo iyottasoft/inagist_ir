@@ -44,7 +44,7 @@ int GistMaker::Init(const char* keytuples_extracter_config_file,
   std::cout << "INFO: initializing keytuples_extracter with config: " \
             << keytuples_extracter_config_file << std::endl;
 #endif
-  if (m_keytuples_extracter.Init(keytuples_extracter_config_file) < 0) {
+  if (m_keytuples_extracter.Init(keytuples_extracter_config_file, true) < 0) {
     std::cerr << "ERROR: could not initialize KeyTuplesExtracter\n";
     return -1;
   }
@@ -143,7 +143,7 @@ int GistMaker::GetGist(const std::string& text,
                        , std::string& sentiment) {
 
   if (text.length() < 1) {
-    std::cerr << "ERROR: invalid input\n";
+    std::cerr << "ERROR: invalid input text\n";
     return -1;
   }
 
@@ -164,33 +164,45 @@ int GistMaker::GetGist(const std::string& text,
 
   unsigned char keywords_buffer[MAX_BUFFER_LEN];
   memset(keywords_buffer, 0, MAX_BUFFER_LEN);
+  unsigned int keywords_buffer_len = MAX_BUFFER_LEN;
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
 
   unsigned char hashtags_buffer[MAX_BUFFER_LEN];
   memset(hashtags_buffer, 0, MAX_BUFFER_LEN);
+  unsigned int hashtags_buffer_len = MAX_BUFFER_LEN;
   unsigned int hashtags_len = 0;
   unsigned int hashtags_count = 0;
 
   unsigned char keyphrases_buffer[MAX_BUFFER_LEN];
   memset(keyphrases_buffer, 0, MAX_BUFFER_LEN);
+  unsigned int keyphrases_buffer_len = MAX_BUFFER_LEN;
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
 
-  char text_classes_buffer[MAX_LIST_LEN];
-  memset(text_classes_buffer, 0, MAX_LIST_LEN);
+  unsigned char text_class_words_buffer[MAX_BUFFER_LEN];
+  memset(text_class_words_buffer, 0, MAX_BUFFER_LEN);
+  unsigned int text_class_words_buffer_len = MAX_BUFFER_LEN;
+  unsigned int text_class_words_len = 0;
+  unsigned int text_class_words_count = 0;
+
+  char text_classes_buffer[MAX_BUFFER_LEN];
+  memset(text_classes_buffer, 0, MAX_BUFFER_LEN);
+  unsigned int text_classes_buffer_len = MAX_BUFFER_LEN;
   unsigned int text_classes_len = 0;
   unsigned int text_classes_count = 0;
 
 #ifdef CLASS_CONTRIBUTORS_ENABLED
-  unsigned char text_class_contributors_buffer[MAX_BUFFER_LEN];
-  memset(text_class_contributors_buffer, 0, MAX_BUFFER_LEN);
+  unsigned char text_class_contributors_buffer[ULTIMATE_BUFFER_LEN];
+  memset(text_class_contributors_buffer, 0, ULTIMATE_BUFFER_LEN);
+  unsigned int text_class_contributors_buffer_len = ULTIMATE_BUFFER_LEN;
   unsigned int text_class_contributors_len = 0;
   unsigned int text_class_contributors_count = 0;
 #endif // CLASS_CONTRIBUTORS_ENABLED
 
   char sentiment_buffer[MAX_CLASS_NAME];
   memset(sentiment_buffer, 0, MAX_CLASS_NAME);
+  unsigned int sentiment_buffer_len = MAX_CLASS_NAME;
 
   strcpy((char*) buffer, text.c_str());
   int ret_value = 0;
@@ -198,19 +210,21 @@ int GistMaker::GetGist(const std::string& text,
                 (char*) safe_status_buffer, safe_status_buffer_len,
                 (char*) script_buffer, script_buffer_len,
                 (char*) lang_buffer, lang_buffer_len,
-                (unsigned char*) keywords_buffer, MAX_BUFFER_LEN,
+                (unsigned char*) keywords_buffer, keywords_buffer_len,
                 &keywords_len, &keywords_count,
-                (unsigned char*) hashtags_buffer, MAX_BUFFER_LEN,
+                (unsigned char*) hashtags_buffer, hashtags_buffer_len,
                 &hashtags_len, &hashtags_count,
-                (unsigned char*) keyphrases_buffer, MAX_BUFFER_LEN,
+                (unsigned char*) keyphrases_buffer, keyphrases_buffer_len,
                 &keyphrases_len, &keyphrases_count,
-                (char*) text_classes_buffer, MAX_LIST_LEN,
+                (unsigned char*) text_class_words_buffer, text_class_words_buffer_len,
+                &text_class_words_len, &text_class_words_count,
+                (char*) text_classes_buffer, text_classes_buffer_len,
                 &text_classes_len, &text_classes_count
 #ifdef CLASS_CONTRIBUTORS_ENABLED
-                , (unsigned char *) text_class_contributors_buffer, ULTIMATE_BUFFER_LEN,
+                , (unsigned char *) text_class_contributors_buffer, text_class_contributors_buffer_len,
                 &text_class_contributors_len, &text_class_contributors_count
 #endif // CLASS_CONTRIBUTORS_ENABLED
-                , (char*) sentiment_buffer, MAX_CLASS_NAME)) < 0) {
+                , (char*) sentiment_buffer, sentiment_buffer_len)) < 0) {
     std::cerr << "ERROR: could not get keywords\n";
   } else {
     safe_status = std::string(safe_status_buffer);
@@ -255,6 +269,8 @@ int GistMaker::GetGist(const unsigned char* tweet, const unsigned int tweet_len,
       unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
       unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
       unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr,
+      unsigned char* text_class_words_buffer, const unsigned int text_class_words_buffer_len,
+      unsigned int* text_class_words_len_ptr, unsigned int* text_class_words_count_ptr,
       char* text_classes_buffer, const unsigned int text_classes_buffer_len,
       unsigned int* text_classes_len_ptr, unsigned int* text_classes_count_ptr
 #ifdef CLASS_CONTRIBUTORS_ENABLED
@@ -276,6 +292,9 @@ int GistMaker::GetGist(const unsigned char* tweet, const unsigned int tweet_len,
   *keyphrases_buffer = '\0';
   *keyphrases_len_ptr = 0;
   *keyphrases_count_ptr = 0;
+  *text_class_words_buffer = '\0';
+  *text_class_words_len_ptr = 0;
+  *text_class_words_count_ptr = 0;
   *text_classes_buffer = '\0';
   *text_classes_len_ptr = 0;
   *text_classes_count_ptr = 0;
@@ -286,8 +305,6 @@ int GistMaker::GetGist(const unsigned char* tweet, const unsigned int tweet_len,
 
   // this can be global. keeping it local for the time being
   unsigned char buffer[MAX_BUFFER_LEN];
-  unsigned int buffer_content_len = 0;
-  unsigned int buffer_content_count = 0;
   if (tweet_len > 0 && tweet_len < MAX_BUFFER_LEN) {
     memcpy((char *) buffer, (char *) tweet, tweet_len);
     buffer[tweet_len] = '\0';
@@ -303,18 +320,14 @@ int GistMaker::GetGist(const unsigned char* tweet, const unsigned int tweet_len,
   unsigned int hashtags_count = 0;
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
+  unsigned int text_class_words_len = 0;
+  unsigned int text_class_words_count = 0;
 
   unsigned char lang_words_buffer[MAX_BUFFER_LEN];
   lang_words_buffer[0] = '\0';
   unsigned int lang_words_buffer_len = MAX_BUFFER_LEN;
   unsigned int lang_words_len = 0;
   unsigned int lang_words_count = 0;
-
-  unsigned char text_class_words_buffer[MAX_BUFFER_LEN];
-  text_class_words_buffer[0] = '\0';
-  unsigned int text_class_words_buffer_len = MAX_BUFFER_LEN;
-  unsigned int text_class_words_len = 0;
-  unsigned int text_class_words_count = 0;
 
   ret_value = m_keytuples_extracter.GetKeyTuples(buffer, tweet_len,
                    safe_status_buffer, safe_status_buffer_len,
@@ -342,6 +355,9 @@ int GistMaker::GetGist(const unsigned char* tweet, const unsigned int tweet_len,
     *keyphrases_buffer = '\0';
     *keyphrases_len_ptr = 0;
     *keyphrases_count_ptr = 0;
+    *text_class_words_buffer = '\0';
+    *text_class_words_len_ptr = 0;
+    *text_class_words_count_ptr = 0;
     return ret_value;
   } else {
     *keywords_len_ptr = keywords_len;
@@ -350,6 +366,8 @@ int GistMaker::GetGist(const unsigned char* tweet, const unsigned int tweet_len,
     *hashtags_count_ptr = hashtags_count;
     *keyphrases_len_ptr = keyphrases_len;
     *keyphrases_count_ptr = keyphrases_count;
+    *text_class_words_len_ptr = text_class_words_len;
+    *text_class_words_count_ptr = text_class_words_count;
   }
 
   char top_lang_classes_buffer[MAX_BUFFER_LEN];
@@ -357,9 +375,10 @@ int GistMaker::GetGist(const unsigned char* tweet, const unsigned int tweet_len,
   unsigned int top_lang_classes_buffer_len = MAX_BUFFER_LEN;
   unsigned int top_lang_classes_len = 0;
   unsigned int top_lang_classes_count = 0;
-  unsigned char lang_class_contributors_buffer[MAX_BUFFER_LEN];
+
+  unsigned char lang_class_contributors_buffer[ULTIMATE_BUFFER_LEN];
   lang_class_contributors_buffer[0] = '\0';
-  unsigned int lang_class_contributors_buffer_len = MAX_BUFFER_LEN;
+  unsigned int lang_class_contributors_buffer_len = ULTIMATE_BUFFER_LEN;
   unsigned int lang_class_contributors_len = 0;
   unsigned int lang_class_contributors_count = 0;
 
@@ -380,24 +399,18 @@ int GistMaker::GetGist(const unsigned char* tweet, const unsigned int tweet_len,
 #endif
   }
 
-  strcpy((char *) buffer, (char *) keywords_buffer);
-  buffer_content_len = keywords_len;
-  buffer_content_count = keywords_count;
-  strcpy((char *) buffer + buffer_content_len, (char *) hashtags_buffer);
-  buffer_content_len += hashtags_len;
-  buffer_content_count += hashtags_count;
-  buffer[buffer_content_len] = 0;
-
   char text_class_buffer[MAX_BUFFER_LEN];
   text_class_buffer[0] = '\0';
   unsigned int text_class_buffer_len = MAX_BUFFER_LEN;
+
   unsigned int text_classes_len = 0;
   unsigned int text_classes_count = 0;
+
   unsigned int text_class_contributors_len = 0;
   unsigned int text_class_contributors_count = 0;
 
   int ret_val = 0;
-  if ((ret_val = m_text_classifier.Classify(buffer, buffer_content_len, buffer_content_count,
+  if ((ret_val = m_text_classifier.Classify(text_class_words_buffer, text_class_words_len, text_class_words_count,
                                  text_class_buffer, text_class_buffer_len,
                                  text_classes_buffer, text_classes_buffer_len,
                                  text_classes_len, text_classes_count
@@ -417,10 +430,15 @@ int GistMaker::GetGist(const unsigned char* tweet, const unsigned int tweet_len,
   *text_class_contributors_len_ptr = text_class_contributors_len;
   *text_class_contributors_count_ptr = text_class_contributors_count;
 
-  buffer[0] = '\0';
   lang_words_buffer[0] = '\0';
   top_lang_classes_buffer[0] = '\0';
   text_class_buffer[0] = '\0';
+
+/*
+  std::cout << "text: " << tweet << std::endl;
+  std::cout << "text_class: " << text_class_buffer << std::endl;
+  std::cout << "top_classes: " << text_classes_buffer << std::endl;
+*/
 
   return ret_value;
 }
@@ -434,11 +452,30 @@ int GistMaker::FindTextClasses(inagist_classifiers::Corpus& corpus,
 #endif // CLASS_CONTRIBUTORS_ENABLED
      ) {
 
-  int ret_val = 0;
-
+  if (!text_classes_buffer) {
+    std::cerr << "ERROR: invalid text_classes_buffer\n";
+    return -1;
+  }
   text_classes_buffer[0] = '\0';
   text_classes_len = 0;
   text_classes_count = 0;
+
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+  if (!text_class_contributors_buffer) {
+    std::cerr << "ERROR: invalid text_class_contributors_buffer\n";
+    return -1;
+  }
+  text_class_contributors_buffer[0] = '\0';
+  text_class_contributors_count = 0;
+  text_class_contributors_len = 0;
+#endif // CLASS_CONTRIBUTORS_ENABLED
+
+  if (corpus.empty()) {
+#ifdef GIST_DEBUG
+    std::cerr << "ERROR: empty corpus. cannot find text classes\n";
+#endif
+    return -1;
+  }
 
   std::string text_class;
   std::string top_classes;
@@ -447,6 +484,7 @@ int GistMaker::FindTextClasses(inagist_classifiers::Corpus& corpus,
   std::map<std::string, std::string> text_class_contributors_map;
 #endif // CLASS_CONTRIBUTORS_ENABLED
 
+  int ret_val = 0;
   if ((ret_val = m_text_classifier.Classify(corpus, text_class,
                                             top_classes, top_classes_count
 #ifdef CLASS_CONTRIBUTORS_ENABLED
@@ -455,9 +493,13 @@ int GistMaker::FindTextClasses(inagist_classifiers::Corpus& corpus,
                                            )) < 0) {
 #ifdef GIST_DEBUG
     std::cerr << "ERROR: could not find text class. assigning RR\n";
-#endif
-    strcpy(text_classes_buffer, top_classes.c_str());
+    strcpy(text_class_buffer, text_class.c_str());
+    strcpy(top_classes_buffer, top_classes.c_str());
     text_classes_len = top_classes.length();
+    strcpy(text_class_contributors_buffer, "RR|"); 
+    text_class_contributors_count = 1;
+    text_class_contributors_len = 3;
+#endif
   } else {
     if ((text_classes_len = top_classes.length()) > 0) {
       strcpy(text_classes_buffer, top_classes.c_str());
@@ -469,13 +511,21 @@ int GistMaker::FindTextClasses(inagist_classifiers::Corpus& corpus,
       std::cerr << "WARNING: no class_contributors found\n";
 #endif
     } else {
+#ifdef GIST_DEBUG
+      std::cout << "INFO: calling StringMapToPipeList\n";
+#endif
       if (inagist_utils::StringMapToPipeList(text_class_contributors_map,
                             text_class_contributors_buffer, text_class_contributors_buffer_len,
                             text_class_contributors_len, text_class_contributors_count) < 0) {
 #ifdef GIST_DEBUG
         std::cerr << "ERROR: could not make a list of class_contributors\n";
 #endif
-      }
+      } else {
+#ifdef GIST_DEBUG
+      std::cout << "INFO: " << text_class_contributors_count \
+                << "strings from map written to piped list\n";
+#endif
+     }
     }
 #endif // CLASS_CONTRIBUTORS_ENABLED
   }

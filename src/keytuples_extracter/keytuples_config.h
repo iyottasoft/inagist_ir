@@ -9,6 +9,7 @@ namespace inagist_trends {
 typedef struct _ke_config_struct {
   std::string stopwords_file;
   std::string dictionary_file;
+  std::string classifier_dictionary_file;
   std::string unsafe_dictionary_file;
   std::string stemmer_dictionary_file;
 } Config;

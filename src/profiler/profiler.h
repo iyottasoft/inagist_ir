@@ -25,12 +25,18 @@ class Profiler {
            const char* self_text_classification_config,
            const char* sentiment_analyser_config=NULL);
 
+  int SetDebugLevel(unsigned int debug_level);
+
   int Profile(const std::string& twitter_handle,
               std::set<std::string>& locations,
-              std::set<std::string>& languages,
+              std::set<std::string>& self_languages,
               std::set<std::string>& self_text_classes,
               std::set<std::string>& self_sub_classes,
               std::map<std::string, std::string>& self_text_class_contributors_map,
+              std::set<std::string>& others_languages,
+              std::set<std::string>& others_text_classes,
+              std::set<std::string>& others_sub_classes,
+              std::map<std::string, std::string>& others_text_class_contributors_map,
               std::string& sentiment,
               std::set<std::string>& recommendations,
               const std::string& profile_name);
@@ -97,6 +103,7 @@ class Profiler {
 
  private:
   inagist::GistMaker m_gist_maker;
+  unsigned int m_debug_level;
 
   DISALLOW_COPY_AND_ASSIGN(Profiler); 
 };

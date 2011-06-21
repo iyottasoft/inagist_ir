@@ -37,6 +37,7 @@ int ClassifierConfig::Read(const char* config_file_name, Config& config) {
     std::string::size_type loc;
     int line_count = 0;
     std::string name;
+    std::string label;
     std::string handles_file_name;
     std::string tweets_file_name;
     std::string corpus_file_name;
@@ -62,6 +63,8 @@ int ClassifierConfig::Read(const char* config_file_name, Config& config) {
         line_count++;
         if (key.compare(0, 5, "class") == 0) {
           name = value;
+        } else if (key.compare(0, 5, "label") == 0) {
+          label = value;
         } else if (key.compare(0, 7, "handles") == 0) {
           handles_file_name = value;
         } else if (key.compare(0, 6, "corpus") == 0) {
@@ -71,9 +74,10 @@ int ClassifierConfig::Read(const char* config_file_name, Config& config) {
         } else if (key.compare(0, 12, "trainingdata") == 0) {
           training_data_file_name = value;
         }
-        if (line_count == 5) {
+        if (line_count == 6) {
           ClassStruct class_struct;
           class_struct.name = name;
+          class_struct.label = label;
           class_struct.training_data_file = training_data_file_name;
           class_struct.handles_file = handles_file_name;
           class_struct.corpus_file = corpus_file_name;
@@ -88,5 +92,14 @@ int ClassifierConfig::Read(const char* config_file_name, Config& config) {
 
   return 0;
 }
+
+int ClassifierConfig::LoadClassLabelsMap(Config& config,
+                                         std::map<std::string, std::string>& class_labels_map) {
+  for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
+    class_labels_map[config.iter->name] = config.iter->label;
+  }
+  return 0;
+}
+
 
 } // namespace inagist_classifiers
