@@ -1011,7 +1011,8 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
       !current_word_stop &&
       !current_word_dict &&
       !current_word_starts_num &&
-      *current_word_start != '#') {
+      *current_word_start != '#' &&
+      current_word_len > 1) {
     if (strncmp((char *) current_word_end-2, "\'s", 2) == 0) {
       is_apostrophe = true;
       ch = *(current_word_end-2);
@@ -1248,7 +1249,8 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* buffer,
         if (!next_word_stop &&
             !next_word_dict &&
             !next_word_starts_num &&
-            *next_word_start != '#') {
+            *next_word_start != '#' &&
+            next_word_len > 1) {
           if (strncmp((char *) next_word_end-2, "\'s", 2) == 0) {
             is_apostrophe = true;
             ch = *(next_word_end-2);
