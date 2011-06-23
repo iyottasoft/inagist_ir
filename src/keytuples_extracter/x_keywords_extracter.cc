@@ -13,10 +13,10 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-#ifdef KEYWORDS_DISABLED
-    std::cerr << "KEYWORDS_DISABLED. nothing to be done.\n";
+#ifdef KEYWORDS_ENABLED
+    std::cerr << "KEYWORDS_ENABLED. nothing to be done.\n";
     return -1;
-#endif // KEYWORDS_DISABLED
+#endif // KEYWORDS_ENABLED
 
   std::string bin_location = std::string(argv[0]);
   std::string::size_type loc = bin_location.find("bin", 0);
@@ -66,9 +66,9 @@ int main(int argc, char *argv[]) {
   std::set<std::string>::iterator tweets_iter;
   for (tweets_iter = tweets.begin(); tweets_iter != tweets.end(); tweets_iter++) {
     strcpy(buffer, (char *) (*tweets_iter).c_str());
-#ifndef KEYWORDS_DISABLED
+#ifdef KEYWORDS_ENABLED
     ke.GetKeywords(buffer, safe_status, script, keywords_set);
-#endif // KEYWORDS_DISABLED
+#endif // KEYWORDS_ENABLED
     km.PopulateFreqMap(keywords_set);
     keywords_set.clear();
     memset(buffer, 0, 1024);

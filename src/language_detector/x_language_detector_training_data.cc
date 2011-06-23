@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
   }
   free(temp_location);
 
-  if (ld.GetTrainingData(classifier_config.c_str()) < 0) {
+  if (ld.GetTrainingData((const char*) classifier_config.c_str()) < 0) {
     std::cout << "ERROR: could not get training data for lang detection\n";
   }
 

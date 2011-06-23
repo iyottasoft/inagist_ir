@@ -22,21 +22,21 @@ int GetKeyTuples(std::string text) {
 
   strcpy(buffer, text.c_str()); 
   if (g_ke.GetKeyTuples(buffer, safe_status, script
-#ifndef KEYWORDS_DISABLED
+#ifdef KEYWORDS_ENABLED
                         , keywords_set
-#endif
+#endif // KEYWORDS_ENABLED
 #ifdef HASHTAGS_ENABLED
                         , hashtags_set
-#endif
+#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                         , keyphrases_set
-#endif
+#endif // KEYPHRASE_ENABLED
 #ifdef LANG_WORDS_ENABLED
                         , lang_words_set
-#endif
+#endif // LANG_WORDS_ENABLED
 #ifdef TEXT_CLASS_WORDS_ENABLED
                         , text_class_words_set
-#endif
+#endif // TEXT_CLASS_WORDS_ENABLED
                        ) < 0) {
     std::cout << "ERROR: could not get keytuples\n";
     return -1;

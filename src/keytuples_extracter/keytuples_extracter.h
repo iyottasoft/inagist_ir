@@ -37,7 +37,7 @@ class KeyTuplesExtracter {
   int LoadClassifierDictionary(const char* classifier_dictionary_file);
   int DeInit();
 
-#ifndef KEYWORDS_DISABLED
+#ifdef KEYWORDS_ENABLED
   int GetKeywords(char* str,
                   std::string& safe_status,
                   std::string& script,
@@ -48,14 +48,14 @@ class KeyTuplesExtracter {
                   std::set<std::string>& keywords_set,
                   std::map<std::string, std::string>& script_user_map,
                   std::map<std::string, std::string>& keyword_user_map);
-#endif // KEYWORDS_DISABLED
+#endif // KEYWORDS_ENABLED
 
   int GetKeyTuples(char* str,
                    std::string& safe_status,
                    std::string& script
-#ifndef KEYWORDS_DISABLED
+#ifdef KEYWORDS_ENABLED
                    , std::set<std::string>& keywords_set
-#endif // KEYWORDS_DISABLED
+#endif // KEYWORDS_ENABLED
 #ifdef HASHTAGS_ENABLED
                    , std::set<std::string>& hashtags_set
 #endif // HASHTAGS_ENABLED
@@ -74,10 +74,10 @@ class KeyTuplesExtracter {
   int GetKeyTuples(unsigned char* buffer, const unsigned int& buffer_len,
                    char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
                    char* script_buffer, const unsigned int& script_buffer_len
-#ifndef KEYWORDS_DISABLED
+#ifdef KEYWORDS_ENABLED
                    , unsigned char* keywords_buffer, const unsigned int& keywords_buffer_len,
                    unsigned int& keywords_len, unsigned int& keywords_count
-#endif // KEYWORDS_DISABLED
+#endif // KEYWORDS_ENABLED
 #ifdef HASHTAGS_ENABLED
                    , unsigned char* hashtags_buffer, const unsigned int& hashtags_buffer_len,
                    unsigned int& hashtags_len, unsigned int& hashtags_count

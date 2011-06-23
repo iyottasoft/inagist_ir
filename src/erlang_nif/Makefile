@@ -43,7 +43,7 @@ stem:
 
 keywords:
 	@echo "creating library ${LIB_DIR}/libkeywords_nif.a ..."
-	@g++ ${CXXFLAGS} -fPIC -shared -c ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc keywords.cc -I../../include/utfcpp -I../utils -I../script_detector -I../keytuples_extracter
+	@g++ ${CXXFLAGS} -fPIC -shared -DKEYWORDS_ENABLED -c ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc keywords.cc -I../../include/utfcpp -I../utils -I../script_detector -I../keytuples_extracter
 	@ar -r ${LIB_DIR}/libkeywords_nif.a keytuples_config.o keytuples_extracter.o keywords.o
 	@ranlib ${LIB_DIR}/libkeywords_nif.a
 	@rm keytuples_config.o keytuples_extracter.o
@@ -57,7 +57,7 @@ keywords:
 
 keytuples:
 	@echo "creating library ${LIB_DIR}/libkeytuples_nif.a ..."
-	@g++ ${CXXFLAGS} -fPIC -shared -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -c ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc keytuples.cc -I../../include/utfcpp -I../utils -I../script_detector -I../keytuples_extracter
+	@g++ ${CXXFLAGS} -fPIC -shared -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -c ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc keytuples.cc -I../../include/utfcpp -I../utils -I../script_detector -I../keytuples_extracter
 	@ar -r ${LIB_DIR}/libkeytuples_nif.a keytuples_config.o keytuples_extracter.o keytuples.o
 	@rm keytuples_config.o keytuples_extracter.o
 	@ranlib ${LIB_DIR}/libkeytuples_nif.a
@@ -84,7 +84,7 @@ trends:
 
 lang:
 	@echo "creating library ${LIB_DIR}/liblang_nif.a ..."
-	@g++ ${CXXFLAGS} -fPIC -shared -c -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc ../language_detector/language_detector.cc lang.cc -I../../include/utfcpp -I../script_detector -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector
+	@g++ ${CXXFLAGS} -fPIC -shared -c -DLANG_WORDS_ENABLED ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc ../language_detector/language_detector.cc lang.cc -I../../include/utfcpp -I../script_detector -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector
 	@ar -r ${LIB_DIR}/liblang_nif.a keytuples_config.o keytuples_extracter.o language_detector.o lang.o
 	@ranlib ${LIB_DIR}/liblang_nif.a
 	@echo "done!"
@@ -97,7 +97,7 @@ lang:
 
 text_class:
 	@echo "creating library ${LIB_DIR}/libtext_class_nif.a ..."
-	@g++ ${CXXFLAGS} -fPIC -shared -c -DKEYWORDS_DISABLED -DTEXT_CLASS_WORDS_ENABLED ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc ../text_classifier/text_classifier.cc text_class.cc -I../../include/utfcpp -I../script_detector -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../text_classifier
+	@g++ ${CXXFLAGS} -fPIC -shared -c -DTEXT_CLASS_WORDS_ENABLED ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc ../text_classifier/text_classifier.cc text_class.cc -I../../include/utfcpp -I../script_detector -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../text_classifier
 	@ar -r ${LIB_DIR}/libtext_class_nif.a keytuples_config.o keytuples_extracter.o text_classifier.o text_class.o
 	@ranlib ${LIB_DIR}/libtext_class_nif.a
 	@echo "done!"
@@ -123,7 +123,7 @@ channels:
 
 gist:
 	@echo "creating library ${LIB_DIR}/libgist_nif.a ..."
-	@g++ ${CXXFLAGS} -fPIC -shared -c -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED -DTEXT_CLASS_WORDS_ENABLED -DCLASS_CONTRIBUTORS_ENABLED ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc ../classifier/classifier_config.cc ../classifier/corpus_manager.cc ../classifier/naive_bayes_classifier.cc ../classifier/classifier.cc ../language_detector/language_detector.cc ../text_classifier/text_classifier.cc ../gist_maker/gist_maker.cc gist.cc -I../../include/utfcpp -I../twitter_api -I../inagist_api -I../script_detector -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../gist_maker
+	@g++ ${CXXFLAGS} -fPIC -shared -c -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED -DTEXT_CLASS_WORDS_ENABLED -DCLASS_CONTRIBUTORS_ENABLED ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc ../classifier/classifier_config.cc ../classifier/corpus_manager.cc ../classifier/naive_bayes_classifier.cc ../classifier/classifier.cc ../language_detector/language_detector.cc ../text_classifier/text_classifier.cc ../gist_maker/gist_maker.cc gist.cc -I../../include/utfcpp -I../twitter_api -I../inagist_api -I../script_detector -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../gist_maker
 	@ar -r ${LIB_DIR}/libgist_nif.a keytuples_config.o keytuples_extracter.o classifier_config.o corpus_manager.o naive_bayes_classifier.o classifier.o language_detector.o text_classifier.o gist_maker.o gist.o
 	@ranlib ${LIB_DIR}/libgist_nif.a
 	@echo "done!"

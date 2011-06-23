@@ -11,10 +11,10 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-#ifdef KEYWORDS_DISABLED
-    std::cerr << "KEYWORDS_DISABLED. nothing to be done.\n";
+#ifndef KEYWORDS_ENABLED
+    std::cerr << "keywords not enabled. nothing to be done.\n";
     return -1;
-#endif // KEYWORDS_DISABLED
+#endif // KEYWORDS_ENABLED
 
   std::string bin_location = std::string(argv[0]);
   std::string::size_type loc = bin_location.find("bin", 0);
@@ -60,9 +60,9 @@ int main(int argc, char *argv[]) {
   while (num_docs < count && getline(std::cin, line)) {
     memset(input, 0, 255);
     strcpy(input, (char *) line.c_str());
-#ifndef KEYWORDS_DISABLED
+#ifdef KEYWORDS_ENABLED
     ke.GetKeywords(input, safe_status, script, keywords_set);
-#endif // KEYWORDS_DISABLED
+#endif // KEYWORDS_ENABLED
     ke.PrintKeywords(keywords_set);
     km.PopulateFreqMap(keywords_set);
     ++num_docs;

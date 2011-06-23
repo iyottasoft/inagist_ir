@@ -8,7 +8,7 @@
 #endif
 #endif
 
-//#define NBC_DEBUG 3
+#define NBC_DEBUG 5
 
 namespace inagist_classifiers {
 

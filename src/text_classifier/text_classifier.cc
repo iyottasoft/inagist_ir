@@ -440,9 +440,9 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   std::string script;
   std::string safe_status;
 
-#ifndef KEYWORDS_DISABLED
+#ifdef KEYWORDS_ENABLED
   std::set<std::string> keywords_set;
-#endif // KEYWORDS_DISABLED
+#endif // KEYWORDS_ENABLED
 #ifdef HASHTAGS_ENABLED
   std::set<std::string> hashtags_set;
 #endif // HASHTAGS_ENABLED
@@ -458,9 +458,9 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   if (m_keytuples_extracter.GetKeyTuples(buffer,
                                          safe_status,
                                          script
-#ifndef KEYWORDS_DISABLED
+#ifdef KEYWORDS_ENABLED
                                          , keywords_set
-#endif // KEYWORDS_DISABLED
+#endif // KEYWORDS_ENABLED
 #ifdef HASHTAGS_ENABLED
                                          , hashtags_set
 #endif // HASHTAGS_ENABLED
@@ -476,9 +476,9 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
     return -1;
   }
 
-#ifndef KEYWORDS_DISABLED
+#ifdef KEYWORDS_ENABLED
   keywords_set.clear();
-#endif // KEYWORDS_DISABLED
+#endif // KEYWORDS_ENABLED
 #ifdef HASHTAGS_ENABLED
   hashtags_set.clear();
 #endif // HASHTAGS_ENABLED

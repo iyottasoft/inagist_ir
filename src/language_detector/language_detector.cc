@@ -327,9 +327,9 @@ int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
   char buffer[MAX_BUFFER_LEN];
   strcpy((char *) buffer, text.c_str());
 
-#ifndef KEYWORDS_DISABLED
+#ifdef KEYWORDS_ENABLED
   std::set<std::string> keywords_set;
-#endif // KEYWORDS_DISABLED
+#endif // KEYWORDS_ENABLED
 #ifdef KEYPHRASE_ENABLED
   std::set<std::string> keyphrases_set;
 #endif // KEYPHRASE_ENABLED
@@ -350,9 +350,9 @@ int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
   ret_val = m_keytuples_extracter.GetKeyTuples((char *) buffer,
                                                safe_status,
                                                script
-#ifndef KEYWORDS_DISABLED
+#ifdef KEYWORDS_ENABLED
                                                , keywords_set
-#endif // KEYWORDS_DISABLED
+#endif // KEYWORDS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                                                , keyphrases_set
 #endif // KEYPHRASE_ENABLED
@@ -376,9 +376,9 @@ int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
     std::cerr << "ERROR: could not find ngrams from tweet: " << text << std::endl;
   }
 
-#ifndef KEYWORDS_DISABLED
+#ifdef KEYWORDS_ENABLED
   keywords_set.clear();
-#endif // KEYWORDS_DISABLED
+#endif // KEYWORDS_ENABLED
 #ifdef KEYPHRASE_ENABLED
   keyphrases_set.clear();
 #endif // KEYPHRASE_ENABLED

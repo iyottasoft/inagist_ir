@@ -1,7 +1,7 @@
 include ../Makefile.incl
 PROJECT = languagedetector
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL} -DKEYWORDS_DISABLED -DLANG_WORDS_ENABLED -DCLASS_CONTRIBUTORS_ENABLED
+CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL} -DLANG_WORDS_ENABLED -DCLASSIFIER_DATA_TRAINING_ENABLED -DCLASSIFIER_DATA_TESTING_ENABLED #-DCLASS_CONTRIBUTORS_ENABLED
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../include/utfcpp -I../utils -I../inagist_api -I../curl_request_maker -I../twitter_api -I../script_detector -I../keytuples_extracter -I../ngrams_generator -I../classifier
@@ -15,11 +15,11 @@ BIN_DIR = ../../bin
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
-#       ${BIN_DIR}/x_language_detector_training_data \
-#       ${BIN_DIR}/t_language_detector_test_data \
 
 BINS = ${BIN_DIR}/t_language_detector \
-       ${BIN_DIR}/t_get_lang_corpus
+       ${BIN_DIR}/t_get_lang_corpus \
+       ${BIN_DIR}/x_language_detector_training_data \
+       ${BIN_DIR}/t_language_detector_test_data
 
 keytuples = keytuples_config.o keytuples_extracter.o
 classifier = classifier_config.o corpus_manager.o naive_bayes_classifier.o classifier.o
@@ -65,15 +65,15 @@ ${BIN_DIR}/t_language_detector: t_language_detector.o ${LIB}
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_language_detector
 	@echo "done!"
 
-#${BIN_DIR}/x_language_detector_training_data: x_language_detector_training_data.o ${LIB}
-#	@echo "creating binary:" $@
-#	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_language_detector_training_data
-#	@echo "done!"
+${BIN_DIR}/x_language_detector_training_data: x_language_detector_training_data.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_language_detector_training_data
+	@echo "done!"
 
-#${BIN_DIR}/t_language_detector_test_data: t_language_detector_test_data.o ${LIB}
-#	@echo "creating binary:" $@
-#	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_language_detector_test_data
-#	@echo "done!"
+${BIN_DIR}/t_language_detector_test_data: t_language_detector_test_data.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_language_detector_test_data
+	@echo "done!"
 
 ${BIN_DIR}/t_get_lang_corpus: t_get_lang_corpus.o ${LIB}
 	@echo "creating binary:" $@

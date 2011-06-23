@@ -8,11 +8,26 @@
 #endif
 
 #include <string>
-#include <fstream>
 #include "classifier_config.h"
 #include "corpus_manager.h"
 
+#define MIN_TWEETS_REQUIRED 15
+
 namespace inagist_classifiers {
+
+typedef struct _test_result_struct {
+  unsigned int total;
+  unsigned int undefined;
+  unsigned int correct;
+  unsigned int wrong;
+  int clear() {
+    total = 0;
+    undefined = 0;
+    correct = 0;
+    wrong = 0;
+    return 0;
+  }
+} TestResult;
 
 // its assumed that a more specialised classifier will inherit this class
 class Classifier {
@@ -21,7 +36,7 @@ class Classifier {
 
   Classifier();
   virtual ~Classifier();
-  // classification functions
+
   int Init(std::string config_file_name, bool ignore_history=false);
   virtual int GetCorpus(const std::string& text, Corpus& corpus)=0;
   virtual int Classify(const std::string& text,
@@ -34,14 +49,11 @@ class Classifier {
 #endif // CLASS_CONTRIBUTORS_ENABLED
                        , bool ignore_case=false)=0;
 
-  // dependency related for training and testing
-
   virtual int InitDependencies(int argc=0, char* argv[]=NULL)=0;
   virtual int ClearDependencies()=0;
 
   // training
 
-#ifdef DATA_TRAINING_ENABLED
   int GetTrainingData(const char* config_file_name);
   int GetTrainingData(const std::string& class_name,
                       const std::string& twitter_handles_file_name,
@@ -54,9 +66,46 @@ class Classifier {
                       Corpus& corpus,
                       unsigned int& output_corpus_size,
                       bool get_user_info=false);
-#endif // DATA_TRAINING_ENABLED
 
   // testing
+
+  // leave handle blank for public timeline
+  int TestTwitterTimeline(const std::string& handle,
+                          const std::string& expected_class_name,
+                          Corpus& class_freq_map,
+                          TestResult& test_result,
+                          std::ostream& output_stream);
+
+  int TestTrainingSources(const char* training_class,
+                          Corpus& class_freq_map,
+                          TestResult& test_result,
+                          std::ostream& output_stream,
+                          bool random_selection=false);
+
+  int GetTestData(const unsigned int& input_type,
+                  const char* input_file,
+                  const char* input_handle,
+                  const std::string& expected_class_name,
+                  const unsigned int& output_type,
+                  const char* output_file);
+
+  int TestTrainingTexts(const char* training_texts_file,
+                        const std::string& expected_class_name,
+                        Corpus& class_freq_map,
+                        TestResult& test_result,
+                        std::ostream &output_stream);
+
+  int WriteTestData(Corpus& corpus, const char* classes_freq_file);
+
+  static int ValidateTestDataInput(int argc, char* argv[],
+                            const char* &config_file,
+                            const char* &keytuples_config_file,
+                            unsigned int &input_type,
+                            unsigned int &output_type,
+                            const char* &input_file,
+                            const char* &output_file,
+                            const char* &input_handle,
+                            std::string &class_name);
 
  protected:
   CorpusManager m_corpus_manager;

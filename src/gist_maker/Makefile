@@ -1,7 +1,7 @@
 include ../Makefile.incl
 PROJECT = gistmaker
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL} -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED -DTEXT_CLASS_WORDS_ENABLED -DCLASS_CONTRIBUTORS_ENABLED
+CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL} -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED -DTEXT_CLASS_WORDS_ENABLED -DCLASS_CONTRIBUTORS_ENABLED
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../twitter_api -I../inagist_api -I../utils -I../keytuples_extracter -I../script_detector -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier

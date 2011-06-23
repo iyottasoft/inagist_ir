@@ -19,7 +19,7 @@ BINS = ${BIN_DIR}/t_corpus_manager \
        ${BIN_DIR}/t_classifier_config \
        ${BIN_DIR}/t_setup_classifier
 
-OBJS = classifier_config.o corpus_manager.o naive_bayes_classifier.o classifier.o #classifier_training.o classifier_testing.o
+OBJS = classifier_config.o corpus_manager.o naive_bayes_classifier.o classifier.o
 
 all: ${LIB} ${BINS}
 	@echo "build done!"
