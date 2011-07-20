@@ -411,11 +411,13 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   // text_class
   ERL_NIF_TERM text_classes_list = enif_make_list(env, 0);
   len = strlen(text_classes_buffer);
+  /*
   if (len < 1) {
     strcpy(text_classes_buffer, "00|");
     len = 3;
     text_classes_count = 1;
   }
+  */
 
   if (text_classes_count > 0) {
     ErlNifBinary text_class_bin;
