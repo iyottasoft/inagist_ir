@@ -79,6 +79,18 @@ int GetInputText(const unsigned int &input_type,
       }
       return docs.size();
       break;
+    case 5:
+      // search twitter for query
+     if (!input_value) {
+       std::cerr << "ERROR: query term needed" << std::endl;
+       return -1;
+     } else {
+       inagist_api::TwitterSearcher ts;
+       if ((ts.Search(input_value, docs)) < 0) {
+         std::cerr << "ERROR: could not search twitter for query: " << input_value << std::endl;
+         return -1;
+       }
+     }
     default:
       break;
   }

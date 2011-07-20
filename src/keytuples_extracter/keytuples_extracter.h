@@ -14,6 +14,7 @@
 #include <iostream>
 #include "dictionary_set.h"
 #include "dictionary_map.h"
+#include "int_dictionary_map.h"
 
 namespace inagist_trends {
 
@@ -32,6 +33,12 @@ class KeyTuplesExtracter {
            const char* dictionary_file,
            const char* unsafe_dictionary_file,
            const char* stemmer_dictionary_file=NULL,
+#ifdef INTENT_ENABLED
+           const char* intent_words_file=NULL,
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+           const char* sentiment_words_file=NULL,
+#endif // SENTIMENT_ENABLED
            const char* input_file=NULL,
            const char* output_file=NULL);
   int LoadClassifierDictionary(const char* classifier_dictionary_file);
@@ -62,12 +69,18 @@ class KeyTuplesExtracter {
 #ifdef KEYPHRASE_ENABLED
                    , std::set<std::string>& keyphrases_set
 #endif // KEYPHRASE_ENABLED
-#ifdef LANG_WORDS_ENABLED
+#ifdef LANG_ENABLED
                    , std::set<std::string>& lang_words_set
-#endif // LANG_WORDS_ENABLED
-#ifdef TEXT_CLASS_WORDS_ENABLED
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
                    , std::set<std::string>& text_class_words_set
-#endif // TEXT_CLASS_WORDS_ENABLED
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+                   , std::string& intent
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+                   , std::string& sentiment
+#endif // SENTIMENT_ENABLED
                   );
 
   // directly writing to an output buffer instead of a set
@@ -86,14 +99,20 @@ class KeyTuplesExtracter {
                    , unsigned char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
                    unsigned int& keyphrases_len, unsigned int& keyphrases_count
 #endif // KEYPHRASE_ENABLED
-#ifdef LANG_WORDS_ENABLED
+#ifdef LANG_ENABLED
                    , unsigned char* lang_words_buffer, const unsigned int& lang_words_buffer_len,
                    unsigned int& lang_words_len, unsigned int& lang_words_count
-#endif // LANG_WORDS_ENABLED
-#ifdef TEXT_CLASS_WORDS_ENABLED
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
                    , unsigned char* text_class_words_buffer, const unsigned int& text_class_words_buffer_len,
                    unsigned int& text_class_words_len, unsigned int& text_class_words_count
-#endif // TEXT_CLASS_WORDS_ENABLED
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+                   , char* intent_buffer, const unsigned int& intent_buffer_len
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+                   , char* sentiment_buffer, const unsigned int& sentiment_buffer_len
+#endif // SENTIMENT_ENABLED
                   );
 
   void PrintKeywords(std::set<std::string> &keywords_set);
@@ -104,6 +123,12 @@ class KeyTuplesExtracter {
   std::ofstream m_out_stream;
   inagist_utils::DictionarySet m_stopwords_dictionary;
   inagist_utils::DictionarySet m_unsafe_dictionary;
+#ifdef INTENT_ENABLED
+  inagist_utils::IntDictionaryMap m_intent_words_dictionary;
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+  inagist_utils::IntDictionaryMap m_sentiment_words_dictionary;
+#endif // SENTIMENT_ENABLED
 
   DISALLOW_COPY_AND_ASSIGN(KeyTuplesExtracter);
   bool IsPunct(char *ptr, char *prev=NULL, char *next=NULL);

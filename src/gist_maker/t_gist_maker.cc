@@ -13,14 +13,13 @@ int main(int argc, char *argv[]) {
 
   if (argc < 5 || argc > 6) {
     std::cout << "Usage: " << argv[0] << " <keytuples_config> <lang_config> " \
-              << "<classifier_config> <input_type> [input_value]\n";
+              << "<text_classifier_config> <input_type> [input_value]\n";
     return -1;
   }
 
   std::string keytuples_extracter_config = std::string(argv[1]);
   std::string language_detector_config = std::string(argv[2]);
   std::string text_classifier_config = std::string(argv[3]);
-  std::string sentiment_analyser_config;
 
   unsigned int input_type = atoi(argv[4]);
   const char* input_value = NULL;
@@ -32,8 +31,7 @@ int main(int argc, char *argv[]) {
 
   if (gm.Init(keytuples_extracter_config.c_str(),
               language_detector_config.c_str(),
-              text_classifier_config.c_str(),
-              sentiment_analyser_config.c_str()) < 0) {
+              text_classifier_config.c_str()) < 0) {
     std::cerr << "ERROR: could not initialize gist maker\n";
     return -1;
   }

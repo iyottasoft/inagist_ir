@@ -1,7 +1,7 @@
 include ../Makefile.incl
 PROJECT = profiler
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED -DTEXT_CLASS_WORDS_ENABLED -DCLASS_CONTRIBUTORS_ENABLED
+CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} -DKEYWORDS_ENABLED -DHASHTAGS_ENABLED -DKEYPHRASE_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DCLASS_CONTRIBUTORS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../inagist_api -I../utils -I../script_detector -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../gist_maker
@@ -19,12 +19,9 @@ BINS = ${BIN_DIR}/x_profiler
 #${BIN_DIR}/x_dashboard_populater \
 #${BIN_DIR}/t_get_followers
 
-#keytuples = keytuples_config.o keytuples_extracter.o
-#text = text_classifier.o
-#lang = language_detector.o
+gist = gist_maker.o
 
-#OBJS = profiler.o follow_analyser.o
-OBJS = profiler.o
+OBJS = profiler.o ${gist} #follow_analyser.o
 
 all: ${LIB} ${BINS}
 	@echo "copying dashboard_generator.py to ${BIN_DIR}"
@@ -40,12 +37,16 @@ clean:
 	@echo "done!"
 
 #${LIB}: ${keytuples} ${text} ${lang} ${OBJS}
-${LIB}: ${OBJS}
+${LIB}: ${OBJS} ${gist}
 	@echo "creating library file ..."
 #	@${ARCHIVE} ${LIB} ${keytuples} ${text} ${lang} ${OBJS}
-	@${ARCHIVE} ${LIB} ${OBJS}
+	@${ARCHIVE} ${LIB} ${gist} ${OBJS}
 	@ranlib ${LIB}
 	@echo "done!"
+
+${gist}:
+	@echo "compiling ../gist_maker/gist_maker.cc ..."
+	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../gist_maker/gist_maker.cc
 
 #${keytuples}:
 #	@echo "compiling ../keytuples_extracter/keytuples_config.cc ..."

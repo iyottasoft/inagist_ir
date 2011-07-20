@@ -13,27 +13,23 @@ extern "C" {
 #ifdef _CPLUSPLUS
 int Init(const char* keytuples_extracter_config_file,
          const char* language_detection_config_file,
-         const char* text_classification_config_file,
-         const char* sentiment_analyser_config_file);
+         const char* text_classification_config_file);
 
-int GetGist(const unsigned char* text, const unsigned int text_len,
+int InaGist(unsigned char* text_buffer, const unsigned int text_len,
             char* safe_status_buffer, const unsigned int safe_status_buffer_len,
-            char* script_buffer, const unsigned int script_buffer_len,
-            char* lang_buffer, const unsigned int lang_buffer_len,
-            unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
-            unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr,
-            unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
-            unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
-            unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
-            unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr,
-            unsigned char* text_class_words_buffer, const unsigned int text_class_words_buffer_len,
-            unsigned int* text_class_words_len_ptr, unsigned int* text_class_words_count_ptr,
-            char* text_classes_buffer, const unsigned int text_classes_buffer_len,
-            unsigned int* text_classes_len_ptr, unsigned int* text_classes_count_ptr,
-            unsigned char* text_class_contributors_buffer, const unsigned int text_class_contributors_buffer_len,
-            unsigned int* text_class_contributors_len_ptr, unsigned int* text_class_contributors_count_ptr,
-            char* sentiment_buffer, const unsigned int sentiment_buffer_len);
-
+            char* script_buffer, const unsigned int script_buffer_len
+            , char* lang_class_buffer, const unsigned int lang_class_buffer_len
+            , unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
+            unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr
+            , unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
+            unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr
+            , unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
+            unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr
+            , char* top_text_classes_buffer, const unsigned int top_text_classes_buffer_len,
+            unsigned int* top_text_classes_len_ptr, unsigned int* top_text_classes_count_ptr
+            , char* intent_buffer, const unsigned int intent_buffer_len
+            , char* sentiment_buffer, const unsigned int sentiment_buffer_len
+           );
 }
 #endif
 

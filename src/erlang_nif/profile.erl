@@ -50,14 +50,18 @@ test_init() ->
          <<"../../configs/channels_classifier.config">>).
 
 test() ->
-  Tuples_list = profile(<<"balajiworld">>),
-  case is_atom(Tuples_list) of
+  Tuple = profile(<<"balajiworld">>),
+  case is_atom(Tuple) of
     false -> false;
     true -> io:format("error")
   end,
-  case is_list(Tuples_list) of
+  case is_list(Tuple) of
     false -> false;
-    true -> [io:format("~p~n",[X]) || X <- Tuples_list]
+    true -> io:format("error")
+  end,
+  case is_tuple(Tuple) of
+    false -> io:format("error");
+    true -> [io:format("~p~n",[X]) || X <- Tuple]
   end.
 
 test_handles() ->

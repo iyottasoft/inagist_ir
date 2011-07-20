@@ -22,6 +22,7 @@ class TwitterSearcher {
   static int GetTweetsFromSearchUrl(const std::string& url, std::set<std::string>& tweets);
   static int GetTweetsFromUser(const std::string& user_name, std::set<std::string>& tweets);
   static int Get100TweetsFromUser(const std::string& user_name, std::set<std::string>& tweets);
+  static int Search(const std::string& query, std::set<std::string>& tweets);
  private:
   std::string m_search_data_dir;
   std::string m_search_data_history_file;

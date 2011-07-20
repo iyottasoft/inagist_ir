@@ -50,13 +50,9 @@ class TextClassifier : public Classifier {
 #endif // CLASS_CONTRIBUTORS_ENABLED
                  , bool ignore_case=false);
 
-  int Classify(const unsigned char* text_word_list,
-               const unsigned int& list_len,
-               const unsigned int& word_count,
-               char* guess_text_class_buffer,
-               const unsigned int& guess_text_class_buffer_len,
-               char* top_classes_buffer,
-               const unsigned int& top_classes_buffer_len,
+  int Classify(const unsigned char* text_word_list, const unsigned int& list_len, const unsigned int& word_count,
+               char* guess_text_class_buffer, const unsigned int& guess_text_class_buffer_len,
+               char* top_classes_buffer, const unsigned int& top_classes_buffer_len,
                unsigned int& top_classes_len,
                unsigned int& top_classes_count
 #ifdef CLASS_CONTRIBUTORS_ENABLED

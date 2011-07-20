@@ -756,6 +756,9 @@ int Classifier::TestTrainingTexts(const char* training_texts_file,
   std::string output_top_classes;
   unsigned int output_top_classes_count = 0;
   int ret_val = 0;
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+  std::map<std::string, std::string> class_contributors_map;
+#endif // CLASS_CONTRIBUTORS_ENABLED
 #ifdef CLASSIFIER_DEBUG
   if (CLASSIFIER_DEBUG > 2) {
     std::cout << "check corpus map" << std::endl;
@@ -766,7 +769,11 @@ int Classifier::TestTrainingTexts(const char* training_texts_file,
     test_result.total++;
     tweet = *set_iter;
     if ((ret_val = Classify(tweet, tweet.length(), output_class,
-                            output_top_classes, output_top_classes_count)) < 0) {
+                            output_top_classes, output_top_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+                            , class_contributors_map
+#endif // CLASS_CONTRIBUTORS_ENABLED
+                           )) < 0) {
       std::cerr << "ERROR: could not find class\n";
       test_result.undefined++;
     } else if (ret_val == 0) {
@@ -832,6 +839,9 @@ int Classifier::TestTwitterTimeline(const std::string& handle,
   std::string output_top_classes;
   unsigned int output_top_classes_count = 0;
   int ret_val = 0;
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+  std::map<std::string, std::string> class_contributors_map;
+#endif // CLASS_CONTRIBUTORS_ENABLED
 #ifdef CLASSIFIER_DEBUG
   if (CLASSIFIER_DEBUG > 2) {
     std::cout << "check corpus map" << std::endl;
@@ -842,7 +852,11 @@ int Classifier::TestTwitterTimeline(const std::string& handle,
     test_result.total++;
     tweet = *set_iter;
     if ((ret_val = Classify(tweet, tweet.length(), output_class,
-                            output_top_classes, output_top_classes_count)) < 0) {
+                            output_top_classes, output_top_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+                            , class_contributors_map
+#endif // CLASS_CONTRIBUTORS_ENABLED
+                           )) < 0) {
       std::cerr << "ERROR: could not find class\n";
       test_result.undefined++;
     } else if (ret_val == 0) {

@@ -22,8 +22,7 @@ class Profiler {
 
   int Init(const char* keytuples_extracter_config,
            const char* language_detection_config,
-           const char* self_text_classification_config,
-           const char* sentiment_analyser_config=NULL);
+           const char* self_text_classification_config);
 
   int SetDebugLevel(unsigned int debug_level);
 
@@ -37,6 +36,7 @@ class Profiler {
               std::set<std::string>& others_text_classes,
               std::set<std::string>& others_sub_classes,
               std::map<std::string, std::string>& others_text_class_contributors_map,
+              std::string& intent,
               std::string& sentiment,
               std::set<std::string>& recommendations,
               const std::string& profile_name);
@@ -64,6 +64,7 @@ class Profiler {
               const unsigned int others_text_class_contributors_buffer_len,
               unsigned int& others_text_class_contributors_len,
               unsigned int& others_text_class_contributors_count,
+              char* intent_buffer, const unsigned int intent_buffer_len,
               char* sentiment_buffer, const unsigned int sentiment_buffer_len,
               unsigned char* recommendations_buffer, const unsigned int recommendations_buffer_len,
               unsigned int& recommendations_len, unsigned int& recommendations_count,
@@ -82,24 +83,26 @@ class Profiler {
         const unsigned int self_text_class_contributors_buffer_len,
         unsigned int& self_text_class_contributors_len,
         unsigned int& self_text_class_contributors_count,
+        char* intent_buffer, const unsigned int intent_buffer_len,
         char* sentiment_buffer, const unsigned int sentiment_buffer_len,
         unsigned char* recommendations_buffer, const unsigned int recommendations_buffer_len,
         unsigned int& recommendations_len, unsigned int& recommendations_count,
         const char* profile_name);
 
-  int GetGist(std::set<std::string>& tweets,
-        char* self_languages_buffer, const unsigned int self_languages_buffer_len,
-        unsigned int& self_languages_len, unsigned int& self_languages_count,
-        char* self_text_classes_buffer, const unsigned int self_text_classes_buffer_len,
-        unsigned int& self_text_classes_len, unsigned int& self_text_classes_count,
-        char* self_sub_classes_buffer, const unsigned int self_sub_classes_buffer_len,
-        unsigned int& self_sub_classes_len, unsigned int& self_sub_classes_count,
-        unsigned char* self_text_class_contributors_buffer,
-        const unsigned int self_text_class_contributors_buffer_len,
-        unsigned int& self_text_class_contributors_len,
-        unsigned int& self_text_class_contributors_count,
-        char* sentiment_buffer, const unsigned int sentiment_buffer_len,
-        inagist_classifiers::Corpus& corpus, unsigned int& corpus_size);
+int GetGist(std::set<std::string>& tweets,
+            char* lang_class_buffer, const unsigned int lang_class_buffer_len,
+            unsigned int& lang_class_len, unsigned int& lang_class_count,
+            char* text_class_buffer, const unsigned int text_class_buffer_len,
+            unsigned int& text_class_len, unsigned int& text_class_count,
+            char* top_text_classes_buffer, const unsigned int sub_classes_buffer_len,
+            unsigned int& top_text_classes_len, unsigned int& top_text_classes_count,
+            unsigned char* text_class_contributors_buffer,
+            const unsigned int text_class_contributors_buffer_len,
+            unsigned int& text_class_contributors_len,
+            unsigned int& text_class_contributors_count,
+            char* intent_buffer, const unsigned int intent_buffer_len,
+            char* sentiment_buffer, const unsigned int sentiment_buffer_len,
+            inagist_classifiers::Corpus& corpus, unsigned int& corpus_size);
 
  private:
   inagist::GistMaker m_gist_maker;

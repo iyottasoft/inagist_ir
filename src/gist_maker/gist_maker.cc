@@ -28,8 +28,7 @@ GistMaker::~GistMaker() {
 
 int GistMaker::Init(const char* keytuples_extracter_config_file,
                     const char* language_detection_config_file,
-                    const char* text_classification_config_file,
-                    const char* sentiment_analyser_config_file) {
+                    const char* text_classification_config_file) {
 
   if (!keytuples_extracter_config_file ||
       !language_detection_config_file ||
@@ -49,6 +48,7 @@ int GistMaker::Init(const char* keytuples_extracter_config_file,
     return -1;
   }
 
+#ifdef LANG_ENABLED
 #ifdef GIST_DEBUG
   std::cout << "INFO: initializing language_detector with config: " \
             << language_detection_config_file << std::endl;
@@ -57,15 +57,18 @@ int GistMaker::Init(const char* keytuples_extracter_config_file,
     std::cerr << "ERROR: could not initialize LanguageDetector\n";
     return -1;
   }
+#endif // LANG_ENABLED
 
+#ifdef TEXT_CLASSIFICATION_ENABLED
 #ifdef GIST_DEBUG
   std::cout << "INFO: initializing text_classifier with config: " \
             << text_classification_config_file << std::endl;
-#endif
+#endif // GIST_DEBUG
   if (m_text_classifier.Init(text_classification_config_file) < 0) {
     std::cerr << "ERROR: could not initialize TextClassifier\n";
     return -1;
   }
+#endif // TEXT_CLASSIFICATION_ENABLED
 
   return 0;
 }
@@ -74,23 +77,66 @@ int GistMaker::GetGist(const std::string& text) {
 
   std::string safe_status;
   std::string script;
+#ifdef LANG_ENABLED
   std::string lang;
+#endif // LANG_ENABLED
+#ifdef KEYWORDS_ENABLED
   std::set<std::string> keywords;
+#endif // KEYWORDS_ENABLED
+#ifdef KEYPHRASE_ENABLED
   std::set<std::string> keyphrases;
+#endif // KEYPHRASE_ENABLED
+#ifdef HASHTAGS_ENABLED
   std::set<std::string> hashtags;
+#endif // HASHTAGS_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
   std::set<std::string> text_classes;
+#ifdef CLASS_CONTRIBUTORS_ENABLED
   std::map<std::string, std::string> text_class_contributors_map;
+#endif // CLASS_CONTRIBUTORS_ENABLED
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+  std::string intent;
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
   std::string sentiment;
+#endif // SENTIMENT_ENABLED
 
-  if (GetGist(text, safe_status, script, lang,
-              keywords, keyphrases, hashtags,
-              text_classes,
-              text_class_contributors_map,
-              sentiment) < 0) {
+  if (GetGist(text, safe_status, script
+#ifdef LANG_ENABLED
+              , lang
+#endif // LANG_ENABLED
+#ifdef KEYWORDS_ENABLED
+              , keywords
+#endif // KEYWORDS_ENABLED
+#ifdef KEYPHRASE_ENABLED
+              , keyphrases
+#endif // KEYPHRASE_ENABLED
+#ifdef HASHTAGS_ENABLED
+              , hashtags
+#endif // HASHTAGS_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+              , text_classes
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+              , text_class_contributors_map
+#endif // CLASS_CONTRIBUTORS_ENABLED
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+              , intent
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+              , sentiment
+#endif // SENTIMENT_ENABLED
+             ) < 0) {
     std::cout << "ERROR: could not get the gist for:" << text << std::endl;
   } else {
+    std::cout << "text: " << text << std::endl;
+    std::cout << "safe status: " << safe_status << std::endl;
     std::cout << "script: " << script << std::endl;
+#ifdef LANG_ENABLED
     std::cout << "lang: " << lang << std::endl;
+#endif // LANG_ENABLED
+#ifdef KEYWORDS_ENABLED
     std::set<std::string>::iterator set_iter;
     std::cout << "keywords: ";
     for (set_iter = keywords.begin(); set_iter != keywords.end(); set_iter++) {
@@ -98,23 +144,30 @@ int GistMaker::GetGist(const std::string& text) {
     }
     std::cout << std::endl;
     keywords.clear();
-    std::cout << "keyphrases:  ";
-    for (set_iter = keyphrases.begin(); set_iter != keyphrases.end(); set_iter++) {
-      std::cout << *set_iter << " | ";
-    }
-    std::cout << std::endl;
-    keyphrases.clear();
+#endif // KEYWORDS_ENABLED
+#ifdef HASHTAGS_ENABLED
     std::cout << "hashtags:  ";
     for (set_iter = hashtags.begin(); set_iter != hashtags.end(); set_iter++) {
       std::cout << *set_iter << " | ";
     }
     std::cout << std::endl;
     hashtags.clear();
+#endif // HASHTAGS_ENABLED
+#ifdef KEYPHRASE_ENABLED
+    std::cout << "keyphrases:  ";
+    for (set_iter = keyphrases.begin(); set_iter != keyphrases.end(); set_iter++) {
+      std::cout << *set_iter << " | ";
+    }
+    std::cout << std::endl;
+    keyphrases.clear();
+#endif // KEYPHRASE_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
     std::cout << "text_classes: ";
     for (set_iter = text_classes.begin(); set_iter != text_classes.end(); set_iter++) {
       std::cout << *set_iter << " | ";
     }
     std::cout << std::endl;
+#ifdef CLASS_CONTRIBUTORS_ENABLED
     std::cout << "text_class_contributors: ";
     std::map<std::string, std::string>::iterator map_iter;
     for (map_iter = text_class_contributors_map.begin();
@@ -123,32 +176,57 @@ int GistMaker::GetGist(const std::string& text) {
       std::cout << map_iter->first << " : " << map_iter->second << " | ";
     }
     std::cout << std::endl;
-    //std::cout << "sentiment: " << sentiment << std::endl;
-    std::cout << "safe status: " << safe_status << std::endl;
+#endif // CLASS_CONTRIBUTORS_ENABLED
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+    std::cout << "intent: " << intent << std::endl;
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+    std::cout << "sentiment: " << sentiment << std::endl;
+#endif // SENTIMENT_ENABLED
+    std::cout << std::endl;
   }
   return 0;
 }
 
 int GistMaker::GetGist(const std::string& text,
                        std::string& safe_status,
-                       std::string& script,
-                       std::string& lang,
-                       std::set<std::string>& keywords,
-                       std::set<std::string>& hashtags,
-                       std::set<std::string>& keyphrases,
-                       std::set<std::string>& text_classes
+                       std::string& script
+#ifdef LANG_ENABLED
+                       , std::string& lang
+#endif // LANG_ENABLED
+#ifdef KEYWORDS_ENABLED
+                       , std::set<std::string>& keywords
+#endif // KEYWORDS_ENABLED
+#ifdef HASHTAGS_ENABLED
+                       , std::set<std::string>& hashtags
+#endif // HASHTAGS_ENABLED
+#ifdef KEYPHRASE_ENABLED
+                       , std::set<std::string>& keyphrases
+#endif // KEYPHRASE_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+                       , std::set<std::string>& text_classes
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                        , std::map<std::string, std::string>& text_class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
-                       , std::string& sentiment) {
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+                       , std::string& intent
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+                       , std::string& sentiment
+#endif // SENTIMENT_ENABLED
+                      ) {
 
   if (text.length() < 1) {
     std::cerr << "ERROR: invalid input text\n";
     return -1;
   }
 
-  unsigned char buffer[MAX_BUFFER_LEN];
-  memset(buffer, 0, MAX_BUFFER_LEN);
+  unsigned char text_buffer[MAX_BUFFER_LEN];
+  memset(text_buffer, 0, MAX_BUFFER_LEN);
+  strcpy((char*) text_buffer, text.c_str());
+  unsigned int text_len = text.length();
 
   char safe_status_buffer[10];
   memset(safe_status_buffer, 0, 10);
@@ -158,39 +236,76 @@ int GistMaker::GetGist(const std::string& text,
   memset(script_buffer, 0, 4);
   unsigned int script_buffer_len = 10;
 
-  char lang_buffer[4];
-  memset(lang_buffer, 0, 4);
-  unsigned int lang_buffer_len = 4;
-
+#ifdef KEYWORDS_ENABLED
   unsigned char keywords_buffer[MAX_BUFFER_LEN];
   memset(keywords_buffer, 0, MAX_BUFFER_LEN);
   unsigned int keywords_buffer_len = MAX_BUFFER_LEN;
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
+#endif // KEYWORDS_ENABLED
 
+#ifdef HASHTAGS_ENABLED
   unsigned char hashtags_buffer[MAX_BUFFER_LEN];
   memset(hashtags_buffer, 0, MAX_BUFFER_LEN);
   unsigned int hashtags_buffer_len = MAX_BUFFER_LEN;
   unsigned int hashtags_len = 0;
   unsigned int hashtags_count = 0;
+#endif // HASHTAGS_ENABLED
 
+#ifdef KEYPHRASE_ENABLED
   unsigned char keyphrases_buffer[MAX_BUFFER_LEN];
   memset(keyphrases_buffer, 0, MAX_BUFFER_LEN);
   unsigned int keyphrases_buffer_len = MAX_BUFFER_LEN;
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
+#endif // KEYPHRASE_ENABLED
 
+#ifdef LANG_ENABLED
+  unsigned char lang_class_words_buffer[MAX_BUFFER_LEN];
+  memset(lang_class_words_buffer, 0, MAX_BUFFER_LEN);
+  unsigned int lang_class_words_buffer_len = MAX_BUFFER_LEN;
+  unsigned int lang_class_words_len = 0;
+  unsigned int lang_class_words_count = 0;
+
+  char lang_class_buffer[MAX_BUFFER_LEN];
+  lang_class_buffer[0] = '\0';
+  unsigned int lang_class_buffer_len = MAX_BUFFER_LEN;
+  unsigned int lang_class_len = 0;
+  unsigned int lang_class_count = 0;
+
+  char top_lang_classes_buffer[MAX_BUFFER_LEN];
+  top_lang_classes_buffer[0] = '\0';
+  unsigned int top_lang_classes_buffer_len = MAX_BUFFER_LEN;
+  unsigned int top_lang_classes_len = 0;
+  unsigned int top_lang_classes_count = 0;
+
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+  unsigned char lang_class_contributors_buffer[ULTIMATE_BUFFER_LEN];
+  memset(lang_class_contributors_buffer, 0, ULTIMATE_BUFFER_LEN);
+  unsigned int lang_class_contributors_buffer_len = ULTIMATE_BUFFER_LEN;
+  unsigned int lang_class_contributors_len = 0;
+  unsigned int lang_class_contributors_count = 0;
+#endif // CLASS_CONTRIBUTORS_ENABLED
+#endif // LANG_ENABLED
+
+#ifdef TEXT_CLASSIFICATION_ENABLED
   unsigned char text_class_words_buffer[MAX_BUFFER_LEN];
   memset(text_class_words_buffer, 0, MAX_BUFFER_LEN);
   unsigned int text_class_words_buffer_len = MAX_BUFFER_LEN;
   unsigned int text_class_words_len = 0;
   unsigned int text_class_words_count = 0;
 
-  char text_classes_buffer[MAX_BUFFER_LEN];
-  memset(text_classes_buffer, 0, MAX_BUFFER_LEN);
-  unsigned int text_classes_buffer_len = MAX_BUFFER_LEN;
-  unsigned int text_classes_len = 0;
-  unsigned int text_classes_count = 0;
+  char text_class_buffer[MAX_BUFFER_LEN];
+  memset(text_class_buffer, 0, MAX_BUFFER_LEN);
+  unsigned int text_class_buffer_len = MAX_BUFFER_LEN;
+  unsigned int text_class_len = 0;
+  unsigned int text_class_count = 0;
+
+  char top_text_classes_buffer[MAX_BUFFER_LEN];
+  top_text_classes_buffer[0] = '\0';
+  unsigned int top_text_classes_buffer_len = MAX_BUFFER_LEN;
+  unsigned int top_text_classes_len = 0;
+  unsigned int top_text_classes_count = 0;
 
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   unsigned char text_class_contributors_buffer[ULTIMATE_BUFFER_LEN];
@@ -199,153 +314,261 @@ int GistMaker::GetGist(const std::string& text,
   unsigned int text_class_contributors_len = 0;
   unsigned int text_class_contributors_count = 0;
 #endif // CLASS_CONTRIBUTORS_ENABLED
+#endif // TEXT_CLASSIFICATION_ENABLED
 
+#ifdef INTENT_ENABLED
+  char intent_buffer[MAX_CLASS_NAME];
+  memset(intent_buffer, 0, MAX_CLASS_NAME);
+  unsigned int intent_buffer_len = MAX_CLASS_NAME;
+#endif // INTENT_ENABLED
+
+#ifdef SENTIMENT_ENABLED
   char sentiment_buffer[MAX_CLASS_NAME];
   memset(sentiment_buffer, 0, MAX_CLASS_NAME);
   unsigned int sentiment_buffer_len = MAX_CLASS_NAME;
+#endif // SENTIMENT_ENABLED
 
-  strcpy((char*) buffer, text.c_str());
   int ret_value = 0;
-  if ((ret_value = GetGist((const unsigned char*) buffer, strlen((char*) buffer),
+  if ((ret_value = GetGist((unsigned char*) text_buffer, text_len,
                 (char*) safe_status_buffer, safe_status_buffer_len,
-                (char*) script_buffer, script_buffer_len,
-                (char*) lang_buffer, lang_buffer_len,
-                (unsigned char*) keywords_buffer, keywords_buffer_len,
-                &keywords_len, &keywords_count,
-                (unsigned char*) hashtags_buffer, hashtags_buffer_len,
-                &hashtags_len, &hashtags_count,
-                (unsigned char*) keyphrases_buffer, keyphrases_buffer_len,
-                &keyphrases_len, &keyphrases_count,
-                (unsigned char*) text_class_words_buffer, text_class_words_buffer_len,
+                (char*) script_buffer, script_buffer_len
+#ifdef KEYWORDS_ENABLED
+                , (unsigned char*) keywords_buffer, keywords_buffer_len,
+                &keywords_len, &keywords_count
+#endif // KEYWORDS_ENABLED
+#ifdef HASHTAGS_ENABLED
+                , (unsigned char*) hashtags_buffer, hashtags_buffer_len,
+                &hashtags_len, &hashtags_count
+#endif // HASHTAGS_ENABLED
+#ifdef KEYPHRASE_ENABLED
+                , (unsigned char*) keyphrases_buffer, keyphrases_buffer_len,
+                &keyphrases_len, &keyphrases_count
+#endif // KEYPHRASE_ENABLED
+#ifdef LANG_ENABLED
+                , (unsigned char*) lang_class_words_buffer, lang_class_words_buffer_len,
+                &lang_class_words_len, &lang_class_words_count,
+                (char*) lang_class_buffer, lang_class_buffer_len,
+                &lang_class_len, &lang_class_count,
+                (char*) top_lang_classes_buffer, top_lang_classes_buffer_len,
+                &top_lang_classes_len, &top_lang_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+                , (unsigned char *) lang_class_contributors_buffer, lang_class_contributors_buffer_len,
+                &lang_class_contributors_len, &lang_class_contributors_count
+#endif // CLASS_CONTRIBUTORS_ENABLED
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+                , (unsigned char*) text_class_words_buffer, text_class_words_buffer_len,
                 &text_class_words_len, &text_class_words_count,
-                (char*) text_classes_buffer, text_classes_buffer_len,
-                &text_classes_len, &text_classes_count
+                (char*) text_class_buffer, text_class_buffer_len,
+                &text_class_len, &text_class_count,
+                (char*) top_text_classes_buffer, top_text_classes_buffer_len,
+                &top_text_classes_len, &top_text_classes_count
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                 , (unsigned char *) text_class_contributors_buffer, text_class_contributors_buffer_len,
                 &text_class_contributors_len, &text_class_contributors_count
 #endif // CLASS_CONTRIBUTORS_ENABLED
-                , (char*) sentiment_buffer, sentiment_buffer_len)) < 0) {
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+                , (char *) intent_buffer, intent_buffer_len
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+                , (char *) sentiment_buffer, sentiment_buffer_len
+#endif // SENTIMENT_ENABLED
+               )) < 0) {
     std::cerr << "ERROR: could not get keywords\n";
   } else {
     safe_status = std::string(safe_status_buffer);
     script = std::string(script_buffer);
-    lang = std::string(lang_buffer);
-    if (text_classes_len > 0 && text_classes_count > 0) {
-      text_classes.insert(std::string(text_classes_buffer));
+#ifdef LANG_ENABLED
+    lang = std::string(lang_class_buffer);
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+    if (top_text_classes_len > 0 && top_text_classes_count > 0) {
+      text_classes.insert(std::string(top_text_classes_buffer));
     }
-    sentiment = std::string(sentiment_buffer);
-#ifdef GIST_DEBUG
-    std::cout << "safe_status: " << safe_status << std::endl;
-    std::cout << "scrips: " << script << std::endl;
-    std::cout << "lang: " << lang << std::endl;
-    std::cout << "text_classes: " << std::endl;
-    std::set<std::string>::iterator set_iter;
-    for (set_iter = text_classes.begin(); set_iter != text_classes.end(); set_iter++) {
-      std::cout << *set_iter << " ";
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+    if (strlen(intent_buffer) > 0) {
+      intent = std::string(intent_buffer);
     }
-    std::cout << std::endl;
-    std::cout << "text_class_contributors: (conversion not implemented yet!)";
-    std::map<std::string, std::string>::iterator map_iter;
-    for (map_iter = text_class_contributors_map.begin();
-         map_iter != text_class_contributors_map.end();
-         map_iter++) {
-      std::cout << map_iter->first << " : " << map_iter->second << " | ";
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+    if (strlen(sentiment_buffer) > 0) {
+      sentiment = std::string(sentiment_buffer);
     }
-    std::cout << std::endl
-#endif
+#endif // SENTIMENT_ENABLED
   }
 
   return ret_value;
 }
 
 // keywords and keyphrases are output parameters
-int GistMaker::GetGist(const unsigned char* tweet, const unsigned int tweet_len,
+int GistMaker::GetGist(unsigned char* text_buffer, const unsigned int text_len,
       char* safe_status_buffer, const unsigned int safe_status_buffer_len,
-      char* script_buffer, const unsigned int script_buffer_len,
-      char* lang_buffer, const unsigned int lang_buffer_len,
-      unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
-      unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr,
-      unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
-      unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr,
-      unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
-      unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr,
-      unsigned char* text_class_words_buffer, const unsigned int text_class_words_buffer_len,
+      char* script_buffer, const unsigned int script_buffer_len
+#ifdef KEYWORDS_ENABLED
+      , unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
+      unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr
+#endif // KEYWORDS_ENABLED
+#ifdef HASHTAGS_ENABLED
+      , unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
+      unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr
+#endif // HASHTAGS_ENABLED
+#ifdef KEYPHRASE_ENABLED
+      , unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
+      unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr
+#endif // KEYPHRASE_ENABLED
+#ifdef LANG_ENABLED
+      , unsigned char* lang_class_words_buffer, const unsigned int lang_class_words_buffer_len,
+      unsigned int* lang_class_words_len_ptr, unsigned int* lang_class_words_count_ptr,
+      char* lang_class_buffer, const unsigned int lang_class_buffer_len,
+      unsigned int* lang_class_len_ptr, unsigned int* lang_class_count_ptr,
+      char* top_lang_classes_buffer, const unsigned int top_lang_classes_buffer_len,
+      unsigned int* top_lang_classes_len_ptr, unsigned int* top_lang_classes_count_ptr
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+      , unsigned char* lang_class_contributors_buffer, const unsigned int lang_class_contributors_buffer_len,
+      unsigned int* lang_class_contributors_len_ptr, unsigned int* lang_class_contributors_count_ptr
+#endif // CLASS_CONTRIBUTORS_ENABLED
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+      , unsigned char* text_class_words_buffer, const unsigned int text_class_words_buffer_len,
       unsigned int* text_class_words_len_ptr, unsigned int* text_class_words_count_ptr,
-      char* text_classes_buffer, const unsigned int text_classes_buffer_len,
-      unsigned int* text_classes_len_ptr, unsigned int* text_classes_count_ptr
+      char* text_class_buffer, const unsigned int text_class_buffer_len,
+      unsigned int* text_class_len_ptr, unsigned int* text_class_count_ptr,
+      char* top_text_classes_buffer, const unsigned int top_text_classes_buffer_len,
+      unsigned int* top_text_classes_len_ptr, unsigned int* top_text_classes_count_ptr
 #ifdef CLASS_CONTRIBUTORS_ENABLED
       , unsigned char* text_class_contributors_buffer, const unsigned int text_class_contributors_buffer_len,
       unsigned int* text_class_contributors_len_ptr, unsigned int* text_class_contributors_count_ptr
 #endif // CLASS_CONTRIBUTORS_ENABLED
-      , char* sentiment_buffer, const unsigned int sentiment_buffer_len) {
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+      , char* intent_buffer, const unsigned int intent_buffer_len
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+      , char* sentiment_buffer, const unsigned int sentiment_buffer_len
+#endif // SENTIMENT_ENABLED
+     ) {
 
-#ifdef GIST_DEBUG
-  std::cout << tweet << std::endl;
-#endif
-
+#ifdef KEYWORDS_ENABLED
   *keywords_buffer = '\0';
   *keywords_len_ptr = 0;
   *keywords_count_ptr = 0;
+#endif // KEYWORDS_ENABLED
+
+#ifdef HASHTAGS_ENABLED
   *hashtags_buffer = '\0';
   *hashtags_len_ptr = 0;
   *hashtags_count_ptr = 0;
+#endif // HASHTAGS_ENABLED
+
+#ifdef KEYPHRASE_ENABLED
   *keyphrases_buffer = '\0';
   *keyphrases_len_ptr = 0;
   *keyphrases_count_ptr = 0;
+#endif // KEYPHRASE_ENABLED
+
+#ifdef TEXT_CLASSIFICATION_ENABLED
   *text_class_words_buffer = '\0';
   *text_class_words_len_ptr = 0;
   *text_class_words_count_ptr = 0;
-  *text_classes_buffer = '\0';
-  *text_classes_len_ptr = 0;
-  *text_classes_count_ptr = 0;
+  *text_class_buffer = '\0';
+  *text_class_len_ptr = 0;
+  *text_class_count_ptr = 0;
+  *top_text_classes_buffer = '\0';
+  *top_text_classes_len_ptr = 0;
+  *top_text_classes_count_ptr = 0;
+#ifdef CLASS_CONTRIBUTORS_ENABLED
   *text_class_contributors_buffer = '\0';
   *text_class_contributors_len_ptr = 0;
   *text_class_contributors_count_ptr = 0;
-  *sentiment_buffer = '\0';
+#endif // CLASS_CONTRIBUTORS_ENABLED
+#endif // TEXT_CLASSIFICATION_ENABLED
 
-  // this can be global. keeping it local for the time being
-  unsigned char buffer[MAX_BUFFER_LEN];
-  if (tweet_len > 0 && tweet_len < MAX_BUFFER_LEN) {
-    memcpy((char *) buffer, (char *) tweet, tweet_len);
-    buffer[tweet_len] = '\0';
-  } else {
-    memset(buffer, '\0', MAX_BUFFER_LEN);
-    return -1;
-  }
+#ifdef LANG_ENABLED
+  *lang_class_words_buffer = '\0';
+  *lang_class_words_len_ptr = 0;
+  *lang_class_words_count_ptr = 0;
+  *lang_class_buffer = '\0';
+  *lang_class_len_ptr = 0;
+  *lang_class_count_ptr = 0;
+  *top_lang_classes_buffer = '\0';
+  *top_lang_classes_len_ptr = 0;
+  *top_lang_classes_count_ptr = 0;
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+  *lang_class_contributors_buffer = '\0';
+  *lang_class_contributors_len_ptr = 0;
+  *lang_class_contributors_count_ptr = 0;
+#endif // CLASS_CONTRIBUTORS_ENABLED
+#endif // LANG_ENABLED
+#ifdef INTENT_ENABLED
+  *intent_buffer = '\0';
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+  *sentiment_buffer = '\0';
+#endif // SENTIMENT_ENABLED
 
   int ret_value = 0;
+#ifdef KEYWORDS_ENABLED
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
+#endif // KEYWORDS_ENABLED
+#ifdef HASHTAGS_ENABLED
   unsigned int hashtags_len = 0;
   unsigned int hashtags_count = 0;
+#endif // HASHTAGS_ENABLED
+#ifdef KEYPHRASE_ENABLED
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
+#endif // KEYPHRASE_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
   unsigned int text_class_words_len = 0;
   unsigned int text_class_words_count = 0;
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LANG_ENABLED
+  unsigned int lang_class_words_len = 0;
+  unsigned int lang_class_words_count = 0;
+#endif // LANG_ENABLED
 
-  unsigned char lang_words_buffer[MAX_BUFFER_LEN];
-  lang_words_buffer[0] = '\0';
-  unsigned int lang_words_buffer_len = MAX_BUFFER_LEN;
-  unsigned int lang_words_len = 0;
-  unsigned int lang_words_count = 0;
-
-  ret_value = m_keytuples_extracter.GetKeyTuples(buffer, tweet_len,
+#ifdef GIST_DEBUG
+  std::cout << "calling GetKeytuples" << std::endl;
+#endif // GIST_DEBUG
+  ret_value = m_keytuples_extracter.GetKeyTuples(text_buffer, text_len,
                    safe_status_buffer, safe_status_buffer_len,
-                   script_buffer, script_buffer_len,
-                   keywords_buffer, keywords_buffer_len, keywords_len, keywords_count,
-                   hashtags_buffer, hashtags_buffer_len, hashtags_len, hashtags_count,
-                   keyphrases_buffer, keyphrases_buffer_len, keyphrases_len, keyphrases_count,
-                   lang_words_buffer, lang_words_buffer_len, lang_words_len, lang_words_count,
-                   text_class_words_buffer, text_class_words_buffer_len,
-                   text_class_words_len, text_class_words_count);
+                   script_buffer, script_buffer_len
+#ifdef KEYWORDS_ENABLED
+                   , keywords_buffer, keywords_buffer_len, keywords_len, keywords_count
+#endif // KEYWORDS_ENABLED
+#ifdef HASHTAGS_ENABLED
+                   , hashtags_buffer, hashtags_buffer_len, hashtags_len, hashtags_count
+#endif // HASHTAGS_ENABLED
+#ifdef KEYPHRASE_ENABLED
+                   , keyphrases_buffer, keyphrases_buffer_len, keyphrases_len, keyphrases_count
+#endif // KEYPHRASE_ENABLED
+#ifdef LANG_ENABLED
+                   , lang_class_words_buffer, lang_class_words_buffer_len,
+                   lang_class_words_len, lang_class_words_count
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+                   , text_class_words_buffer, text_class_words_buffer_len,
+                   text_class_words_len, text_class_words_count
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+                   , intent_buffer, intent_buffer_len
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+                  , sentiment_buffer, sentiment_buffer_len
+#endif // SENTIMENT_ENABLED
+                 );
 
   if (ret_value <= 0) {
     if (ret_value < 0 ) {
 #ifdef GIST_DEBUG
       std::cout << "ERROR: could not get keywords from KeyTuplesExtracter\n";
       return -1;
-#endif
+#endif // GIST_DEBUG
     }
+/*
     *keywords_buffer = '\0';
     *keywords_len_ptr = 0;
     *keywords_count_ptr = 0;
@@ -355,65 +578,90 @@ int GistMaker::GetGist(const unsigned char* tweet, const unsigned int tweet_len,
     *keyphrases_buffer = '\0';
     *keyphrases_len_ptr = 0;
     *keyphrases_count_ptr = 0;
+    *lang_class_words_buffer = '\0';
+    *lang_class_words_len_ptr = 0;
+    *lang_class_words_count_ptr = 0;
     *text_class_words_buffer = '\0';
     *text_class_words_len_ptr = 0;
     *text_class_words_count_ptr = 0;
+    *intent_buffer = '\0';
+    *sentiment_buffer = '\0';
+*/
+#ifdef GIST_DEBUG
+    std::cout << "WARNING: no keytuples found\n";
+#endif // GIST_DEBUG
     return ret_value;
   } else {
+#ifdef KEYWORDS_ENABLED
     *keywords_len_ptr = keywords_len;
     *keywords_count_ptr = keywords_count;
+#endif // KEYWORDS_ENABLED
+#ifdef HASHTAGS_ENABLED
     *hashtags_len_ptr = hashtags_len;
     *hashtags_count_ptr = hashtags_count;
+#endif // HASHTAGS_ENABLED
+#ifdef KEYPHRASE_ENABLED
     *keyphrases_len_ptr = keyphrases_len;
     *keyphrases_count_ptr = keyphrases_count;
+#endif // KEYPHRASE_ENABLED
+#ifdef LANG_ENABLED
+    *lang_class_words_len_ptr = lang_class_words_len;
+    *lang_class_words_count_ptr = lang_class_words_count;
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
     *text_class_words_len_ptr = text_class_words_len;
     *text_class_words_count_ptr = text_class_words_count;
+#endif // TEXT_CLASSIFICATION_ENABLED
   }
 
-  char top_lang_classes_buffer[MAX_BUFFER_LEN];
-  top_lang_classes_buffer[0] = '\0';
-  unsigned int top_lang_classes_buffer_len = MAX_BUFFER_LEN;
+#ifdef LANG_ENABLED
   unsigned int top_lang_classes_len = 0;
   unsigned int top_lang_classes_count = 0;
-
-  unsigned char lang_class_contributors_buffer[ULTIMATE_BUFFER_LEN];
-  lang_class_contributors_buffer[0] = '\0';
-  unsigned int lang_class_contributors_buffer_len = ULTIMATE_BUFFER_LEN;
+#ifdef CLASS_CONTRIBUTORS_ENABLED
   unsigned int lang_class_contributors_len = 0;
   unsigned int lang_class_contributors_count = 0;
-
-  if (m_language_detector.Classify(lang_words_buffer, lang_words_len, lang_words_count,
-                                   lang_buffer, lang_buffer_len,
-                                   top_lang_classes_buffer, top_lang_classes_buffer_len,
-                                   top_lang_classes_len, top_lang_classes_count
-#ifdef CLASS_CONTRIBUTORS_ENABLED
-                                   , lang_class_contributors_buffer,
-                                   lang_class_contributors_buffer_len,
-                                   lang_class_contributors_len,
-                                   lang_class_contributors_count
 #endif // CLASS_CONTRIBUTORS_ENABLED
-                                  ) < 0) {
+
+  if (strcmp(script_buffer, "en") != 0) {
+    strcpy(lang_class_buffer, script_buffer);
+  } else {
+    if (m_language_detector.Classify(lang_class_words_buffer, lang_class_words_len, lang_class_words_count,
+                                     lang_class_buffer, lang_class_buffer_len,
+                                     top_lang_classes_buffer, top_lang_classes_buffer_len,
+                                     top_lang_classes_len, top_lang_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+                                     , lang_class_contributors_buffer,
+                                     lang_class_contributors_buffer_len,
+                                     lang_class_contributors_len,
+                                     lang_class_contributors_count
+#endif // CLASS_CONTRIBUTORS_ENABLED
+                                    ) < 0) {
 #ifdef GIST_DEBUG
-    std::cerr << "ERROR: could not detect language. assigning RR\n";
-    strcpy(lang_buffer, "RR");
-#endif
+      std::cerr << "ERROR: could not detect language. assigning RR\n";
+      strcpy(lang_class_buffer, "RR");
+#endif // GIST_DEBUG
+    } else {
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+      *lang_class_contributors_len_ptr = lang_class_contributors_len;
+      *lang_class_contributors_count_ptr = lang_class_contributors_count;
+#endif // CLASS_CONTRIBUTORS_ENABLED
+    }
   }
+#endif // LANG_ENABLED
 
-  char text_class_buffer[MAX_BUFFER_LEN];
-  text_class_buffer[0] = '\0';
-  unsigned int text_class_buffer_len = MAX_BUFFER_LEN;
-
-  unsigned int text_classes_len = 0;
-  unsigned int text_classes_count = 0;
-
+#ifdef TEXT_CLASSIFICATION_ENABLED
+  unsigned int top_text_classes_len = 0;
+  unsigned int top_text_classes_count = 0;
+#ifdef CLASS_CONTRIBUTORS_ENABLED
   unsigned int text_class_contributors_len = 0;
   unsigned int text_class_contributors_count = 0;
+#endif // CLASS_CONTRIBUTORS_ENABLED
 
   int ret_val = 0;
   if ((ret_val = m_text_classifier.Classify(text_class_words_buffer, text_class_words_len, text_class_words_count,
                                  text_class_buffer, text_class_buffer_len,
-                                 text_classes_buffer, text_classes_buffer_len,
-                                 text_classes_len, text_classes_count
+                                 top_text_classes_buffer, top_text_classes_buffer_len,
+                                 top_text_classes_len, top_text_classes_count
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                                  , text_class_contributors_buffer,
                                  text_class_contributors_buffer_len,
@@ -423,26 +671,57 @@ int GistMaker::GetGist(const unsigned char* tweet, const unsigned int tweet_len,
                                 )) < 0) {
 #ifdef GIST_DEBUG
     std::cerr << "ERROR: could not find text class. assigning RR\n";
-#endif
+#endif // GIST_DEBUG
+  } else {
+    *top_text_classes_len_ptr = top_text_classes_len;
+    *top_text_classes_count_ptr = top_text_classes_count;
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+    *text_class_contributors_len_ptr = text_class_contributors_len;
+    *text_class_contributors_count_ptr = text_class_contributors_count;
+#endif // CLASS_CONTRIBUTORS_ENABLED
   }
-  *text_classes_len_ptr = text_classes_len;
-  *text_classes_count_ptr = text_classes_count;
-  *text_class_contributors_len_ptr = text_class_contributors_len;
-  *text_class_contributors_count_ptr = text_class_contributors_count;
+#endif // TEXT_CLASSIFICATION_ENABLED
 
+/*
   lang_words_buffer[0] = '\0';
   top_lang_classes_buffer[0] = '\0';
   text_class_buffer[0] = '\0';
-
-/*
-  std::cout << "text: " << tweet << std::endl;
-  std::cout << "text_class: " << text_class_buffer << std::endl;
-  std::cout << "top_classes: " << text_classes_buffer << std::endl;
 */
+
+#ifdef GIST_DEBUG
+  std::cout << "text: " << text_buffer << std::endl;
+  std::cout << "safe_status: " << safe_status_buffer << std::endl;
+  std::cout << "script: " << script_buffer << std::endl;
+#ifdef LANG_ENABLED
+  std::cout << "lang: " << lang_class_buffer << std::endl;
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+  std::cout << "top_text_classes: " << top_text_classes_buffer << std::endl;
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+  std::cout << "text_class_contributors: " << text_class_contributors_buffer << std::endl;
+#endif // CLASS_CONTRIBUTORS_ENABLED
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+  std::cout << "intent: ";
+  if (intent_buffer) {
+    std::cout << intent_buffer;
+  }
+  std::cout << std::endl;
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+  std::cout << "sentiment: ";
+  if (sentiment_buffer) {
+    std::cout << sentiment_buffer;
+  }
+  std::cout << std::endl;
+#endif // SENTIMENT_ENABLED
+  std::cout << std::endl;
+#endif // GIST_DEBUG
 
   return ret_value;
 }
 
+#ifdef TEXT_CLASSIFICATION_ENABLED
 int GistMaker::FindTextClasses(inagist_classifiers::Corpus& corpus,
       char* text_classes_buffer, const unsigned int text_classes_buffer_len,
       unsigned int& text_classes_len, unsigned int& text_classes_count
@@ -493,46 +772,36 @@ int GistMaker::FindTextClasses(inagist_classifiers::Corpus& corpus,
                                            )) < 0) {
 #ifdef GIST_DEBUG
     std::cerr << "ERROR: could not find text class. assigning RR\n";
-    strcpy(text_class_buffer, text_class.c_str());
-    strcpy(top_classes_buffer, top_classes.c_str());
-    text_classes_len = top_classes.length();
-    strcpy(text_class_contributors_buffer, "RR|"); 
-    text_class_contributors_count = 1;
-    text_class_contributors_len = 3;
 #endif
   } else {
     if ((text_classes_len = top_classes.length()) > 0) {
       strcpy(text_classes_buffer, top_classes.c_str());
       text_classes_count = top_classes_count;
     }
+#ifdef GIST_DEBUG
 #ifdef CLASS_CONTRIBUTORS_ENABLED
     if (text_class_contributors_map.empty()) {
-#ifdef GIST_DEBUG
       std::cerr << "WARNING: no class_contributors found\n";
-#endif
     } else {
-#ifdef GIST_DEBUG
-      std::cout << "INFO: calling StringMapToPipeList\n";
-#endif
       if (inagist_utils::StringMapToPipeList(text_class_contributors_map,
                             text_class_contributors_buffer, text_class_contributors_buffer_len,
                             text_class_contributors_len, text_class_contributors_count) < 0) {
-#ifdef GIST_DEBUG
         std::cerr << "ERROR: could not make a list of class_contributors\n";
-#endif
       } else {
-#ifdef GIST_DEBUG
-      std::cout << "INFO: " << text_class_contributors_count \
+        std::cout << "INFO: " << text_class_contributors_count \
                 << "strings from map written to piped list\n";
-#endif
      }
     }
 #endif // CLASS_CONTRIBUTORS_ENABLED
+#endif // GIST_DEBUG
   }
+#ifdef CLASS_CONTRIBUTORS_ENABLED
   text_class_contributors_map.clear();
+#endif // CLASS_CONTRIBUTORS_ENABLED
 
   return ret_val;
 
 }
+#endif // TEXT_CLASSIFICATION_ENABLED
 
 } // namespace inagist_trends

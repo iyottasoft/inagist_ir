@@ -1,14 +1,14 @@
 include ../Makefile.incl
 PROJECT = sentimentanalyser
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL}
+CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} -DSENTIMENT_ENABLED
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker -I../twitter_api
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../include/utfcpp -I../curl_request_maker -I../twitter_api -I../utils -I../script_detector -I../keytuples_extracter
 
 LINK_DIR = -L../../lib
 
-LIBS = -l${PROJECT} -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+LIBS = -l${PROJECT} -lkeytuplesextracter -lscriptdetector -lutils -ltwitterapi -linagistapi -ljsonparser -lcurlrequestmaker -lcurl
 
 LIB_DIR = ../../lib
 BIN_DIR = ../../bin
@@ -20,17 +20,25 @@ BINS = ${BIN_DIR}/t_sentiment_analyser
 
 OBJS = sentiment_analyser.o
 
+keytuples = keytuples_config.o keytuples_extracter.o
+
 all: ${LIB} ${BINS}
 	@echo "build done!"
 
 clean:
 	@echo "cleaning libraries ..."
-	@rm *.o ${BINS} ${LIB}
+	@rm *.o ${BINS} ${keytuples} ${LIB}
 	@echo "done!"
 
-${LIB}: ${OBJS}
+${keytuples}:
+	@echo "compiling ../keytuples_extracter/keytuples_config.cc ..."
+	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_config.cc
+	@echo "compiling ../keytuples_extracter/keytuples_extracter.cc ..."
+	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_extracter.cc
+
+${LIB}: ${keytuples} ${OBJS}
 	@echo "creating library file ..."
-	@${ARCHIVE} ${LIB} ${OBJS}
+	@${ARCHIVE} ${LIB} ${OBJS} ${keytuples}
 	@ranlib ${LIB} # this creates an index table
 	@echo "done!"
 

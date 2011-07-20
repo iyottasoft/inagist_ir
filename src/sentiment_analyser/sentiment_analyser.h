@@ -11,6 +11,7 @@
 #include <string>
 #include <set>
 #include <fstream>
+#include "keytuples_extracter.h"
 
 namespace inagist_classifiers {
 
@@ -18,15 +19,15 @@ class SentimentAnalyser {
  public:
   SentimentAnalyser();
   ~SentimentAnalyser();
-  int Init(const std::string& evidence_map_file);
-  int AnalyseSentiment(std::set<std::string>& features);
+  int Init(const char* keytuples_config_file);
+  int AnalyseSentiment(unsigned char* text_buffer, const unsigned int& text_buffer_len,
+                       char* sentiment_buffer, const unsigned int& sentiment_buffer_len);
   int Clear();
 
  private:
-  std::map<std::string, int> m_evidence_map;
-  std::ofstream m_evidence_map_file_stream;
-
+  inagist_trends::KeyTuplesExtracter m_keytuples_extracter;
   DISALLOW_COPY_AND_ASSIGN(SentimentAnalyser); 
+
 };
 
 } // inagist_classifiers

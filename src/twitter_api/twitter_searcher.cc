@@ -283,4 +283,14 @@ int TwitterSearcher::GetFollowers(const std::string& handle, std::set<std::strin
   return num_followers;
 }
 
+int TwitterSearcher::Search(const std::string& query,
+                            std::set<std::string>& tweets) {
+  std::string url = "http://search.twitter.com/search.json?q=" + query;
+  int ret_value = 0;
+  if ((ret_value = GetTweetsFromSearchUrl(url, tweets)) < 0) {
+    std::cout << "Error: could not get tweets for query: " << query << std::endl;
+  }
+  return ret_value;
+}
+
 }

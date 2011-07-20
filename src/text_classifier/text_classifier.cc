@@ -109,21 +109,23 @@ int TextClassifier::Classify(const std::string& text, const unsigned int& text_l
                                         , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
                                        ) < 0) {
-    std::cout << "ERROR: naive bayes classifier could not guess the text class\n";
-    test_corpus.clear();
     top_classes_count = 0;
+    test_corpus.clear();
 #ifdef TC_DEBUG
+    std::cout << "ERROR: naive bayes classifier could not guess the text class\n";
     text_class.assign("RR");
     top_classes.assign("RR");
     top_classes_count = 1;
-#endif
+#endif // TC_DEBUG
     return -1;
   }
 
   if (m_class_labels_map.empty()) {
+#ifdef TC_DEBUG
     std::cerr << "ERROR: class labels map empty\n";
     top_classes.assign("RR|");
     top_classes_count = 1;
+#endif // TC_DEBUG
     return -1;
   }
 
@@ -249,18 +251,20 @@ int TextClassifier::Classify(const unsigned char* text_word_list,
   if (m_debug_level > 1) {
     std::cout << "guess_class: " << text_class << std::endl;
   }
-#endif
+#endif // TC_DEBUG
   strcpy(guess_text_class_buffer, text_class.c_str());
   text_class.clear();
 
   // top classes
   std::map<std::string, std::string>::iterator label_map_iter;
   if (m_class_labels_map.empty()) {
-    std::cerr << "ERROR: class labels map empty\n";
     top_classes_set.clear();
+#ifdef TC_DEBUG
+    std::cerr << "ERROR: class labels map empty\n";
     strcpy(top_classes_buffer, "RR|");
     top_classes_count = 1;
     top_classes_len = 3; 
+#endif // TC_DEBUG
     return -1;
   }
 
@@ -373,9 +377,11 @@ int TextClassifier::Classify(Corpus& corpus,
   }
 
   if (m_class_labels_map.empty()) {
+#ifdef TC_DEBUG
     std::cerr << "ERROR: class labels map empty\n";
     top_classes.assign("RR|");
     top_classes_count = 1;
+#endif // TC_DEBUG
     return -1;
   }
 
@@ -449,9 +455,15 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
 #ifdef KEYPHRASE_ENABLED
   std::set<std::string> keyphrases_set;
 #endif // KEYPHRASE_ENABLED
-#ifdef LANG_WORDS_ENABLED
+#ifdef LANG_ENABLED
   std::set<std::string> lang_words_set;
-#endif // LANG_WORDS_ENABLED
+#endif // LANG_ENABLED
+#ifdef INTENT_ENABLED
+  std::string intent_words;
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+  std::string sentiment;
+#endif // SENTIMENT_ENABLED
 
   std::set<std::string> text_class_words_set;
 
@@ -467,10 +479,18 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
 #ifdef KEYPHRASE_ENABLED
                                          , keyphrases_set
 #endif // KEYPHRASE_ENABLED
-#ifdef LANG_WORDS_ENABLED
+#ifdef LANG_ENABLED
                                          , lang_words_set
-#endif // LANG_WORDS_ENABLED
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
                                          , text_class_words_set
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+                                         , intent_words
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+                                         , sentiment
+#endif // SENTIMENT_ENABLED
                                         ) < 0) {
     std::cerr << "ERROR: could not get words for: " << text << std::endl;
     return -1;
@@ -485,9 +505,9 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
 #ifdef KEYPHRASE_ENABLED
   keyphrases_set.clear();
 #endif // KEYPHRASE_ENABLED
-#ifdef LANG_WORDS_ENABLED
+#ifdef LANG_ENABLED
   lang_words_set.clear();
-#endif // LANG_WORDS_ENABLED
+#endif // LANG_ENABLED
 
   if (script.compare(0, 2, "en") != 0) {
 #ifndef TC_DEBUG

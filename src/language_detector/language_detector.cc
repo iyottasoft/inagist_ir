@@ -330,18 +330,28 @@ int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
 #ifdef KEYWORDS_ENABLED
   std::set<std::string> keywords_set;
 #endif // KEYWORDS_ENABLED
+
 #ifdef KEYPHRASE_ENABLED
   std::set<std::string> keyphrases_set;
 #endif // KEYPHRASE_ENABLED
+
 #ifdef HASHTAGS_ENABLED
   std::set<std::string> hashtags_set;
 #endif // HASHTAGS_ENABLED
 
   std::set<std::string> lang_words_set;
 
-#ifdef TEXT_CLASS_WORDS_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
   std::set<std::string> text_class_words_set;
-#endif // TEXT_CLASS_WORDS_ENABLED
+#endif // TEXT_CLASSIFICATION_ENABLED
+
+#ifdef INTENT_ENABLED
+  std::string intent;
+#endif // INTENT_ENABLED
+
+#ifdef SENTIMENT_ENABLED
+  std::string sentiment;
+#endif // SENTIMENT_ENABLED
 
   std::string safe_status;
   std::string script;
@@ -359,14 +369,22 @@ int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
 #ifdef HASHTAGS_ENABLED
                                                , hashtags_set
 #endif // HASHTAGS_ENABLED
+#ifdef LANG_ENABLED
                                                , lang_words_set
-#ifdef TEXT_CLASS_WORDS_ENABLED
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
                                                , text_class_words_set
-#endif // TEXT_CLASS_WORDS_ENABLED
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+                                               , intent
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+                                               , sentiment
+#endif // SENTIMENT_ENABLED
                                               );
 
   if (ret_val < 0) {
-    std::cerr << "ERROR: could not get words for: " << text << std::endl;
+    std::cerr << "ERROR: could not get keytuples for: " << text << std::endl;
     lang_words_set.clear();
     return -1;
   }
@@ -385,9 +403,9 @@ int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
 #ifdef HASHTAGS_ENABLED
   hashtags_set.clear();
 #endif // HASHTAGS_ENABLED
-#ifdef TEXT_CLASS_WORDS_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
   text_class_words_set.clear();
-#endif // TEXT_CLASS_WORDS_ENABLED
+#endif // TEXT_CLASSIFICATION_ENABLED
 
   lang_words_set.clear();
 

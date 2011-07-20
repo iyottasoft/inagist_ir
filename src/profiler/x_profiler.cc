@@ -49,6 +49,7 @@ int main(int argc, char* argv[]) {
   std::set<std::string> others_text_classes;
   std::set<std::string> others_sub_classes;
   std::map<std::string, std::string> others_text_class_contributors_map;
+  std::string intent_words;
   std::string sentiment;
   std::set<std::string> recommendations;
   if (p.Profile(twitter_handle,
@@ -61,6 +62,7 @@ int main(int argc, char* argv[]) {
                 others_text_classes,
                 others_sub_classes,
                 others_text_class_contributors_map,
+                intent_words,
                 sentiment,
                 recommendations,
                 profile_name) < 0) {

@@ -8,8 +8,7 @@ extern "C" {
 #endif
 int InitProfiler(const char* keytuples_extracter_config,
                  const char* language_detection_config,
-                 const char* text_classifier_config,
-                 const char* sentiment_analyser_config);
+                 const char* text_classifier_config);
 
 int GetProfile(const char* twitter_handle, unsigned int twitter_handle_len,
       unsigned char* locations_buffer, unsigned int locations_buffer_len,
@@ -30,6 +29,7 @@ int GetProfile(const char* twitter_handle, unsigned int twitter_handle_len,
       unsigned int* others_sub_classes_len_ptr, unsigned int* others_sub_classes_count_ptr,
       unsigned char* others_text_class_contributors_buffer, unsigned int others_text_class_contributors_buffer_len,
       unsigned int* others_text_class_contributors_len_ptr, unsigned int* others_text_class_contributors_count_ptr,
+      char* intent_buffer, unsigned int intent_buffer_len,
       char* sentiment_buffer, unsigned int sentiment_buffer_len,
       unsigned char* recommendations_buffer, unsigned int recommendations_buffer_len,
       unsigned int* recommendations_len_ptr, unsigned int* recommendations_count_ptr,

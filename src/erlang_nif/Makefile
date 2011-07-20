@@ -13,7 +13,7 @@ ERL_LIBS = -lstdc++ -lei -lerl_interface
 
 LIBS = ${LIB_DIR}/libtweets.a ${LIB_DIR}/libstem_nif.a ${LIB_DIR}/libstem_erl.so ${LIB_DIR}/libkeytuples_nif.a ${LIB_DIR}/libkeytuples_erl.so ${LIB_DIR}/libtrends_nif.a ${LIB_DIR}/libtrends_erl.so ${LIB_DIR}/liblang_nif.a ${LIB_DIR}/liblang_erl.so ${LIB_DIR}/libtext_class_nif.a ${LIB_DIR}/libtext_class_erl.so ${LIB_DIR}/libgist_nif.a ${LIB_DIR}/libgist_erl.so ${LIB_DIR}/libchannels_nif.a ${LIB_DIR}/libchannels_erl.so ${LIB_DIR}/libprofile_nif.a ${LIB_DIR}/libprofile_nif.so
 
-all: tweets stem keywords keytuples trends lang text_class gist channels profile
+all: tweets stem keywords keytuples intent trends lang text_class gist channels profile
 	@echo "build done!"
 
 clean:
@@ -57,7 +57,7 @@ keywords:
 
 keytuples:
 	@echo "creating library ${LIB_DIR}/libkeytuples_nif.a ..."
-	@g++ ${CXXFLAGS} -fPIC -shared -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -c ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc keytuples.cc -I../../include/utfcpp -I../utils -I../script_detector -I../keytuples_extracter
+	@g++ ${CXXFLAGS} -fPIC -shared -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -c ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc keytuples.cc -I../../include/utfcpp -I../utils -I../script_detector -I../keytuples_extracter
 	@ar -r ${LIB_DIR}/libkeytuples_nif.a keytuples_config.o keytuples_extracter.o keytuples.o
 	@rm keytuples_config.o keytuples_extracter.o
 	@ranlib ${LIB_DIR}/libkeytuples_nif.a
@@ -67,6 +67,34 @@ keytuples:
 	@echo "done!"
 	@echo "compiling keytuples.erl"
 	@erlc keytuples.erl
+	@echo "done!"
+
+intent:
+	@echo "creating library ${LIB_DIR}/libintent_nif.a ..."
+	@g++ ${CXXFLAGS} -fPIC -shared -DINTENT_ENABLED -c ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc intent.cc -I../../include/utfcpp -I../utils -I../script_detector -I../keytuples_extracter
+	@ar -r ${LIB_DIR}/libintent_nif.a keytuples_config.o keytuples_extracter.o intent.o
+	@ranlib ${LIB_DIR}/libintent_nif.a
+	@rm keytuples_config.o keytuples_extracter.o
+	@echo "done!"
+	@echo "creating erlang library file ${LIB_DIR}/libintent_erl.so ..."
+	@gcc -fPIC -shared -o ${LIB_DIR}/libintent_erl.so intent_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L${LIB_DIR} -lintent_nif -lutils -lscriptdetector -ltweets -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+	@echo "done!"
+	@echo "compiling intent.erl"
+	@erlc intent.erl
+	@echo "done!"
+
+sentiment:
+	@echo "creating library ${LIB_DIR}/libsentiment_nif.a ..."
+	@g++ ${CXXFLAGS} -fPIC -shared -DSENTIMENT_ENABLED -c ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc sentiment.cc -I../../include/utfcpp -I../utils -I../script_detector -I../keytuples_extracter
+	@ar -r ${LIB_DIR}/libsentiment_nif.a keytuples_config.o keytuples_extracter.o sentiment.o
+	@ranlib ${LIB_DIR}/libsentiment_nif.a
+	@rm keytuples_config.o keytuples_extracter.o
+	@echo "done!"
+	@echo "creating erlang library file ${LIB_DIR}/libsentiment_erl.so ..."
+	@gcc -fPIC -shared -o ${LIB_DIR}/libsentiment_erl.so sentiment_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -L${LIB_DIR} -lsentiment_nif -lutils -lscriptdetector -ltweets -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+	@echo "done!"
+	@echo "compiling sentiment.erl"
+	@erlc sentiment.erl
 	@echo "done!"
 
 trends:
@@ -121,10 +149,40 @@ channels:
 	@erlc channels.erl
 	@echo "done!"
 
+KEYTUPLES = -I../keytuples_extracter ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc \
+            -DKEYWORDS_ENABLED \
+            -DINTENT_ENABLED \
+            -DSENTIMENT_ENABLED \
+            -DKEYPHRASE_ENABLED \
+            -DHASHTAGS_ENABLED
+
+KEYTUPLES_OBJS = keytuples_config.o keytuples_extracter.o
+
+CLASSIFIER =  -I../ngrams_generator -I../classifier ../classifier/classifier_config.cc ../classifier/corpus_manager.cc ../classifier/naive_bayes_classifier.cc ../classifier/classifier.cc
+CLASSIFIER_OBJS = classifier_config.o corpus_manager.o naive_bayes_classifier.o classifier.o
+
+LANG =  -I../language_detector -DLANG_ENABLED ../language_detector/language_detector.cc
+LANG_OBJS = language_detector.o
+
+TEXT_CLASSIFICATION = -DTEXT_CLASSIFICATION_ENABLED -I../text_classifier ../text_classifier/text_classifier.cc 
+TEXT_CLASSIFICATION_OBJS = text_classifier.o
+
+GIST_COMPONENTS =  -I../gist_maker ../gist_maker/gist_maker.cc gist.cc \
+                  ${KEYTUPLES} \
+                  ${CLASSIFIER} \
+                  ${TEXT_CLASSIFICATION} \
+                  ${LANG}
+
+GIST_OBJS = gist_maker.o gist.o \
+            ${KEYTUPLES_OBJS} \
+            ${CLASSIFIER_OBJS} \
+            ${TEXT_CLASSIFICATION_OBJS} \
+            ${LANG_OBJS}
+
 gist:
 	@echo "creating library ${LIB_DIR}/libgist_nif.a ..."
-	@g++ ${CXXFLAGS} -fPIC -shared -c -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_WORDS_ENABLED -DTEXT_CLASS_WORDS_ENABLED -DCLASS_CONTRIBUTORS_ENABLED ../keytuples_extracter/keytuples_config.cc ../keytuples_extracter/keytuples_extracter.cc ../classifier/classifier_config.cc ../classifier/corpus_manager.cc ../classifier/naive_bayes_classifier.cc ../classifier/classifier.cc ../language_detector/language_detector.cc ../text_classifier/text_classifier.cc ../gist_maker/gist_maker.cc gist.cc -I../../include/utfcpp -I../twitter_api -I../inagist_api -I../script_detector -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../gist_maker
-	@ar -r ${LIB_DIR}/libgist_nif.a keytuples_config.o keytuples_extracter.o classifier_config.o corpus_manager.o naive_bayes_classifier.o classifier.o language_detector.o text_classifier.o gist_maker.o gist.o
+	@g++ ${CXXFLAGS} -fPIC -shared -c ${GIST_COMPONENTS} -I../../include/utfcpp -I../twitter_api -I../inagist_api -I../script_detector -I../utils
+	@ar -r ${LIB_DIR}/libgist_nif.a ${GIST_OBJS}
 	@ranlib ${LIB_DIR}/libgist_nif.a
 	@echo "done!"
 	@echo "creating erlang library file libgist_erl.so ..."
@@ -134,9 +192,13 @@ gist:
 	@erlc gist.erl
 	@echo "done!"
 
+test_gist:
+	gcc -g t_test_gist.c -o ../../bin/t_test_gist -I. -lstdc++ -L ${LIB_DIR} -lgist_nif -lngramsgenerator -ltweets -ltwitterapi -linagistapi -lutils -lscriptdetector -lcurlrequestmaker -ljsonparser -lcurl
+	@echo "done!"
+
 profile:
 	@echo "creating library ${LIB_DIR}/libprofile_nif.a ..."
-	@g++ ${CXXFLAGS} -fPIC -shared -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../gist_maker -I../profiler -c profile.cc
+	@g++ ${CXXFLAGS} -fPIC -shared -DKEYWORDS_ENABLED -DHASHTAGS_ENABLED -DKEYPHRASE_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DCLASS_CONTRIBUTORS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -I../utils -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../gist_maker -I../profiler -c profile.cc
 	@ar -r ${LIB_DIR}/libprofile_nif.a profile.o
 	@ranlib ${LIB_DIR}/libprofile_nif.a
 	@echo "done!"

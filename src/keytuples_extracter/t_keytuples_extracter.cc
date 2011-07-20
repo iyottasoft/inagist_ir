@@ -19,6 +19,8 @@ int GetKeyTuples(std::string text) {
   std::set<std::string> keyphrases_set;
   std::set<std::string> lang_words_set;
   std::set<std::string> text_class_words_set;
+  std::string intent;
+  std::string sentiment;
 
   strcpy(buffer, text.c_str()); 
   if (g_ke.GetKeyTuples(buffer, safe_status, script
@@ -31,12 +33,18 @@ int GetKeyTuples(std::string text) {
 #ifdef KEYPHRASE_ENABLED
                         , keyphrases_set
 #endif // KEYPHRASE_ENABLED
-#ifdef LANG_WORDS_ENABLED
+#ifdef LANG_ENABLED
                         , lang_words_set
-#endif // LANG_WORDS_ENABLED
-#ifdef TEXT_CLASS_WORDS_ENABLED
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
                         , text_class_words_set
-#endif // TEXT_CLASS_WORDS_ENABLED
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+                        , intent
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+                        , sentiment
+#endif // SENTIMENT_ENABLED
                        ) < 0) {
     std::cout << "ERROR: could not get keytuples\n";
     return -1;
@@ -49,31 +57,47 @@ int GetKeyTuples(std::string text) {
   memset(buffer, 0, 1024);
   std::cout << "safe_status: " << safe_status << std::endl;
   std::cout << "script: " << script << std::endl;
+#ifdef KEYWORDS_ENABLED
   if (keywords_set.size() > 0) {
     std::cout << "keywords:\n";
     g_ke.PrintKeywords(keywords_set);
     keywords_set.clear();
   }
+#endif // KEYWORDS_ENABLED
+#ifdef HASHTAGS_ENABLED
   if (hashtags_set.size() > 0) {
     std::cout << "hashtags:\n";
     g_ke.PrintKeywords(hashtags_set);
     hashtags_set.clear();
   }
+#endif // HASHTAGS_ENABLED
+#ifdef KEYPHRASE_ENABLED
   if (keyphrases_set.size() > 0) {
     std::cout << "keyphrases:\n";
     g_ke.PrintKeywords(keyphrases_set);
     keyphrases_set.clear();
   }
+#endif // KEYPHRASE_ENABLED
+#ifdef LANG_ENABLED
   if (lang_words_set.size() > 0) {
     std::cout << "lang_words:\n";
     g_ke.PrintKeywords(lang_words_set);
     lang_words_set.clear();
   }
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
   if (text_class_words_set.size() > 0) {
     std::cout << "text_class_words:\n";
     g_ke.PrintKeywords(text_class_words_set);
     text_class_words_set.clear();
   }
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+  std::cout << "intent: " << intent << std::endl;
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+  std::cout << "sentiment: " << sentiment << std::endl;
+#endif // SENTIMENT_ENABLED
 
   return 0;
 }
@@ -81,7 +105,7 @@ int GetKeyTuples(std::string text) {
 int main(int argc, char *argv[]) {
 
   if (argc < 3 || argc > 4) {
-    std::cout << "Usage: " << argv[0] << "\n\t<config_file_name>\n\t<0/1/2, 0-interactive, 1-file, 2-tweet, 3-many tweets, 4-inagist>\n\t[<file>/<handle>]\n";
+    std::cout << "Usage: " << argv[0] << "\n\t<config_file_name>\n\t<0-5, 0-interactive, 1-file, 2-tweet, 3-many tweets, 4-inagist, 5-twitter search>\n\t[file_name/<handle/query>]\n";
     return -1;
   }
 
@@ -102,7 +126,7 @@ int main(int argc, char *argv[]) {
   }
 
   unsigned int input_type = atoi(argv[2]);
-  assert(input_type >=0 && input_type <=4);
+  assert(input_type >=0 && input_type <=5);
   const char* input_value = NULL;
 
   // initialize keytuples extracter
@@ -111,8 +135,8 @@ int main(int argc, char *argv[]) {
     return -1; 
   }
 
-  if (5 == argc) {
-    input_value = argv[4];
+  if (4 == argc) {
+    input_value = argv[3];
   }
 
   std::string text;
