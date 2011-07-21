@@ -1,4 +1,4 @@
-include ../Makefile.incl
+include ../../Makefile.incl
 PROJECT = textclassifier
 CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL} -DTEXT_CLASSIFICATION_ENABLED -DCLASSIFIER_DATA_TRAINING_ENABLED -DCLASSIFIER_DATA_TESTING_ENABLED #-DCLASS_CONTRIBUTORS_ENABLED #-DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED
@@ -6,12 +6,7 @@ ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../include/utfcpp -I../curl_request_maker -I../twitter_api -I../inagist_api -I../script_detector -I../utils -I../keytuples_extracter -I../classifier -I../ngrams_generator
 
-LINK_DIR = -L../../lib
-
 LIBS = -l${PROJECT} -lngramsgenerator -lutils -lscriptdetector -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
-
-LIB_DIR = ../../lib
-BIN_DIR = ../../bin
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 

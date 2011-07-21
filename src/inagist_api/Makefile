@@ -1,4 +1,4 @@
-include ../Makefile.incl
+include ../../Makefile.incl
 PROJECT = inagistapi
 CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL}
@@ -6,13 +6,7 @@ ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker
 
-LINK_DIR = -L../../lib
-
 LIBS = -l${PROJECT} -ljsonparser -lcurlrequestmaker -lcurl
-
-LIB_DIR = ../../lib
-BIN_DIR = ../../bin
-
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 

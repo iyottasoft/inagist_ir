@@ -1,8 +1,8 @@
--module(stem).
+-module(stemmer).
 -export([init/0, init_c/3, stem/1, test_twitter_timeline/0, test_twitter_timeline/1, test_init/0, test/0, test/1, stress_test/1]).
 
 init() ->
-  erlang:load_nif("../../lib/libstem_erl", 0).
+  erlang:load_nif("../../lib/libstemmer", 0).
 
 init_c(_stopwords_file_path, _dictionary_file_path, _stemmer_dictionary_file_path) ->
   "NIF library not loaded".

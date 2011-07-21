@@ -4,7 +4,7 @@
 #include <string.h>
 #endif
 
-#include "gist.h"
+#include "gist_maker_eapi.h"
 #include "gist_maker.h"
 
 inagist::GistMaker g_gist_maker;

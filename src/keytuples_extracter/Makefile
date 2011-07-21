@@ -1,4 +1,4 @@
-include ../Makefile.incl
+include ../../Makefile.incl
 PROJECT = keytuplesextracter
 CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED #-DINTENT_ENABLED -DSENTIMENT_ENABLED
@@ -6,13 +6,7 @@ ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../inagist_api -I../twitter_api -I../utils -I../script_detector
 
-LINK_DIR = -L../../lib
-
 LIBS = -l${PROJECT} -lscriptdetector -lutils -ltwitterapi -linagistapi -lcurlrequestmaker -ljsonparser -lcurl
-
-LIB_DIR = ../../lib
-BIN_DIR = ../../bin
-
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 

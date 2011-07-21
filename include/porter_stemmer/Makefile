@@ -1,3 +1,4 @@
+include ../../Makefile.incl
 PROJECT = porterstemmer
 CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated
@@ -5,13 +6,7 @@ ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/
 
-LINK_DIR = -L../../lib
-
 LIBS = -l${PROJECT}
-
-LIB_DIR = ../../lib
-BIN_DIR = ../../bin
-
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 

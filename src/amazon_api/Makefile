@@ -1,3 +1,4 @@
+include ../../Makefile.incl
 PROJECT = amazonapi
 CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated #-DDEBUG
@@ -5,15 +6,10 @@ ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I/usr/include/python2.6/
 
-LINK_DIR = -L../../lib
-
 LIBS = -l${PROJECT}
 
 PYLINK_DIR = -L/usr/lib/python2.6/config/
 PYLIBS = -lpython2.6
-
-LIB_DIR = ../../lib
-BIN_DIR = ../../bin
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 

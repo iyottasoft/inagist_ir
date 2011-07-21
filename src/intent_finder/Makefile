@@ -1,7 +1,7 @@
 include ../../Makefile.incl
-PROJECT = sentimentanalyser
+PROJECT = intentdetector
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} -DSENTIMENT_ENABLED
+CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} -DINTENT_ENABLED
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../include/utfcpp -I../curl_request_maker -I../twitter_api -I../utils -I../script_detector -I../keytuples_extracter
@@ -10,9 +10,9 @@ LIBS = -l${PROJECT} -lkeytuplesextracter -lscriptdetector -lutils -ltwitterapi -
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
-BINS = ${BIN_DIR}/t_sentiment_analyser
+BINS = ${BIN_DIR}/t_intent_finder
 
-OBJS = sentiment_analyser.o
+OBJS = intent_finder.o
 
 keytuples = keytuples_config.o keytuples_extracter.o
 
@@ -40,9 +40,9 @@ ${LIB}: ${keytuples} ${OBJS}
 	@echo "compiling ..." $< "..."
 	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
-${BIN_DIR}/t_sentiment_analyser: t_sentiment_analyser.o ${LIB}
+${BIN_DIR}/t_intent_finder: t_intent_finder.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_sentiment_analyser
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_intent_finder
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

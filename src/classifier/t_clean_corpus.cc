@@ -61,7 +61,8 @@ int clean_lang_model(std::string& lang_model_file_name) {
     return -1;
   }
 
-  std::ofstream ofs(lang_model_file_name.c_str());
+  std::string new_file_name = lang_model_file_name + ".new";
+  std::ofstream ofs(new_file_name.c_str());
   if (ofs) {
     std::map<std::string, std::string>::iterator map_iter;
     for (map_iter = lang_corpus.begin(); map_iter != lang_corpus.end(); map_iter++) {

@@ -12,7 +12,7 @@
 #define TC_DEBUG DEBUG
 #endif
 #endif
-//#define TC_DEBUG 5
+#define TC_DEBUG 0
 
 #define MAX_BUFFER_LEN 1024
 

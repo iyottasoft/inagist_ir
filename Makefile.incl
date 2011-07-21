@@ -1,0 +1,7 @@
+DEBUG_LEVEL=0
+
+LINK_DIR = -L../../local/lib
+LIB_DIR = ../../local/lib
+BIN_DIR = ../../bin
+
+EXPORT_LIB_DIR = ../../lib

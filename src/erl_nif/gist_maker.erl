@@ -1,9 +1,9 @@
--module(gist).
+-module(gist_maker).
 
 -export([init/0, init_c/3, get_gist/1, test_init/0, test/0, test_user/1, test_file/1, test_gist_twitter_timeline/0, test_gist_twitter_timeline/1, stress_test/1]).
 
 init() ->
-  erlang:load_nif("../../lib/libgist_erl", 0).
+  erlang:load_nif("../../lib/libgist_maker", 0).
 
 init_c(_keytuples_extracter_config_file_path, _lang_detect_config_file_path, _text_classifier_config_file_path) ->
   "NIF library not loaded".

@@ -1,4 +1,4 @@
-include ../Makefile.incl
+include ../../Makefile.incl
 PROJECT = profiler
 CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} -DKEYWORDS_ENABLED -DHASHTAGS_ENABLED -DKEYPHRASE_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DCLASS_CONTRIBUTORS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED
@@ -6,12 +6,7 @@ ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../../include/json_parser -I../curl_request_maker -I../twitter_api -I../inagist_api -I../utils -I../script_detector -I../keytuples_extracter -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier -I../gist_maker
 
-LINK_DIR = -L../../lib
-
 LIBS = -l${PROJECT} -lgistmaker -lngramsgenerator -lutils -lscriptdetector -linagistapi -ltwitterapi -lcurlrequestmaker -ljsonparser -lcurl
-
-LIB_DIR = ../../lib
-BIN_DIR = ../../bin
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 

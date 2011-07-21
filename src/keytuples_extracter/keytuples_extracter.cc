@@ -112,7 +112,8 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
 #endif // KE_DEBUG
     int ret = m_stopwords_dictionary.Load(stopwords_file);
     if (ret < 0) {
-      std::cerr << "ERROR: could not load stopwords file into dictionary set\n";
+      std::cerr << "ERROR: could not load stopwords file " \
+                << stopwords_file << " into dictionary set\n";
       return -1;
     }
   }
@@ -125,7 +126,8 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
 #endif // KE_DEBUG
     int ret = m_dictionary.Load(dictionary_file);
     if (ret < 0) {
-      std::cerr << "ERROR: could not load dictionary file into dictionary set\n";
+      std::cerr << "ERROR: could not load dictionary file " \
+                << dictionary_file << " into dictionary set\n";
       return -1;
     }
   }
@@ -138,7 +140,8 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
 #endif // KE_DEBUG
     int ret = m_unsafe_dictionary.Load(unsafe_dictionary_file);
     if (ret < 0) {
-      std::cerr << "ERROR: could not load unsafe words into dictionary set\n";
+      std::cerr << "ERROR: could not load unsafe file " \
+                << unsafe_dictionary_file << " into dictionary set\n";
       return -1;
     }
   }
@@ -152,7 +155,8 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
 #endif // KE_DEBUG
     int ret = m_intent_words_dictionary.Load(intent_words_file);
     if (ret < 0) {
-      std::cerr << "ERROR: could not load intent words file into dictionary map\n";
+      std::cerr << "ERROR: could not load intent words file " \
+                << intent_words_file << " into dictionary map\n";
       return -1;
     }
   }

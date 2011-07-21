@@ -1,3 +1,4 @@
+include ../../Makefile.incl
 PROJECT = test_utf8
 CXX = g++
 CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG -D_CPLUSPLUS
@@ -5,12 +6,7 @@ ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../src/curl_request_maker -I../../include/utfcpp -I../../src/twitter_api -I../../src/script_detector
 
-LINK_DIR = -L../../lib
-
 LIBS = -l${PROJECT} -lscriptdetector -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
-
-LIB_DIR = ../../lib
-BIN_DIR = ../../bin
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 

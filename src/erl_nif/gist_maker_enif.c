@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "tweets.h"
-#include "gist.h"
+#include "gist_maker_eapi.h"
 
 #define ULTIMATE_BUFFER_LEN 10240
 #define MAX_BUFFER_LEN 1024
@@ -779,5 +779,5 @@ static ErlNifFunc nif_funcs[] =
   {"test_gist_twitter_timeline", 1, nif_test_twitter_timeline},
   {"test_gist_file", 1, nif_test_from_file},
 };
-ERL_NIF_INIT(gist, nif_funcs, NULL, NULL, NULL, NULL)
+ERL_NIF_INIT(gist_maker, nif_funcs, NULL, NULL, NULL, NULL)
 

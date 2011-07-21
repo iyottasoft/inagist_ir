@@ -4,7 +4,7 @@
 #include <iostream>
 #endif
 
-#include "stem.h"
+#include "stemmer_eapi.h"
 #include "stemmer.h"
 
 inagist_search::Stemmer g_stemmer;
