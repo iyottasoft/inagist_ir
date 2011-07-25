@@ -26,6 +26,15 @@ int main(int argc, char *argv[]) {
   if (6 == argc) {
     input_value = argv[5];
   }
+  unsigned int stress_count = 1;
+  if (6 == input_type) {
+    stress_count = atoi(input_value);
+    if (stress_count < 0 || stress_count > 10000) {
+      std::cerr << "ERROR: valid value for stress_count is between 1 and 10k" << std::endl;
+    }
+    input_type = 3;
+    input_value = NULL;
+  }
 
   inagist::GistMaker gm;
 
@@ -47,30 +56,33 @@ int main(int argc, char *argv[]) {
         std::cerr << "ERROR: coult not get gist for doc:" << doc << std::endl;
       }
     }
-  } else {
+    return 0;
+  }
+
+  for (unsigned int i=0; i < stress_count; i++) {
     if (inagist_utils::GetInputText(input_type,
                                     input_value,
                                     docs) < 0) {
       std::cerr << "ERROR: could not get test input\n";
       return -1;
     }
-  }
 
-  if (docs.empty()) {
-    std::cerr << "WARNING: no input text found\n";
-    return 0;
-  }
-
-  std::set<std::string>::iterator doc_iter;
-  for (doc_iter = docs.begin(); doc_iter != docs.end(); doc_iter++) {
-    doc = *doc_iter;
-    std::cout << std::endl;
-    std::cout << doc << std::endl;
-    if (gm.GetGist(doc) < 0) {
-      std::cerr << "ERROR: could not get gist for doc:" << doc << std::endl;
+    if (docs.empty()) {
+      std::cerr << "WARNING: no input text found\n";
+      return 0;
     }
+
+    std::set<std::string>::iterator doc_iter;
+    for (doc_iter = docs.begin(); doc_iter != docs.end(); doc_iter++) {
+      doc = *doc_iter;
+      std::cout << std::endl;
+      std::cout << doc << std::endl;
+      if (gm.GetGist(doc) < 0) {
+        std::cerr << "ERROR: could not get gist for doc:" << doc << std::endl;
+      }
+    }
+    docs.clear();
   }
-  docs.clear();
   input_value = NULL;
 
   return 0;
