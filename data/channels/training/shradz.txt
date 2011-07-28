@@ -1,3 +1,7 @@
-Harshdeep Kaur=476
+Harshdeep Kaur=579
+Meego=600
+dobara=169
 fb=120
+milegi=169
 spam=120
+zindagi=169
