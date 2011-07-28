@@ -1004,16 +1004,13 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
 
   if (isupper(*ptr)) {
     current_word_caps = true;
-    current_word_all_caps = true;
-    current_word_starts_num = false;
     num_caps_words++;
-  } else {
-    if (isdigit(*ptr)) {
-      current_word_starts_num = true; 
-      num_numeric_words++;
-    } else {
-      current_word_starts_num = false;
+    if (isupper(*(ptr+1))) {
+      current_word_all_caps = true;
     }
+  } else if (isdigit(*ptr)) {
+    current_word_starts_num = true; 
+    num_numeric_words++;
   }
 
   // now lets find the end of the current word - while loop works from the second letter
@@ -1048,15 +1045,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
 
   while (ptr && ' ' != *ptr && '\0' != *ptr &&
          !(is_punct = IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1/*, current_word_has_apostropheS*/))) {
-    /*
-    if (!strcmp((char *) ptr, "&#")) {
-      ptr+=2;
-      while (' ' != *ptr && '\0' != *ptr && (isdigit(*ptr) || ';' == *ptr))
-        ptr++;
-      if ('\0' == *ptr)
-        break;
-    }
-    */
+
     if (!ptr || '\0' == *ptr) {
 #ifdef KE_DEBUG
       if (KE_DEBUG > 1) {
@@ -1066,21 +1055,18 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       return 0;
     }
 
-/*
-  if (current_word_has_apostropheS) {
-    std::cout << current_word_start << " has apostropheS" << std::endl;
-  }
-*/
 
     if (isupper(*ptr)) {
-      if (!current_word_all_caps && !ispunct(*ptr)) {
-          current_word_has_mixed_case = true;
+      if (!current_word_all_caps) {
+        current_word_has_mixed_case = true;
       }
     } else if (islower(*ptr)) {
-      //if (current_word_caps)
-      //  current_word_has_mixed_case = false;
-      current_word_all_caps = false;
+      if (current_word_all_caps) {
+        current_word_has_mixed_case = true;
+        current_word_all_caps = false;
+      }
     }
+
     //ptr++;
     try {
       code_point = utf8::next(ptr, end);
@@ -1221,9 +1207,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       ch = *(current_word_end-2);
       *(current_word_end-2) = '\0';
     }
-    if (!current_word_caps) {
-      text_class_words_set.insert(std::string((char *) current_word_start));
-    } else if (current_word_all_caps || current_word_has_mixed_case) {
+    if (!current_word_caps || current_word_all_caps || current_word_has_mixed_case) {
       text_class_words_set.insert(std::string((char *) current_word_start));
     } else { 
       *current_word_start += 32;
@@ -1308,21 +1292,18 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
 #endif // KE_DEBUG
     }
 
+    // remember - this is start of word
     if (isupper(*next_word_start)) {
       next_word_caps = true;
       num_caps_words++;
-      next_word_all_caps = true;
-      next_word_starts_num = false;
-    } else {
-      next_word_caps = false;
-      next_word_all_caps = false;
-      if (isdigit(*next_word_start)) {
-        next_word_starts_num = true;
-        num_numeric_words++;
-      } else {
-        next_word_starts_num = false;
+      if (isupper(*(next_word_start + 1))) {
+        next_word_all_caps = true;
       }
+    } else if (isdigit(*next_word_start)) {
+      next_word_starts_num = true;
+      num_numeric_words++;
     }
+
   }
 
   // now we need to achieve the following
@@ -1536,9 +1517,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
             ch = *(next_word_end-2);
             *(next_word_end-2) = '\0';
           }
-          if (!next_word_caps) {
-            text_class_words_set.insert(std::string((char *) next_word_start));
-          } else if (next_word_all_caps || next_word_has_mixed_case) {
+          if (!next_word_caps || next_word_all_caps || next_word_has_mixed_case) {
             text_class_words_set.insert(std::string((char *) next_word_start));
           } else {
             *next_word_start += 32;
@@ -2271,17 +2250,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
           if (isupper(*next_word_start)) {
             next_word_caps = true;
             num_caps_words++;
-            next_word_all_caps = true;
-            next_word_starts_num = false;
-          } else {
-            next_word_caps = false;
-            next_word_all_caps = false;
-            if (isdigit(*next_word_start)) {
-              next_word_starts_num = true;
-              num_numeric_words++;
-            } else {
-              next_word_starts_num = false;
+            if (isupper(*(next_word_start+1))) {
+              next_word_all_caps = true;
             }
+          } else if (isdigit(*next_word_start)) {
+            next_word_starts_num = true;
+            num_numeric_words++;
           }
         } else {
           // placing the probe before '/0' so that loop will make it probe++
@@ -2291,36 +2265,18 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       } // check for current word delimiter 
 
     } else {
-      /*
-      if (!strcmp((char *) probe, "&#")) {
-        probe+=2;
-        while (' ' != *probe && '\0' != *probe && (isdigit(*probe) || ';' == *probe))
-          probe++;
-        if ('\0' == *probe)
-          break;
-        current_word_precedes_ignore_word = true;
-      }
-      */
-      // TODO (balaji) - mixed case logic seems twisted
-      // yes, tried to fix it. -Balaji July 22, 2011
-/*
-  if (next_word_has_apostropheS) {
-    std::cout << next_word_start << " has apostropheS" << std::endl;
-  }
-*/
 
       if (isupper(*probe)) {
-        if (!next_word_all_caps && !ispunct(*probe)) {
-          //if ((probe-1) == ptr)
-            //second_letter_has_caps = true;
-          //else
+        if (!next_word_all_caps) {
           next_word_has_mixed_case = true;
         }
       } else if (islower(*probe)) {
-        //if (next_word_caps)
-        //  next_word_has_mixed_case = false;
-        next_word_all_caps = false;
+        if (next_word_all_caps) {
+          next_word_has_mixed_case = true;
+          next_word_all_caps = false;
+        }
       }
+
     }
 
     // a mere cog in a loop wheel, but a giant killer if commented
