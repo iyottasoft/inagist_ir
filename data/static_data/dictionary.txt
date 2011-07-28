@@ -270,6 +270,8 @@ Likely
 LIKELY
 lmao
 LMAO
+lt
+LT
 may
 May
 MAY
@@ -4455,6 +4457,8 @@ quirkily
 quiveringly
 quixotically
 quizzically
+quot
+QUOT
 quotably
 quotationally
 rabidly
@@ -6157,6 +6161,7 @@ Amicably
 Amorally
 Amorously
 Amorphously
+amp
 Amply
 Amusedly
 Amusingly

@@ -1,14 +1,13 @@
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
-#include <cassert>
 #include <string>
 #include <set>
 #include "keytuples_extracter.h"
 #include "intent_finder.h"
 #include "test_utils.h"
 
-inagist_classifiers::IntentFinder g_sa;
+inagist_classifiers::IntentFinder g_if;
 
 int FindIntent(std::string text) {
 
@@ -18,11 +17,16 @@ int FindIntent(std::string text) {
   int intent_buffer_len = 255;
 
   strcpy((char *) text_buffer, text.c_str()); 
-  if (g_sa.FindIntent(text_buffer, text_buffer_len,
-                            intent_buffer, intent_buffer_len) < 0) {
+  unsigned int text_len = text.length();
+  int ret_val = 0;
+  if ((ret_val = g_if.FindIntent(text_buffer, text_buffer_len, text_len,
+                                 intent_buffer, intent_buffer_len)) < 0) {
     std::cout << "ERROR: could not get sentiment\n";
     return -1;
   }
+
+  if (ret_val < 1)
+    return 0;
 
   std::cout << std::endl << text_buffer << std::endl;
   text_buffer[0] = '\0';
@@ -38,7 +42,7 @@ int FindIntent(std::string text) {
 int main(int argc, char *argv[]) {
 
   if (argc < 3 || argc > 4) {
-    std::cout << "Usage: " << argv[0] << "\n\t<keytuples_config_file_name>\n\t<0/1/2, 0-interactive, 1-file, 2-tweet, 3-many tweets, 4-inagist>\n\t[<file>/<handle>]\n";
+    std::cout << "Usage: " << argv[0] << "\n\t<keytuples_config_file_name>\n\t<0/1/2, 0-interactive, 1-file, 2-tweet, 3-many tweets, 4-inagist, 5-search, 6-stress_test, 7-followers>\n\t[<file>/<handle>/stress_count]\n";
     return -1;
   }
 
@@ -49,17 +53,16 @@ int main(int argc, char *argv[]) {
   }
 
   unsigned int input_type = atoi(argv[2]);
-  assert(input_type >=0 && input_type <=4);
   const char* input_value = NULL;
 
   // initialize keytuples extracter
-  if (g_sa.Init(keytuples_config_file.c_str()) < 0) {
+  if (g_if.Init(keytuples_config_file.c_str()) < 0) {
     std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
     return -1; 
   }
 
-  if (5 == argc) {
-    input_value = argv[4];
+  if (4 == argc) {
+    input_value = argv[3];
   }
 
   std::string text;
@@ -85,7 +88,7 @@ int main(int argc, char *argv[]) {
   }
 
   tweets.clear();
-  g_sa.Clear();
+  g_if.Clear();
 
   return 0;
 }

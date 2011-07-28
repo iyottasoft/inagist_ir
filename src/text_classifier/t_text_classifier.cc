@@ -76,9 +76,6 @@ int main(int argc, char* argv[]) {
   std::string text;
   std::set<std::string> tweets;
   std::set<std::string>::iterator set_iter;
-  std::string text_class;
-  std::string top_classes;
-  unsigned int top_classes_count = 0;
 
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   std::map<std::string, std::string> class_contributors_map;
@@ -103,6 +100,8 @@ int main(int argc, char* argv[]) {
   }
 
   tweets.clear();
+
+  g_tc.ClearDependencies();
 
   return 0;
 }

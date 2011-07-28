@@ -496,6 +496,155 @@ int Classifier::GetTrainingData(const std::string& handle,
 
   return count + user_info_count;
 }
+
+int Classifier::CleanCorpusFile(std::string& corpus_file_name, std::string& output_suffix) {
+
+  std::ifstream ifs(corpus_file_name.c_str());
+  if (!ifs.is_open()) {
+    std::cout << "ERROR: could not open file " << corpus_file_name << std::endl;
+    return -1;
+  }
+
+  Corpus corpus;
+  Corpus new_corpus;
+  Corpus invalid_corpus;
+  Corpus temp_corpus;
+  CorpusIter corpus_iter;
+  CorpusIter temp_corpus_iter;
+  CorpusIter trojan_corpus_iter;
+  std::string key;
+  std::string temp_key;
+  int value = 0;
+  int temp_value = 0;
+  bool flag = false;
+
+  if (CorpusManager::LoadCorpus(corpus_file_name, corpus) < 0) {
+    std::cerr << "ERROR: could not load corpus file: " << corpus_file_name << std::endl;
+    return 0;
+  }
+
+#ifdef CLASSIFIER_DEBUG
+  bool wait=true;
+  bool temp_wait=true;
+  std::string input;
+#endif // CLASSIFIER_DEBUG
+
+  for (corpus_iter = corpus.begin(); corpus_iter != corpus.end(); corpus_iter++) {
+    flag = false;
+    // corpus_iter->first is a string. we are going to get corpus from that string and investigate
+    key.assign(corpus_iter->first);
+    if (key.find(" ") != std::string::npos)
+      continue;
+    value = corpus_iter->second;
+#ifdef CLASSIFIER_DEBUG
+    temp_wait = false;
+    std::cout << "analysing " << key << " = " << value << std::endl;
+#endif // CLASSIFIER_DEBUG
+    if (GetCorpus(key, temp_corpus) < 0) {
+      std::cerr << "ERROR: could not get corpus for: " << key << std::endl;
+    } else {
+      for (temp_corpus_iter = temp_corpus.begin();
+           temp_corpus_iter != temp_corpus.end();
+           temp_corpus_iter++) {
+        temp_key.assign(temp_corpus_iter->first);
+        temp_value = temp_corpus_iter->second;
+        if (key.compare(temp_key) == 0) {
+          flag = true;
+        } else {
+          if ((trojan_corpus_iter = corpus.find(temp_key)) != corpus.end()) {
+#ifdef CLASSIFIER_DEBUG
+            std::cout << "incrementing " << trojan_corpus_iter->first \
+                      << "=" << trojan_corpus_iter->second \
+                      << " by " << temp_value << std::endl;
+            temp_wait = true;
+#endif // CLASSIFIER_DEBUG
+            trojan_corpus_iter->second += temp_value;
+          } else {
+            new_corpus.insert(std::pair<std::string, unsigned int> (temp_corpus_iter->first, value));
+            corpus.insert(std::pair<std::string, unsigned int> (temp_corpus_iter->first, value));
+#ifdef CLASSIFIER_DEBUG
+            std::cout << "inserting " << temp_corpus_iter->first << std::endl;
+            temp_wait = true;
+#endif // CLASSIFIER_DEBUG
+          }
+        }
+      }
+    }
+    temp_corpus.clear();
+    if (!flag) {
+      //std::cout << key << ", " << value_str << " is invalid. ignoring." << std::endl;
+      invalid_corpus.insert(std::pair<std::string, unsigned int> (key, value));
+      corpus.erase(corpus_iter);
+    }
+#ifdef CLASSIFIER_DEBUG
+    if (wait) {
+      if (temp_wait) {
+      std::cin >> input;
+      if (input.compare("enuf") == 0) {
+        wait = false;
+      }
+      }
+    }
+#endif // CLASSIFIER_DEBUG
+  }
+
+  std::string new_file_name;
+  if (output_suffix.compare("none") == 0) {
+    // replace old file
+    new_file_name = corpus_file_name;
+  } else {
+    new_file_name = corpus_file_name + "." + output_suffix;
+  }
+  CorpusManager::WriteCorpusToFile(corpus, new_file_name);
+  corpus.clear();
+
+  new_file_name = corpus_file_name + ".new_";
+  CorpusManager::WriteCorpusToFile(new_corpus, new_file_name);
+  new_corpus.clear();
+
+  new_file_name = corpus_file_name + ".invalid_";
+  CorpusManager::WriteCorpusToFile(invalid_corpus, new_file_name);
+  invalid_corpus.clear();
+
+  return 0;
+}
+
+int Classifier::CleanCorpus(unsigned int input_type,
+                 std::string& file_name,
+                 std::string& output_suffix) {
+
+  if (0 == input_type) {
+    return CleanCorpusFile(file_name, output_suffix);
+  }
+
+  // this config file name should have corpus files
+  // and the strings with which the corpus contents can be uniquely identified
+
+  inagist_classifiers::Config config;
+  if (inagist_classifiers::ClassifierConfig::Read(file_name.c_str(), config) < 0) {
+    std::cerr << "ERROR: could not read config file: " << file_name << std::endl;
+    return -1;
+  }
+
+  if (config.classes.empty()) {
+    std::cerr << "ERROR: class structs could not be read from config file: " << file_name << std::endl;
+    return -1;
+  }
+
+  std::string corpus_file_name;
+  for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
+    corpus_file_name = config.iter->corpus_file;
+    if (CleanCorpusFile(corpus_file_name, output_suffix) < 0) {
+      std::cout << "ERROR: could not clean lang model in file: " \
+                << config.iter->corpus_file << std::endl; 
+      break;
+    }
+  }
+  inagist_classifiers::ClassifierConfig::Clear(config);
+
+  return 0;
+
+}
 #endif // CLASSIFIER_DATA_TRAINING_ENABLED
 
 #ifdef CLASSIFIER_DATA_TESTING_ENABLED

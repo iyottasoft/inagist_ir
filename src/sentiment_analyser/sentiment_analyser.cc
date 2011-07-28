@@ -23,6 +23,7 @@ int SentimentAnalyser::Init(const char* keytuples_extracter_config_file) {
 }
 
 int SentimentAnalyser::AnalyseSentiment(unsigned char* text_buffer, const unsigned int& text_buffer_len,
+                                        const unsigned int& text_len,
                                         char* sentiment_buffer, const unsigned int& sentiment_buffer_len) {
 
   if (!text_buffer || !sentiment_buffer) {
@@ -36,7 +37,7 @@ int SentimentAnalyser::AnalyseSentiment(unsigned char* text_buffer, const unsign
   char script_buffer[4];
   unsigned int script_buffer_len = 4;
 
-  if (m_keytuples_extracter.GetKeyTuples(text_buffer, text_buffer_len,
+  if (m_keytuples_extracter.GetKeyTuples(text_buffer, text_buffer_len, text_len,
                                          safe_status_buffer, safe_status_buffer_len,
                                          script_buffer, script_buffer_len,
                                          sentiment_buffer, sentiment_buffer_len) < 0) {

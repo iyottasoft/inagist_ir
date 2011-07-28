@@ -16,6 +16,13 @@
 #include "dictionary_map.h"
 #include "int_dictionary_map.h"
 
+#ifdef DEBUG
+#if DEBUG>0
+#define KE_DEBUG DEBUG
+#endif
+#endif
+//#define KE_DEBUG 6
+
 namespace inagist_trends {
 
 class KeyTuplesExtracter {
@@ -84,7 +91,8 @@ class KeyTuplesExtracter {
                   );
 
   // directly writing to an output buffer instead of a set
-  int GetKeyTuples(unsigned char* buffer, const unsigned int& buffer_len,
+  int GetKeyTuples(unsigned char* text_buffer, const unsigned int& text_buffer_len,
+                   const unsigned int& text_len,
                    char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
                    char* script_buffer, const unsigned int& script_buffer_len
 #ifdef KEYWORDS_ENABLED
@@ -131,8 +139,9 @@ class KeyTuplesExtracter {
 #endif // SENTIMENT_ENABLED
 
   DISALLOW_COPY_AND_ASSIGN(KeyTuplesExtracter);
-  bool IsPunct(char *ptr, char *prev=NULL, char *next=NULL);
-  bool IsIgnore(char *&ptr);
+  // using char* for word_has_apostrophe instead of bool&
+  bool IsPunct(char*& ptr, char* prev=NULL, char* next=NULL/*, bool word_has_apostrophe=false*/);
+  bool IsIgnore(char*& ptr);
   inline void Insert(unsigned char* buffer, unsigned int& current_len,
                      unsigned char* str_to_add, const unsigned int& str_len,
                      unsigned int& buffer_content_count);

@@ -18,7 +18,6 @@ class TwitterSearcher {
              std::multimap<std::string, std::string> &tweets_map);
   int Init(std::string root_dir);
   int DeInit();
-  int GetFollowers(const std::string& handle, std::set<std::string>& followers);
   static int GetTweetsFromSearchUrl(const std::string& url, std::set<std::string>& tweets);
   static int GetTweetsFromUser(const std::string& user_name, std::set<std::string>& tweets);
   static int Get100TweetsFromUser(const std::string& user_name, std::set<std::string>& tweets);

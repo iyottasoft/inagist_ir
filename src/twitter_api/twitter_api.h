@@ -46,6 +46,11 @@ class TwitterAPI {
                          unsigned int& locations_len, unsigned int& locations_count,
                          std::set<std::string>& user_info_tokens);
 
+  static int GetFollowers(const std::string& handle, std::set<std::string>& followers);
+
+  static int GetFollowerTweets(const std::string& handle,
+                        std::set<std::string>& tweets,
+                        const unsigned int required_count=15);
 };
 
 }

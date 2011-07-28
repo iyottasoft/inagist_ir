@@ -122,6 +122,7 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   ErlNifBinary tweet;
   unsigned char tweet_str[MAX_BUFFER_LEN];
+  unsigned int tweet_buffer_len = MAX_BUFFER_LEN;
   memset((char *) tweet_str, '\0', MAX_BUFFER_LEN);
 
   bool success = enif_inspect_binary(env, argv[0], &tweet);
@@ -192,7 +193,7 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   unsigned int sentiment_buffer_len = MAX_CLASS_NAME;
 
   int ret_value = 0;
-  if ((ret_value = InaGist((const unsigned char *) tweet_str, tweet_len,
+  if ((ret_value = InaGist((const unsigned char *) tweet_str, tweet_buffer_len, tweet_len,
                   (char *) safe_status_buffer, safe_status_buffer_len,
                   (char *) script_buffer, script_buffer_len
                   , (char *) lang, MAX_BUFFER_LEN

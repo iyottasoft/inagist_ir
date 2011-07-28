@@ -13,7 +13,8 @@ LIB = ${LIB_DIR}/lib${PROJECT}.so
 BINS = ${BIN_DIR}/t_text_classifier \
        ${BIN_DIR}/x_text_classifier_training_data \
        ${BIN_DIR}/t_text_classifier_training_data \
-       ${BIN_DIR}/t_text_classifier_test_data
+       ${BIN_DIR}/t_text_classifier_test_data \
+       ${BIN_DIR}/t_clean_text_corpus
 
 keytuples = keytuples_config.o keytuples_extracter.o
 classifier = classifier_config.o corpus_manager.o naive_bayes_classifier.o classifier.o
@@ -75,6 +76,11 @@ ${BIN_DIR}/t_text_classifier_training_data: t_text_classifier_training_data.o ${
 ${BIN_DIR}/t_text_classifier_test_data: t_text_classifier_test_data.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_text_classifier_test_data
+	@echo "done!"
+
+${BIN_DIR}/t_clean_text_corpus: t_clean_text_corpus.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_clean_text_corpus
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

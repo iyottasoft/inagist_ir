@@ -43,7 +43,8 @@ int GistMaker::Init(const char* keytuples_extracter_config_file,
   std::cout << "INFO: initializing keytuples_extracter with config: " \
             << keytuples_extracter_config_file << std::endl;
 #endif
-  if (m_keytuples_extracter.Init(keytuples_extracter_config_file, true) < 0) {
+  bool load_classifier_dictionary = false;
+  if (m_keytuples_extracter.Init(keytuples_extracter_config_file, load_classifier_dictionary=false) < 0) {
     std::cerr << "ERROR: could not initialize KeyTuplesExtracter\n";
     return -1;
   }
@@ -109,12 +110,12 @@ int GistMaker::GetGist(const std::string& text) {
 #ifdef KEYWORDS_ENABLED
               , keywords
 #endif // KEYWORDS_ENABLED
-#ifdef KEYPHRASE_ENABLED
-              , keyphrases
-#endif // KEYPHRASE_ENABLED
 #ifdef HASHTAGS_ENABLED
               , hashtags
 #endif // HASHTAGS_ENABLED
+#ifdef KEYPHRASE_ENABLED
+              , keyphrases
+#endif // KEYPHRASE_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
               , text_classes
 #ifdef CLASS_CONTRIBUTORS_ENABLED
@@ -226,6 +227,7 @@ int GistMaker::GetGist(const std::string& text,
   unsigned char text_buffer[MAX_BUFFER_LEN];
   memset(text_buffer, 0, MAX_BUFFER_LEN);
   strcpy((char*) text_buffer, text.c_str());
+  unsigned int text_buffer_len = MAX_BUFFER_LEN;
   unsigned int text_len = text.length();
 
   char safe_status_buffer[10];
@@ -329,7 +331,7 @@ int GistMaker::GetGist(const std::string& text,
 #endif // SENTIMENT_ENABLED
 
   int ret_value = 0;
-  if ((ret_value = GetGist((unsigned char*) text_buffer, text_len,
+  if ((ret_value = GetGist((unsigned char*) text_buffer, text_buffer_len, text_len,
                 (char*) safe_status_buffer, safe_status_buffer_len,
                 (char*) script_buffer, script_buffer_len
 #ifdef KEYWORDS_ENABLED
@@ -379,6 +381,15 @@ int GistMaker::GetGist(const std::string& text,
   } else {
     safe_status = std::string(safe_status_buffer);
     script = std::string(script_buffer);
+#ifdef KEYWORDS_ENABLED
+    inagist_utils::PipeListToSet(keywords_buffer, keywords);
+#endif // KEYWORDS_ENABLED
+#ifdef KEYPHRASE_ENABLED
+    inagist_utils::PipeListToSet(keyphrases_buffer, keyphrases);
+#endif // KEYPHRASE_ENABLED
+#ifdef HASHTAGS_ENABLED
+    inagist_utils::PipeListToSet(hashtags_buffer, hashtags);
+#endif // HASHTAGS_ENABLED
 #ifdef LANG_ENABLED
     lang = std::string(lang_class_buffer);
 #endif // LANG_ENABLED
@@ -403,7 +414,8 @@ int GistMaker::GetGist(const std::string& text,
 }
 
 // keywords and keyphrases are output parameters
-int GistMaker::GetGist(unsigned char* text_buffer, const unsigned int text_len,
+int GistMaker::GetGist(unsigned char* text_buffer,  const unsigned int text_buffer_len,
+      const unsigned int text_len,
       char* safe_status_buffer, const unsigned int safe_status_buffer_len,
       char* script_buffer, const unsigned int script_buffer_len
 #ifdef KEYWORDS_ENABLED
@@ -533,7 +545,7 @@ int GistMaker::GetGist(unsigned char* text_buffer, const unsigned int text_len,
 #ifdef GIST_DEBUG
   std::cout << "calling GetKeytuples" << std::endl;
 #endif // GIST_DEBUG
-  ret_value = m_keytuples_extracter.GetKeyTuples(text_buffer, text_len,
+  ret_value = m_keytuples_extracter.GetKeyTuples(text_buffer, text_buffer_len, text_len,
                    safe_status_buffer, safe_status_buffer_len,
                    script_buffer, script_buffer_len
 #ifdef KEYWORDS_ENABLED

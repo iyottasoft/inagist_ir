@@ -27,7 +27,8 @@ int InitKeyTuplesExtracter(const char* keytuples_config) {
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int GetKeywords(unsigned char* text, const unsigned int text_len,
+int GetKeywords(unsigned char* text_buffer, const unsigned int text_buffer_len,
+                const unsigned int text_len,
                 char* safe_status_buffer, const unsigned int safe_status_buffer_len,
                 char* script_buffer, const unsigned int script_buffer_len,
                 unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
@@ -38,7 +39,7 @@ int GetKeywords(unsigned char* text, const unsigned int text_len,
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
 
-  if ((ret_value = g_kt.GetKeyTuples(text, text_len,
+  if ((ret_value = g_kt.GetKeyTuples(text_buffer, text_buffer_len, text_len,
                 safe_status_buffer, safe_status_buffer_len,
                 script_buffer, script_buffer_len,
                 keywords_buffer, keywords_buffer_len,

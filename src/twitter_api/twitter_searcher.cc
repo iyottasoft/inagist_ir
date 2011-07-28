@@ -11,7 +11,7 @@
 #define TS_DEBUG DEBUG
 #endif
 #endif
-//#define TS_DEBUG 1
+// #define TS_DEBUG 0
 
 namespace inagist_api {
 
@@ -102,6 +102,11 @@ int TwitterSearcher::GetTweetsFromSearchUrl(const std::string& url, std::set<std
       if (!json_value || (false == json_value->IsObject())) {
         std::cout << "ERROR: JSON::Parse failed for query: " << url << std::endl;
       } else {
+#ifdef TS_DEBUG
+        if (TS_DEBUG > 2) {
+          std::cout << reply_message << std::endl;
+        }
+#endif // TS_DEBUG
         std::string tweet;
         JSONObject tweet_o = json_value->AsObject();
         if (tweet_o.find("results") != tweet_o.end() && tweet_o["results"]->IsArray()) {
@@ -170,6 +175,7 @@ int TwitterSearcher::Search(const std::string& url,
 
     if (reply_message.size() <= 0) {
       curl_request_maker.GetLastCurlError(reply_message);
+      std::cout << "Twitter Search Error: " << reply_message << std::endl;
     }
 
     if (reply_message.size() > 0) {
@@ -177,6 +183,11 @@ int TwitterSearcher::Search(const std::string& url,
       if (!json_value || (false == json_value->IsObject())) {
         std::cout << "ERROR: JSON::Parse failed for query: " << temp_url << std::endl;
       } else {
+#ifdef TS_DEBUG
+        if (TS_DEBUG > 2) {
+          std::cout << reply_message << std::endl;
+        }
+#endif // TS_DEBUG
         std::string script;
         std::string tweet;
         JSONObject tweet_o = json_value->AsObject();
@@ -223,69 +234,9 @@ int TwitterSearcher::Search(const std::string& url,
   return num_docs;
 }
 
-int TwitterSearcher::GetFollowers(const std::string& handle, std::set<std::string>& followers) {
-
-  inagist_api::CurlRequestMaker curl_request_maker;
-
-  std::string temp_str;
-  std::string reply_message;
-  std::string cursor = "-1";
-  int num_followers = 0;
-
-  bool ret_value = true;
-  while (ret_value) {
-    std::string url = "http://twitter.com/statuses/followers/" + handle + ".json?cursor=" + cursor;
-    ret_value = curl_request_maker.GetTweets(url.c_str());
-
-    if (ret_value) {
-      curl_request_maker.GetLastWebResponse(reply_message);
-      if (reply_message.size() > 0) {
-        // the response is in json format
-        JSONValue *json_value = JSON::Parse(reply_message.c_str());
-        if (!json_value || false == json_value->IsObject()) {
-          std::cout << "Error: curl reply not a json object\n";
-          break;
-        } else {
-          // to be specific, the response is a json array
-          JSONObject t_o = json_value->AsObject(); 
-          if (t_o.find("users") != t_o.end() && t_o["users"]->IsArray()) {
-            JSONArray tweet_array = t_o["users"]->AsArray();
-            JSONObject tweet_object;
-            for (unsigned int i=0; i < tweet_array.size(); i++) {
-              num_followers++;
-              JSONValue *tweet_value = tweet_array[i];
-              if (false == tweet_value->IsObject()) {
-                std::cout << "ERROR: tweet_value is not an object" << std::endl;
-              } else {
-                tweet_object = tweet_value->AsObject();
-  
-                // now lets work on the json object thus obtained
-                if (tweet_object.find("screen_name") != tweet_object.end() && tweet_object["screen_name"]->IsString()) {
-                  followers.insert(tweet_object["screen_name"]->AsString());
-                }
-              }
-            }
-          }
-          if (t_o.find("next_cursor_str") != t_o.end() && t_o["next_cursor_str"]->IsString()) {
-            cursor = t_o["next_cursor_str"]->AsString();
-            if (cursor.compare("0") == 0) {
-              break;
-            }
-          } else {
-            std::cout << "could not find next_cursor_str" << std::endl;
-            break;
-          }
-        }
-        delete json_value;
-      }
-    }
-  }
-  return num_followers;
-}
-
 int TwitterSearcher::Search(const std::string& query,
                             std::set<std::string>& tweets) {
-  std::string url = "http://search.twitter.com/search.json?q=" + query;
+  std::string url = "http://search.twitter.com/search.json?q='" + query + "'";
   int ret_value = 0;
   if ((ret_value = GetTweetsFromSearchUrl(url, tweets)) < 0) {
     std::cout << "Error: could not get tweets for query: " << query << std::endl;

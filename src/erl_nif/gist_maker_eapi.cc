@@ -32,7 +32,8 @@ int InitGistMaker(const char* keytuples_extracter_config_file,
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int InaGist(unsigned char* text_buffer, const unsigned int text_len,
+int InaGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
+            const unsigned int text_len,
             char* safe_status_buffer, const unsigned int safe_status_buffer_len,
             char* script_buffer, const unsigned int script_buffer_len
             , char* lang_class_buffer, const unsigned int lang_class_buffer_len
@@ -76,7 +77,7 @@ int InaGist(unsigned char* text_buffer, const unsigned int text_len,
   unsigned int top_lang_classes_count = 0;
 
   int ret_value = 0;
-  if ((ret_value = g_gist_maker.GetGist(text_buffer, text_len,
+  if ((ret_value = g_gist_maker.GetGist(text_buffer, text_buffer_len, text_len,
     safe_status_buffer, safe_status_buffer_len,
     script_buffer, script_buffer_len
     , (unsigned char*) keywords_buffer, keywords_buffer_len,

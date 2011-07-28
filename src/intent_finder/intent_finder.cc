@@ -1,5 +1,6 @@
 #include "intent_finder.h"
 #include <iostream>
+#include <cstring>
 
 namespace inagist_classifiers {
 
@@ -23,6 +24,7 @@ int IntentFinder::Init(const char* keytuples_extracter_config_file) {
 }
 
 int IntentFinder::FindIntent(unsigned char* text_buffer, const unsigned int& text_buffer_len,
+                             const unsigned int& text_len,
                              char* intent_buffer, const unsigned int& intent_buffer_len) {
 
   if (!text_buffer || !intent_buffer) {
@@ -36,15 +38,19 @@ int IntentFinder::FindIntent(unsigned char* text_buffer, const unsigned int& tex
   char script_buffer[4];
   unsigned int script_buffer_len = 4;
 
-  if (m_keytuples_extracter.GetKeyTuples(text_buffer, text_buffer_len,
+  if (m_keytuples_extracter.GetKeyTuples(text_buffer, text_buffer_len, text_len,
                                          safe_status_buffer, safe_status_buffer_len,
                                          script_buffer, script_buffer_len,
                                          intent_buffer, intent_buffer_len) < 0) {
-    std::cerr << "ERROR: could not get sentiment\n";
+    std::cerr << "ERROR: could not get intent\n";
     return -1;
   }
 
-  return 0;
+  if ((strcmp(script_buffer, "en") != 0) || (strcmp(intent_buffer, "none") == 0)) {
+    return 0;
+  }
+
+  return 1;
 }
 
 int IntentFinder::Clear() {

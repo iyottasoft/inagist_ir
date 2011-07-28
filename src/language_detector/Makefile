@@ -13,7 +13,8 @@ LIB = ${LIB_DIR}/lib${PROJECT}.so
 BINS = ${BIN_DIR}/t_language_detector \
        ${BIN_DIR}/t_get_lang_corpus \
        ${BIN_DIR}/x_language_detector_training_data \
-       ${BIN_DIR}/t_language_detector_test_data
+       ${BIN_DIR}/t_language_detector_test_data# \
+       #${BIN_DIR}/t_clean_lang_corpus
 
 keytuples = keytuples_config.o keytuples_extracter.o
 classifier = classifier_config.o corpus_manager.o naive_bayes_classifier.o classifier.o

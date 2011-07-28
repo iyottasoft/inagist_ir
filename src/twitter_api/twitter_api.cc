@@ -23,7 +23,7 @@ int TwitterAPI::GetPublicTimeLine(std::set<std::string>& tweets) {
 
   int num_docs = 0;
 
-  std::string url = "http://twitter.com/statuses/public_timeline.json";
+  std::string url = "http://api.twitter.com/1/statuses/public_timeline.json";
   std::string reply_message;
   // get top tweets from inagist api
   if (curl_request_maker.GetTweets(url.c_str()) < 0) {
@@ -35,6 +35,14 @@ int TwitterAPI::GetPublicTimeLine(std::set<std::string>& tweets) {
     if (!json_value) {
       std::cout << "ERROR: JSON::Parse failed\n";
     } else {
+      JSONObject json_obj = json_value->AsObject();
+      if (json_obj.find("error") != json_obj.end() && json_obj["error"]->IsString()) {
+        std::string error = json_obj["error"]->AsString();
+        std::cout << "Twitter Error: " << error << std::endl;
+        delete json_value;
+        return -1;
+      }
+
       // to be specific, the response is a json array
       JSONArray tweet_array = json_value->AsArray();
       JSONValue *tweet_value;
@@ -78,6 +86,15 @@ int TwitterAPI::GetUserTimeLine(const std::string& user_name, std::set<std::stri
     if (!json_value) {
       std::cout << "ERROR: JSON::Parse failed\n";
     } else {
+
+      JSONObject json_obj = json_value->AsObject();
+      if (json_obj.find("error") != json_obj.end() && json_obj["error"]->IsString()) {
+        std::string error = json_obj["error"]->AsString();
+        std::cout << "Twitter Error: " << error << std::endl;
+        delete json_value;
+        return -1;
+      }
+
       // to be specific, the response is a json array
       JSONArray tweet_array = json_value->AsArray();
       JSONValue *tweet_value;
@@ -115,7 +132,7 @@ int TwitterAPI::GetLists(const std::string& user_name,
   bool ret_value = true;
   std::string list_name;
   while (ret_value) {
-    std::string url = "http://api.twitter.com/1/" + user_name + "/lists.json?cursor=" + cursor;
+    std::string url = "http://api.twitter.com/1/screen_name=" + user_name + "/lists.json?cursor=" + cursor;
     ret_value = curl_request_maker.GetTweets(url.c_str());
 
     if (ret_value) {
@@ -127,6 +144,15 @@ int TwitterAPI::GetLists(const std::string& user_name,
           std::cout << "Error: curl reply not a json object\n";
           break;
         } else {
+
+          JSONObject json_obj = json_value->AsObject();
+          if (json_obj.find("error") != json_obj.end() && json_obj["error"]->IsString()) {
+            std::string error = json_obj["error"]->AsString();
+            std::cout << "Twitter Error: " << error << std::endl;
+            delete json_value;
+            return -1;
+          }
+
           // to be specific, the response is a json array
           JSONObject t_o = json_value->AsObject(); 
           if (t_o.find("lists") != t_o.end() && t_o["lists"]->IsArray()) {
@@ -197,6 +223,15 @@ int TwitterAPI::GetListMembers(const std::string& user_name,
           std::cout << "Error: curl reply not a json object\n";
           break;
         } else {
+
+          JSONObject json_obj = json_value->AsObject();
+          if (json_obj.find("error") != json_obj.end() && json_obj["error"]->IsString()) {
+            std::string error = json_obj["error"]->AsString();
+            std::cout << "Twitter Error: " << error << std::endl;
+            delete json_value;
+            return -1;
+          }
+
           // to be specific, the response is a json array
           JSONObject t_o = json_value->AsObject(); 
           if (t_o.find("users") != t_o.end() && t_o["users"]->IsArray()) {
@@ -324,6 +359,15 @@ int TwitterAPI::GetUserInfo(const std::string& handle,
       if (false == json_value->IsObject()) {
         std::cout << "ERROR: json value obtained for user info not an object\n";
       } else {
+
+        JSONObject json_obj = json_value->AsObject();
+        if (json_obj.find("error") != json_obj.end() && json_obj["error"]->IsString()) {
+          std::string error = json_obj["error"]->AsString();
+          std::cout << "Twitter Error: " << error << std::endl;
+          delete json_value;
+          return -1;
+        }
+
         JSONObject json_object = json_value->AsObject();
         if (json_object.find("name") != json_object.end() && json_object["name"]->IsString()) {
           name.assign(json_object["name"]->AsString());
@@ -509,6 +553,160 @@ int TwitterAPI::GetListStatuses(const std::string& user_name,
     }
 
   return tweets.size();
+}
+
+int TwitterAPI::GetFollowers(const std::string& handle, std::set<std::string>& followers) {
+
+  inagist_api::CurlRequestMaker curl_request_maker;
+
+  std::string temp_str;
+  std::string reply_message;
+  std::string cursor = "-1";
+  int num_followers = 0;
+
+  bool ret_value = true;
+  while (ret_value) {
+    std::string url = "http://api.twitter.com/1/followers/ids.json?screen_name=" + handle + "&cursor=" + cursor;
+    //std::string url = "http://twitter.com/statuses/followers/" + handle + ".json?cursor=" + cursor;
+    ret_value = curl_request_maker.GetTweets(url.c_str());
+
+    if (ret_value) {
+      curl_request_maker.GetLastWebResponse(reply_message);
+      if (reply_message.size() > 0) {
+        // the response is in json format
+        JSONValue *json_value = JSON::Parse(reply_message.c_str());
+        if (!json_value || false == json_value->IsObject()) {
+          std::cout << "Error: curl reply not a json object\n";
+          break;
+        } else {
+          // to be specific, the response is a json array
+          JSONObject t_o = json_value->AsObject(); 
+          if (t_o.find("ids") != t_o.end() && t_o["ids"]->IsArray()) {
+            JSONArray tweet_array = t_o["ids"]->AsArray();
+            JSONObject tweet_object;
+            for (unsigned int i=0; i < tweet_array.size(); i++) {
+              num_followers++;
+              //JSONValue *tweet_value = tweet_array[i];
+              std::string follower_id_str = tweet_array[i]->AsString();
+              unsigned long follower_id = tweet_array[i]->AsLongLong();
+              std::cout << "follower_id: " << follower_id << std::endl;
+              /*
+              if (false == tweet_value->IsObject()) {
+                std::cout << "ERROR: tweet_value is not an object" << std::endl;
+              } else {
+                tweet_object = tweet_value->AsObject();
+                // now lets work on the json object thus obtained
+                if (tweet_object.find("screen_name") != tweet_object.end() && tweet_object["screen_name"]->IsString()) {
+                  followers.insert(tweet_object["screen_name"]->AsString());
+                }
+              }
+              */
+            }
+          }
+          if (t_o.find("next_cursor_str") != t_o.end() && t_o["next_cursor_str"]->IsString()) {
+            cursor = t_o["next_cursor_str"]->AsString();
+            if (cursor.compare("0") == 0) {
+              break;
+            }
+          } else {
+            std::cout << "could not find next_cursor_str" << std::endl;
+            break;
+          }
+        }
+        delete json_value;
+      }
+    }
+  }
+  return num_followers;
+}
+
+int TwitterAPI::GetFollowerTweets(const std::string& handle,
+                                       std::set<std::string>& tweets,
+                                       const unsigned int required_count) {
+
+  inagist_api::CurlRequestMaker curl_request_maker;
+
+  std::string temp_str;
+  std::string reply_message;
+  std::string cursor = "-1";
+  int num_followers = 0;
+  std::string follower_id;
+  std::string follower;
+  bool flag = false;
+//  unsigned int num_tweets = 0;
+  bool ret_value = true;
+
+  while (!flag && ret_value) {
+
+    std::string url = "http://api.twitter.com/1/followers/ids.json?screen_name=" + handle + "&cursor=" + cursor;
+#ifdef TA_DEBUG
+    std::cout << "Url: " << url << std::endl;
+#endif // TA_DEBUG
+
+    ret_value = curl_request_maker.GetTweets(url.c_str());
+
+    if (!ret_value) {
+#ifdef TA_DEBUG
+      std::cerr << "ERROR: curl request failed\n";
+#endif // TA_DEBUG
+      break;
+    }
+
+    curl_request_maker.GetLastWebResponse(reply_message);
+#ifdef TA_DEBUG
+    if (TA_DEBUG > 2) {
+      std::cout << reply_message << std::endl;
+    }
+#endif // TA_DEBUG
+    if (reply_message.size() > 0) {
+      // the response is in json format
+      JSONValue *json_value = JSON::Parse(reply_message.c_str());
+      if (!json_value || false == json_value->IsObject()) {
+#ifdef TA_DEBUG
+        std::cout << "ERROR: curl reply not a json object\n";
+#endif // TA_DEBUG
+        break;
+      } else {
+        JSONObject json_obj = json_value->AsObject();
+        if (json_obj.find("error") != json_obj.end() && json_obj["error"]->IsString()) {
+          std::string error = json_obj["error"]->AsString();
+          std::cout << "Twitter Error: " << error << std::endl;
+          break;
+        }
+        // to be specific, the response is a json array
+        JSONArray json_array = json_value->AsArray();
+        for (unsigned int i=0; i < json_array.size(); i++) {
+          follower_id = json_array[i]->AsString();
+#ifdef TA_DEBUG
+          std::cout << "follower id: " << follower_id << std::endl;
+#endif // TA_DEBUG
+          num_followers++;
+          /*
+              num_tweets += GetUserTimeLine(follower, tweets);
+              if (num_tweets > required_count) {
+                flag = true;
+                break;
+              }
+          */
+        }
+/*
+        if (t_o.find("next_cursor_str") != t_o.end() && t_o["next_cursor_str"]->IsString()) {
+          cursor = t_o["next_cursor_str"]->AsString();
+          if (cursor.compare("0") == 0) {
+            break;
+          }
+        } else {
+          std::cout << "could not find next_cursor_str" << std::endl;
+          break;
+        }
+*/
+        delete json_value;
+      }
+    }
+    break;
+  } // while
+
+  return num_followers;
 }
 
 } // namespace

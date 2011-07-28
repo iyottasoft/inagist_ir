@@ -12,7 +12,7 @@
 #define TC_DEBUG DEBUG
 #endif
 #endif
-#define TC_DEBUG 0
+//#define TC_DEBUG 0
 
 #define MAX_BUFFER_LEN 1024
 
@@ -496,6 +496,8 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
     return -1;
   }
 
+  buffer[0] = '\0';
+
 #ifdef KEYWORDS_ENABLED
   keywords_set.clear();
 #endif // KEYWORDS_ENABLED
@@ -509,10 +511,17 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   lang_words_set.clear();
 #endif // LANG_ENABLED
 
+/*
+  // no need to check for script. just check text_class_words_set = empty. hence commenting below code.
   if (script.compare(0, 2, "en") != 0) {
 #ifndef TC_DEBUG
     // std::cout << buffer << "\nnon-english tweet. no keytuples." << std::endl;
 #endif
+    return 0;
+  }
+*/
+
+  if (text_class_words_set.size() <= 0) {
     return 0;
   }
 
@@ -521,21 +530,21 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   std::set<std::string>::iterator words_iter;
   std::set<std::string> corpus_set;
 
-  if (text_class_words_set.size() > 0) {
 #ifdef TC_DEBUG
-    std::cout << "text_class_words:\n";
+  std::cout << "text_class_words:\n";
 #endif
-    for (set_iter = text_class_words_set.begin(); set_iter != text_class_words_set.end(); set_iter++) {
-      corpus_set.insert(*set_iter);
+  for (set_iter = text_class_words_set.begin(); set_iter != text_class_words_set.end(); set_iter++) {
+    corpus_set.insert(*set_iter);
 #ifdef TC_DEBUG
-      std::cout << *set_iter << std::endl;
+    std::cout << *set_iter << std::endl;
 #endif
-    }
-    text_class_words_set.clear();
   }
-  buffer[0] = '\0';
+  text_class_words_set.clear();
 
-  int words_count = corpus_set.size();
+  int words_count = 0;
+  if ((words_count = corpus_set.size()) == 0)
+    return 0;
+
   for (set_iter = corpus_set.begin(); set_iter != corpus_set.end(); set_iter++) {
     corpus[*set_iter] = 1;
   }

@@ -19,7 +19,8 @@ class TrendsManager {
   int GetTrends(const std::string& text,
                 std::set<std::string>& trends);
 
-  int GetTrends(const unsigned char* text_buffer, const unsigned int text_len,
+  int GetTrends(const unsigned char* text_buffer, const unsigned int text_buffer_len,
+                const unsigned int& text_len,
                 unsigned char* trends_buffer, const unsigned int& buffer_len,
                 unsigned int& trends_len, unsigned int& trends_count);
 

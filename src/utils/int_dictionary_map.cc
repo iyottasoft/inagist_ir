@@ -3,6 +3,8 @@
 #include <fstream>
 #include <cstring>
 
+//#define UTILS_DEBUG 0
+
 namespace inagist_utils {
 
 IntDictionaryMap::IntDictionaryMap() {
@@ -73,6 +75,20 @@ int IntDictionaryMap::Find(const unsigned char *key, int& value) {
     return -1;
   }
   if ((m_dict_map_iter = m_dictionary_map.find(std::string((char *) key))) != m_dictionary_map.end()) {
+    value = m_dict_map_iter->second;
+    return 1;
+  }
+  return 0;
+}
+
+int IntDictionaryMap::Find(std::string& key, int& value) {
+  if (key.empty()) {
+#ifdef UTILS_DEBUG
+    std::cerr << "ERROR: invalid input for dictionary map lookup\n";
+#endif // UTILS_DEBUG
+    return -1;
+  }
+  if ((m_dict_map_iter = m_dictionary_map.find(key)) != m_dictionary_map.end()) {
     value = m_dict_map_iter->second;
     return 1;
   }

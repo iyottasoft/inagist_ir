@@ -81,16 +81,27 @@ int GetInputText(const unsigned int &input_type,
       break;
     case 5:
       // search twitter for query
-     if (!input_value) {
-       std::cerr << "ERROR: query term needed" << std::endl;
-       return -1;
-     } else {
-       inagist_api::TwitterSearcher ts;
-       if ((ts.Search(input_value, docs)) < 0) {
-         std::cerr << "ERROR: could not search twitter for query: " << input_value << std::endl;
-         return -1;
-       }
-     }
+      if (!input_value) {
+        std::cerr << "ERROR: query term needed" << std::endl;
+        return -1;
+      } else {
+        inagist_api::TwitterSearcher ts;
+        if ((ts.Search(input_value, docs)) < 0) {
+          std::cerr << "ERROR: could not search twitter for query: " << input_value << std::endl;
+          return -1;
+        }
+      }
+    case 7:
+      if (!input_value) {
+        std::cerr << "ERROR: user handle needed" << std::endl;
+        return -1;
+      } else {
+        inagist_api::TwitterAPI ta;
+        if ((ta.GetFollowerTweets(input_value, docs, 100)) < 0) {
+          std::cerr << "ERROR: could not get follower tweets from user: " << input_value << std::endl;
+          return -1;
+        }
+      }
     default:
       break;
   }

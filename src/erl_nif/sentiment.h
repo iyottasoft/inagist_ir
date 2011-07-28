@@ -12,11 +12,12 @@ extern "C" {
 #endif
 int InitKeyTuplesExtracter(const char* keytuples_config);
 
-int GetSentiment(unsigned char* tweet, const unsigned int tweet_len,
-                char* safe_status_buffer, const unsigned int safe_status_buffer_len,
-                char* script_buffer, const unsigned int script_buffer_len,
-                unsigned char* sentiment_buffer, const unsigned int sentiment_buffer_len,
-                unsigned int* sentiment_len_ptr, unsigned int* sentiment_count_ptr);
+int GetSentiment(unsigned char* text_buffer, const unsigned int text_buffer_len,
+                 const unsigned int text_len,
+                 char* safe_status_buffer, const unsigned int safe_status_buffer_len,
+                 char* script_buffer, const unsigned int script_buffer_len,
+                 unsigned char* sentiment_buffer, const unsigned int sentiment_buffer_len,
+                 unsigned int* sentiment_len_ptr, unsigned int* sentiment_count_ptr);
 #ifdef _CPLUSPLUS
 }
 #endif

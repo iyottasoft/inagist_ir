@@ -27,7 +27,7 @@ int InitKeyTuplesExtracter(const char* keytuples_config) {
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int GetIntent(unsigned char* text, const unsigned int text_len,
+int GetIntent(unsigned char* text_buffer, const unsigned int text_buffer_len, const unsigned int text_len,
                 char* safe_status_buffer, const unsigned int safe_status_buffer_len,
                 char* script_buffer, const unsigned int script_buffer_len,
                 unsigned char* intent_buffer, const unsigned int intent_buffer_len,
@@ -38,7 +38,7 @@ int GetIntent(unsigned char* text, const unsigned int text_len,
   unsigned int intent_len = 0;
   unsigned int intent_count = 0;
 
-  if ((ret_value = g_kt.GetKeyTuples(text, text_len,
+  if ((ret_value = g_kt.GetKeyTuples(text_buffer, text_buffer_len, text_len,
                 safe_status_buffer, safe_status_buffer_len,
                 script_buffer, script_buffer_len,
                 (char *) intent_buffer, intent_buffer_len)) < 0) {

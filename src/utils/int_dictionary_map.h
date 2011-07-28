@@ -12,6 +12,7 @@ class IntDictionaryMap {
   ~IntDictionaryMap();
   int Load(const char* dictionary_file_name);
   int Find(const unsigned char *key, int& value);
+  int Find(std::string& key, int& value);
   int FindPart(const unsigned char* key, int& value);
   int Print();
   int Clear();

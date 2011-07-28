@@ -23,7 +23,8 @@ int GetKeyTuples(std::string text) {
   std::string sentiment;
 
   strcpy(buffer, text.c_str()); 
-  if (g_ke.GetKeyTuples(buffer, safe_status, script
+  int keytuples_count = 0;
+  if ((keytuples_count = g_ke.GetKeyTuples(buffer, safe_status, script
 #ifdef KEYWORDS_ENABLED
                         , keywords_set
 #endif // KEYWORDS_ENABLED
@@ -45,18 +46,21 @@ int GetKeyTuples(std::string text) {
 #ifdef SENTIMENT_ENABLED
                         , sentiment
 #endif // SENTIMENT_ENABLED
-                       ) < 0) {
+                       )) < 0) {
     std::cout << "ERROR: could not get keytuples\n";
     return -1;
   }
 
-  if (script.compare(0,2,"en") != 0)
-    return 0;
-
+#ifndef KE_DEBUG
   std::cout << std::endl << buffer << std::endl;
   memset(buffer, 0, 1024);
-  std::cout << "safe_status: " << safe_status << std::endl;
-  std::cout << "script: " << script << std::endl;
+
+  if (!safe_status.empty()) {
+    std::cout << "safe_status: " << safe_status << std::endl;
+  }
+  if (!script.empty()) {
+    std::cout << "script: " << script << std::endl;
+  }
 #ifdef KEYWORDS_ENABLED
   if (keywords_set.size() > 0) {
     std::cout << "keywords:\n";
@@ -93,11 +97,16 @@ int GetKeyTuples(std::string text) {
   }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-  std::cout << "intent: " << intent << std::endl;
+  if (!intent.empty()) {
+    std::cout << "intent: " << intent << std::endl;
+  }
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-  std::cout << "sentiment: " << sentiment << std::endl;
+  if (!sentiment.empty()) {
+    std::cout << "sentiment: " << sentiment << std::endl;
+  }
 #endif // SENTIMENT_ENABLED
+#endif // KE_DEBUG
 
   return 0;
 }

@@ -15,7 +15,8 @@ int Init(const char* keytuples_extracter_config_file,
          const char* language_detection_config_file,
          const char* text_classification_config_file);
 
-int InaGist(unsigned char* text_buffer, const unsigned int text_len,
+int InaGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
+            const unsigned int text_len,
             char* safe_status_buffer, const unsigned int safe_status_buffer_len,
             char* script_buffer, const unsigned int script_buffer_len
             , char* lang_class_buffer, const unsigned int lang_class_buffer_len

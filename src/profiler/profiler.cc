@@ -666,6 +666,7 @@ int Profiler::GetGist(std::set<std::string>& tweets,
 
   unsigned char text_buffer[MAX_BUFFER_LEN];
   text_buffer[0] = '\0';
+  unsigned int text_buffer_len = MAX_BUFFER_LEN;
   unsigned int text_len = 0;
 
   char safe_status_buffer[10];
@@ -732,7 +733,7 @@ int Profiler::GetGist(std::set<std::string>& tweets,
       continue;
     strcpy((char*) text_buffer, tweet.c_str());
     text_len = tweet.length();
-    if ((ret_value = m_gist_maker.GetGist((unsigned char*) text_buffer, text_len,
+    if ((ret_value = m_gist_maker.GetGist((unsigned char*) text_buffer, text_buffer_len, text_len,
                   (char*) safe_status_buffer, safe_status_buffer_len,
                   (char*) scripts_buffer, scripts_buffer_len,
                   (unsigned char*) keywords_buffer, keywords_buffer_len,

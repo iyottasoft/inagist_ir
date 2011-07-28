@@ -51,6 +51,7 @@ int TrendsManager::GetTrends(const std::string& text,
   }
 
   unsigned char text_buffer[MAX_BUFFER_LEN];
+  unsigned int text_buffer_len = MAX_BUFFER_LEN;
   strcpy((char*) text_buffer, text.c_str());
   unsigned int text_len = text.length();
 
@@ -60,11 +61,12 @@ int TrendsManager::GetTrends(const std::string& text,
   unsigned int trends_len = 0;
   unsigned int trends_count = 0;
 
-  return GetTrends(text_buffer, text_len, trends_buffer, trends_buffer_len, trends_len, trends_count);
+  return GetTrends(text_buffer, text_buffer_len, text_len, trends_buffer, trends_buffer_len, trends_len, trends_count);
 
 }
 
-int TrendsManager::GetTrends(const unsigned char* text_buffer, const unsigned int text_len,
+int TrendsManager::GetTrends(const unsigned char* text_buffer, const unsigned int text_buffer_len,
+                  const unsigned int& text_len,
                   unsigned char* trends_buffer, const unsigned int& buffer_len,
                   unsigned int& trends_len, unsigned int& trends_count) {
 
@@ -100,7 +102,7 @@ int TrendsManager::GetTrends(const unsigned char* text_buffer, const unsigned in
 
   int ret_value = 0;
 
-  ret_value = m_keytuples_extracter.GetKeyTuples((unsigned char*) text_buffer, text_len,
+  ret_value = m_keytuples_extracter.GetKeyTuples((unsigned char*) text_buffer, text_buffer_len, text_len,
                    safe_status_buffer, safe_status_buffer_len,
                    script_buffer, script_buffer_len,
                    keywords_buffer, keywords_buffer_len, keywords_len, keywords_count,

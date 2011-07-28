@@ -71,6 +71,7 @@ ERL_NIF_TERM nif_get_intent(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
   ErlNifBinary text;
   unsigned char text_str[MAX_BUFFER_LEN];
+  unsigned int text_buffer_len = MAX_BUFFER_LEN;
   memset(text_str, 0, MAX_BUFFER_LEN);
 
   bool success = enif_inspect_binary(env, argv[0], &text);
@@ -106,7 +107,7 @@ ERL_NIF_TERM nif_get_intent(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
   int intent_count = 0;
 
   int ret_value = 0;
-  if ((ret_value = GetIntent((unsigned char *) text_str, text_len,
+  if ((ret_value = GetIntent((unsigned char *) text_str, text_buffer_len, text_len,
                   (char *) safe_status, 10,
                   (char *) script, 4,
                   (char *) intent, MAX_BUFFER_LEN,

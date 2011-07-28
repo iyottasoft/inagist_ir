@@ -10,16 +10,16 @@ int main(int argc, char* argv[]) {
 
   if (argc < 2 || argc > 4) {
     std::cerr << "Usage: " << argv[0] \
-              << "\n\t<0/1/2/3/4, 0-tweets, 1-lists, 2-list_statuses, 3-list_members, 4-usersummary, 5-userdetails>" \
+              << "\n\t<0-7, 0-tweets, 1-lists, 2-list_statuses, 3-list_members, 4-usersummary, 5-userdetails, 6-followers, 7-followertweets>" \
               << "\n\t[<user_name>]" \
               << "\n\t[<output_file>]\n";
     return -1;
   }
 
-  inagist_api::TwitterAPI tapi;
   int request_type = atoi(argv[1]);
-  std::cout << request_type << std::endl;
-  assert((request_type >= 0) && (request_type <= 5) && (request_type == 0 || argc > 2));
+  assert((request_type >= 0) && (request_type <= 7) && (request_type == 0 || argc > 2));
+
+  inagist_api::TwitterAPI tapi;
   std::string user_name;
   std::string output_file_name;
   if (argc > 3) {
@@ -181,6 +181,24 @@ int main(int argc, char* argv[]) {
           std::cout << "language: " << language << std::endl;
           std::cout << "user_info: " << user_info << std::endl;
         }
+      }
+      break;
+    case 6:
+      {
+        std::set<std::string> followers;
+        if (tapi.GetFollowers(user_name, followers) < 0) {
+          std::cerr << "ERROR: could not get followers for user: " << user_name << std::endl;
+        }
+        followers.clear();
+      }
+      break;
+    case 7:
+      {
+        std::set<std::string> tweets;
+        if (tapi.GetFollowerTweets(user_name, tweets) < 0) {
+          std::cerr << "ERROR: could not get followerTweets for user: " << user_name << std::endl;
+        }
+        tweets.clear();
       }
       break;
     default:
