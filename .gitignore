@@ -20,10 +20,11 @@ data/lang/tweetsource/handles/[^.]*
 data/lang/tweetsource/freqs/[^.]*
 data/lang/test/test.txt
 data/lang/backup/[^.]*
-data/channels/tweetsource/tweets/[^.]*
-data/channels/tweetsource/corpus/[^.]*
-data/channels/tweetsource/handles/[^.]*
-data/channels/tweetsource/freqs/[^.]*
+data/channels/[^.]*
+data/channels/training/tweetsource/tweets/[^.]*
+data/channels/training/tweetsource/corpus/[^.]*
+data/channels/training/tweetsource/handles/[^.]*
+data/channels/training/tweetsource/freqs/[^.]*
 data/channels/test/test.txt
 data/channels/backup/[^.]*
 data/ipl/tweetsource/tweets/[^.]*
