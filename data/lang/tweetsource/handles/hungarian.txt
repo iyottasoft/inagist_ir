@@ -1,0 +1,10 @@
+BudapestFovaros=2
+Hirnezo=2
+Katilevele=1
+beolhu=1
+hirtelevizio=1
+hvg_hu=2
+magyaronline=1
+mediapiac_com=1
+nolhu=2
+nyesthu=2

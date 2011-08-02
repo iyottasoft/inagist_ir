@@ -1,0 +1,12 @@
+KontanNews=1
+NGIndonesia=1
+Yahoo_ID=1
+antaranews=1
+bbcindonesia=1
+candramalik=1
+detikSBY=2
+detikcom=2
+detikfinance=2
+gm_gm=1
+h3ru_h=1
+korantempo=1

@@ -1,0 +1,6 @@
+BeritaMalaysia=2
+PerakToday=1
+anwaribrahim=1
+bharianmy=1
+mkini_bm=1
+msiainstinct=1

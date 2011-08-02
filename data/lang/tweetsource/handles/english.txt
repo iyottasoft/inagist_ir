@@ -1,0 +1,9 @@
+bbcworld=1
+ibnlive=2
+justinbieber=2
+ndtv=2
+nytimes=2
+reuters=1
+scobleizer=1
+slate=1
+techcrunch=1
