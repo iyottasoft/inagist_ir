@@ -1,7 +1,0 @@
-as=2
-he=2
-is=2
-th=2
-the=2
-wa=2
-was=2
