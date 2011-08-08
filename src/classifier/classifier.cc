@@ -178,6 +178,13 @@ int Classifier::GetTrainingData(const char* config_file_name) {
       std::cerr << "ERROR: could not get training data for handles in file: " \
                 << config.iter->handles_file << std::endl; 
     } else {
+      if (NormalizeFrequencies(config.iter->corpus_file.c_str(),
+                               config.iter->training_data_file.c_str()) < 0) {
+        std::cerr << "ERROR - : could not normalize raw data file: " \
+                  << config.iter->corpus_file << " to " \
+                  << config.iter->training_data_file;
+        break;
+      }
 #ifdef CLASSIFIER_DEBUG
       if (m_debug_level > 1) {
         std::cout << "INFO: Corpus of size " << count_temp \
@@ -206,8 +213,8 @@ int Classifier::GetTrainingData(const char* config_file_name) {
                                config.iter->training_data_file.c_str()) < 0) {
         std::cerr << "ERROR - : could not normalize raw data file: " \
                   << config.iter->corpus_file << " to " \
-                  << config.iter->training_data_file; 
-        return -1;
+                  << config.iter->training_data_file;
+        break;
       }
 #ifdef CLASSIFIER_DEBUG
       if (m_debug_level > 1) {
