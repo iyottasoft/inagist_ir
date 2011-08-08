@@ -9,7 +9,8 @@ src/*/*.so
 api/*/*.so
 src/*/*.beam
 api/*/*.beam
-api/*/lib/*
+api/*/lib/*.so
+api/*/lib/*.a
 include/*/*.o
 test/*/*.o
 test/*/*.so
