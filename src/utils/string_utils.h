@@ -22,8 +22,8 @@ namespace inagist_utils {
   int TestUtils(const std::string& text, unsigned int text_len);
   int Tokenize(const std::string& text, std::set<std::string>& tokens);
   int ToLower(const char* input, char* output);
-  int PipeListToMap(unsigned char* buffer, std::map<std::string, int>& map);
-  int MapToPipeList(std::map<std::string, int>& map,
+  int PipeListToMap(unsigned char* buffer, std::map<std::string, double>& map);
+  int MapToPipeList(std::map<std::string, double>& map,
                     unsigned char* buffer, unsigned int buffer_len,
                     unsigned int& list_len, unsigned int& list_count);
   int StringMapToPipeList(std::map<std::string, std::string> map,

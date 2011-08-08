@@ -20,9 +20,9 @@ int main(int argc, char *argv[]) {
 
   int ret_value = 0;
   std::string tweets_file_name = root_dir + "/tweets_by_" + handle + "." + time_stamp + ".txt";
-  std::string keywords_file_name = root_dir + "/keywords_by_" + handle + "." + time_stamp + ".txt";
+  std::string named_entities_file_name = root_dir + "/named_entities_by_" + handle + "." + time_stamp + ".txt";
 
-  ret_value = fa.GetKeywords(handle, tweets_file_name, keywords_file_name);
+  ret_value = fa.GetKeywords(handle, tweets_file_name, named_entities_file_name);
   if (ret_value < 0)
     std::cout << "Error: could not get tweets for " + handle << std::endl;
   else
@@ -36,17 +36,17 @@ int main(int argc, char *argv[]) {
   }
 
   tweets_file_name = root_dir + "/tweets_by_" + handle + "_followers." + time_stamp + ".txt";
-  keywords_file_name = root_dir + "/keywords_by_" + handle + "_followers." + time_stamp + ".txt";
+  named_entities_file_name = root_dir + "/named_entities_by_" + handle + "_followers." + time_stamp + ".txt";
   std::string scripts_tweeters_map_file_name = root_dir + "/scripts_tweeters_map_for_" + handle + "_followers." + time_stamp + ".txt";
-  std::string keywords_tweeters_map_file_name = root_dir + "/keywords_tweeters_map_for_" + handle + "_followers." + time_stamp + ".txt";
+  std::string named_entities_tweeters_map_file_name = root_dir + "/named_entities_tweeters_map_for_" + handle + "_followers." + time_stamp + ".txt";
 
   ret_value = fa.GetKeywordsFromFollowers(followers,
                                           tweets_file_name,
-                                          keywords_file_name,
+                                          named_entities_file_name,
                                           scripts_tweeters_map_file_name,
-                                          keywords_tweeters_map_file_name);
+                                          named_entities_tweeters_map_file_name);
   if (ret_value < 0)
-    std::cout << "Error: could not get keywords from " << handle << "'s followers\n";
+    std::cout << "Error: could not get named_entities from " << handle << "'s followers\n";
   else
     std::cout << ret_value << " tweets by " + handle + "'s followers\n";
   followers.clear();
@@ -54,10 +54,10 @@ int main(int argc, char *argv[]) {
   // mentions
   std::set<std::string> mentioners;
   tweets_file_name = root_dir + "/tweets_at_" + handle + "." + time_stamp + ".txt";
-  keywords_file_name = root_dir + "/keywords_at_" + handle + "." + time_stamp + ".txt";
-  keywords_tweeters_map_file_name = root_dir + "/keywords_tweeters_map_for_" + handle + "_mentions." + time_stamp + ".txt";
+  named_entities_file_name = root_dir + "/named_entities_at_" + handle + "." + time_stamp + ".txt";
+  named_entities_tweeters_map_file_name = root_dir + "/named_entities_tweeters_map_for_" + handle + "_mentions." + time_stamp + ".txt";
 
-  ret_value = fa.GetKeywordsFromMentions(handle, mentioners, tweets_file_name, keywords_file_name, keywords_tweeters_map_file_name);
+  ret_value = fa.GetKeywordsFromMentions(handle, mentioners, tweets_file_name, named_entities_file_name, named_entities_tweeters_map_file_name);
   if (ret_value < 0)
     std::cout << "Error: could not get tweets at " + handle << std::endl;
   else
@@ -65,17 +65,17 @@ int main(int argc, char *argv[]) {
 
   // tweetes of the mentioners
   tweets_file_name = root_dir + "/tweets_by_" + handle + "_mentioners." + time_stamp + ".txt";
-  keywords_file_name = root_dir + "/keywords_by_" + handle + "_mentioners." + time_stamp + ".txt";
+  named_entities_file_name = root_dir + "/named_entities_by_" + handle + "_mentioners." + time_stamp + ".txt";
   scripts_tweeters_map_file_name = root_dir + "/scripts_tweeters_map_for_" + handle + "_mentioners." + time_stamp + ".txt";
-  keywords_tweeters_map_file_name = root_dir + "/keywords_tweeters_map_for_" + handle + "_mentioners." + time_stamp + ".txt";
+  named_entities_tweeters_map_file_name = root_dir + "/named_entities_tweeters_map_for_" + handle + "_mentioners." + time_stamp + ".txt";
 
   ret_value = fa.GetKeywordsFromFollowers(mentioners,
                                           tweets_file_name,
-                                          keywords_file_name,
+                                          named_entities_file_name,
                                           scripts_tweeters_map_file_name,
-                                          keywords_tweeters_map_file_name);
+                                          named_entities_tweeters_map_file_name);
   if (ret_value < 0)
-    std::cout << "Error: could not get keywords from " << handle << "'s mentioners\n";
+    std::cout << "Error: could not get named_entities from " << handle << "'s mentioners\n";
   else
     std::cout << ret_value << " tweets by " + handle + "'s mentioners\n";
   mentioners.clear();

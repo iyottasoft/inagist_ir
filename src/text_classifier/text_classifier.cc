@@ -70,12 +70,17 @@ int TextClassifier::LoadKeyTuplesDictionary(const char* dictionary_file) {
 int TextClassifier::Classify(const std::string& text, const unsigned int& text_len,
                              std::string& text_class,
                              std::string& top_classes, unsigned int& top_classes_count
+#ifdef CLASSIFIER_DATA_TESTING_ENABLED
+                             , Corpus& test_corpus
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                              , std::map<std::string, std::string>& class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
                              , bool ignore_case) {
   int num_words = 0;
+#ifndef CLASSIFIER_DATA_TESTING_ENABLED
   Corpus test_corpus;
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 
   if ((num_words = GetCorpus(text, test_corpus)) < 0) {
     std::cerr << "ERROR: no words found" << std::endl;
@@ -94,64 +99,20 @@ int TextClassifier::Classify(const std::string& text, const unsigned int& text_l
     return 0;
   }
 
-#ifdef TC_DEBUG
-  if (m_debug_level > 1)
-    std::cout << "now guessing class for ... \n" << text << std::endl;
-#endif
-
-  std::set<std::string> top_classes_set;
-  if (NaiveBayesClassifier::GuessClass2(m_corpus_manager.m_corpus_map,
-                                        m_corpus_manager.m_classes_freq_map,
-                                        test_corpus,
-                                        text_class,
-                                        top_classes_set
+  int ret_value = 0;
+  if ((ret_value = Classify(test_corpus,
+                            text_class,
+                            top_classes, top_classes_count
 #ifdef CLASS_CONTRIBUTORS_ENABLED
-                                        , class_contributors_map
+                             , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
-                                       ) < 0) {
-    top_classes_count = 0;
-    test_corpus.clear();
-#ifdef TC_DEBUG
-    std::cout << "ERROR: naive bayes classifier could not guess the text class\n";
-    text_class.assign("RR");
-    top_classes.assign("RR");
-    top_classes_count = 1;
-#endif // TC_DEBUG
-    return -1;
+                           )) < 0) {
+    std::cerr << "ERROR: could not classify the given corpus\n";
   }
 
-  if (m_class_labels_map.empty()) {
-#ifdef TC_DEBUG
-    std::cerr << "ERROR: class labels map empty\n";
-    top_classes.assign("RR|");
-    top_classes_count = 1;
-#endif // TC_DEBUG
-    return -1;
-  }
-
-  std::set<std::string>::iterator name_set_iter;
-  std::map<std::string, std::string>::iterator label_map_iter;
-  for (name_set_iter = top_classes_set.begin();
-       name_set_iter != top_classes_set.end();
-       name_set_iter++) {
-    if ((label_map_iter = m_class_labels_map.find(*name_set_iter)) != m_class_labels_map.end()) {
-      top_classes += label_map_iter->second;
-    } else {
-      top_classes += *name_set_iter; 
-      std::cerr << "ERROR: no class label found for: " << *name_set_iter << std::endl;
-    }
-    top_classes += "|";
-    top_classes_count++;
-  }
-
-#ifdef TC_DEBUG
-  if (m_debug_level > 1) {
-    std::cout << "guess_class: " << text_class << std::endl;
-    std::cout << "top_classes: " << top_classes << std::endl;
-  }
-#endif
-
+#ifndef CLASSIFIER_DATA_TESTING_ENABLED
   test_corpus.clear();
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 
   return 1;
 }
@@ -446,12 +407,12 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   std::string script;
   std::string safe_status;
 
+#ifdef NAMED_ENTITIES_ENABLED
+  std::set<std::string> named_entities_set;
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
   std::set<std::string> keywords_set;
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-  std::set<std::string> hashtags_set;
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
   std::set<std::string> keyphrases_set;
 #endif // KEYPHRASE_ENABLED
@@ -470,12 +431,12 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   if (m_keytuples_extracter.GetKeyTuples(buffer,
                                          safe_status,
                                          script
+#ifdef NAMED_ENTITIES_ENABLED
+                                         , named_entities_set
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
                                          , keywords_set
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-                                         , hashtags_set
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                                          , keyphrases_set
 #endif // KEYPHRASE_ENABLED
@@ -498,12 +459,12 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
 
   buffer[0] = '\0';
 
+#ifdef NAMED_ENTITIES_ENABLED
+  named_entities_set.clear();
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
   keywords_set.clear();
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-  hashtags_set.clear();
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
   keyphrases_set.clear();
 #endif // KEYPHRASE_ENABLED
@@ -511,15 +472,12 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   lang_words_set.clear();
 #endif // LANG_ENABLED
 
-/*
-  // no need to check for script. just check text_class_words_set = empty. hence commenting below code.
   if (script.compare(0, 2, "en") != 0) {
 #ifndef TC_DEBUG
-    // std::cout << buffer << "\nnon-english tweet. no keytuples." << std::endl;
-#endif
+    std::cout << buffer << "\nnon-english tweet. no text classification done" << std::endl;
+#endif // TC_DEBUG
     return 0;
   }
-*/
 
   if (text_class_words_set.size() <= 0) {
     return 0;

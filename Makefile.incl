@@ -1,7 +1,17 @@
+HOME_DIR = /home/balaji/inagist/ir_cpp
+
+CXX = g++
+#CXXFLAGS = -Wextra -g -Wno-deprecated #-pg
+CXXFLAGS = -O3
 DEBUG_LEVEL=0
 
+CPP_INCLUDE_DIR = ${HOME_DIR}/include
+CPP_LINK_DIR = ${HOME_DIR}/local/lib
+CPP_SRC_DIR = ${HOME_DIR}/src
+
+# used internally and hence retative to ${HOME_DIR}/src/*
 LINK_DIR = -L../../local/lib
 LIB_DIR = ../../local/lib
 BIN_DIR = ../../bin
 
-EXPORT_LIB_DIR = ../../lib
+EXPORT_LIB_DIR = ${HOME_DIR}/lib

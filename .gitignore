@@ -4,8 +4,12 @@ local/lib/[^.]*
 log/[^.]*.log
 data/*.*
 src/*/*.o
+api/*/*.o
 src/*/*.so
+api/*/*.so
 src/*/*.beam
+api/*/*.beam
+api/*/lib/*
 include/*/*.o
 test/*/*.o
 test/*/*.so

@@ -26,23 +26,46 @@ GistMaker::GistMaker() {
 GistMaker::~GistMaker() {
 }
 
-int GistMaker::Init(const char* keytuples_extracter_config_file,
-                    const char* language_detection_config_file,
-                    const char* text_classification_config_file) {
+int GistMaker::Init(const char* keytuples_extracter_config_file
+#ifdef LANG_ENABLED
+                    , const char* language_detection_config_file
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+                    , const char* text_classification_config_file
+#endif // TEXT_CLASSIFICATION_ENABLED
+                   ) {
 
-  if (!keytuples_extracter_config_file ||
-      !language_detection_config_file ||
-      !text_classification_config_file) {
+
+  if (!keytuples_extracter_config_file) {
 #ifdef GIST_DEBUG
     std::cerr << "ERROR: invalid input file name(s)\n";
-#endif
+#endif // GIST_DEBUG
     return -1;
   }
+
+#ifdef LANG_ENABLED
+  if (!language_detection_config_file) {
+#ifdef GIST_DEBUG
+    std::cerr << "ERROR: invalid input file name(s)\n";
+#endif // GIST_DEBUG
+    return -1;
+  }
+#endif // LANG_ENABLED
+
+#ifdef TEXT_CLASSIFICATION_ENABLED
+  if (!text_classification_config_file) {
+#ifdef GIST_DEBUG
+    std::cerr << "ERROR: invalid input file name(s)\n";
+#endif // GIST_DEBUG
+    return -1;
+  }
+#endif // TEXT_CLASSIFICATION_ENABLED
 
 #ifdef GIST_DEBUG
   std::cout << "INFO: initializing keytuples_extracter with config: " \
             << keytuples_extracter_config_file << std::endl;
-#endif
+#endif // GIST_DEBUG
+
   bool load_classifier_dictionary = false;
   if (m_keytuples_extracter.Init(keytuples_extracter_config_file, load_classifier_dictionary=false) < 0) {
     std::cerr << "ERROR: could not initialize KeyTuplesExtracter\n";
@@ -53,7 +76,7 @@ int GistMaker::Init(const char* keytuples_extracter_config_file,
 #ifdef GIST_DEBUG
   std::cout << "INFO: initializing language_detector with config: " \
             << language_detection_config_file << std::endl;
-#endif
+#endif // GIST_DEBUG
   if (m_language_detector.Init(language_detection_config_file) < 0) {
     std::cerr << "ERROR: could not initialize LanguageDetector\n";
     return -1;
@@ -81,15 +104,15 @@ int GistMaker::GetGist(const std::string& text) {
 #ifdef LANG_ENABLED
   std::string lang;
 #endif // LANG_ENABLED
-#ifdef KEYWORDS_ENABLED
-  std::set<std::string> keywords;
-#endif // KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
+  std::set<std::string> named_entities;
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYPHRASE_ENABLED
   std::set<std::string> keyphrases;
 #endif // KEYPHRASE_ENABLED
-#ifdef HASHTAGS_ENABLED
-  std::set<std::string> hashtags;
-#endif // HASHTAGS_ENABLED
+#ifdef KEYWORDS_ENABLED
+  std::set<std::string> keywords;
+#endif // KEYWORDS_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
   std::set<std::string> text_classes;
 #ifdef CLASS_CONTRIBUTORS_ENABLED
@@ -107,12 +130,12 @@ int GistMaker::GetGist(const std::string& text) {
 #ifdef LANG_ENABLED
               , lang
 #endif // LANG_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
+              , named_entities
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
               , keywords
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-              , hashtags
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
               , keyphrases
 #endif // KEYPHRASE_ENABLED
@@ -137,23 +160,23 @@ int GistMaker::GetGist(const std::string& text) {
 #ifdef LANG_ENABLED
     std::cout << "lang: " << lang << std::endl;
 #endif // LANG_ENABLED
-#ifdef KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
     std::set<std::string>::iterator set_iter;
-    std::cout << "keywords: ";
+    std::cout << "named_entities: ";
+    for (set_iter = named_entities.begin(); set_iter != named_entities.end(); set_iter++) {
+      std::cout << *set_iter << " | ";
+    }
+    std::cout << std::endl;
+    named_entities.clear();
+#endif // NAMED_ENTITIES_ENABLED
+#ifdef KEYWORDS_ENABLED
+    std::cout << "keywords:  ";
     for (set_iter = keywords.begin(); set_iter != keywords.end(); set_iter++) {
       std::cout << *set_iter << " | ";
     }
     std::cout << std::endl;
     keywords.clear();
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-    std::cout << "hashtags:  ";
-    for (set_iter = hashtags.begin(); set_iter != hashtags.end(); set_iter++) {
-      std::cout << *set_iter << " | ";
-    }
-    std::cout << std::endl;
-    hashtags.clear();
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
     std::cout << "keyphrases:  ";
     for (set_iter = keyphrases.begin(); set_iter != keyphrases.end(); set_iter++) {
@@ -196,12 +219,12 @@ int GistMaker::GetGist(const std::string& text,
 #ifdef LANG_ENABLED
                        , std::string& lang
 #endif // LANG_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
+                       , std::set<std::string>& named_entities
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
                        , std::set<std::string>& keywords
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-                       , std::set<std::string>& hashtags
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                        , std::set<std::string>& keyphrases
 #endif // KEYPHRASE_ENABLED
@@ -238,6 +261,14 @@ int GistMaker::GetGist(const std::string& text,
   memset(script_buffer, 0, 4);
   unsigned int script_buffer_len = 10;
 
+#ifdef NAMED_ENTITIES_ENABLED
+  unsigned char named_entities_buffer[MAX_BUFFER_LEN];
+  memset(named_entities_buffer, 0, MAX_BUFFER_LEN);
+  unsigned int named_entities_buffer_len = MAX_BUFFER_LEN;
+  unsigned int named_entities_len = 0;
+  unsigned int named_entities_count = 0;
+#endif // NAMED_ENTITIES_ENABLED
+
 #ifdef KEYWORDS_ENABLED
   unsigned char keywords_buffer[MAX_BUFFER_LEN];
   memset(keywords_buffer, 0, MAX_BUFFER_LEN);
@@ -245,14 +276,6 @@ int GistMaker::GetGist(const std::string& text,
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
 #endif // KEYWORDS_ENABLED
-
-#ifdef HASHTAGS_ENABLED
-  unsigned char hashtags_buffer[MAX_BUFFER_LEN];
-  memset(hashtags_buffer, 0, MAX_BUFFER_LEN);
-  unsigned int hashtags_buffer_len = MAX_BUFFER_LEN;
-  unsigned int hashtags_len = 0;
-  unsigned int hashtags_count = 0;
-#endif // HASHTAGS_ENABLED
 
 #ifdef KEYPHRASE_ENABLED
   unsigned char keyphrases_buffer[MAX_BUFFER_LEN];
@@ -334,14 +357,14 @@ int GistMaker::GetGist(const std::string& text,
   if ((ret_value = GetGist((unsigned char*) text_buffer, text_buffer_len, text_len,
                 (char*) safe_status_buffer, safe_status_buffer_len,
                 (char*) script_buffer, script_buffer_len
+#ifdef NAMED_ENTITIES_ENABLED
+                , (unsigned char*) named_entities_buffer, named_entities_buffer_len,
+                &named_entities_len, &named_entities_count
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
                 , (unsigned char*) keywords_buffer, keywords_buffer_len,
                 &keywords_len, &keywords_count
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-                , (unsigned char*) hashtags_buffer, hashtags_buffer_len,
-                &hashtags_len, &hashtags_count
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                 , (unsigned char*) keyphrases_buffer, keyphrases_buffer_len,
                 &keyphrases_len, &keyphrases_count
@@ -377,19 +400,19 @@ int GistMaker::GetGist(const std::string& text,
                 , (char *) sentiment_buffer, sentiment_buffer_len
 #endif // SENTIMENT_ENABLED
                )) < 0) {
-    std::cerr << "ERROR: could not get keywords\n";
+    std::cerr << "ERROR: could not get named_entities\n";
   } else {
     safe_status = std::string(safe_status_buffer);
     script = std::string(script_buffer);
-#ifdef KEYWORDS_ENABLED
-    inagist_utils::PipeListToSet(keywords_buffer, keywords);
-#endif // KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
+    inagist_utils::PipeListToSet(named_entities_buffer, named_entities);
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYPHRASE_ENABLED
     inagist_utils::PipeListToSet(keyphrases_buffer, keyphrases);
 #endif // KEYPHRASE_ENABLED
-#ifdef HASHTAGS_ENABLED
-    inagist_utils::PipeListToSet(hashtags_buffer, hashtags);
-#endif // HASHTAGS_ENABLED
+#ifdef KEYWORDS_ENABLED
+    inagist_utils::PipeListToSet(keywords_buffer, keywords);
+#endif // KEYWORDS_ENABLED
 #ifdef LANG_ENABLED
     lang = std::string(lang_class_buffer);
 #endif // LANG_ENABLED
@@ -413,19 +436,19 @@ int GistMaker::GetGist(const std::string& text,
   return ret_value;
 }
 
-// keywords and keyphrases are output parameters
+// named_entities and keyphrases are output parameters
 int GistMaker::GetGist(unsigned char* text_buffer,  const unsigned int text_buffer_len,
       const unsigned int text_len,
       char* safe_status_buffer, const unsigned int safe_status_buffer_len,
       char* script_buffer, const unsigned int script_buffer_len
+#ifdef NAMED_ENTITIES_ENABLED
+      , unsigned char* named_entities_buffer, const unsigned int named_entities_buffer_len,
+      unsigned int* named_entities_len_ptr, unsigned int* named_entities_count_ptr
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
       , unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
       unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-      , unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
-      unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
       , unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
       unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr
@@ -462,17 +485,17 @@ int GistMaker::GetGist(unsigned char* text_buffer,  const unsigned int text_buff
 #endif // SENTIMENT_ENABLED
      ) {
 
+#ifdef NAMED_ENTITIES_ENABLED
+  *named_entities_buffer = '\0';
+  *named_entities_len_ptr = 0;
+  *named_entities_count_ptr = 0;
+#endif // NAMED_ENTITIES_ENABLED
+
 #ifdef KEYWORDS_ENABLED
   *keywords_buffer = '\0';
   *keywords_len_ptr = 0;
   *keywords_count_ptr = 0;
 #endif // KEYWORDS_ENABLED
-
-#ifdef HASHTAGS_ENABLED
-  *hashtags_buffer = '\0';
-  *hashtags_len_ptr = 0;
-  *hashtags_count_ptr = 0;
-#endif // HASHTAGS_ENABLED
 
 #ifdef KEYPHRASE_ENABLED
   *keyphrases_buffer = '\0';
@@ -521,14 +544,14 @@ int GistMaker::GetGist(unsigned char* text_buffer,  const unsigned int text_buff
 #endif // SENTIMENT_ENABLED
 
   int ret_value = 0;
+#ifdef NAMED_ENTITIES_ENABLED
+  unsigned int named_entities_len = 0;
+  unsigned int named_entities_count = 0;
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-  unsigned int hashtags_len = 0;
-  unsigned int hashtags_count = 0;
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
@@ -548,12 +571,12 @@ int GistMaker::GetGist(unsigned char* text_buffer,  const unsigned int text_buff
   ret_value = m_keytuples_extracter.GetKeyTuples(text_buffer, text_buffer_len, text_len,
                    safe_status_buffer, safe_status_buffer_len,
                    script_buffer, script_buffer_len
+#ifdef NAMED_ENTITIES_ENABLED
+                   , named_entities_buffer, named_entities_buffer_len, named_entities_len, named_entities_count
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
                    , keywords_buffer, keywords_buffer_len, keywords_len, keywords_count
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-                   , hashtags_buffer, hashtags_buffer_len, hashtags_len, hashtags_count
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                    , keyphrases_buffer, keyphrases_buffer_len, keyphrases_len, keyphrases_count
 #endif // KEYPHRASE_ENABLED
@@ -576,17 +599,17 @@ int GistMaker::GetGist(unsigned char* text_buffer,  const unsigned int text_buff
   if (ret_value <= 0) {
     if (ret_value < 0 ) {
 #ifdef GIST_DEBUG
-      std::cout << "ERROR: could not get keywords from KeyTuplesExtracter\n";
+      std::cout << "ERROR: could not get named_entities from KeyTuplesExtracter\n";
       return -1;
 #endif // GIST_DEBUG
     }
 /*
+    *named_entities_buffer = '\0';
+    *named_entities_len_ptr = 0;
+    *named_entities_count_ptr = 0;
     *keywords_buffer = '\0';
     *keywords_len_ptr = 0;
     *keywords_count_ptr = 0;
-    *hashtags_buffer = '\0';
-    *hashtags_len_ptr = 0;
-    *hashtags_count_ptr = 0;
     *keyphrases_buffer = '\0';
     *keyphrases_len_ptr = 0;
     *keyphrases_count_ptr = 0;
@@ -604,14 +627,14 @@ int GistMaker::GetGist(unsigned char* text_buffer,  const unsigned int text_buff
 #endif // GIST_DEBUG
     return ret_value;
   } else {
+#ifdef NAMED_ENTITIES_ENABLED
+    *named_entities_len_ptr = named_entities_len;
+    *named_entities_count_ptr = named_entities_count;
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
     *keywords_len_ptr = keywords_len;
     *keywords_count_ptr = keywords_count;
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-    *hashtags_len_ptr = hashtags_len;
-    *hashtags_count_ptr = hashtags_count;
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
     *keyphrases_len_ptr = keyphrases_len;
     *keyphrases_count_ptr = keyphrases_count;

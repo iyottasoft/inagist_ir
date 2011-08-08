@@ -39,6 +39,9 @@ int LanguageDetector::SetDebugLevel(unsigned int debug_level) {
 int LanguageDetector::Classify(const std::string& text, const unsigned int& text_len,
                                std::string& guess_lang_output,
                                std::string& top_classes, unsigned int& top_classes_count
+#ifdef CLASSIFIER_DATA_TESTING_ENABLED
+               , Corpus& test_corpus
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                                , std::map<std::string, std::string>& class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
@@ -47,7 +50,9 @@ int LanguageDetector::Classify(const std::string& text, const unsigned int& text
   top_classes_count = 0;
 
   int num_ngrams = 0;
+#ifndef CLASSIFIER_DATA_TESTING_ENABLED
   Corpus test_corpus;
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 
   if ((num_ngrams = m_ngrams_generator.GetNgramsFromTweet(text, test_corpus, ignore_case)) < 0) {
     top_classes_count = 0;
@@ -110,7 +115,9 @@ int LanguageDetector::Classify(const std::string& text, const unsigned int& text
   }
 #endif
 
+#ifndef CLASSIFIER_DATA_TESTING_ENABLED
   test_corpus.clear();
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 
   return 1;
 }
@@ -327,17 +334,17 @@ int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
   char buffer[MAX_BUFFER_LEN];
   strcpy((char *) buffer, text.c_str());
 
-#ifdef KEYWORDS_ENABLED
-  std::set<std::string> keywords_set;
-#endif // KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
+  std::set<std::string> named_entities_set;
+#endif // NAMED_ENTITIES_ENABLED
 
 #ifdef KEYPHRASE_ENABLED
   std::set<std::string> keyphrases_set;
 #endif // KEYPHRASE_ENABLED
 
-#ifdef HASHTAGS_ENABLED
-  std::set<std::string> hashtags_set;
-#endif // HASHTAGS_ENABLED
+#ifdef KEYWORDS_ENABLED
+  std::set<std::string> keywords_set;
+#endif // KEYWORDS_ENABLED
 
   std::set<std::string> lang_words_set;
 
@@ -360,15 +367,15 @@ int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
   ret_val = m_keytuples_extracter.GetKeyTuples((char *) buffer,
                                                safe_status,
                                                script
-#ifdef KEYWORDS_ENABLED
-                                               , keywords_set
-#endif // KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
+                                               , named_entities_set
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYPHRASE_ENABLED
                                                , keyphrases_set
 #endif // KEYPHRASE_ENABLED
-#ifdef HASHTAGS_ENABLED
-                                               , hashtags_set
-#endif // HASHTAGS_ENABLED
+#ifdef KEYWORDS_ENABLED
+                                               , keywords_set
+#endif // KEYWORDS_ENABLED
 #ifdef LANG_ENABLED
                                                , lang_words_set
 #endif // LANG_ENABLED
@@ -394,15 +401,15 @@ int LanguageDetector::GetCorpus(const std::string& text, Corpus& corpus) {
     std::cerr << "ERROR: could not find ngrams from tweet: " << text << std::endl;
   }
 
-#ifdef KEYWORDS_ENABLED
-  keywords_set.clear();
-#endif // KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
+  named_entities_set.clear();
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYPHRASE_ENABLED
   keyphrases_set.clear();
 #endif // KEYPHRASE_ENABLED
-#ifdef HASHTAGS_ENABLED
-  hashtags_set.clear();
-#endif // HASHTAGS_ENABLED
+#ifdef KEYWORDS_ENABLED
+  keywords_set.clear();
+#endif // KEYWORDS_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
   text_class_words_set.clear();
 #endif // TEXT_CLASSIFICATION_ENABLED

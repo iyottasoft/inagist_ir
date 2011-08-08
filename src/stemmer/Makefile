@@ -1,7 +1,6 @@
 include ../../Makefile.incl
 PROJECT = stemmer
-CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL}
+PROJECTFLAGS = -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/porter_stemmer -I../../include/utfcpp -I../utils -I../curl_request_maker -I../twitter_api -I../script_detector
@@ -30,11 +29,11 @@ ${LIB}: ${OBJS}
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/t_stemmer: t_stemmer.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_stemmer
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_stemmer
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

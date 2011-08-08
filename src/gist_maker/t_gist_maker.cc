@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
   unsigned int stress_count = 1;
   if (6 == input_type) {
     stress_count = atoi(input_value);
-    if (stress_count < 0 || stress_count > 10000) {
+    if (stress_count < 1 || stress_count > 10000) {
       std::cerr << "ERROR: valid value for stress_count is between 1 and 10k" << std::endl;
     }
     input_type = 3;

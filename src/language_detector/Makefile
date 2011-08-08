@@ -1,12 +1,11 @@
 include ../../Makefile.incl
 PROJECT = languagedetector
-CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL} -DLANG_ENABLED -DCLASSIFIER_DATA_TRAINING_ENABLED -DCLASSIFIER_DATA_TESTING_ENABLED #-DCLASS_CONTRIBUTORS_ENABLED
+PROJECTFLAGS = -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL} -DLANG_ENABLED -DCLASSIFIER_DATA_TRAINING_ENABLED -DCLASSIFIER_DATA_TESTING_ENABLED #-DCLASS_CONTRIBUTORS_ENABLED
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../include/utfcpp -I../utils -I../inagist_api -I../curl_request_maker -I../twitter_api -I../script_detector -I../keytuples_extracter -I../ngrams_generator -I../classifier
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../include/utfcpp -I../utils -I../inagist_api -I../curl_request_maker -I../twitter_api -I../script_detector -I../keytuples_extracter -I../corpus_manager -I../ngrams_generator -I../classifier
 
-LIBS = -l${PROJECT} -lngramsgenerator -lscriptdetector -lutils -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+LIBS = -l${PROJECT} -lngramsgenerator -lcorpusmanager -lscriptdetector -lutils -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
@@ -17,7 +16,7 @@ BINS = ${BIN_DIR}/t_language_detector \
        #${BIN_DIR}/t_clean_lang_corpus
 
 keytuples = keytuples_config.o keytuples_extracter.o
-classifier = classifier_config.o corpus_manager.o naive_bayes_classifier.o classifier.o
+classifier = classifier_config.o naive_bayes_classifier.o classifier.o
 
 OBJS = language_detector.o
 
@@ -37,42 +36,40 @@ ${LIB}: ${keytuples} ${classifier} ${OBJS}
 
 ${keytuples}:
 	@echo "compiling ../keytuples_extracter/keytuples_config.cc ..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_config.cc
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_config.cc
 	@echo "compiling ../keytuples_extracter/keytuples_extracter.cc ..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_extracter.cc
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_extracter.cc
 
 ${classifier}:
 	@echo "compiling ../classifier/classifier_config.cc ..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../classifier/classifier_config.cc
-	@echo "compiling ../classifier/corpus_manager.cc ..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../classifier/corpus_manager.cc
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../classifier/classifier_config.cc
 	@echo "compiling ../classifier/naive_bayes_classifier.cc ..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../classifier/naive_bayes_classifier.cc
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../classifier/naive_bayes_classifier.cc
 	@echo "compiling ../classifier/classifier.cc ..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../classifier/classifier.cc
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../classifier/classifier.cc
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/t_language_detector: t_language_detector.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_language_detector
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_language_detector
 	@echo "done!"
 
 ${BIN_DIR}/x_language_detector_training_data: x_language_detector_training_data.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_language_detector_training_data
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_language_detector_training_data
 	@echo "done!"
 
 ${BIN_DIR}/t_language_detector_test_data: t_language_detector_test_data.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_language_detector_test_data
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_language_detector_test_data
 	@echo "done!"
 
 ${BIN_DIR}/t_get_lang_corpus: t_get_lang_corpus.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_get_lang_corpus
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_get_lang_corpus
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

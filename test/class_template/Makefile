@@ -1,7 +1,6 @@
 include ../../Makefile.incl
 PROJECT = classtemplate
-CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated #-DDEBUG
+PROJECTFLAGS = #-DDEBUG
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/
@@ -30,11 +29,11 @@ ${LIB}: ${OBJS}
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/t_class_template: t_class_template.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_class_template
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_class_template
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

@@ -16,9 +16,13 @@ int Classify(std::string text) {
   std::string text_class;
   std::string top_classes;
   unsigned int top_classes_count;
+  inagist_classifiers::Corpus test_corpus;
   if (g_tc.Classify(text, text.length(),
                   text_class,
                   top_classes, top_classes_count
+#ifdef CLASSIFIER_DATA_TESTING_ENABLED
+                  , test_corpus
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                   , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED

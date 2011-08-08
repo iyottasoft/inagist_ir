@@ -108,7 +108,7 @@ int Stemmer::Stem(const std::string& text,
       ptr++;
     } else {
 #ifdef STEM_DEBUG
-      std::cout << "ERROR: Not enuf space in the keywords buffer\n";
+      std::cout << "ERROR: Not enuf space in the named_entities buffer\n";
 #endif
       *pipe_delimited_output = '\0';
       stems.clear();

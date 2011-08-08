@@ -1,15 +1,25 @@
 README
 ------
 
+*** BEGIN QUICKIE ***
+
+1. change Makefile.incl to specify directory paths.
+2. go to ./apis directory and choose your language. compile from the corresponding folder.
+3. grap the libraries you need from ./lib directory.
+
+*** END QUICKIE ***
+
 This project is called ir_cpp becos, its supposed to have code for Information Retrieval
 and most of the code is written in cpp. There are some python scripts here and there,
 which are used in lieu of pseudo code.
 
+/apis    - this directory provides apis to access ir_cpp. currently erlang alone is supported
+/lib     - libraries that are exported. compiling code in apis/* will copy libraries to this directory by default
 /include - all third party code must be checked in here and nowhere else
 /src     - all modules of this project are checked in here
 /test    - misc test code can be checked in here. however do not check in unit tests of
            code in /src or /include. they should be in checked along with class files
-/lib     - each Makefile in each directory of each module must copy its library
+/local/lib     - each Makefile in each directory of each module must copy its library
            (if present) here and nowhere else. copy the libraries from third party code
            also to this directory
 /bin     - all binaries from projects in src and include are copied here

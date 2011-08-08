@@ -31,6 +31,9 @@ class LanguageDetector : public Classifier {
   int Classify(const std::string& text, const unsigned int& text_len,
                std::string& guess_lang_output,
                std::string& top_classes, unsigned int& top_classes_count
+#ifdef CLASSIFIER_DATA_TESTING_ENABLED
+               , Corpus& test_corpus
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                , std::map<std::string, std::string>& class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED

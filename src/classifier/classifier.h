@@ -44,6 +44,9 @@ class Classifier {
                        std::string& output_class,
                        std::string& top_classes,
                        unsigned int& top_classes_count
+#ifdef CLASSIFIER_DATA_TESTING_ENABLED
+                       , Corpus& test_corpus
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                        , std::map<std::string, std::string>& class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
@@ -75,19 +78,6 @@ class Classifier {
 
   // testing
 
-  // leave handle blank for public timeline
-  int TestTwitterTimeline(const std::string& handle,
-                          const std::string& expected_class_name,
-                          Corpus& class_freq_map,
-                          TestResult& test_result,
-                          std::ostream& output_stream);
-
-  int TestTrainingSources(const char* training_class,
-                          Corpus& class_freq_map,
-                          TestResult& test_result,
-                          std::ostream& output_stream,
-                          bool random_selection=false);
-
   int GetTestData(const unsigned int& input_type,
                   const char* input_file,
                   const char* input_handle,
@@ -95,9 +85,25 @@ class Classifier {
                   const unsigned int& output_type,
                   const char* output_file);
 
+  // leave handle blank for public timeline
+  int TestTwitterTimeline(const std::string& handle,
+                          const std::string& expected_class_name,
+                          Corpus& test_freq_map,
+                          CorpusMap& test_corpus_map,
+                          TestResult& test_result,
+                          std::ostream& output_stream);
+
+  int TestTrainingSources(const char* training_class,
+                          Corpus& test_freq_map,
+                          CorpusMap& test_corpus_map,
+                          TestResult& test_result,
+                          std::ostream& output_stream,
+                          bool random_selection=false);
+
   int TestTrainingTexts(const char* training_texts_file,
                         const std::string& expected_class_name,
-                        Corpus& class_freq_map,
+                        Corpus& test_freq_map,
+                        CorpusMap& test_corpus_map,
                         TestResult& test_result,
                         std::ostream &output_stream);
 
@@ -112,6 +118,9 @@ class Classifier {
                             const char* &output_file,
                             const char* &input_handle,
                             std::string &class_name);
+
+  int NormalizeFrequencies();
+  int NormalizeFrequencies(const char* raw_data_file, const char* relative_freq_file);
 
  protected:
   CorpusManager m_corpus_manager;

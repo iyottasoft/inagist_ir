@@ -171,7 +171,7 @@ int ToLower(const char* input, char* output) {
   return 0;
 }
 
-int PipeListToMap(unsigned char* buffer, std::map<std::string, int>& map) {
+int PipeListToMap(unsigned char* buffer, std::map<std::string, double>& map) {
 
   if (!buffer) {
     std::cerr << "ERROR: invalid input\n";
@@ -207,7 +207,7 @@ int PipeListToMap(unsigned char* buffer, std::map<std::string, int>& map) {
 }
 
 // copy elements of a set to a buffer, each element separated by a '|'
-int MapToPipeList(std::map<std::string, int>& map,
+int MapToPipeList(std::map<std::string, double>& map,
                   unsigned char* buffer, unsigned int buffer_len,
                   unsigned int& list_len, unsigned int& list_count) {
 
@@ -222,7 +222,7 @@ int MapToPipeList(std::map<std::string, int>& map,
 
   list_len = 0;
   list_count = 0;
-  std::map<std::string, int>::iterator map_iter;
+  std::map<std::string, double>::iterator map_iter;
   unsigned char* ptr = buffer;
   std::string element;
   for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
@@ -230,7 +230,7 @@ int MapToPipeList(std::map<std::string, int>& map,
     element += ",";
     strcpy((char *) ptr, element.c_str()); 
     ptr += element.length();
-    ptr += sprintf((char *) ptr, "%d", (*map_iter).second);
+    ptr += sprintf((char *) ptr, "%f", (*map_iter).second);
     strcpy((char *) ptr, "|");
     ptr += 1;
     list_count++;

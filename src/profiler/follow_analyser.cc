@@ -5,7 +5,7 @@
 #include <cstring>
 #include <map>
 #include "JSON.h"
-#include "keywords_manager.h"
+#include "named_entities_manager.h"
 
 namespace inagist_dashboard {
 
@@ -55,16 +55,16 @@ int FollowAnalyser::ReadFollowers(std::string handle, std::set<std::string> &fol
   return followers.size();
 }
 
-// gets a set keywords
-// writes tweets and idf of keywords to files
-// uses TwitterSearcher class to get the tweets and the keywords
-// uses KeywordsManager class to get the idf of keywords
+// gets a set named_entities
+// writes tweets and idf of named_entities to files
+// uses TwitterSearcher class to get the tweets and the named_entities
+// uses KeywordsManager class to get the idf of named_entities
 int FollowAnalyser::GetKeywords(const std::string& handle,
                                 const std::string& tweets_file_name,
-                                const std::string& keywords_file_name) {
+                                const std::string& named_entities_file_name) {
 
   int ret_value = 0;
-  std::set<std::string> keywords_set;
+  std::set<std::string> named_entities_set;
   std::multimap<std::string, std::string> tweets_map;
   std::string url;
 
@@ -81,38 +81,38 @@ int FollowAnalyser::GetKeywords(const std::string& handle,
   std::string safe_status;
   for (multimap_iter = tweets_map.begin(); multimap_iter != tweets_map.end(); multimap_iter++) {
     strcpy(m_buffer, (char *) multimap_iter->second.c_str());
-    if (m_keytuples_extracter.GetKeywords((char *) m_buffer, safe_status, script, keywords_set) < 0) {
-      std::cout << "ERROR: could not get keywords for\n" << m_buffer << std::endl;
+    if (m_keytuples_extracter.GetKeywords((char *) m_buffer, safe_status, script, named_entities_set) < 0) {
+      std::cout << "ERROR: could not get named_entities for\n" << m_buffer << std::endl;
     }
   }
   tweets_map.clear();
 
-  inagist_trends::KeywordsManager keywords_manager;
-  keywords_manager.PopulateFreqMap(keywords_set);
+  inagist_trends::KeywordsManager named_entities_manager;
+  named_entities_manager.PopulateFreqMap(named_entities_set);
 
-  keywords_manager.CalculateIDF(ret_value, keywords_file_name.c_str());
+  named_entities_manager.CalculateIDF(ret_value, named_entities_file_name.c_str());
 
   return ret_value;
 }
 
 // gets a set of followers
-// writes tweets and idf of keywords to files
-// uses TwitterSearcher class to get the tweets and the keywords
-// uses KeywordsManager class to get the idf of keywords
+// writes tweets and idf of named_entities to files
+// uses TwitterSearcher class to get the tweets and the named_entities
+// uses KeywordsManager class to get the idf of named_entities
 int FollowAnalyser::GetKeywordsFromFollowers(const std::set<std::string>& followers,
                                              const std::string& tweets_file_name,
-                                             const std::string& keywords_file_name,
+                                             const std::string& named_entities_file_name,
                                              const std::string& scripts_tweeters_map_file_name,
-                                             const std::string& keywords_tweeters_map_file_name) {
+                                             const std::string& named_entities_tweeters_map_file_name) {
 
   int ret_value = 0;
   int num_docs = 0;
-  std::set<std::string> keywords_set;
+  std::set<std::string> named_entities_set;
   std::set<std::string> unused_set;
   std::set<std::string>::iterator set_iter;
   std::map<std::string, std::string> scripts_tweeters_map;
-  std::map<std::string, std::string> keywords_tweeters_map;
-  inagist_trends::KeywordsManager keywords_manager;
+  std::map<std::string, std::string> named_entities_tweeters_map;
+  inagist_trends::KeywordsManager named_entities_manager;
   std::string url;
   std::map<std::string, std::string>::iterator map_iter;
   std::multimap<std::string, std::string> tweets_map;
@@ -128,12 +128,12 @@ int FollowAnalyser::GetKeywordsFromFollowers(const std::set<std::string>& follow
       for (multimap_iter = tweets_map.begin(); multimap_iter != tweets_map.end(); multimap_iter++) {
         strcpy(m_buffer, multimap_iter->second.c_str());
         script = multimap_iter->first;
-        m_keytuples_extracter.GetKeywords((char *) m_buffer, script, keywords_set, scripts_tweeters_map, keywords_tweeters_map);
+        m_keytuples_extracter.GetKeywords((char *) m_buffer, script, named_entities_set, scripts_tweeters_map, named_entities_tweeters_map);
       }
       tweets_map.clear();
-      // TODO (balaji) - this whole keywords manager thingy can be implemented here. will save some pain
-      keywords_manager.PopulateFreqMap(keywords_set);
-      keywords_set.clear();
+      // TODO (balaji) - this whole named_entities manager thingy can be implemented here. will save some pain
+      named_entities_manager.PopulateFreqMap(named_entities_set);
+      named_entities_set.clear();
       ret_value += num_docs;
     }
     usleep(100000);
@@ -148,15 +148,15 @@ int FollowAnalyser::GetKeywordsFromFollowers(const std::set<std::string>& follow
   scripts_tweeters_map_file_stream.close();
   scripts_tweeters_map.clear();
 
-  // write keywords map to file
-  std::ofstream keywords_tweeters_map_file_stream(keywords_tweeters_map_file_name.c_str());
-  for (map_iter = keywords_tweeters_map.begin(); map_iter != keywords_tweeters_map.end(); map_iter++) {
-    keywords_tweeters_map_file_stream << map_iter->first << " = " << map_iter->second << std::endl;
+  // write named_entities map to file
+  std::ofstream named_entities_tweeters_map_file_stream(named_entities_tweeters_map_file_name.c_str());
+  for (map_iter = named_entities_tweeters_map.begin(); map_iter != named_entities_tweeters_map.end(); map_iter++) {
+    named_entities_tweeters_map_file_stream << map_iter->first << " = " << map_iter->second << std::endl;
   }
-  keywords_tweeters_map_file_stream.close();
-  keywords_tweeters_map.clear();
+  named_entities_tweeters_map_file_stream.close();
+  named_entities_tweeters_map.clear();
 
-  keywords_manager.CalculateIDF(ret_value, keywords_file_name.c_str());
+  named_entities_manager.CalculateIDF(ret_value, named_entities_file_name.c_str());
 
   return ret_value;
 }
@@ -164,15 +164,15 @@ int FollowAnalyser::GetKeywordsFromFollowers(const std::set<std::string>& follow
 int FollowAnalyser::GetKeywordsFromMentions(const std::string& handle,
                                             std::set<std::string>& mentioners,
                                             const std::string& tweets_file_name,
-                                            const std::string& keywords_file_name,
-                                            const std::string& keywords_tweeters_map_file_name) {
+                                            const std::string& named_entities_file_name,
+                                            const std::string& named_entities_tweeters_map_file_name) {
 
   int ret_value = 0;
   int num_docs = 0;
   std::multimap<std::string, std::string> tweets_map;
-  std::set<std::string> keywords_set;
+  std::set<std::string> named_entities_set;
   std::map<std::string, std::string> scripts_tweeters_map;
-  std::map<std::string, std::string> keywords_tweeters_map;
+  std::map<std::string, std::string> named_entities_tweeters_map;
   std::string url;
   std::string script;
 
@@ -190,25 +190,25 @@ int FollowAnalyser::GetKeywordsFromMentions(const std::string& handle,
     mentioners.insert(multimap_iter->first);
     strcpy(m_buffer, multimap_iter->second.c_str());
     script = multimap_iter->first;
-    m_keytuples_extracter.GetKeywords((char *) m_buffer, script, keywords_set, scripts_tweeters_map, keywords_tweeters_map);
+    m_keytuples_extracter.GetKeywords((char *) m_buffer, script, named_entities_set, scripts_tweeters_map, named_entities_tweeters_map);
   }
   tweets_map.clear();
 
-  // TODO (balaji) - this whole keywords manager thingy can be implemented here. will save some pain
-  inagist_trends::KeywordsManager keywords_manager;
-  keywords_manager.PopulateFreqMap(keywords_set);
-  keywords_set.clear();
+  // TODO (balaji) - this whole named_entities manager thingy can be implemented here. will save some pain
+  inagist_trends::KeywordsManager named_entities_manager;
+  named_entities_manager.PopulateFreqMap(named_entities_set);
+  named_entities_set.clear();
 
-  // write keywords map to file
+  // write named_entities map to file
   std::map<std::string, std::string>::iterator map_iter;
-  std::ofstream keywords_tweeters_map_file_stream(keywords_tweeters_map_file_name.c_str());
-  for (map_iter = keywords_tweeters_map.begin(); map_iter != keywords_tweeters_map.end(); map_iter++) {
-    keywords_tweeters_map_file_stream << map_iter->first << " = " << map_iter->second << std::endl;
+  std::ofstream named_entities_tweeters_map_file_stream(named_entities_tweeters_map_file_name.c_str());
+  for (map_iter = named_entities_tweeters_map.begin(); map_iter != named_entities_tweeters_map.end(); map_iter++) {
+    named_entities_tweeters_map_file_stream << map_iter->first << " = " << map_iter->second << std::endl;
   }
-  keywords_tweeters_map_file_stream.close();
-  keywords_tweeters_map.clear();
+  named_entities_tweeters_map_file_stream.close();
+  named_entities_tweeters_map.clear();
 
-  keywords_manager.CalculateIDF(ret_value, keywords_file_name.c_str());
+  named_entities_manager.CalculateIDF(ret_value, named_entities_file_name.c_str());
 
   return ret_value;
 }

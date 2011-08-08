@@ -51,28 +51,28 @@ class KeyTuplesExtracter {
   int LoadClassifierDictionary(const char* classifier_dictionary_file);
   int DeInit();
 
-#ifdef KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
   int GetKeywords(char* str,
                   std::string& safe_status,
                   std::string& script,
-                  std::set<std::string>& keywords_set);
+                  std::set<std::string>& named_entities_set);
 
   int GetKeywords(char *str,
                   std::string& user,
-                  std::set<std::string>& keywords_set,
+                  std::set<std::string>& named_entities_set,
                   std::map<std::string, std::string>& script_user_map,
                   std::map<std::string, std::string>& keyword_user_map);
-#endif // KEYWORDS_ENABLED
+#endif // NAMED_ENTITIES_ENABLED
 
   int GetKeyTuples(char* str,
                    std::string& safe_status,
                    std::string& script
+#ifdef NAMED_ENTITIES_ENABLED
+                   , std::set<std::string>& named_entities_set
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
                    , std::set<std::string>& keywords_set
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-                   , std::set<std::string>& hashtags_set
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                    , std::set<std::string>& keyphrases_set
 #endif // KEYPHRASE_ENABLED
@@ -95,14 +95,14 @@ class KeyTuplesExtracter {
                    const unsigned int& text_len,
                    char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
                    char* script_buffer, const unsigned int& script_buffer_len
+#ifdef NAMED_ENTITIES_ENABLED
+                   , unsigned char* named_entities_buffer, const unsigned int& named_entities_buffer_len,
+                   unsigned int& named_entities_len, unsigned int& named_entities_count
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
                    , unsigned char* keywords_buffer, const unsigned int& keywords_buffer_len,
                    unsigned int& keywords_len, unsigned int& keywords_count
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-                   , unsigned char* hashtags_buffer, const unsigned int& hashtags_buffer_len,
-                   unsigned int& hashtags_len, unsigned int& hashtags_count
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                    , unsigned char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
                    unsigned int& keyphrases_len, unsigned int& keyphrases_count
@@ -123,7 +123,7 @@ class KeyTuplesExtracter {
 #endif // SENTIMENT_ENABLED
                   );
 
-  void PrintKeywords(std::set<std::string> &keywords_set);
+  void PrintKeywords(std::set<std::string> &named_entities_set);
   int DetectScript(int code_point, std::string &script);
 
  private:

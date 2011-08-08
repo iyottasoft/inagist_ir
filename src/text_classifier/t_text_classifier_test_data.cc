@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
   if (argc < 5 || argc > 7) {
     std::cout << "Usage: " << argv[0] << " <classifier_config> <keytuples_config> <input_type> <output_type>\n";
     std::cout << "\t[class_name] [output_file] [input_file/handle]\n";
-    std::cout << "input_type:\n\t0 - twitter timeline\n\t1 - random selection of handles from training sources\n\t2 - all training sources (all handles)\n\t3 - given class (random handles)\n\t4 - use input file\n\t5 - tweets from handle\noutput_type:\n\t0 - stdout\n\t1 - class frequency file\n\t2 - html version\n";
+    std::cout << "input_type:\n\t0 - twitter timeline\n\t1 - random selection of handles from training sources\n\t2 - all training sources (all handles)\n\t3 - given class (random handles)\n\t4 - use input file\n\t5 - tweets from handle\noutput_type:\n\t0 - stdout\n\t1 - class frequency file\n\t2 - html version\n\t3 - all test data files (prod version)\n";
     return -1;
   }
 

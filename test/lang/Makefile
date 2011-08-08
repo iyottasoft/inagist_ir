@@ -1,7 +1,6 @@
 include ../../Makefile.incl
 PROJECT = naiveguess
-CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated #-DDEBUG
+PROJECTFLAGS = #-DDEBUG
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../src/ngrams_generator
@@ -28,11 +27,11 @@ ${LIB}:
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/t_naive_guess: t_naive_guess.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_naive_guess
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_naive_guess
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

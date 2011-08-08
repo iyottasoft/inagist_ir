@@ -1,4 +1,4 @@
-SUBDIRS = nif utf8 dashboard
+SUBDIRS = nif utf8
 
 .PHONY: subdirs $(SUBDIRS)
 

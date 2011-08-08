@@ -5,7 +5,7 @@
 
 #include <string>
 #include "keytuples_extracter.h"
-#include "keywords_manager.h"
+#include "named_entities_manager.h"
 
 namespace inagist_trends {
 

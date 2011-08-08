@@ -23,9 +23,14 @@ class GistMaker {
   GistMaker();
   ~GistMaker();
 
-  int Init(const char* keytuples_extracter_config_file,
-           const char* language_detection_config_file,
-           const char* text_classification_config_file);
+int Init(const char* keytuples_extracter_config_file
+#ifdef LANG_ENABLED
+         , const char* language_detection_config_file
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+         , const char* text_classification_config_file
+#endif // TEXT_CLASSIFICATION_ENABLED
+        );
 
   int GetGist(const std::string& text);
 
@@ -35,12 +40,12 @@ class GistMaker {
 #ifdef LANG_ENABLED
                        , std::string& lang
 #endif // LANG_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
+                       , std::set<std::string>& named_entities
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
                        , std::set<std::string>& keywords
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-                       , std::set<std::string>& hashtags
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                        , std::set<std::string>& keyphrases
 #endif // KEYPHRASE_ENABLED
@@ -62,14 +67,14 @@ int GetGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
       const unsigned int text_len,
       char* safe_status_buffer, const unsigned int safe_status_buffer_len,
       char* script_buffer, const unsigned int script_buffer_len
+#ifdef NAMED_ENTITIES_ENABLED
+      , unsigned char* named_entities_buffer, const unsigned int named_entities_buffer_len,
+      unsigned int* named_entities_len_ptr, unsigned int* named_entities_count_ptr
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
       , unsigned char* keywords_buffer, const unsigned int keywords_buffer_len,
       unsigned int* keywords_len_ptr, unsigned int* keywords_count_ptr
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-      , unsigned char* hashtags_buffer, const unsigned int hashtags_buffer_len,
-      unsigned int* hashtags_len_ptr, unsigned int* hashtags_count_ptr
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
       , unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
       unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr

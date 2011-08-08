@@ -46,13 +46,20 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  std::cout << config.test_data_file << std::endl;
-  if (CreateDir(config.test_data_file) < 0) {
+  std::cout << config.class_freqs_file << std::endl;
+  if (CreateDir(config.class_freqs_file) < 0) {
     inagist_classifiers::ClassifierConfig::Clear(config);
     return -1;
   }
+  std::string cmd = "touch " + config.class_freqs_file;
+  system(cmd.c_str());
 
-  std::string cmd = "touch " + config.freqs_file;
+  std::cout << config.test_freqs_file << std::endl;
+  if (CreateDir(config.test_freqs_file) < 0) {
+    inagist_classifiers::ClassifierConfig::Clear(config);
+    return -1;
+  }
+  cmd = "touch " + config.test_freqs_file;
   system(cmd.c_str());
 
   if (config.classes.empty()) {

@@ -112,3 +112,6 @@ trip is=1
 trip is booked=3
 room to rent=3
 looking to rent=3
+here i come=3
+driving to=2
+driving down to=3

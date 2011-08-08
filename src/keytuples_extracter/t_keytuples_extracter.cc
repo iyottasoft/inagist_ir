@@ -14,8 +14,8 @@ int GetKeyTuples(std::string text) {
   char buffer[1024];
   std::string safe_status;
   std::string script;
+  std::set<std::string> named_entities_set;
   std::set<std::string> keywords_set;
-  std::set<std::string> hashtags_set;
   std::set<std::string> keyphrases_set;
   std::set<std::string> lang_words_set;
   std::set<std::string> text_class_words_set;
@@ -25,12 +25,12 @@ int GetKeyTuples(std::string text) {
   strcpy(buffer, text.c_str()); 
   int keytuples_count = 0;
   if ((keytuples_count = g_ke.GetKeyTuples(buffer, safe_status, script
+#ifdef NAMED_ENTITIES_ENABLED
+                        , named_entities_set
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
                         , keywords_set
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-                        , hashtags_set
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                         , keyphrases_set
 #endif // KEYPHRASE_ENABLED
@@ -61,6 +61,13 @@ int GetKeyTuples(std::string text) {
   if (!script.empty()) {
     std::cout << "script: " << script << std::endl;
   }
+#ifdef NAMED_ENTITIES_ENABLED
+  if (named_entities_set.size() > 0) {
+    std::cout << "named_entities:\n";
+    g_ke.PrintKeywords(named_entities_set);
+    named_entities_set.clear();
+  }
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
   if (keywords_set.size() > 0) {
     std::cout << "keywords:\n";
@@ -68,13 +75,6 @@ int GetKeyTuples(std::string text) {
     keywords_set.clear();
   }
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-  if (hashtags_set.size() > 0) {
-    std::cout << "hashtags:\n";
-    g_ke.PrintKeywords(hashtags_set);
-    hashtags_set.clear();
-  }
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
   if (keyphrases_set.size() > 0) {
     std::cout << "keyphrases:\n";

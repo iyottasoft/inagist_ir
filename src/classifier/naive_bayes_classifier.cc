@@ -20,7 +20,7 @@ NaiveBayesClassifier::NaiveBayesClassifier() {
   }
 #else
   m_debug_level = 0;
-#endif
+#endif // NBC_DEBUG
 }
 
 NaiveBayesClassifier::~NaiveBayesClassifier() {
@@ -30,7 +30,7 @@ int NaiveBayesClassifier::SetDebugLevel(unsigned int debug_level) {
   m_debug_level = debug_level;
 #ifdef NBC_DEBUG
   std::cout << "setting NBC debug level to " << m_debug_level << std::endl;
-#endif
+#endif // NBC_DEBUG
   return 0;
 }
 
@@ -97,7 +97,9 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
     classes[count] = class_name;
     corpus_ptr = &(corpus_map_iter->second);
     if (corpus_ptr->empty()) {
+#ifdef NBC_DEBUG
       std::cout << "WARNING: no entries found in corpus for class: " << class_name << std::endl;
+#endif // NBC_DEBUG
       continue;
     }
 
@@ -128,7 +130,7 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
         if (debug_level > 4 || NBC_DEBUG > 4) {
           std::cout << (*corpus_iter).first << " : " << (*corpus_iter).second << " in " << class_name << std::endl;
         }
-#endif
+#endif // NBC_DEBUG
         temp_freq = (double) (*corpus_iter).second;
         if (temp_freq > 8) {
           temp_freq = 8;
@@ -163,7 +165,7 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
       }
     }
   }
-#endif
+#endif // NBC_DEBUG
 
   double max_freq = 0;
   unsigned int max_index = 0;
@@ -258,6 +260,10 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
   return ret_val;
 }
 
+/*
+  c = arg max [ log p(c) + sigma 1<=k<=n log p(tk|c) ]
+  the probability of document d being in class c is equal to the sum over 1 to n of the probablity of each term being in class c plus the prior probability of the class among all classes.
+*/
 int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
                                       Corpus& classes_freq_map,
                                       Corpus& test_corpus,
@@ -321,7 +327,9 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
     }
     corpus_ptr = &(corpus_map_iter->second);
     if (corpus_ptr->empty()) {
+#ifdef NBC_DEBUG
       std::cout << "WARNING: no entries found in corpus for class: " << class_name << std::endl;
+#endif // NBC_DEBUG
       continue;
     }
 
@@ -363,6 +371,8 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
     }
     if (!entry_found)
       continue;
+
+    // what is this? why divide the product of term frequencies in class C with the number of words in document D?
     if (temp_total_freq > 0) {
       freq = log(temp_total_freq/test_corpus.size());
     }
@@ -531,7 +541,7 @@ int NaiveBayesClassifier::GuessClass(std::map<std::string, int> testfile_feature
     std::cout << "Class 1 freq: " << class1_freq << std::endl;
     std::cout << "Class 2 freq: " << class2_freq << std::endl;
   }
-#endif
+#endif // NBC_DEBUG
 
   double score1 = exp(class1_freq);
   double score2 = exp(class2_freq);
@@ -541,7 +551,7 @@ int NaiveBayesClassifier::GuessClass(std::map<std::string, int> testfile_feature
     std::cout << "Class 1 score: " << score1 << std::endl;
     std::cout << "Class 2 score: " << score2 << std::endl;
   }
-#endif
+#endif // NBC_DEBUG
 
   if (score1 > score2) {
     return 1;

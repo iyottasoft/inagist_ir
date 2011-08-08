@@ -11,24 +11,24 @@ ClassifierConfig::~ClassifierConfig() {
 }
 
 int ClassifierConfig::Clear(Config& config) {
-  config.test_data_file.clear();
-  config.freqs_file.clear();
+  config.class_freqs_file.clear();
+  config.test_freqs_file.clear();
   if (!config.classes.empty()) {
     config.classes.clear();
   }
   return 0;
 }
 
-int ClassifierConfig::Read(const char* config_file_name, Config& config) {
+int ClassifierConfig::Read(const char* config_file, Config& config) {
 
-  if (!config_file_name) {
+  if (!config_file) {
     std::cerr << "ERROR: invalid input. can't read config\n";
     return -1;
   }
 
-  std::ifstream ifs(config_file_name);
+  std::ifstream ifs(config_file);
   if (!ifs.is_open()) {
-    std::cout << "ERROR: could not open config file " << config_file_name << std::endl;
+    std::cout << "ERROR: could not open config file " << config_file << std::endl;
     return -1;
   } else {
     std::string line;
@@ -36,12 +36,7 @@ int ClassifierConfig::Read(const char* config_file_name, Config& config) {
     std::string value;
     std::string::size_type loc;
     int line_count = 0;
-    std::string name;
-    std::string label;
-    std::string handles_file_name;
-    std::string tweets_file_name;
-    std::string corpus_file_name;
-    std::string training_data_file_name;
+    ClassStruct class_struct;
     while (getline(ifs, line)) {
       //std::cout << line << std::endl;
       if (line.length() < 1)
@@ -55,35 +50,35 @@ int ClassifierConfig::Read(const char* config_file_name, Config& config) {
       value.assign(line.c_str(), loc+1, (line.length()-loc-1));
       //std::cout << key << std::endl;
       //std::cout << value << std::endl;
-      if (key.compare(0, 8, "testdata") == 0) {
-        config.test_data_file = value;
-      } else if (key.compare(0, 11, "frequencies") == 0) {
-        config.freqs_file = value;
+      if (key.compare(0, 17, "class_frequencies") == 0) {
+        config.class_freqs_file = value;
+      } else if (key.compare(0, 16, "test_frequencies") == 0) {
+        config.test_freqs_file = value;
       } else {
         line_count++;
-        if (key.compare(0, 5, "class") == 0) {
-          name = value;
-        } else if (key.compare(0, 5, "label") == 0) {
-          label = value;
+        if (key.compare(0, 10, "class_name") == 0) {
+          class_struct.name = value;
+        } else if (key.compare(0, 11, "class_label") == 0) {
+          class_struct.label = value;
+        } else if (key.compare(0, 10, "class_data") == 0) {
+          class_struct.class_data_file = value;
+        } else if (key.compare(0, 12, "testing_data") == 0) {
+          class_struct.testing_data_file = value;
+        } else if (key.compare(0, 13, "training_data") == 0) {
+          class_struct.training_data_file = value;
         } else if (key.compare(0, 7, "handles") == 0) {
-          handles_file_name = value;
+          class_struct.handles_file = value;
         } else if (key.compare(0, 6, "corpus") == 0) {
-          corpus_file_name = value;
+          class_struct.corpus_file = value;
         } else if (key.compare(0, 6, "tweets") == 0) {
-          tweets_file_name = value;
-        } else if (key.compare(0, 12, "trainingdata") == 0) {
-          training_data_file_name = value;
+          class_struct.tweets_file = value;
+        } else if (key.compare(0, 4, "seed") == 0) {
+          class_struct.seed_file = value;
         }
-        if (line_count == 6) {
-          ClassStruct class_struct;
-          class_struct.name = name;
-          class_struct.label = label;
-          class_struct.training_data_file = training_data_file_name;
-          class_struct.handles_file = handles_file_name;
-          class_struct.corpus_file = corpus_file_name;
-          class_struct.tweets_file = tweets_file_name;
+        if (line_count == 9) {
           config.classes.insert(class_struct);
           line_count = 0;
+          class_struct.clear();
         }
       }
     }

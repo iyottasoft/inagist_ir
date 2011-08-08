@@ -1,7 +1,6 @@
 include ../../Makefile.incl
 PROJECT = test_utf8
-CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG -D_CPLUSPLUS
+PROJECTFLAGS = -DDEBUG -D_CPLUSPLUS
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../src/curl_request_maker -I../../include/utfcpp -I../../src/twitter_api -I../../src/script_detector
@@ -31,16 +30,16 @@ ${LIB}: ${OBJS}
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/t_encode: t_encode.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_encode
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_encode
 	@echo "done!"
 
 ${BIN_DIR}/t_test_utfcpp: t_test_utfcpp.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_test_utfcpp
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_test_utfcpp
 	@echo "done!"
 
 ERL_LIB = ${LIB_DIR}/libtestutfcpp_erl.so

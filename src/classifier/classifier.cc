@@ -23,13 +23,17 @@ Classifier::Classifier() {
 Classifier::~Classifier() {
 
   if (ClassifierConfig::Clear(m_config) < 0) {
+#ifdef CLASSIFIER_DEBUG
     std::cerr << "ERROR: could not clear config\n";
+#endif // CLASSIFIER_DEBUG
   }
 
   try {
     m_corpus_manager.Clear();
   } catch (...) {
+#ifdef CLASSIFIER_DEBUG
     std::cerr << "ERROR: Corpus Manager throws exception" << std::endl;
+#endif // CLASSIFIER_DEBUG
   }
 
 }
@@ -40,32 +44,50 @@ int Classifier::Init(std::string config_file_name, bool ignore_history) {
   // and the strings with which the corpus contents can be uniquely identified
 
   if (ClassifierConfig::Read(config_file_name.c_str(), m_config) < 0) {
+#ifdef CLASSIFIER_DEBUG
     std::cerr << "ERROR: could not read config file: " << config_file_name << std::endl;
+#endif // CLASSIFIER_DEBUG
     return -1;
   }
 
   if (m_config.classes.empty()) {
+#ifdef CLASSIFIER_DEBUG
     std::cerr << "ERROR: class structs could not be read from config file: " \
               << config_file_name << std::endl;
+#endif // CLASSIFIER_DEBUG
     return -1;
   }
 
-  std::map<std::string, std::string> class_name_file_map;
+  CorpusMapMeta corpus_map_meta_data;
+#ifdef CLASSIFIER_DEBUG
+    if (CLASSIFIER_DEBUG > 4) {
+      std::cout << "classifier training meta data\n";
+    }
+#endif // CLASSIFIER_DEBUG
   for (m_config.iter = m_config.classes.begin();
        m_config.iter != m_config.classes.end();
        m_config.iter++) {
-    class_name_file_map[m_config.iter->name] = m_config.iter->training_data_file;
+    corpus_map_meta_data[m_config.iter->name] = m_config.iter->class_data_file;
+#ifdef CLASSIFIER_DEBUG
+    if (CLASSIFIER_DEBUG > 4) {
+      std::cout << m_config.iter->name << " = " << m_config.iter->class_data_file << std::endl;
+    }
+#endif // CLASSIFIER_DEBUG
   }
-  if (class_name_file_map.empty()) {
-    std::cerr << "ERROR: class_name_file_map cannot be empty\n";
+  if (corpus_map_meta_data.empty()) {
+#ifdef CLASSIFIER_DEBUG
+    std::cerr << "ERROR: corpus_map_meta_data cannot be empty\n";
+#endif // CLASSIFIER_DEBUG
     return -1;
   }
 
   if (!ignore_history) {
-    if (m_corpus_manager.LoadCorpus(m_config.test_data_file,
+    if (m_corpus_manager.LoadCorpus(m_config.class_freqs_file,
                                     m_corpus_manager.m_classes_freq_map) < 0) {
+#ifdef CLASSIFIER_DEBUG
       std::cerr << "ERROR: could not load the text classes freq file (test data)\n";
       std::cout << "WARNING: continuing without the text classes freq data\n";
+#endif // CLASSIFIER_DEBUG
     }
   } else {
 #ifdef CLASSIFIER_DEBUG
@@ -75,13 +97,20 @@ int Classifier::Init(std::string config_file_name, bool ignore_history) {
 #endif
   }
 
-  if (m_corpus_manager.LoadCorpusMap(class_name_file_map) < 0) {
+#ifdef CLASSIFIER_DEBUG
+  std::cout << "loading corpus_map from corpus_map_meta_data (while initializing classifier)\n";
+#endif // CLASSIFIER_DEBUG
+  if (m_corpus_manager.LoadCorpusMap(corpus_map_meta_data) < 0) {
+#ifdef CLASSIFIER_DEBUG
     std::cerr << "ERROR: could not load Corpus Map\n";
+#endif // CLASSIFIER_DEBUG
     return -1;
   }
 
   if (ClassifierConfig::LoadClassLabelsMap(m_config, m_class_labels_map) < 0) {
+#ifdef CLASSIFIER_DEBUG
     std::cerr << "ERROR: could not load class labels map\n";
+#endif // CLASSIFIER_DEBUG
     return -1;
   }
 
@@ -157,6 +186,13 @@ int Classifier::GetTrainingData(const char* config_file_name) {
       std::cerr << "ERROR: could not get training data for handles in file: " \
                 << config.iter->handles_file << std::endl; 
     } else {
+      if (NormalizeFrequencies(config.iter->corpus_file.c_str(),
+                               config.iter->training_data_file.c_str()) < 0) {
+        std::cerr << "ERROR - : could not normalize raw data file: " \
+                  << config.iter->corpus_file << " to " \
+                  << config.iter->training_data_file; 
+        return -1;
+      }
       std::cout << "Corpus of size " << count_temp \
                 << " generated for " << config.iter->name << " from " \
                 << num_docs << " docs" << std::endl;
@@ -221,7 +257,7 @@ int Classifier::GetTrainingData(const std::string& class_name,
   inagist_api::TwitterSearcher twitter_searcher;
 
   unsigned int count = 0;
-  unsigned int count_temp = 0;
+  int count_temp = 0;
   Corpus corpus;
 
   // the following code is to randomly pick one handle and get tweets from it
@@ -411,7 +447,7 @@ int Classifier::GetTrainingData(const std::string& handle,
 
   unsigned int count = 0;
   unsigned int user_info_count = 0;
-  unsigned int count_temp = 0;
+  int count_temp = 0;
 
   if (get_user_info) {
     /*
@@ -443,7 +479,7 @@ int Classifier::GetTrainingData(const std::string& handle,
   output_corpus_size += user_info_count;
 
   if (twitter_searcher.GetTweetsFromUser(handle, tweets) < 0) {
-    std::cout << "ERROR: could not get tweets from user: " << handle << std::endl;
+    std::cerr << "ERROR: could not get tweets from user: " << handle << std::endl;
     // this 'count' is from above user info
     if (0 == user_info_count) {
       return -1;
@@ -501,7 +537,7 @@ int Classifier::CleanCorpusFile(std::string& corpus_file_name, std::string& outp
 
   std::ifstream ifs(corpus_file_name.c_str());
   if (!ifs.is_open()) {
-    std::cout << "ERROR: could not open file " << corpus_file_name << std::endl;
+    std::cerr << "ERROR: could not open file " << corpus_file_name << std::endl;
     return -1;
   }
 
@@ -651,7 +687,7 @@ int Classifier::CleanCorpus(unsigned int input_type,
   for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
     corpus_file_name = config.iter->corpus_file;
     if (CleanCorpusFile(corpus_file_name, output_suffix) < 0) {
-      std::cout << "ERROR: could not clean lang model in file: " \
+      std::cerr << "ERROR: could not clean corpus in file: " \
                 << config.iter->corpus_file << std::endl; 
       break;
     }
@@ -679,7 +715,7 @@ int Classifier::WriteTestData(Corpus& corpus, const char* classes_freq_file) {
     if ((corpus_iter->first.compare("UU") == 0) ||
         (corpus_iter->first.compare("XX") == 0) ||
         (corpus_iter->first.compare("RR") == 0)) {
-      std::cout << "deleting" << std::endl;
+      //std::cout << "deleting" << std::endl;
       corpus.erase(corpus_iter);
       continue;
     } else if (corpus_iter->first.compare("all_classes") != 0) {
@@ -719,6 +755,7 @@ int Classifier::WriteTestData(Corpus& corpus, const char* classes_freq_file) {
 //          0 - stdout
 //          1 - class frequency file
 //          2 - html version
+//          3 - test corpus files
 //
 // Note: the output file is to write texts that contributed to the class frequenceies.
 //
@@ -744,26 +781,61 @@ int Classifier::GetTestData(const unsigned int& input_type,
     return -1;
   }
 
-  if (output_type > 0 && NULL == output_file) {
-    std::cerr << "ERROR: invalid output file. cannot get test data.\n";
-    return -1;
+  if (output_type > 0 && output_type < 3) {
+    if (NULL == output_file) {
+      std::cerr << "ERROR: invalid output file. cannot get test data.\n";
+      return -1;
+    }
   }
 
   std::ofstream ofs;
   std::ostream* output_stream; // note ostream not ofstream
+  Corpus test_freq_map;
+  CorpusMap test_corpus_map;
+  CorpusMapMeta test_corpus_map_meta_data;
 
-  if (0 == output_type) {
-    output_stream = &std::cout;
-  } else {
-    ofs.open(output_file);
-    if (!ofs.is_open()) {
-      std::cerr << "ERROR: could not open output file: " << output_file << std::endl;
-      return -1;
-    }
-    output_stream = &ofs;
+  switch (output_type) {
+    case 0:
+      output_stream = &std::cout;
+      break;
+    case 1:
+      ofs.open(output_file);
+      if (!ofs.is_open()) {
+        std::cerr << "ERROR: could not open output file: " << output_file << std::endl;
+        return -1;
+      }
+      output_stream = &ofs;
+      break;
+    case 2:
+      std::cout << "ERROR: not implemented yet\n";
+      break;
+    case 3:
+      {
+        output_stream = &std::cout;
+        for (m_config.iter = m_config.classes.begin();
+           m_config.iter != m_config.classes.end();
+           m_config.iter++) {
+          test_corpus_map_meta_data[m_config.iter->name] = m_config.iter->testing_data_file;
+        }
+        if (test_corpus_map_meta_data.empty()) {
+          std::cerr << "ERROR: test_corpus_map_meta_data cannot be empty\n";
+          return -1;
+        }
+#ifdef CLASSIFIER_DEBUG
+        std::cout << "loading test_corpus_map to get testing data\n";
+#endif // CLASSIFIER_DEBUG
+/*
+        if (CorpusManager::LoadCorpusMap(test_corpus_map_meta_data, test_corpus_map) < 0) {
+          std::cerr << "ERROR: could not load Corpus Map\n";
+          return -1;
+        }
+*/
+      }
+      break;
+    default:
+      break;
   }
 
-  Corpus class_freq_map;
   bool random_selection = false;
   const char* training_class = NULL;
   std::string handle;
@@ -776,7 +848,8 @@ int Classifier::GetTestData(const unsigned int& input_type,
       // send empty handle and expected class_name to test public timeline
       if (TestTwitterTimeline(handle,
                               expected_class_name,
-                              class_freq_map,
+                              test_freq_map,
+                              test_corpus_map,
                               test_result,
                               *output_stream) < 0) {
         std::cerr << "ERROR: could not test twitter timeline\n";
@@ -786,7 +859,8 @@ int Classifier::GetTestData(const unsigned int& input_type,
       break;
     case 1:
       if (TestTrainingSources(training_class=NULL,
-                              class_freq_map,
+                              test_freq_map,
+                              test_corpus_map,
                               test_result,
                               *output_stream,
                               random_selection = true) < 0) {
@@ -797,7 +871,8 @@ int Classifier::GetTestData(const unsigned int& input_type,
       break;
     case 2:
       if (TestTrainingSources(training_class=NULL,
-                              class_freq_map,
+                              test_freq_map,
+                              test_corpus_map,
                               test_result,
                               *output_stream,
                               random_selection = false) < 0) {
@@ -808,7 +883,8 @@ int Classifier::GetTestData(const unsigned int& input_type,
       break;
     case 3:
       if (TestTrainingSources(training_class=expected_class_name.c_str(),
-                              class_freq_map,
+                              test_freq_map,
+                              test_corpus_map,
                               test_result,
                               *output_stream,
                               random_selection = true) < 0) {
@@ -820,7 +896,8 @@ int Classifier::GetTestData(const unsigned int& input_type,
     case 4:
         if (TestTrainingTexts(training_texts_file=input_file,
                               expected_class_name,
-                              class_freq_map,
+                              test_freq_map,
+                              test_corpus_map,
                               test_result,
                               *output_stream) < 0) {
           std::cerr << "ERROR: could not test training sources from file: " \
@@ -833,7 +910,8 @@ int Classifier::GetTestData(const unsigned int& input_type,
         handle.assign(input_handle);
       if (TestTwitterTimeline(handle,
                               expected_class_name,
-                              class_freq_map,
+                              test_freq_map,
+                              test_corpus_map,
                               test_result,
                               *output_stream) < 0) {
         std::cerr << "ERROR: could not test tweets from hanlde: " << handle << std::endl;
@@ -845,7 +923,7 @@ int Classifier::GetTestData(const unsigned int& input_type,
       break;
   }
 
-  if (class_freq_map.empty()) {
+  if (test_freq_map.empty()) {
     std::cout << "WARNING: no test data found\n";
     ofs.close();
     return 0;
@@ -854,26 +932,44 @@ int Classifier::GetTestData(const unsigned int& input_type,
   int ret_val = 0;
   switch (output_type) {
     case 0:
-      if (CorpusManager::PrintCorpus(class_freq_map) < 0) {
+      if (CorpusManager::PrintCorpus(test_freq_map) < 0) {
         std::cerr << "ERROR: could not print corpus\n";
         ret_val = -1;
       }
       break;
     case 1:
-      if (WriteTestData(class_freq_map, m_config.freqs_file.c_str()) < 0) {
+      if (WriteTestData(test_freq_map, m_config.test_freqs_file.c_str()) < 0) {
         std::cerr << "ERROR: could not write test data to file: " \
-                  << m_config.freqs_file << std::endl;
+                  << m_config.test_freqs_file << std::endl;
         ret_val = -1;
       }
       break;
     case 2:
+      break;
+    case 3:
+      if (!test_freq_map.empty()) {
+        if (WriteTestData(test_freq_map, m_config.test_freqs_file.c_str()) < 0) {
+          std::cerr << "ERROR: could not write test data to file: " \
+                    << m_config.test_freqs_file << std::endl;
+          ret_val = -1;
+          break;
+        }
+      }
+      if (!test_corpus_map.empty()) {
+        if (CorpusManager::WriteCorpusMap(test_corpus_map, test_corpus_map_meta_data) < 0) {
+          std::cerr << "ERROR: could not update test corpus files\n";
+          ret_val = -1;
+        }
+      }
       break;
     default:
       break;
   }
 
   ofs.close();
-  class_freq_map.clear();
+  test_freq_map.clear();
+  test_corpus_map.clear();
+  test_corpus_map_meta_data.clear();
 
   std::cout << "Total text: " << test_result.total << std::endl;
   if (!expected_class_name.empty()) {
@@ -889,7 +985,8 @@ int Classifier::GetTestData(const unsigned int& input_type,
 
 int Classifier::TestTrainingTexts(const char* training_texts_file,
                                   const std::string& expected_class_name,
-                                  Corpus& class_freq_map,
+                                  Corpus& test_freq_map,
+                                  CorpusMap& test_corpus_map,
                                   TestResult& test_result,
                                   std::ostream &output_stream) {
 
@@ -921,20 +1018,27 @@ int Classifier::TestTrainingTexts(const char* training_texts_file,
   std::string output_top_classes;
   unsigned int output_top_classes_count = 0;
   int ret_val = 0;
+  Corpus test_corpus;
+
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   std::map<std::string, std::string> class_contributors_map;
 #endif // CLASS_CONTRIBUTORS_ENABLED
+
 #ifdef CLASSIFIER_DEBUG
   if (CLASSIFIER_DEBUG > 2) {
     std::cout << "check corpus map" << std::endl;
     CorpusManager::PrintCorpusMap(m_corpus_manager.m_corpus_map);
   }
 #endif
+
   for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
     test_result.total++;
     tweet = *set_iter;
     if ((ret_val = Classify(tweet, tweet.length(), output_class,
                             output_top_classes, output_top_classes_count
+#ifdef CLASSIFIER_DATA_TESTING_ENABLED
+                            , test_corpus
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                             , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
@@ -961,22 +1065,30 @@ int Classifier::TestTrainingTexts(const char* training_texts_file,
           test_result.wrong++;
         }
       }
-      if (class_freq_map.find(output_class) != class_freq_map.end()) {
-        class_freq_map[output_class] += 1;
+      if (test_freq_map.find(output_class) != test_freq_map.end()) {
+        test_freq_map[output_class] += 1;
       } else {
-        class_freq_map[output_class] = 1;
+        test_freq_map[output_class] = 1;
+      }
+      if (!test_corpus.empty()) {
+        if (m_corpus_manager.UpdateCorpusMap(test_corpus_map, output_class, test_corpus) < 0) {
+          std::cerr << "ERROR: could not update test_corpus_map for class: " \
+                    << output_class << std::endl;
+        }
       }
     }
+    test_corpus.clear();
   }
 
   tweets.clear();
 
-  return class_freq_map.size();
+  return test_freq_map.size();
 }
 
 int Classifier::TestTwitterTimeline(const std::string& handle,
                                     const std::string& expected_class_name,
-                                    Corpus& class_freq_map,
+                                    Corpus& test_freq_map,
+                                    CorpusMap& test_corpus_map,
                                     TestResult& test_result,
                                     std::ostream &output_stream) {
 
@@ -1004,20 +1116,35 @@ int Classifier::TestTwitterTimeline(const std::string& handle,
   std::string output_top_classes;
   unsigned int output_top_classes_count = 0;
   int ret_val = 0;
+#ifdef CLASSIFIER_DATA_TESTING_ENABLED
+  Corpus test_corpus;
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   std::map<std::string, std::string> class_contributors_map;
 #endif // CLASS_CONTRIBUTORS_ENABLED
+
 #ifdef CLASSIFIER_DEBUG
-  if (CLASSIFIER_DEBUG > 2) {
+  if (CLASSIFIER_DEBUG > 4) {
     std::cout << "check corpus map" << std::endl;
     CorpusManager::PrintCorpusMap(m_corpus_manager.m_corpus_map);
   }
 #endif
+
   for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
     test_result.total++;
     tweet = *set_iter;
+
+#ifdef CLASSIFIER_DEBUG
+    if (CLASSIFIER_DEBUG > 1) {
+      std::cout << "Classifying text: " << tweet << std::endl;
+    }
+#endif
+
     if ((ret_val = Classify(tweet, tweet.length(), output_class,
                             output_top_classes, output_top_classes_count
+#ifdef CLASSIFIER_DATA_TESTING_ENABLED
+                            , test_corpus
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                             , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
@@ -1044,17 +1171,26 @@ int Classifier::TestTwitterTimeline(const std::string& handle,
           test_result.wrong++;
         }
       }
-      if (class_freq_map.find(output_class) != class_freq_map.end()) {
-        class_freq_map[output_class] += 1;
+      if (test_freq_map.find(output_class) != test_freq_map.end()) {
+        test_freq_map[output_class] += 1;
       } else {
-        class_freq_map[output_class] = 1;
+        test_freq_map[output_class] = 1;
+      }
+      if (!test_corpus.empty()) {
+        if (m_corpus_manager.UpdateCorpusMap(test_corpus_map, output_class, test_corpus) < 0) {
+          std::cerr << "ERROR: could not update test_corpus_map for class: " \
+                    << output_class << std::endl;
+        }
       }
     }
+#ifdef CLASSIFIER_DATA_TESTING_ENABLED
+    test_corpus.clear();
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
   }
 
   tweets.clear();
 
-  return class_freq_map.size();
+  return test_freq_map.size();
 }
 
 // training_class - this can be null. when not null, only the handles in the given class will be tested
@@ -1064,6 +1200,7 @@ int Classifier::TestTwitterTimeline(const std::string& handle,
 // random_selection - while choosing input from training sources, whether to randomly select classes and handles
 int Classifier::TestTrainingSources(const char* training_class,
                                     Corpus& class_freq_map,
+                                    CorpusMap& test_corpus_map,
                                     TestResult& test_result,
                                     std::ostream &output_stream,
                                     bool random_selection) {
@@ -1125,14 +1262,18 @@ int Classifier::TestTrainingSources(const char* training_class,
       }
       handles_set.clear();
 
-      if (TestTwitterTimeline(handle, class_name, class_freq_map, test_result, output_stream) < 0) {
+      if (TestTwitterTimeline(handle, class_name,
+                              class_freq_map, test_corpus_map,
+                              test_result, output_stream) < 0) {
         std::cout << "ERROR: TestTwitterTimeline failed for class: " \
                   << class_name << " on handle: " << handle << std::endl;
       }
     } else {
       for (set_iter = handles_set.begin(); set_iter != handles_set.end(); set_iter++) {
         handle = *set_iter;
-        if (TestTwitterTimeline(handle, class_name, class_freq_map, test_result, output_stream) < 0) {
+        if (TestTwitterTimeline(handle, class_name,
+                                class_freq_map, test_corpus_map,
+                                test_result, output_stream) < 0) {
           std::cout << "ERROR: TestTwitterTimeline failed for class: " \
                     << class_name << " on handle: " << handle << std::endl;
         }
@@ -1150,6 +1291,7 @@ int Classifier::TestTrainingSources(const char* training_class,
   return 0;
 }
 
+// shameful code below. use optarg
 int Classifier::ValidateTestDataInput(int argc, char* argv[],
                                       const char* &config_file,
                                       const char* &keytuples_config_file,
@@ -1218,7 +1360,7 @@ int Classifier::ValidateTestDataInput(int argc, char* argv[],
     }
   }
 
-  if (output_type < 0 || output_type > 2) {
+  if (output_type > 3) {
     std::cout << "invalid output type: " << output_type << std::endl;
     return -1;
   }
@@ -1267,5 +1409,81 @@ int Classifier::ValidateTestDataInput(int argc, char* argv[],
 }
 
 #endif // CLASSIFIER_DATA_TESTING_ENABLED
+
+#if defined CLASSIFIER_DATA_TRAINING_ENABLED || CLASSIFIER_DATA_TESTING_ENABLED
+
+int Classifier::NormalizeFrequencies(const char* raw_data_file,
+                                     const char* relative_freq_file) {
+
+  if (!raw_data_file || !relative_freq_file) {
+#ifdef CLASSIFIER_DEBUG
+    std::cerr << "ERROR: invalid input\n";
+#endif // CLASSIFIER_DEBUG
+    return -1;
+  }
+
+  Corpus raw_data_corpus;
+  if (CorpusManager::LoadCorpus(raw_data_file, raw_data_corpus) < 0) {
+#ifdef CLASSIFIER_DEBUG
+    std::cerr << "ERROR: could not load raw corpus from file: " \
+              << raw_data_file << std::endl;
+#endif // CLASSIFIER_DEBUG
+    return -1;
+  }
+
+  if (raw_data_corpus.size() < 2) {
+    raw_data_corpus.clear();
+    return 0;
+  }
+
+  CorpusIter corpus_iter;
+  double vocabulary_size = (double) raw_data_corpus.size();
+  double vocabulary_sum = 0;
+  for (corpus_iter = raw_data_corpus.begin(); corpus_iter != raw_data_corpus.end(); corpus_iter++) {
+    vocabulary_sum += corpus_iter->second;
+  }
+  
+  double normalizing_denominator = vocabulary_sum + vocabulary_size;
+  if (normalizing_denominator <= 1) {
+    raw_data_corpus.clear();
+    return 0;
+  }
+
+  for (corpus_iter = raw_data_corpus.begin(); corpus_iter != raw_data_corpus.end(); corpus_iter++) {
+    raw_data_corpus[corpus_iter->first] = (corpus_iter->second / (unsigned int) normalizing_denominator);
+  }
+
+  if (CorpusManager::WriteCorpusToFile(raw_data_corpus, relative_freq_file) < 0) {
+    raw_data_corpus.clear();
+#ifdef CLASSIFIER_DEBUG
+    std::cerr << "ERROR - could not write normalized values to " \
+              << relative_freq_file << std::endl;
+#endif // CLASSIFIER_DEBUG
+    return -1;
+  }
+
+  raw_data_corpus.clear();
+
+  return 0;
+}
+
+int Classifier::NormalizeFrequencies() {
+
+  for (m_config.iter = m_config.classes.begin();
+       m_config.iter != m_config.classes.end();
+       m_config.iter++) {
+    if (NormalizeFrequencies(m_config.iter->corpus_file.c_str(),
+                             m_config.iter->training_data_file.c_str()) < 0) {
+#ifdef CLASSIFIER_DEBUG
+      std::cerr << "ERROR - could not normalize frequencies for: " << m_config.iter->corpus_file << std::endl;
+#endif // CLASSIFIER_DEBUG
+      break;
+    }
+  }
+
+  return 0;
+}
+
+#endif // CLASSIFIER_DATA_TRAINING_ENABLED || CLASSIFIER_DATA_TESTING_ENABLED
 
 } // namespace inagist_classifiers

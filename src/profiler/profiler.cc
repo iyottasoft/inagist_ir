@@ -677,17 +677,17 @@ int Profiler::GetGist(std::set<std::string>& tweets,
   memset(scripts_buffer, 0, MAX_LIST_LEN);
   unsigned int scripts_buffer_len = MAX_LIST_LEN;
 
+  unsigned char named_entities_buffer[MAX_BUFFER_LEN];
+  named_entities_buffer[0] = '\0';
+  unsigned int named_entities_buffer_len = MAX_BUFFER_LEN;
+  unsigned int named_entities_len = 0;
+  unsigned int named_entities_count = 0;
+
   unsigned char keywords_buffer[MAX_BUFFER_LEN];
   keywords_buffer[0] = '\0';
   unsigned int keywords_buffer_len = MAX_BUFFER_LEN;
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
-
-  unsigned char hashtags_buffer[MAX_BUFFER_LEN];
-  hashtags_buffer[0] = '\0';
-  unsigned int hashtags_buffer_len = MAX_BUFFER_LEN;
-  unsigned int hashtags_len = 0;
-  unsigned int hashtags_count = 0;
 
   unsigned char keyphrases_buffer[MAX_BUFFER_LEN];
   keyphrases_buffer[0] = '\0';
@@ -719,7 +719,7 @@ int Profiler::GetGist(std::set<std::string>& tweets,
   unsigned int text_class_words_count = 0;
 
   std::set<std::string> lang_classes_set;
-  std::map<std::string, int> sub_classes_map;
+  std::map<std::string, double> sub_classes_map;
   std::set<std::string>::iterator set_iter;
   std::string tweet;
   std::string language;
@@ -736,10 +736,10 @@ int Profiler::GetGist(std::set<std::string>& tweets,
     if ((ret_value = m_gist_maker.GetGist((unsigned char*) text_buffer, text_buffer_len, text_len,
                   (char*) safe_status_buffer, safe_status_buffer_len,
                   (char*) scripts_buffer, scripts_buffer_len,
+                  (unsigned char*) named_entities_buffer, named_entities_buffer_len,
+                  &named_entities_len, &named_entities_count,
                   (unsigned char*) keywords_buffer, keywords_buffer_len,
                   &keywords_len, &keywords_count,
-                  (unsigned char*) hashtags_buffer, hashtags_buffer_len,
-                  &hashtags_len, &hashtags_count,
                   (unsigned char*) keyphrases_buffer, keyphrases_buffer_len,
                   &keyphrases_len, &keyphrases_count,
                   (unsigned char*) lang_class_words_buffer, lang_class_words_buffer_len,
@@ -763,7 +763,7 @@ int Profiler::GetGist(std::set<std::string>& tweets,
                   (char*) intent_buffer, intent_buffer_len,
                   (char*) sentiment_buffer, sentiment_buffer_len)) < 0) {
 #ifdef PROFILE_DEBUG
-      std::cerr << "ERROR: could not get keywords\n";
+      std::cerr << "ERROR: could not get named_entities\n";
 #endif
     } else {
 
@@ -812,8 +812,8 @@ int Profiler::GetGist(std::set<std::string>& tweets,
     lang_class_words_buffer[0] = '\0';
     top_lang_classes_buffer[0] = '\0';
     lang_class_contributors_buffer[0] = '\0';
+    named_entities_buffer[0] = '\0';
     keywords_buffer[0] = '\0';
-    hashtags_buffer[0] = '\0';
     keyphrases_buffer[0] = '\0';
     text_class_words_buffer[0] = '\0';
     text_classes_buffer[0] = '\0';

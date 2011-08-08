@@ -1,7 +1,6 @@
 include ../../Makefile.incl
 PROJECT = intentdetector
-CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} -DINTENT_ENABLED
+PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL} -DINTENT_ENABLED
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../include/utfcpp -I../curl_request_maker -I../twitter_api -I../utils -I../script_detector -I../keytuples_extracter
@@ -26,9 +25,9 @@ clean:
 
 ${keytuples}:
 	@echo "compiling ../keytuples_extracter/keytuples_config.cc ..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_config.cc
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_config.cc
 	@echo "compiling ../keytuples_extracter/keytuples_extracter.cc ..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_extracter.cc
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_extracter.cc
 
 ${LIB}: ${keytuples} ${OBJS}
 	@echo "creating library file ..."
@@ -38,11 +37,11 @@ ${LIB}: ${keytuples} ${OBJS}
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/t_intent_finder: t_intent_finder.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_intent_finder
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_intent_finder
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

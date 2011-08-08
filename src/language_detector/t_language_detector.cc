@@ -81,6 +81,10 @@ int main(int argc, char* argv[]) {
   }
   ld->SetDebugLevel(debug_level);
 
+#ifdef CLASSIFIER_DATA_TESTING_ENABLED
+  Corpus test_corpus;
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
+
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   std::map<std::string, std::string> class_contributors_map;
 #endif // CLASS_CONTRIBUTORS_ENABLED
@@ -91,6 +95,9 @@ int main(int argc, char* argv[]) {
       }
       if (ld->Classify(line, line.length(), lang,
                        top_classes, top_classes_count
+#ifdef CLASSIFIER_DATA_TESTING_ENABLED
+                       , test_corpus
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                        , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
@@ -110,6 +117,9 @@ int main(int argc, char* argv[]) {
     std::cout << line << std::endl;
     if (ld->Classify(line, line.length(), lang,
                      top_classes, top_classes_count
+#ifdef CLASSIFIER_DATA_TESTING_ENABLED
+                     , test_corpus
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                      , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
@@ -124,6 +134,9 @@ int main(int argc, char* argv[]) {
       std::cout << lang << std::endl;
       if (ld->Classify(line, line.length(), lang,
                        top_classes, top_classes_count
+#ifdef CLASSIFIER_DATA_TESTING_ENABLED
+                       , test_corpus
+#endif // CLASSIFIER_DATA_TESTING_ENABLED
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                        , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED

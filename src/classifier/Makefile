@@ -1,20 +1,18 @@
 include ../../Makefile.incl
 PROJECT = classifier
-CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} #-DCLASS_CONTRIBUTORS_ENABLED
+PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL} -DCLASSIFIER_DATA_TRAINING_ENABLED -DCLASSIFIER_DATA_TESTING_ENABLED -DCLASS_CONTRIBUTORS_ENABLED
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../utils -I../curl_request_maker -I../twitter_api -I../inagist_api -I../ngrams_generator
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../utils -I../curl_request_maker -I../twitter_api -I../inagist_api -I../corpus_manager -I../ngrams_generator
 
-LIBS = -l${PROJECT} -lngramsgenerator -lutils -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+LIBS = -l${PROJECT} -lngramsgenerator -lcorpusmanager -lutils -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
-BINS = ${BIN_DIR}/t_corpus_manager \
-       ${BIN_DIR}/t_classifier_config \
+BINS = ${BIN_DIR}/t_classifier_config \
        ${BIN_DIR}/t_setup_classifier
 
-OBJS = classifier_config.o corpus_manager.o naive_bayes_classifier.o classifier.o
+OBJS = classifier_config.o naive_bayes_classifier.o classifier.o
 
 all: ${LIB} ${BINS}
 	@echo "build done!"
@@ -32,21 +30,16 @@ ${LIB}: ${OBJS}
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
-
-${BIN_DIR}/t_corpus_manager: t_corpus_manager.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_corpus_manager
-	@echo "done!"
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/t_classifier_config: t_classifier_config.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_classifier_config
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_classifier_config
 	@echo "done!"
 
 ${BIN_DIR}/t_setup_classifier: t_setup_classifier.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_setup_classifier
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_setup_classifier
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

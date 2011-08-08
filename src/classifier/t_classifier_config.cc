@@ -15,8 +15,8 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  std::cout << config.test_data_file << std::endl;
-  std::cout << config.freqs_file << std::endl;
+  std::cout << config.test_freqs_file << std::endl;
+  std::cout << config.class_freqs_file << std::endl;
   if (config.classes.empty()) {
     std::cerr << "ERROR: class structs could not be read from config file: " << config_file_name << std::endl;
   } else {

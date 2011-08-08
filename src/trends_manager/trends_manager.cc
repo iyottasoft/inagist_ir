@@ -82,17 +82,17 @@ int TrendsManager::GetTrends(const unsigned char* text_buffer, const unsigned in
   memset(script_buffer, 0, 4);
   unsigned int script_buffer_len = 4;
 
+  unsigned char named_entities_buffer[MAX_BUFFER_LEN];
+  memset(named_entities_buffer, 0, MAX_BUFFER_LEN);
+  unsigned int named_entities_buffer_len = MAX_BUFFER_LEN;
+  unsigned int named_entities_len = 0;
+  unsigned int named_entities_count = 0;
+
   unsigned char keywords_buffer[MAX_BUFFER_LEN];
   memset(keywords_buffer, 0, MAX_BUFFER_LEN);
   unsigned int keywords_buffer_len = MAX_BUFFER_LEN;
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
-
-  unsigned char hashtags_buffer[MAX_BUFFER_LEN];
-  memset(hashtags_buffer, 0, MAX_BUFFER_LEN);
-  unsigned int hashtags_buffer_len = MAX_BUFFER_LEN;
-  unsigned int hashtags_len = 0;
-  unsigned int hashtags_count = 0;
 
   unsigned char keyphrases_buffer[MAX_BUFFER_LEN];
   memset(keyphrases_buffer, 0, MAX_BUFFER_LEN);
@@ -105,18 +105,18 @@ int TrendsManager::GetTrends(const unsigned char* text_buffer, const unsigned in
   ret_value = m_keytuples_extracter.GetKeyTuples((unsigned char*) text_buffer, text_buffer_len, text_len,
                    safe_status_buffer, safe_status_buffer_len,
                    script_buffer, script_buffer_len,
+                   named_entities_buffer, named_entities_buffer_len, named_entities_len, named_entities_count,
                    keywords_buffer, keywords_buffer_len, keywords_len, keywords_count,
-                   hashtags_buffer, hashtags_buffer_len, hashtags_len, hashtags_count,
                    keyphrases_buffer, keyphrases_buffer_len, keyphrases_len, keyphrases_count);
 
   if (ret_value <= 0) {
     if (ret_value < 0)
-      std::cout << "Error: could not get keywords from KeyTuplesExtracter\n";
+      std::cout << "Error: could not get named_entities from KeyTuplesExtracter\n";
     return ret_value;
   }
 
+  named_entities_buffer[0] = '\0';
   keywords_buffer[0] = '\0';
-  hashtags_buffer[0] = '\0';
   keyphrases_buffer[0] = '\0';
 
   return ret_value;

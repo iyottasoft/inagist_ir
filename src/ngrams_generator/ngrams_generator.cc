@@ -98,7 +98,7 @@ int NgramsGenerator::PositionPointer(unsigned char*& prev, unsigned char*& curre
 // returns the number of bigrams + trigrams + ngrams (words)
 int NgramsGenerator::GetNgrams(const unsigned char* text,
                                const unsigned int& text_len,
-                               std::map<std::string, int>& features_map) {
+                               Corpus& corpus) {
 
   if (!text) {
 #ifdef NG_DEBUG
@@ -117,7 +117,7 @@ int NgramsGenerator::GetNgrams(const unsigned char* text,
   int ret_value = 0;
   std::string bigram;
   std::string trigram;
-  std::map<std::string, int>::iterator map_iter;
+  Corpus::iterator map_iter;
   while (next && *next != '\0') {
     if ((ret_value = PositionPointer(prev, current, next)) < 0) {
       std::cout << "Error: invalid pointer position\n";
@@ -127,18 +127,18 @@ int NgramsGenerator::GetNgrams(const unsigned char* text,
     switch (ret_value) {
       case 3:
         trigram = std::string((char *) prev, 3);
-        if ((map_iter = features_map.find(trigram)) != features_map.end())
+        if ((map_iter = corpus.find(trigram)) != corpus.end())
           (*map_iter).second += 1;
         else
-          features_map.insert(std::pair<std::string, int>(trigram, 1));
+          corpus.insert(std::pair<std::string, int>(trigram, 1));
         count++;
         // fall through
       case 2:
         bigram = std::string((char *) prev, 2);
-        if ((map_iter = features_map.find(bigram)) != features_map.end())
+        if ((map_iter = corpus.find(bigram)) != corpus.end())
           (*map_iter).second += 1;
         else
-          features_map.insert(std::pair<std::string, int>(bigram, 1));
+          corpus.insert(std::pair<std::string, int>(bigram, 1));
         count++;
         break;
       case 1:
@@ -154,7 +154,7 @@ int NgramsGenerator::GetNgrams(const unsigned char* text,
 // returns the number of bigrams + trigrams + ngrams (words)
 // this handles the ignore words, utf codepoints present in tweets
 int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
-                                        std::map<std::string, int>& features_map,
+                                        Corpus& corpus,
                                         bool ignore_case) {
 
   if (tweet.length() < 1) {
@@ -270,13 +270,13 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
       if (word_has_all_latin && !current_word_all_caps && !word_starts_caps) {
         /*
         ngram.assign((char *) current_word_start, current_word_len);
-        if (features_map.find(ngram) != features_map.end()) {
-          features_map[ngram] += 1;
+        if (corpus.find(ngram) != corpus.end()) {
+          corpus[ngram] += 1;
         } else {
-          features_map[ngram] = 1;
+          corpus[ngram] = 1;
         }
         */
-        if (GetNgramsFromWord((const unsigned char*) current_word_start, current_word_len, features_map) < 0) {
+        if (GetNgramsFromWord((const unsigned char*) current_word_start, current_word_len, corpus) < 0) {
 #ifdef NG_DEBUG
           std::cout << "ERROR: could not get ngrams for word " << current_word_start << std::endl;
 #endif
@@ -392,7 +392,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
 #ifdef NG_DEBUG
         std::cout << "Exception: " << code_point << " " << probe << std::endl;
 #endif
-        features_map.clear();
+        corpus.clear();
         return -1;
       }
     //}
@@ -401,15 +401,15 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
 #ifdef NG_DEBUG
   if (m_debug_level > 2) {
     std::cout << "num words: " << num_words << std::endl;
-    std::cout << "features map size: " << features_map.size() << std::endl;
+    std::cout << "features map size: " << corpus.size() << std::endl;
   }
 #endif
 
-  return features_map.size();
+  return corpus.size();
 }
 
 int NgramsGenerator::GetNgramsFromFile(const std::string& input_file_name,
-                                       std::map<std::string, int>& features_map) {
+                                       Corpus& corpus) {
 
   std::ifstream ifs(input_file_name.c_str());
   if (!ifs) {
@@ -423,16 +423,16 @@ int NgramsGenerator::GetNgramsFromFile(const std::string& input_file_name,
   int num_lines = 0;
   while (getline(ifs, line)) {
     num_lines++;
-    if (GetNgrams((unsigned char*) line.c_str(), line.length(), features_map) <= 0) {
+    if (GetNgrams((unsigned char*) line.c_str(), line.length(), corpus) <= 0) {
     }
   }
   ifs.close();
 
-  return features_map.size();
+  return corpus.size();
 }
 
 int NgramsGenerator::GetAllNgrams(const std::string& tweet,
-                                  std::map<std::string, int>& features_map) {
+                                  Corpus& corpus) {
 
   if (tweet.length() < 1) {
     std::cout << "ERROR: empty string. no ngrams.\n";
@@ -457,7 +457,7 @@ int NgramsGenerator::GetAllNgrams(const std::string& tweet,
         (pch = (unsigned char*) strstr((char *) ptr, "@")) != NULL) {
       if (pch > ptr) {
         stop = pch - 1;
-        if (GetAllNgrams(ptr, stop, features_map) < 0) {
+        if (GetAllNgrams(ptr, stop, corpus) < 0) {
           std::cout << "ERROR: could not find ngrams\n";
           return -1;
         }
@@ -472,7 +472,7 @@ int NgramsGenerator::GetAllNgrams(const std::string& tweet,
   }
 
   if (ptr && ptr < end) {
-    if (GetAllNgrams(ptr, end, features_map) < 0) {
+    if (GetAllNgrams(ptr, end, corpus) < 0) {
       std::cout << "ERROR: could not find ngrams\n";
       return -1;
     }
@@ -480,16 +480,16 @@ int NgramsGenerator::GetAllNgrams(const std::string& tweet,
 
 #ifdef NG_DEBUG
   if (m_debug_level) {
-    std::cout << "Num ngrams: " << features_map.size() << std::endl;
+    std::cout << "Num ngrams: " << corpus.size() << std::endl;
   }
 #endif
 
-  return features_map.size();
+  return corpus.size();
 }
 
 int NgramsGenerator::GetAllNgrams(unsigned char* start,
                                   unsigned char* stop,
-                                  std::map<std::string, int>& features_map) {
+                                  Corpus& corpus) {
 
   unsigned char* ptr = start;
   unsigned char* pch = NULL;
@@ -506,10 +506,10 @@ int NgramsGenerator::GetAllNgrams(unsigned char* start,
 #ifdef NG_DEBUG
         std::cout << ngram << std::endl;
 #endif
-        if (features_map.find(ngram) != features_map.end()) {
-          features_map[ngram] += 1;
+        if (corpus.find(ngram) != corpus.end()) {
+          corpus[ngram] += 1;
         } else {
-          features_map[ngram] = 1;
+          corpus[ngram] = 1;
         }
       }
       pch++;
@@ -522,7 +522,7 @@ int NgramsGenerator::GetAllNgrams(unsigned char* start,
 }
 
 int NgramsGenerator::GetNgramsFromWords(std::set<std::string>& words_set,
-                                  std::map<std::string, int>& features_map,
+                                  Corpus& corpus,
                                   bool ignore_case) {
 
   std::set<std::string>::iterator set_iter;
@@ -531,21 +531,21 @@ int NgramsGenerator::GetNgramsFromWords(std::set<std::string>& words_set,
     word[MAX_WORD_LEN] = '\0';
     for (set_iter = words_set.begin(); set_iter != words_set.end(); set_iter++) {
       inagist_utils::ToLower(set_iter->c_str(), (char *) word);
-      GetNgramsFromWord(word, set_iter->length(), features_map);
+      GetNgramsFromWord(word, set_iter->length(), corpus);
     }
   } else {
     for (set_iter = words_set.begin(); set_iter != words_set.end(); set_iter++) {
-      GetNgramsFromWord((unsigned char*) set_iter->c_str(), set_iter->length(), features_map);
+      GetNgramsFromWord((unsigned char*) set_iter->c_str(), set_iter->length(), corpus);
     }
   }
 
-  return features_map.size();
+  return corpus.size();
 }
 
 int NgramsGenerator::GetNgramsFromWords(const unsigned char* text_word_list,
                                         const unsigned int& list_len,
                                         const unsigned int& word_count, 
-                                        std::map<std::string, int>& features_map,
+                                        Corpus& corpus,
                                         bool ignore_case) {
 
   if (!text_word_list || list_len <= 0 || word_count <= 0) {
@@ -559,7 +559,7 @@ int NgramsGenerator::GetNgramsFromWords(const unsigned char* text_word_list,
   unsigned int word_len = 0;
   while (start && end && *start != '\0') {
     word_len = end - start; 
-    if ((ret_val = GetNgramsFromWord(start, word_len, features_map)) < 0) {
+    if ((ret_val = GetNgramsFromWord(start, word_len, corpus)) < 0) {
       std::cerr << "ERROR: could not get ngrams" << std::endl;
       return ret_val;
     } else {
@@ -576,7 +576,7 @@ int NgramsGenerator::GetNgramsFromWords(const unsigned char* text_word_list,
 
 int NgramsGenerator::GetNgramsFromWord(const unsigned char* word_str,
                                        unsigned int word_len,
-                                       std::map<std::string, int>& features_map) {
+                                       Corpus& corpus) {
 
   if (!word_str || word_len < 1) {
     std::cerr << "ERROR: invalid word input. could not get ngrams\n";
@@ -589,10 +589,10 @@ int NgramsGenerator::GetNgramsFromWord(const unsigned char* word_str,
   ngram = " ";
   ngram += std::string((char *) word_str, word_len);
   ngram += " ";
-  if (features_map.find(ngram) != features_map.end()) {
-    features_map[ngram] += 1;
+  if (corpus.find(ngram) != corpus.end()) {
+    corpus[ngram] += 1;
   } else {
-    features_map[ngram] = 1;
+    corpus[ngram] = 1;
   }
   count++;
 
@@ -628,10 +628,10 @@ int NgramsGenerator::GetNgramsFromWord(const unsigned char* word_str,
 #ifdef NG_DEBUG
         std::cout << ngram << std::endl;
 #endif
-        if (features_map.find(ngram) != features_map.end()) {
-          features_map[ngram] += 1;
+        if (corpus.find(ngram) != corpus.end()) {
+          corpus[ngram] += 1;
         } else {
-          features_map[ngram] = 1;
+          corpus[ngram] = 1;
         }
         count++;
       }

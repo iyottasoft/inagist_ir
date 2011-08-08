@@ -13,27 +13,27 @@ inagist_classifiers::NgramsGenerator g_ng;
 int GetNgrams(unsigned int test_type,
               std::string& text,
               std::set<std::string>& words_set,
-              std::map<std::string, int>& features_map) {
+              inagist_classifiers::Corpus& corpus) {
 
   int ngrams_count = 0;
-  std::map<std::string, int>::iterator map_iter;
+  inagist_classifiers::CorpusIter map_iter;
   if (0 == test_type) {
-    ngrams_count = g_ng.GetNgrams((unsigned char*) text.c_str(), text.length(), features_map);
+    ngrams_count = g_ng.GetNgrams((unsigned char*) text.c_str(), text.length(), corpus);
   } else if (1 == test_type) {
     if (inagist_utils::Tokenize(text, words_set) < 0) {
       std::cout << "ERROR: could not tokenize text:\n" << text << std::endl;
     } else {
-      ngrams_count = g_ng.GetNgramsFromWords(words_set, features_map);
+      ngrams_count = g_ng.GetNgramsFromWords(words_set, corpus);
     }
   } else if (2 == test_type) {
-    ngrams_count = g_ng.GetAllNgrams(text, features_map);
+    ngrams_count = g_ng.GetAllNgrams(text, corpus);
   } else if (3 == test_type) {
-    ngrams_count = g_ng.GetNgramsFromTweet(text, features_map);
+    ngrams_count = g_ng.GetNgramsFromTweet(text, corpus);
   }
   if (ngrams_count > 0) {
-    for (map_iter = features_map.begin(); map_iter != features_map.end(); map_iter++)
+    for (map_iter = corpus.begin(); map_iter != corpus.end(); map_iter++)
       std::cout << (*map_iter).first << " " << (*map_iter).second << std::endl;
-    features_map.clear();
+    corpus.clear();
   } else if (ngrams_count < 0) {
     std::cout << "ERROR: could not find ngrams" << std::endl;
   } else {
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  std::map<std::string, int> features_map;
+  inagist_classifiers::Corpus corpus;
   std::string text;
 
   unsigned int input_type = atoi(argv[1]);
@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
   std::set<std::string> words_set;
   if (0 == input_type) {
     while (getline(std::cin, text)) {
-      GetNgrams(test_type, text, words_set, features_map);
+      GetNgrams(test_type, text, words_set, corpus);
     }
     return 0;
   }
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
     for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
       text = *set_iter;
       std::cout << text << std::endl;
-      if (GetNgrams(test_type, text, words_set, features_map) > 0)
+      if (GetNgrams(test_type, text, words_set, corpus) > 0)
         std::cout << text << std::endl;
       if (2 == input_type)
         break;

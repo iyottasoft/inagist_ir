@@ -1,7 +1,6 @@
 include ../../Makefile.incl
 PROJECT = trendsmanager
-CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL} -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED
+PROJECTFLAGS = -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL} -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../twitter_api -I../inagist_api -I../utils -I../keytuples_extracter -I../script_detector
@@ -17,13 +16,11 @@ keytuples = keytuples_config.o keytuples_extracter.o
 OBJS = trends_manager.o 
 
 all: ${LIB} ${BINS}
-	cp trends_generater.py ${BIN_DIR}
 	@echo "build done!"
 
 clean:
 	@echo "cleaning libraries ..."
 	@rm *.o ${BINS} ${LIB}
-	@rm ${BIN_DIR}/trends_generater.py
 	@echo "done!"
 
 ${LIB}: ${keytuples} ${OBJS}
@@ -34,17 +31,17 @@ ${LIB}: ${keytuples} ${OBJS}
 
 ${keytuples}:
 	@echo "compiling ../keytuples_extracter/keytuples_config.cc ..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_config.cc
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_config.cc
 	@echo "compiling ../keytuples_extracter/keytuples_extracter.cc ..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_extracter.cc
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} ../keytuples_extracter/keytuples_extracter.cc
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/t_trends_manager: t_trends_manager.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_trends_manager
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_trends_manager
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

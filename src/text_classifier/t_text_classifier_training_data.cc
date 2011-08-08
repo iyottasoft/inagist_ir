@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
   std::string keytuples_config = argv[1];
   std::string dictionary_file = argv[2];
 
-  unsigned int input_type = atoi(argv[3]);
+  int input_type = atoi(argv[3]);
   assert(input_type >=0 && input_type <=4);
 
   std::string input_file_name;

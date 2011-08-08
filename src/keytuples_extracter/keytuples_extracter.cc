@@ -202,11 +202,11 @@ int KeyTuplesExtracter::DeInit() {
   return 0;
 }
 
-void KeyTuplesExtracter::PrintKeywords(std::set<std::string> &keywords_set) {
+void KeyTuplesExtracter::PrintKeywords(std::set<std::string> &named_entities_set) {
   std::set<std::string>::iterator iter;
 
-  if (!keywords_set.empty()) {
-    for (iter = keywords_set.begin(); iter != keywords_set.end(); iter++)
+  if (!named_entities_set.empty()) {
+    for (iter = named_entities_set.begin(); iter != named_entities_set.end(); iter++)
       std::cout << *iter << "|"; 
     std::cout << std::endl;
   }
@@ -320,18 +320,18 @@ bool KeyTuplesExtracter::IsIgnore(char *&ptr) {
   return false;
 }
 
-#ifdef KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
 int KeyTuplesExtracter::GetKeywords(char* str,
                                   std::string& safe_status,
                                   std::string& script,
-                                  std::set<std::string>& keywords_set) {
+                                  std::set<std::string>& named_entities_set) {
 
 #ifdef KEYPHRASE_ENABLED
   std::set<std::string> keyphrases_set;
 #endif // KEYPHRASE_ENABLED
-#ifdef HASHTAGS_ENABLED
-  std::set<std::string> hashtags_set;
-#endif // HASHTAGS_ENABLED
+#ifdef KEYWORDS_ENABLED
+  std::set<std::string> keywords_set;
+#endif // KEYWORDS_ENABLED
 #ifdef LANG_ENABLED
   std::set<std::string> lang_words_set;
 #endif // LANG_ENABLED
@@ -345,10 +345,10 @@ int KeyTuplesExtracter::GetKeywords(char* str,
   std::string sentiment;
 #endif // SENTIMENT_ENABLED
 
-  int ret_val = GetKeyTuples(str, safe_status, script, keywords_set
-#ifdef HASHTAGS_ENABLED
-                             , hashtags_set
-#endif // HASHTAGS_ENABLED
+  int ret_val = GetKeyTuples(str, safe_status, script, named_entities_set
+#ifdef KEYWORDS_ENABLED
+                             , keywords_set
+#endif // KEYWORDS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                              , keyphrases_set
 #endif // KEYPHRASE_ENABLED
@@ -369,9 +369,9 @@ int KeyTuplesExtracter::GetKeywords(char* str,
 #ifdef KEYPHRASE_ENABLED
   keyphrases_set.clear();
 #endif // KEYPHRASE_ENABLED
-#ifdef HASHTAGS_ENABLED
-  hashtags_set.clear();
-#endif // HASHTAGS_ENABLED
+#ifdef KEYWORDS_ENABLED
+  keywords_set.clear();
+#endif // KEYWORDS_ENABLED
 #ifdef LANG_ENABLED
   lang_words_set.clear();
 #endif // LANG_ENABLED
@@ -382,18 +382,18 @@ int KeyTuplesExtracter::GetKeywords(char* str,
   return ret_val;
 
 }
-#endif // KEYWORDS_ENABLED
+#endif // NAMED_ENTITIES_ENABLED
 
-#ifdef KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
 int KeyTuplesExtracter::GetKeywords(char* str,
                                    std::string& user,
-                                   std::set<std::string>& keywords_set,
+                                   std::set<std::string>& named_entities_set,
                                    std::map<std::string, std::string>& script_user_map,
                                    std::map<std::string, std::string>& keyword_user_map) {
   std::string safe_status;
   std::string script;
-  if (GetKeywords(str, safe_status, script, keywords_set) < 0) {
-    cout << "ERROR: could not get keywords\n";
+  if (GetKeywords(str, safe_status, script, named_entities_set) < 0) {
+    cout << "ERROR: could not get named_entities\n";
     return -1;
   }
 
@@ -406,7 +406,7 @@ int KeyTuplesExtracter::GetKeywords(char* str,
     }
   }
   std::set<std::string>::iterator set_iter;
-  for (set_iter = keywords_set.begin(); set_iter != keywords_set.end(); set_iter++) {
+  for (set_iter = named_entities_set.begin(); set_iter != named_entities_set.end(); set_iter++) {
     if ((map_iter = keyword_user_map.find(*set_iter)) != keyword_user_map.end()) {
       keyword_user_map[*set_iter]+= ", " + user;
     } else {
@@ -416,18 +416,18 @@ int KeyTuplesExtracter::GetKeywords(char* str,
 
   return 0;
 }
-#endif // KEYWORDS_ENABLED
+#endif // NAMED_ENTITIES_ENABLED
 
 int KeyTuplesExtracter::GetKeyTuples(char* str, 
                                      std::string& safe_status,
                                      std::string& script
 
+#ifdef NAMED_ENTITIES_ENABLED
+                                     , std::set<std::string>& named_entities_set
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
                                      , std::set<std::string>& keywords_set
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-                                     , std::set<std::string>& hashtags_set
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                                      , std::set<std::string>& keyphrases_set
 #endif // KEYPHRASE_ENABLED
@@ -464,20 +464,20 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
   unsigned int script_buffer_len = 4;
   memset(script_buffer, '\0', 4);
 
+#ifdef NAMED_ENTITIES_ENABLED
+  unsigned char named_entities_buffer[MAX_DEBUG_BUFFER_LEN];
+  memset(named_entities_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
+  unsigned int named_entities_buffer_len = MAX_DEBUG_BUFFER_LEN;
+  unsigned int named_entities_len = 0;
+  unsigned int named_entities_count = 0;
+#endif
+
 #ifdef KEYWORDS_ENABLED
   unsigned char keywords_buffer[MAX_DEBUG_BUFFER_LEN];
   memset(keywords_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
   unsigned int keywords_buffer_len = MAX_DEBUG_BUFFER_LEN;
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
-#endif
-
-#ifdef HASHTAGS_ENABLED
-  unsigned char hashtags_buffer[MAX_DEBUG_BUFFER_LEN];
-  memset(hashtags_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
-  unsigned int hashtags_buffer_len = MAX_DEBUG_BUFFER_LEN;
-  unsigned int hashtags_len = 0;
-  unsigned int hashtags_count = 0;
 #endif
 
 #ifdef KEYPHRASE_ENABLED
@@ -521,13 +521,13 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
   if ((count = GetKeyTuples(text_buffer, text_buffer_len, text_len,
                   safe_status_buffer, safe_status_buffer_len,
                   script_buffer, script_buffer_len
+#ifdef NAMED_ENTITIES_ENABLED
+                  , named_entities_buffer, named_entities_buffer_len,
+                  named_entities_len, named_entities_count
+#endif
 #ifdef KEYWORDS_ENABLED
                   , keywords_buffer, keywords_buffer_len,
                   keywords_len, keywords_count
-#endif
-#ifdef HASHTAGS_ENABLED
-                  , hashtags_buffer, hashtags_buffer_len,
-                  hashtags_len, hashtags_count
 #endif
 #ifdef KEYPHRASE_ENABLED
                   , keyphrases_buffer, keyphrases_buffer_len,
@@ -550,11 +550,11 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
                 )) < 0) {
     std::cout << "ERROR: could not get keytuples\n";
     text_buffer[0] = '\0';
+#ifdef NAMED_ENTITIES_ENABLED
+    named_entities_buffer[0] = '\0';
+#endif
 #ifdef KEYWORDS_ENABLED
     keywords_buffer[0] = '\0';
-#endif
-#ifdef HASHTAGS_ENABLED
-    hashtags_buffer[0] = '\0';
 #endif
 #ifdef KEYPHRASE_ENABLED
     keyphrases_buffer[0] = '\0';
@@ -579,11 +579,28 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
   script.assign(script_buffer, script_buffer_len);
   safe_status.assign(safe_status_buffer, safe_status_buffer_len);
 
-#if defined KEYWORDS_ENABLED || defined HASHTAGS_ENABLED || defined KEYPHRASE_ENABLED || defined TEXT_CLASSIFICATION_ENABLED || defined LANG_ENABLED
+#if defined NAMED_ENTITIES_ENABLED || defined KEYWORDS_ENABLED || defined KEYPHRASE_ENABLED || defined TEXT_CLASSIFICATION_ENABLED || defined LANG_ENABLED
   unsigned char* pch1 = NULL;
   unsigned char* pch2 = NULL;
   unsigned char ch;
 #endif
+
+#ifdef NAMED_ENTITIES_ENABLED
+  if (named_entities_len > 0) {
+    pch1 = named_entities_buffer;
+    pch2 = pch1;
+    pch1 = (unsigned char*) strchr((char *) pch2, '|');
+    while (pch1 && pch1 != '\0') {
+      ch = *pch1;
+      *pch1 = '\0';
+      named_entities_set.insert((char *) pch2);
+      *pch1 = ch;
+      pch2 = pch1 + 1;
+      pch1 = (unsigned char*) strchr((char *) pch2, '|');
+    }
+  }
+  named_entities_buffer[0] = '\0';
+#endif // NAMED_ENTITIES_ENABLED
 
 #ifdef KEYWORDS_ENABLED
   if (keywords_len > 0) {
@@ -601,23 +618,6 @@ int KeyTuplesExtracter::GetKeyTuples(char* str,
   }
   keywords_buffer[0] = '\0';
 #endif // KEYWORDS_ENABLED
-
-#ifdef HASHTAGS_ENABLED
-  if (hashtags_len > 0) {
-    pch1 = hashtags_buffer;
-    pch2 = pch1;
-    pch1 = (unsigned char*) strchr((char *) pch2, '|');
-    while (pch1 && pch1 != '\0') {
-      ch = *pch1;
-      *pch1 = '\0';
-      hashtags_set.insert((char *) pch2);
-      *pch1 = ch;
-      pch2 = pch1 + 1;
-      pch1 = (unsigned char*) strchr((char *) pch2, '|');
-    }
-  }
-  hashtags_buffer[0] = '\0';
-#endif // HASHTAGS_ENABLED
 
 #ifdef KEYPHRASE_ENABLED
   if (keyphrases_len > 0) {
@@ -715,18 +715,18 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
                                      const unsigned int& safe_status_buffer_len,
                                      char* script_buffer,
                                      const unsigned int& script_buffer_len
+#ifdef NAMED_ENTITIES_ENABLED
+                                     , unsigned char* named_entities_buffer,
+                                     const unsigned int& named_entities_buffer_len,
+                                     unsigned int& named_entities_len,
+                                     unsigned int& named_entities_count
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
                                      , unsigned char* keywords_buffer,
                                      const unsigned int& keywords_buffer_len,
                                      unsigned int& keywords_len,
                                      unsigned int& keywords_count
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-                                     , unsigned char* hashtags_buffer,
-                                     const unsigned int& hashtags_buffer_len,
-                                     unsigned int& hashtags_len,
-                                     unsigned int& hashtags_count
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
                                      , unsigned char* keyphrases_buffer,
                                      const unsigned int& keyphrases_buffer_len,
@@ -764,6 +764,18 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
   *safe_status_buffer = '\0';
   *script_buffer = '\0';
 
+#ifdef NAMED_ENTITIES_ENABLED
+  if (!named_entities_buffer) {
+#ifdef KE_DEBUG
+    std::cerr << "ERROR: invalid named_entities buffer\n";
+#endif // KE_DEBUG
+    return -1;
+  }
+  *named_entities_buffer = '\0';
+  named_entities_len = 0;
+  named_entities_count = 0;
+#endif // NAMED_ENTITIES_ENABLED
+
 #ifdef KEYWORDS_ENABLED
   if (!keywords_buffer) {
 #ifdef KE_DEBUG
@@ -775,18 +787,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
   keywords_len = 0;
   keywords_count = 0;
 #endif // KEYWORDS_ENABLED
-
-#ifdef HASHTAGS_ENABLED
-  if (!hashtags_buffer) {
-#ifdef KE_DEBUG
-    std::cerr << "ERROR: invalid hashtags buffer\n";
-#endif // KE_DEBUG
-    return -1;
-  }
-  *hashtags_buffer = '\0';
-  hashtags_len = 0;
-  hashtags_count = 0;
-#endif // HASHTAGS_ENABLED
 
 #ifdef KEYPHRASE_ENABLED
   if (!keyphrases_buffer) {
@@ -869,12 +869,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
   unsigned char *next_word_start = NULL;
   unsigned char *next_word_end = NULL;
 
-#if defined KEYWORDS_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
+#if defined NAMED_ENTITIES_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
   unsigned char *caps_entity_start = NULL;
   unsigned char *caps_entity_end = NULL;
   unsigned char *stopwords_entity_start = NULL;
   unsigned char *stopwords_entity_end = NULL;
-#endif // KEYWORDS_ENABLED || TEXT_CLASSIFICATION_ENABLED
+#endif // NAMED_ENTITIES_ENABLED || TEXT_CLASSIFICATION_ENABLED
 
 #ifdef KEYPHRASE_ENABLED
   unsigned char *stopwords_keyphrase_start = NULL;
@@ -925,7 +925,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
   bool is_punct = false;
 
   // misc
-#if defined KEYWORDS_ENABLED || defined HASHTAGS_ENABLED || defined KEYPHRASE_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
+#if defined NAMED_ENTITIES_ENABLED || defined KEYWORDS_ENABLED || defined KEYPHRASE_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
   unsigned char *pch = NULL;
   unsigned char ch;
 #endif
@@ -1558,7 +1558,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       if (current_word_has_mixed_case)
         num_mixed_words++;
 
-#if defined KEYWORDS_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
+#if defined NAMED_ENTITIES_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
       if (NULL == stopwords_entity_start) {
         if (current_word_stop) {
           // X of Y case
@@ -1672,7 +1672,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
           }
         }
       }
-#endif // KEYWORDS_ENABLED || TEXT_CLASSIFICATION_ENABLED
+#endif // NAMED_ENTITIES_ENABLED || TEXT_CLASSIFICATION_ENABLED
 
 #ifdef KEYPHRASE_ENABLED
       if (NULL == stopwords_keyphrase_start) {
@@ -1722,7 +1722,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       }
 #endif // KEYPHRASE_ENABLED
 
-#if defined KEYWORDS_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
+#if defined NAMED_ENTITIES_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
       if (NULL == caps_entity_start) {
         caps_entity_end = NULL;
         if ((current_word_len > 1 && (current_word_caps || ('#' == *current_word_start && isupper(*(current_word_start+1)))) &&
@@ -1746,16 +1746,16 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
               current_word_precedes_ignore_word ||
               current_word_precedes_punct)) { 
 
-              // this is a single word entity. so not inserting into keywords
+              // this is a single word entity. so not inserting into named_entities
               // caps_entity_start = current_word_start;
               // caps_entity_end = current_word_end;
               
-              // instead insert into hashtags set
-#ifdef HASHTAGS_ENABLED
-              if ((hashtags_len + current_word_len + 1) < hashtags_buffer_len) {
-                Insert(hashtags_buffer, hashtags_len, current_word_start, current_word_len, hashtags_count);
+              // instead insert into keywords set
+#ifdef KEYWORDS_ENABLED
+              if ((keywords_len + current_word_len + 1) < keywords_buffer_len) {
+                Insert(keywords_buffer, keywords_len, current_word_start, current_word_len, keywords_count);
               }
-#endif // HASHTAGS_ENABLED
+#endif // KEYWORDS_ENABLED
           }
         }
       } else {
@@ -1791,7 +1791,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
           }
         }
       }
-#endif // KEYWORDS_ENABLED || TEXT_CLASSIFICATION_ENABLED
+#endif // NAMED_ENTITIES_ENABLED || TEXT_CLASSIFICATION_ENABLED
 
       unsigned int temp_len;
       temp_len = 0;
@@ -1800,9 +1800,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       // write keyphrases
       if (NULL != stopwords_keyphrase_start && NULL != stopwords_keyphrase_end) {
 
-#ifdef KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
         if (stopwords_keyphrase_start != caps_entity_start || stopwords_keyphrase_end != caps_entity_end) {
-#endif // KEYWORDS_ENABLED
+#endif // NAMED_ENTITIES_ENABLED
 
 #ifdef KE_DEBUG
           if (KE_DEBUG > 1) {
@@ -1851,18 +1851,18 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
                      keyphrases_count);
             }
           }
-#ifdef KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
         } else {
           if (stopwords_keyphrase_start > stopwords_keyphrase_end)
             cout << "ERROR: keyphrase markers are wrong\n";
         }
-#endif // KEYWORDS_ENABLED
+#endif // NAMED_ENTITIES_ENABLED
         stopwords_keyphrase_start = NULL;
         stopwords_keyphrase_end = NULL;
       }
 #endif // KEYPHRASE_ENABLED
 
-#if defined KEYWORDS_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
+#if defined NAMED_ENTITIES_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
       // write entities
       if (NULL != stopwords_entity_start && NULL != stopwords_entity_end) {
         if (stopwords_entity_start < stopwords_entity_end) {
@@ -1877,11 +1877,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
             ch = *(stopwords_entity_end-2);
             *(stopwords_entity_end-2) = '\0';
             temp_len = (stopwords_entity_end-2) - stopwords_entity_start;
-#ifdef KEYWORDS_ENABLED
-            if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-              Insert(keywords_buffer, keywords_len,
+#ifdef NAMED_ENTITIES_ENABLED
+            if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
+              Insert(named_entities_buffer, named_entities_len,
                      stopwords_entity_start, temp_len,
-                     keywords_count);
+                     named_entities_count);
             }
 #elif defined TEXT_CLASSIFICATION_ENABLED
             if ((text_class_words_len + temp_len + 1) < text_class_words_buffer_len) {
@@ -1889,7 +1889,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
                      stopwords_entity_start, temp_len,
                      text_class_words_count);
             }
-#endif // KEYWORDS_ENABLED elif TEXT_CLASSIFICATION_ENABLED
+#endif // NAMED_ENTITIES_ENABLED elif TEXT_CLASSIFICATION_ENABLED
             *(stopwords_entity_end-2) = ch;
           }
           else if ((pch = (unsigned char*) strstr((char *) stopwords_entity_start, "\'s")) && (pch < stopwords_entity_end)) {
@@ -1898,6 +1898,20 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
             // but don't insert the X in X's if X is a single word!
             temp_len = pch - stopwords_entity_start;
             if (strstr((char *) stopwords_entity_start, " ")) {
+#ifdef NAMED_ENTITIES_ENABLED
+              if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
+                Insert(named_entities_buffer, named_entities_len,
+                       stopwords_entity_start, temp_len,
+                       named_entities_count);
+              }
+#elif defined TEXT_CLASSIFICATION_ENABLED
+              if ((text_class_words_len + temp_len + 1) < text_class_words_buffer_len) {
+                Insert(text_class_words_buffer, text_class_words_len,
+                       stopwords_entity_start, temp_len,
+                       text_class_words_count);
+              }
+#endif // NAMED_ENTITIES_ENABLED elif TEXT_CLASSIFICATION_ENABLED
+            } else {
 #ifdef KEYWORDS_ENABLED
               if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
                 Insert(keywords_buffer, keywords_len,
@@ -1910,30 +1924,16 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
                        stopwords_entity_start, temp_len,
                        text_class_words_count);
               }
-#endif // KEYWORDS_ENABLED elif TEXT_CLASSIFICATION_ENABLED
-            } else {
-#ifdef HASHTAGS_ENABLED
-              if ((hashtags_len + temp_len + 1) < hashtags_buffer_len) {
-                Insert(hashtags_buffer, hashtags_len,
-                       stopwords_entity_start, temp_len,
-                       hashtags_count);
-              }
-#elif defined TEXT_CLASSIFICATION_ENABLED
-              if ((text_class_words_len + temp_len + 1) < text_class_words_buffer_len) {
-                Insert(text_class_words_buffer, text_class_words_len,
-                       stopwords_entity_start, temp_len,
-                       text_class_words_count);
-              }
-#endif // HASHTAGS_ENABLED || TEXT_CLASSIFICATION_ENABLED
+#endif // KEYWORDS_ENABLED || TEXT_CLASSIFICATION_ENABLED
             }
 
             *pch = ch;
             temp_len = stopwords_entity_end - stopwords_entity_start;
-#ifdef KEYWORDS_ENABLED
-            if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-              Insert(keywords_buffer, keywords_len,
+#ifdef NAMED_ENTITIES_ENABLED
+            if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
+              Insert(named_entities_buffer, named_entities_len,
                      stopwords_entity_start, temp_len,
-                     keywords_count);
+                     named_entities_count);
             }
 #elif defined TEXT_CLASSIFICATION_ENABLED
             if ((text_class_words_len + temp_len + 1) < text_class_words_buffer_len) {
@@ -1941,14 +1941,14 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
                      stopwords_entity_start, temp_len,
                      text_class_words_count);
             }
-#endif // KEYWORDS_ENABLED elif TEXT_CLASSIFICATION_ENABLED
+#endif // NAMED_ENTITIES_ENABLED elif TEXT_CLASSIFICATION_ENABLED
           } else {
             temp_len = stopwords_entity_end - stopwords_entity_start;
-#ifdef KEYWORDS_ENABLED
-            if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-              Insert(keywords_buffer, keywords_len,
+#ifdef NAMED_ENTITIES_ENABLED
+            if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
+              Insert(named_entities_buffer, named_entities_len,
                      stopwords_entity_start, temp_len,
-                     keywords_count);
+                     named_entities_count);
             }
 #elif defined TEXT_CLASSIFICATION_ENABLED
             if ((text_class_words_len + temp_len + 1) < text_class_words_buffer_len) {
@@ -1956,7 +1956,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
                      stopwords_entity_start, temp_len,
                      text_class_words_count);
             }
-#endif // KEYWORDS_ENABLED elif TEXT_CLASSIFICATION_ENABLED
+#endif // NAMED_ENTITIES_ENABLED elif TEXT_CLASSIFICATION_ENABLED
           }
         } else {
           cout << "ERROR: stopwords entity markers are wrong\n";
@@ -1981,11 +1981,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
             ch = *(caps_entity_end-2);
             *(caps_entity_end-2) = '\0';
             temp_len = (caps_entity_end-2) - caps_entity_start;
-#ifdef KEYWORDS_ENABLED
-            if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-              Insert(keywords_buffer, keywords_len,
+#ifdef NAMED_ENTITIES_ENABLED
+            if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
+              Insert(named_entities_buffer, named_entities_len,
                      caps_entity_start, temp_len,
-                     keywords_count);
+                     named_entities_count);
             }
 #elif defined TEXT_CLASSIFICATION_ENABLED
             if ((text_class_words_len + temp_len + 1) < text_class_words_buffer_len) {
@@ -1993,7 +1993,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
                      caps_entity_start, temp_len,
                      text_class_words_count);
             }
-#endif // KEYWORDS_ENABLED elif TEXT_CLASSIFICATION_ENABLED
+#endif // NAMED_ENTITIES_ENABLED elif TEXT_CLASSIFICATION_ENABLED
 
             *(caps_entity_end-2) = ch;
           }
@@ -2004,11 +2004,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
             // don't insert the X in X's if X is a single word!
             temp_len = pch - caps_entity_start;
             if (strstr((char *) caps_entity_start, " ")) {
-#ifdef KEYWORDS_ENABLED
-              if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-                Insert(keywords_buffer, keywords_len,
+#ifdef NAMED_ENTITIES_ENABLED
+              if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
+                Insert(named_entities_buffer, named_entities_len,
                        caps_entity_start, temp_len,
-                       keywords_count);
+                       named_entities_count);
               }
 #elif defined TEXT_CLASSIFICATION_ENABLED
               if ((text_class_words_len + temp_len + 1) < text_class_words_buffer_len) {
@@ -2016,25 +2016,25 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
                        caps_entity_start, temp_len,
                        text_class_words_count);
               }
-#endif // KEYWORDS_ENABLED elif TEXT_CLASSIFICATION_ENABLED
+#endif // NAMED_ENTITIES_ENABLED elif TEXT_CLASSIFICATION_ENABLED
             } else {
-              // but such single word X's can be hashtags
-#ifdef HASHTAGS_ENABLED
-              if ((hashtags_len + temp_len + 1) < hashtags_buffer_len) {
-                Insert(hashtags_buffer, hashtags_len,
+              // but such single word X's can be keywords
+#ifdef KEYWORDS_ENABLED
+              if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
+                Insert(keywords_buffer, keywords_len,
                        caps_entity_start, temp_len,
-                       hashtags_count);
+                       keywords_count);
               }
-#endif // HASHTAGS_ENABLED
+#endif // KEYWORDS_ENABLED
             }
 
             *pch = ch;
             temp_len = caps_entity_end - caps_entity_start;
-#ifdef KEYWORDS_ENABLED
-            if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-              Insert(keywords_buffer, keywords_len,
+#ifdef NAMED_ENTITIES_ENABLED
+            if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
+              Insert(named_entities_buffer, named_entities_len,
                      caps_entity_start, temp_len,
-                     keywords_count);
+                     named_entities_count);
             }
 #elif defined TEXT_CLASSIFICATION_ENABLED
             if ((text_class_words_len + temp_len + 1) < text_class_words_buffer_len) {
@@ -2042,14 +2042,14 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
                      caps_entity_start, temp_len,
                      text_class_words_count);
             }
-#endif // KEYWORDS_ENABLED elif TEXT_CLASSIFICATION_ENABLED
+#endif // NAMED_ENTITIES_ENABLED elif TEXT_CLASSIFICATION_ENABLED
           } else { 
             temp_len = caps_entity_end - caps_entity_start;
-#ifdef KEYWORDS_ENABLED
-            if ((keywords_len + temp_len + 1) < keywords_buffer_len) {
-              Insert(keywords_buffer, keywords_len,
+#ifdef NAMED_ENTITIES_ENABLED
+            if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
+              Insert(named_entities_buffer, named_entities_len,
                      caps_entity_start, temp_len,
-                     keywords_count);
+                     named_entities_count);
             }
 #elif defined TEXT_CLASSIFICATION_ENABLED
             if ((text_class_words_len + temp_len + 1) < text_class_words_buffer_len) {
@@ -2057,7 +2057,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
                      caps_entity_start, temp_len,
                      text_class_words_count);
             }
-#endif // KEYWORDS_ENABLED elif TEXT_CLASSIFICATION_ENABLED
+#endif // NAMED_ENTITIES_ENABLED elif TEXT_CLASSIFICATION_ENABLED
           }
         } else {
           cout << "ERROR: caps entity markers are wrong\n";
@@ -2065,16 +2065,16 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
         caps_entity_start = NULL;
         caps_entity_end = NULL;
       }
-#endif // KEYWORDS_ENABLED || TEXT_CLASSIFICATION_ENABLED
+#endif // NAMED_ENTITIES_ENABLED || TEXT_CLASSIFICATION_ENABLED
 
-#ifdef HASHTAGS_ENABLED 
+#ifdef KEYWORDS_ENABLED 
       // hash tags
       if ('#' == *current_word_start && current_word_len >= 2) {
         // avoiding #, hence note the length
-        if ((hashtags_len + current_word_len/* + 1*/) < hashtags_buffer_len) {
-          Insert(hashtags_buffer, hashtags_len,
+        if ((keywords_len + current_word_len/* + 1*/) < keywords_buffer_len) {
+          Insert(keywords_buffer, keywords_len,
                  current_word_start + 1, current_word_len-1,
-                 hashtags_count); 
+                 keywords_count); 
         }
       }
 #elif TEXT_CLASSIFICATION_ENABLED
@@ -2086,7 +2086,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
                  text_class_words_count); 
         }
       }
-#endif // HASHTAGS_ENABLED elif TEXT_CLASSIFICATION_ENABLED
+#endif // KEYWORDS_ENABLED elif TEXT_CLASSIFICATION_ENABLED
 
 #ifndef I18N_ENABLED
       }
@@ -2202,30 +2202,30 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
                 '-' == current_word_delimiter ||
                 '(' == current_word_delimiter) {
               if (num_normal_words == 0) {
-#ifdef KEYWORDS_ENABLED
-                *keywords_buffer = '\0';
-                keywords_len = 0;
-#endif // KEYWORDS_ENABLED
-#if defined KEYWORDS_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
+                *named_entities_buffer = '\0';
+                named_entities_len = 0;
+#endif // NAMED_ENTITIES_ENABLED
+#if defined NAMED_ENTITIES_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
                 caps_entity_start = NULL;
                 caps_entity_end = NULL;
                 stopwords_entity_start = NULL;
                 stopwords_entity_end = NULL;
-#endif // KEYWORDS_ENABLED || TEXT_CLASSIFICATION_ENABLED
+#endif // NAMED_ENTITIES_ENABLED || TEXT_CLASSIFICATION_ENABLED
 #ifdef KEYPHRASE_ENABLED
                 stopwords_keyphrase_start = NULL;
                 stopwords_keyphrase_end = NULL;
 #endif // KEYPHRASE_ENABLED
               }
             } else {
-#if defined KEYWORDS_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
+#if defined NAMED_ENTITIES_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
               for (pch = current_word_end + 1; (pch != next_word_start); pch++) {
                 if (':' == *pch || '>' == *pch || '-' == *pch || '(' == *pch) {
                   if (num_normal_words == 0) {
-#ifdef KEYWORDS_ENABLED
-                    *keywords_buffer = '\0';
-                    keywords_len = 0;
-#endif // KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
+                    *named_entities_buffer = '\0';
+                    named_entities_len = 0;
+#endif // NAMED_ENTITIES_ENABLED
                     caps_entity_start = NULL;
                     caps_entity_end = NULL;
                     stopwords_entity_start = NULL;
@@ -2240,7 +2240,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
                   }
                 }
               }
-#endif // KEYWORDS_ENABLED || TEXT_CLASSIFICATION_ENABLED
+#endif // NAMED_ENTITIES_ENABLED || TEXT_CLASSIFICATION_ENABLED
             }
           }
 
@@ -2319,14 +2319,14 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
   if (num_mixed_words > 2) {
 #ifdef KE_DEBUG
     if (KE_DEBUG > 0) {
-      cout << "suspected non-english tweet. ignoring keywords and keyphrases" << endl;
+      cout << "suspected non-english tweet. ignoring named_entities and keyphrases" << endl;
       cout << "num mixed words: " << num_mixed_words << endl;
     }
 #endif // KE_DEBUG
-#ifdef KEYWORDS_ENABLED
-    *keywords_buffer = '\0';
-    keywords_len = 0;
-#endif // KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
+    *named_entities_buffer = '\0';
+    named_entities_len = 0;
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYPHRASE_ENABLED
     *keyphrases_buffer = '\0';
     keyphrases_len = 0;
@@ -2347,21 +2347,21 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
   }
 #endif // KE_DEBUG
 
-#ifdef KEYWORDS_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
   if ((num_normal_words == 0) && (num_dict_words != 0 || num_words > 5)) {
 #ifdef KE_DEBUG
     if (KE_DEBUG > 0) {
-      cout << "no normal words. ignoring keywords." << endl;
+      cout << "no normal words. ignoring named_entities." << endl;
       cout << "num normal words: " << num_normal_words << endl;
       cout << "num words: " << num_words << endl;
       cout << "num dict words: " << num_dict_words << endl;
     }
 #endif // KE_DEBUG
-    *keywords_buffer = '\0';
-    keywords_len = 0;
-    keywords_count = 0;
+    *named_entities_buffer = '\0';
+    named_entities_len = 0;
+    named_entities_count = 0;
   }
-#endif // KEYWORDS_ENABLED
+#endif // NAMED_ENTITIES_ENABLED
 
   // prepare for return
   int ret_val = 0;
@@ -2380,13 +2380,13 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
 
   strcpy(script_buffer, script.c_str());
 
+#ifdef NAMED_ENTITIES_ENABLED
+  ret_val += named_entities_count;
+#endif // NAMED_ENTITIES_ENABLED
+
 #ifdef KEYWORDS_ENABLED
   ret_val += keywords_count;
 #endif // KEYWORDS_ENABLED
-
-#ifdef HASHTAGS_ENABLED
-  ret_val += hashtags_count;
-#endif // HASHTAGS_ENABLED
 
 #ifdef KEYPHRASE_ENABLED
   ret_val += keyphrases_count;
@@ -2412,6 +2412,15 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
     Insert(text_class_words_buffer, text_class_words_len, word, text_class_words_count);
     word.clear();
   }
+#ifdef NAMED_ENTITIES_ENABLED
+  if (named_entities_count > 0) {
+    strncpy((char *) text_class_words_buffer + text_class_words_len,
+            (const char*) named_entities_buffer,
+            named_entities_len);
+    text_class_words_len += named_entities_len;
+    text_class_words_count += named_entities_count;
+  }
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
   if (keywords_count > 0) {
     strncpy((char *) text_class_words_buffer + text_class_words_len,
@@ -2421,15 +2430,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
     text_class_words_count += keywords_count;
   }
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-  if (hashtags_count > 0) {
-    strncpy((char *) text_class_words_buffer + text_class_words_len,
-            (const char*) hashtags_buffer,
-            hashtags_len);
-    text_class_words_len += hashtags_len;
-    text_class_words_count += hashtags_count;
-  }
-#endif // HASHTAGS_ENABLED
   ret_val += text_class_words_count;
 #endif // TEXT_CLASSIFICATION_ENABLED
 
@@ -2461,12 +2461,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
   if (KE_DEBUG) {
     std::cout << "keytuples_extracter summary:" << std::endl;
     std::cout << "input: " << text_buffer << std::endl;
+#ifdef NAMED_ENTITIES_ENABLED
+    std::cout << "named_entities (" << named_entities_count << "): " << named_entities_buffer << std::endl;
+#endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
     std::cout << "keywords (" << keywords_count << "): " << keywords_buffer << std::endl;
 #endif // KEYWORDS_ENABLED
-#ifdef HASHTAGS_ENABLED
-    std::cout << "hashtags (" << hashtags_count << "): " << hashtags_buffer << std::endl;
-#endif // HASHTAGS_ENABLED
 #ifdef KEYPHRASE_ENABLED
     std::cout << "keyphrases (" << keyphrases_count << "): " << keyphrases_buffer << std::endl;
 #endif // KEYPHRASE_ENABLED

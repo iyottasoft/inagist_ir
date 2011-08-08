@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include <set>
+#include "corpus_manager.h"
 
 namespace inagist_classifiers {
 
@@ -22,28 +23,28 @@ class NgramsGenerator {
   ~NgramsGenerator();
   int GetNgrams(const unsigned char* text,
                 const unsigned int& text_len,
-                std::map<std::string, int>& features_map);
+                Corpus& corpus);
   int GetNgramsFromTweet(const std::string& tweet,
-                         std::map<std::string, int>& features_map,
+                         Corpus& corpus,
                          bool ignore_case=false);
   int GetAllNgrams(const std::string& tweet,
-                   std::map<std::string, int>& features_map);
+                   Corpus& corpus);
   int GetAllNgrams(unsigned char* start,
                    unsigned char* stop,
-                   std::map<std::string, int>& features_map);
+                   Corpus& corpus);
   int GetNgramsFromFile(const std::string& input_file_name,
-                        std::map<std::string, int>& features_map);
+                        Corpus& corpus);
   int GetNgramsFromWords(std::set<std::string>& words_set,
-                         std::map<std::string, int>& features_map,
+                         Corpus& corpus,
                          bool ignore_case=false);
   int GetNgramsFromWords(const unsigned char* text_word_list,
                          const unsigned int& list_len,
                          const unsigned int& word_count, 
-                         std::map<std::string, int>& features_map,
+                         Corpus& corpus,
                          bool ignore_case=false);
   int GetNgramsFromWord(const unsigned char* word_str,
                         unsigned int word_len,
-                        std::map<std::string, int>& features_map);
+                        Corpus& corpus);
   int SetDebugLevel(unsigned int debug_level);
 
  private:

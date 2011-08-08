@@ -1,7 +1,6 @@
 include ../../Makefile.incl
 PROJECT = keytuplesextracter
-CXX = g++
-CXXFLAGS = -Wall -g -Wno-deprecated -DDEBUG=${DEBUG_LEVEL} -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DHASHTAGS_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED
+PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL} -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../inagist_api -I../twitter_api -I../utils -I../script_detector
@@ -11,10 +10,10 @@ LIBS = -l${PROJECT} -lscriptdetector -lutils -ltwitterapi -linagistapi -lcurlreq
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_keytuples_extracter \
-       ${BIN_DIR}/t_keywords_manager \
-       ${BIN_DIR}/x_keywords_extracter
+       ${BIN_DIR}/t_named_entities_manager \
+       ${BIN_DIR}/x_named_entities_extracter
 
-OBJS = keytuples_extracter.o keywords_manager.o keytuples_config.o
+OBJS = keytuples_extracter.o named_entities_manager.o keytuples_config.o
 
 all: ${LIB} ${BINS}
 	@echo "build done!"
@@ -32,31 +31,31 @@ ${LIB}: ${OBJS}
 
 .cc.o:
 	@echo "compiling ..." $< "..."
-	@${CXX} ${CXXFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -shared -fPIC -c ${INCLUDE_DIR} $<
 
 ${BIN_DIR}/t_keytuples_extracter: t_keytuples_extracter.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keytuples_extracter
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keytuples_extracter
 	@echo "done!"
 
-${BIN_DIR}/x_keywords_extracter: x_keywords_extracter.o ${LIB}
+${BIN_DIR}/x_named_entities_extracter: x_named_entities_extracter.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_keywords_extracter
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_named_entities_extracter
 	@echo "done!"
 
-${BIN_DIR}/t_keywords_manager: t_keywords_manager.o ${LIB}
+${BIN_DIR}/t_named_entities_manager: t_named_entities_manager.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keywords_manager
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_named_entities_manager
 	@echo "done!"
 
 ${BIN_DIR}/t_keytuples_from_twitter: t_keytuples_from_twitter.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keytuples_from_twitter
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keytuples_from_twitter
 	@echo "done!"
 
 ${BIN_DIR}/t_keytuples_from_inagist: t_keytuples_from_inagist.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keytuples_from_inagist
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keytuples_from_inagist
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE
