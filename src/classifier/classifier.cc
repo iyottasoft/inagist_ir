@@ -18,6 +18,11 @@
 namespace inagist_classifiers {
 
 Classifier::Classifier() {
+#ifdef CLASSIFIER_DEBUG
+  m_debug_level = CLASSIFIER_DEBUG;
+#else
+  m_debug_level = 0;
+#endif
 }
 
 Classifier::~Classifier() {
@@ -36,6 +41,11 @@ Classifier::~Classifier() {
 #endif // CLASSIFIER_DEBUG
   }
 
+}
+
+int Classifier::SetDebugLevel(unsigned int debug_level) {
+  m_debug_level = debug_level;
+  return 0;
 }
 
 int Classifier::Init(std::string config_file_name, bool ignore_history) {
@@ -60,7 +70,7 @@ int Classifier::Init(std::string config_file_name, bool ignore_history) {
 
   CorpusMapMeta corpus_map_meta_data;
 #ifdef CLASSIFIER_DEBUG
-    if (CLASSIFIER_DEBUG > 4) {
+    if (m_debug_level > 4) {
       std::cout << "classifier training meta data\n";
     }
 #endif // CLASSIFIER_DEBUG
@@ -69,7 +79,7 @@ int Classifier::Init(std::string config_file_name, bool ignore_history) {
        m_config.iter++) {
     corpus_map_meta_data[m_config.iter->name] = m_config.iter->class_data_file;
 #ifdef CLASSIFIER_DEBUG
-    if (CLASSIFIER_DEBUG > 4) {
+    if (m_debug_level > 4) {
       std::cout << m_config.iter->name << " = " << m_config.iter->class_data_file << std::endl;
     }
 #endif // CLASSIFIER_DEBUG
@@ -91,14 +101,16 @@ int Classifier::Init(std::string config_file_name, bool ignore_history) {
     }
   } else {
 #ifdef CLASSIFIER_DEBUG
-    if (CLASSIFIER_DEBUG > 1) {
+    if (m_debug_level > 1) {
       std::cout << "INFO: ignoring historical data. plain vanilla classification\n";
     }
 #endif
   }
 
 #ifdef CLASSIFIER_DEBUG
-  std::cout << "loading corpus_map from corpus_map_meta_data (while initializing classifier)\n";
+  if (m_debug_level > 1) {
+    std::cout << "loading corpus_map from corpus_map_meta_data (while initializing classifier)\n";
+  }
 #endif // CLASSIFIER_DEBUG
   if (m_corpus_manager.LoadCorpusMap(corpus_map_meta_data) < 0) {
 #ifdef CLASSIFIER_DEBUG
@@ -166,9 +178,13 @@ int Classifier::GetTrainingData(const char* config_file_name) {
       std::cerr << "ERROR: could not get training data for handles in file: " \
                 << config.iter->handles_file << std::endl; 
     } else {
-      std::cout << "Corpus of size " << count_temp \
-                << " generated for " << config.iter->name << " from " \
-                << num_docs << " docs" << std::endl;
+#ifdef CLASSIFIER_DEBUG
+      if (m_debug_level > 1) {
+        std::cout << "INFO: Corpus of size " << count_temp \
+                  << " generated for " << config.iter->name << " from " \
+                  << num_docs << " docs" << std::endl;
+      }
+#endif // CLASSIFIER_DEBUG
       count += count_temp;
     }
   }
@@ -193,9 +209,13 @@ int Classifier::GetTrainingData(const char* config_file_name) {
                   << config.iter->training_data_file; 
         return -1;
       }
-      std::cout << "Corpus of size " << count_temp \
-                << " generated for " << config.iter->name << " from " \
-                << num_docs << " docs" << std::endl;
+#ifdef CLASSIFIER_DEBUG
+      if (m_debug_level > 1) {
+        std::cout << "Corpus of size " << count_temp \
+                  << " generated for " << config.iter->name << " from " \
+                  << num_docs << " docs" << std::endl;
+      }
+#endif // CLASSIFIER_DEBUG
       count += count_temp;
     }
   }
@@ -219,7 +239,9 @@ int Classifier::GetTrainingData(const std::string& class_name,
   }
 
 #ifdef CLASSIFIER_DEBUG
-  std::cout << "INFO: training data from handles file: " << twitter_handles_file_name << std::endl;
+  if (m_debug_level > 1) {
+    std::cout << "INFO: training data from handles file: " << twitter_handles_file_name << std::endl;
+  }
 #endif
 
   std::string line;
@@ -721,7 +743,9 @@ int Classifier::WriteTestData(Corpus& corpus, const char* classes_freq_file) {
     } else if (corpus_iter->first.compare("all_classes") != 0) {
       sum += corpus_iter->second;
     } else {
+#ifdef CLASSIFIER_DEBUG
       std::cout << "all_classes. hence ignoring" << std::endl;
+#endif // CLASSIFIER_DEBUG
     }
   }
 

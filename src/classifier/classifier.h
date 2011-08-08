@@ -55,6 +55,8 @@ class Classifier {
   virtual int InitDependencies(int argc=0, char* argv[]=NULL)=0;
   virtual int ClearDependencies()=0;
 
+  int SetDebugLevel(unsigned int debug_level);
+
   // training
 
   int GetTrainingData(const char* config_file_name);
@@ -127,6 +129,7 @@ class Classifier {
   std::map<std::string, std::string> m_class_labels_map;
  private:
   Config m_config;
+  unsigned int m_debug_level;
 
 };
 

@@ -19,13 +19,14 @@ todo.txt
 configs/sentiment_analyser.config
 data/senti/[^.]*
 data/lang/testing/*.*
-data/lang/training/tweetsource/tweets/[^.]*
-data/lang/training/tweetsource/corpus/[^.]*
+data/lang/training/tweetsource/tweets/*.*
+data/lang/training/tweetsource/corpus/*.*
 data/lang/backup/[^.]*
 data/channels/[^.]*
 data/channels/testing/*.*
 data/channels/training/tweetsource/tweets/*.*
 data/channels/training/tweetsource/corpus/*.*
+data/channels/backup/[^.]*
 data/ipl/testing/*.*
 data/ipl/training/tweetsource/tweets/*.*
 data/ipl/training/tweetsource/corpus/*.*

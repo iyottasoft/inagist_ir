@@ -77,11 +77,17 @@ int TextClassifier::Classify(const std::string& text, const unsigned int& text_l
                              , std::map<std::string, std::string>& class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
                              , bool ignore_case) {
-  int num_words = 0;
+
+  text_class.clear();
+  top_classes.clear();
+  top_classes_count = 0;
 #ifndef CLASSIFIER_DATA_TESTING_ENABLED
   Corpus test_corpus;
+#else
+  test_corpus.clear();
 #endif // CLASSIFIER_DATA_TESTING_ENABLED
 
+  int num_words = 0;
   if ((num_words = GetCorpus(text, test_corpus)) < 0) {
     std::cerr << "ERROR: no words found" << std::endl;
     return -1;
@@ -90,11 +96,12 @@ int TextClassifier::Classify(const std::string& text, const unsigned int& text_l
   if (num_words == 0) {
     top_classes_count = 0;
 #ifdef TC_DEBUG
-    if (m_debug_level > 0)
+    if (m_debug_level > 0) {
       std::cout << "no ngrams found for ... \n" << text << std::endl;
-    text_class.assign("RR");
-    top_classes.assign("RR");
-    top_classes_count = 1;
+      text_class.assign("RR");
+      top_classes.assign("RR");
+      top_classes_count = 1;  
+  }
 #endif
     return 0;
   }
@@ -152,6 +159,11 @@ int TextClassifier::Classify(const unsigned char* text_word_list,
     std::cerr << "ERROR: invalid input text class buffers\n";
     return -1;
   }
+
+  guess_text_class_buffer[0] = '\0';
+  top_classes_buffer[0] = '\0';
+  top_classes_len = 0;
+  top_classes_count = 0;
 
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   if (!class_contributors_buffer) {
@@ -281,6 +293,10 @@ int TextClassifier::Classify(std::set<std::string>& words_set,
 #endif // CLASS_CONTRIBUTORS_ENABLED
                              , bool ignore_case) {
 
+  text_class.clear();
+  top_classes.clear();
+  top_classes_count = 0;
+
   if (words_set.size() <= 0) {
     top_classes_count = 0;
 #ifdef TC_DEBUG
@@ -321,6 +337,10 @@ int TextClassifier::Classify(Corpus& corpus,
                              , std::map<std::string, std::string>& class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
                             ) {
+
+  text_class.clear();
+  top_classes.clear();
+  top_classes_count = 0;
 
   int ret_value = 0;
   std::set<std::string> top_classes_set;

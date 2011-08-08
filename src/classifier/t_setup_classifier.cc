@@ -52,7 +52,8 @@ int main(int argc, char* argv[]) {
     return -1;
   }
   std::string cmd = "touch " + config.class_freqs_file;
-  system(cmd.c_str());
+  unsigned int sys_out = 0;
+  sys_out = system(cmd.c_str());
 
   std::cout << config.test_freqs_file << std::endl;
   if (CreateDir(config.test_freqs_file) < 0) {
@@ -60,7 +61,7 @@ int main(int argc, char* argv[]) {
     return -1;
   }
   cmd = "touch " + config.test_freqs_file;
-  system(cmd.c_str());
+  sys_out = system(cmd.c_str());
 
   if (config.classes.empty()) {
     std::cerr << "ERROR: class structs could not be read from config file: " << config_file_name << std::endl;
@@ -93,7 +94,7 @@ int main(int argc, char* argv[]) {
         }
       }
       cmd = "touch " + config.iter->handles_file;
-      system(cmd.c_str());
+      sys_out = system(cmd.c_str());
       if (class_name_is_handle) {
         std::ofstream ofs(config.iter->handles_file.c_str(), std::ios::app);
         if (!ofs.is_open()) {
@@ -105,9 +106,9 @@ int main(int argc, char* argv[]) {
         ofs.close();
       }
       cmd = "touch " + config.iter->corpus_file;
-      system(cmd.c_str());
+      sys_out = system(cmd.c_str());
       cmd = "touch " + config.iter->tweets_file;
-      system(cmd.c_str());
+      sys_out = system(cmd.c_str());
     }
   }
   inagist_classifiers::ClassifierConfig::Clear(config);
