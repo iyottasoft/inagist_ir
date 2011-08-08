@@ -473,7 +473,7 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
 #endif // LANG_ENABLED
 
   if (script.compare(0, 2, "en") != 0) {
-#ifndef TC_DEBUG
+#ifdef TC_DEBUG
     std::cout << buffer << "\nnon-english tweet. no text classification done" << std::endl;
 #endif // TC_DEBUG
     return 0;
