@@ -47,6 +47,8 @@ int LanguageDetector::Classify(const std::string& text, const unsigned int& text
 #endif // CLASS_CONTRIBUTORS_ENABLED
                                , bool ignore_case) {
 
+  guess_lang_output.clear();
+  top_classes.clear();
   top_classes_count = 0;
 
   int num_ngrams = 0;
