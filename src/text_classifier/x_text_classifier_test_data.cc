@@ -50,13 +50,11 @@ int main(int argc, char* argv[]) {
   free(my_argv[0]);
 
   int ret_val = 0;
-  unsigned int input_type = 0;
-  const char* input_file = NULL;
-  const char* input_handle = NULL;
-  std::string expected_class_name;
+  unsigned int input_type = 10;
+  const char* input_value = NULL;
   unsigned int output_type = 3;
   const char* output_file = NULL;
-  if (tc->GetTestData(input_type, input_file, input_handle, expected_class_name, output_type, output_file) < 0) {
+  if (tc->GetTestData(input_type, input_value, output_type, output_file) < 0) {
     std::cerr << "ERROR: could not get test data\n";
     ret_val = -1;
   }

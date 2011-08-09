@@ -50,6 +50,7 @@ typedef struct _class_struct {
 typedef struct _config_struct {
   std::string class_freqs_file; 
   std::string test_freqs_file; // this is same data as class_freqs_file except this file is updated repeatedly
+  unsigned int num_classes;
   std::set<ClassStruct> classes;
   std::set<ClassStruct>::iterator iter;
 } Config;
@@ -62,6 +63,7 @@ class ClassifierConfig {
   static int Read(const char* config_file_name, Config& config);
   static int LoadClassLabelsMap(Config& config, std::map<std::string, std::string>& class_labels_map);
   static int Clear(Config& config);
+  static int Write(Config& config, const char* config_file_name);
 };
 
 } // namespace inagist_classifiers

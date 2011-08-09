@@ -7,6 +7,7 @@
 #include "twitter_searcher.h"
 #include "twitter_api.h"
 #include "inagist_api.h"
+#include "test_utils.h"
 
 #ifdef DEBUG
 #if DEBUG>0
@@ -777,11 +778,14 @@ int Classifier::WriteTestData(Corpus& corpus, const char* classes_freq_file) {
 // will work fine with its dependencies already initalized
 //
 // input_type:
-//          0 - twitter timeline
-//          1 - random selection of training sources
-//          2 - all training sources (all handles)
-//          3 - only given training source will be tested 
-//          4 - test input is taken from the given file
+//          0 - not implemented
+//          1 - input file 
+//          2 - single tweet
+//          3 - multiple tweets
+//          10 - random selection of training sources
+//          11 - all training sources (all handles)
+//          12 - only given training source will be tested 
+//          13 - test input is taken from the given file
 // output_type:
 //          0 - stdout
 //          1 - class frequency file
@@ -791,29 +795,12 @@ int Classifier::WriteTestData(Corpus& corpus, const char* classes_freq_file) {
 // Note: the output file is to write texts that contributed to the class frequenceies.
 //
 int Classifier::GetTestData(const unsigned int& input_type,
-                            const char* input_file,
-                            const char* input_handle,
-                            const std::string& expected_class_name,
+                            const char* input_value,
                             const unsigned int& output_type,
-                            const char* output_file) {
-
-  if (NULL == input_file && 4 == input_type) {
-    std::cerr << "ERROR: invalid input file. cannot get test data.\n";
-    return -1;
-  }
-
-  if (NULL == input_handle && 5 == input_type) {
-    std::cerr << "ERROR: invalid input handle. cannot get test data.\n";
-    return -1;
-  }
-
-  if (expected_class_name.empty() && 3 == input_type) {
-    std::cerr << "ERROR: invalid expected class name. cannot get test data.\n";
-    return -1;
-  }
+                            const char* output_value) {
 
   if (output_type > 0 && output_type < 3) {
-    if (NULL == output_file) {
+    if (NULL == output_value) {
       std::cerr << "ERROR: invalid output file. cannot get test data.\n";
       return -1;
     }
@@ -830,9 +817,9 @@ int Classifier::GetTestData(const unsigned int& input_type,
       output_stream = &std::cout;
       break;
     case 1:
-      ofs.open(output_file);
+      ofs.open(output_value);
       if (!ofs.is_open()) {
-        std::cerr << "ERROR: could not open output file: " << output_file << std::endl;
+        std::cerr << "ERROR: could not open output file: " << output_value << std::endl;
         return -1;
       }
       output_stream = &ofs;
@@ -870,25 +857,27 @@ int Classifier::GetTestData(const unsigned int& input_type,
   bool random_selection = false;
   const char* training_class = NULL;
   std::string handle;
+  std::string expected_class_name;
   TestResult test_result;
   test_result.clear();
   const char* training_texts_file = NULL;
 
   switch (input_type) {
-    case 0:
+    case 0 ... 9:
       // send empty handle and expected class_name to test public timeline
-      if (TestTwitterTimeline(handle,
-                              expected_class_name,
-                              test_freq_map,
-                              test_corpus_map,
-                              test_result,
-                              *output_stream) < 0) {
+      if (TestTimeline(input_type,
+                       input_value,
+                       expected_class_name,
+                       test_freq_map,
+                       test_corpus_map,
+                       test_result,
+                       *output_stream) < 0) {
         std::cerr << "ERROR: could not test twitter timeline\n";
         ofs.close();
         return -1;
       }
       break;
-    case 1:
+    case 10:
       if (TestTrainingSources(training_class=NULL,
                               test_freq_map,
                               test_corpus_map,
@@ -900,7 +889,7 @@ int Classifier::GetTestData(const unsigned int& input_type,
         return -1;
       }
       break;
-    case 2:
+    case 11:
       if (TestTrainingSources(training_class=NULL,
                               test_freq_map,
                               test_corpus_map,
@@ -912,7 +901,7 @@ int Classifier::GetTestData(const unsigned int& input_type,
         return -1;
       }
       break;
-    case 3:
+    case 12:
       if (TestTrainingSources(training_class=expected_class_name.c_str(),
                               test_freq_map,
                               test_corpus_map,
@@ -924,8 +913,8 @@ int Classifier::GetTestData(const unsigned int& input_type,
         return -1;
       }
       break;
-    case 4:
-        if (TestTrainingTexts(training_texts_file=input_file,
+    case 13:
+        if (TestTrainingTexts(training_texts_file=input_value,
                               expected_class_name,
                               test_freq_map,
                               test_corpus_map,
@@ -935,20 +924,6 @@ int Classifier::GetTestData(const unsigned int& input_type,
                     << training_texts_file << std::endl;
           return -1;
         }
-      break;
-    case 5:
-      if (input_handle)
-        handle.assign(input_handle);
-      if (TestTwitterTimeline(handle,
-                              expected_class_name,
-                              test_freq_map,
-                              test_corpus_map,
-                              test_result,
-                              *output_stream) < 0) {
-        std::cerr << "ERROR: could not test tweets from hanlde: " << handle << std::endl;
-        ofs.close();
-        return -1;
-      }
       break;
     default:
       break;
@@ -1116,33 +1091,47 @@ int Classifier::TestTrainingTexts(const char* training_texts_file,
   return test_freq_map.size();
 }
 
-int Classifier::TestTwitterTimeline(const std::string& handle,
-                                    const std::string& expected_class_name,
-                                    Corpus& test_freq_map,
-                                    CorpusMap& test_corpus_map,
-                                    TestResult& test_result,
-                                    std::ostream &output_stream) {
+int Classifier::TestTimeline(const unsigned int& input_type,
+                             const char* input_value,
+                             const std::string& expected_class_name,
+                             Corpus& test_freq_map,
+                             CorpusMap& test_corpus_map,
+                             TestResult& test_result,
+                             std::ostream &output_stream) {
 
-  std::set<std::string> tweets;
+  std::set<std::string> texts;
 
-  if (handle.empty()) {
-    if (inagist_api::TwitterAPI::GetPublicTimeLine(tweets) < 0) {
-      std::cout << "ERROR: could not get twitter's public timeline\n";
-      return -1;
-    }
-  } else {
-    if (inagist_api::TwitterSearcher::GetTweetsFromUser(handle, tweets) < 0) {
-      std::cout << "ERROR: could not search twitter for user handle: " << handle << std::endl;
-      return -1;
-    }
+  if (inagist_utils::GetInputText(input_type, input_value, texts) < 0) {
+    std::cerr << "ERROR: could not input texts\n";
+    return -1;
   }
 
-  if (tweets.empty()) {
+  if (texts.empty()) {
     return 0;
   }
 
+  int ret_value = TestTimeline(texts,
+                      expected_class_name,
+                      test_freq_map,
+                      test_corpus_map,
+                      test_result,
+                      output_stream
+                     );
+
+  texts.clear();
+
+  return ret_value;
+}
+
+int Classifier::TestTimeline(const std::set<std::string>& texts,
+                             const std::string& expected_class_name,
+                             Corpus& test_freq_map,
+                             CorpusMap& test_corpus_map,
+                             TestResult& test_result,
+                             std::ostream &output_stream) {
+
   std::set<std::string>::iterator set_iter;
-  std::string tweet;
+  std::string text;
   std::string output_class;
   std::string output_top_classes;
   unsigned int output_top_classes_count = 0;
@@ -1161,17 +1150,17 @@ int Classifier::TestTwitterTimeline(const std::string& handle,
   }
 #endif
 
-  for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
+  for (set_iter = texts.begin(); set_iter != texts.end(); set_iter++) {
     test_result.total++;
-    tweet = *set_iter;
+    text = *set_iter;
 
 #ifdef CLASSIFIER_DEBUG
     if (CLASSIFIER_DEBUG > 1) {
-      std::cout << "Classifying text: " << tweet << std::endl;
+      std::cout << "Classifying text: " << text << std::endl;
     }
 #endif
 
-    if ((ret_val = Classify(tweet, tweet.length(), output_class,
+    if ((ret_val = Classify(text, text.length(), output_class,
                             output_top_classes, output_top_classes_count
 #ifdef CLASSIFIER_DATA_TESTING_ENABLED
                             , test_corpus
@@ -1184,12 +1173,18 @@ int Classifier::TestTwitterTimeline(const std::string& handle,
       test_result.undefined++;
     } else if (ret_val == 0) {
       if (output_stream) {
-        output_stream << expected_class_name << "|" << output_class << "|" << tweet << std::endl;
+        output_stream << expected_class_name << "|" \
+                      << output_class << "|(" \
+                      << output_top_classes << ")|" \
+                      << text << std::endl;
       }
       test_result.undefined++;
     } else {
       if (output_stream) {
-        output_stream << expected_class_name << "|" << output_class << "|" << tweet << std::endl;
+        output_stream << expected_class_name << "|" \
+                      << output_class << "|(" \
+                      << output_top_classes << ")|" \
+                      << text << std::endl;
       }
       if (!expected_class_name.empty()) {
         if (expected_class_name.compare(output_class) == 0) {
@@ -1218,8 +1213,6 @@ int Classifier::TestTwitterTimeline(const std::string& handle,
     test_corpus.clear();
 #endif // CLASSIFIER_DATA_TESTING_ENABLED
   }
-
-  tweets.clear();
 
   return test_freq_map.size();
 }
@@ -1276,6 +1269,8 @@ int Classifier::TestTrainingSources(const char* training_class,
       continue;
     }
 
+    unsigned int input_type = 0;
+    const char* input_value = NULL;
     if (random_selection) {
       unsigned int index = rand();
       index = index % handles_set.size();
@@ -1293,19 +1288,27 @@ int Classifier::TestTrainingSources(const char* training_class,
       }
       handles_set.clear();
 
-      if (TestTwitterTimeline(handle, class_name,
-                              class_freq_map, test_corpus_map,
-                              test_result, output_stream) < 0) {
-        std::cout << "ERROR: TestTwitterTimeline failed for class: " \
+      if (TestTimeline(input_type = 3,
+                       input_value = handle.c_str(),
+                       class_name,
+                       class_freq_map,
+                       test_corpus_map,
+                       test_result,
+                       output_stream) < 0) {
+        std::cout << "ERROR: TestTimeline failed for class: " \
                   << class_name << " on handle: " << handle << std::endl;
       }
     } else {
       for (set_iter = handles_set.begin(); set_iter != handles_set.end(); set_iter++) {
         handle = *set_iter;
-        if (TestTwitterTimeline(handle, class_name,
-                                class_freq_map, test_corpus_map,
-                                test_result, output_stream) < 0) {
-          std::cout << "ERROR: TestTwitterTimeline failed for class: " \
+        if (TestTimeline(input_type = 3,
+                       input_value = handle.c_str(),
+                       class_name,
+                       class_freq_map,
+                       test_corpus_map,
+                       test_result,
+                       output_stream) < 0) {
+          std::cout << "ERROR: TestTimeline failed for class: " \
                     << class_name << " on handle: " << handle << std::endl;
         }
       }
@@ -1318,123 +1321,6 @@ int Classifier::TestTrainingSources(const char* training_class,
     }
 */
   } // end of for loop
-
-  return 0;
-}
-
-// shameful code below. use optarg
-int Classifier::ValidateTestDataInput(int argc, char* argv[],
-                                      const char* &config_file,
-                                      const char* &keytuples_config_file,
-                                      unsigned int &input_type,
-                                      unsigned int &output_type,
-                                      const char* &input_file,
-                                      const char* &output_file,
-                                      const char* &input_handle,
-                                      std::string &class_name) {
-
-  config_file = argv[1];
-  keytuples_config_file = argv[2];
-  input_type = atoi(argv[3]);
-  output_type = atoi(argv[4]);
-
-  if (8 == argc) {
-    if (4 == input_type)
-      input_file = argv[7];
-    else if (5 == input_type)
-      input_handle = argv[7];
-    output_file = argv[6];
-
-    if ((3 == input_type || 4 == input_type) &&
-        (argv[5] && strlen(argv[5]) > 0))
-      class_name = std::string(argv[5]);
-  }
-
-  if (7 == argc) {
-    if (input_type == 4)
-      input_file = argv[6];
-    else if (input_type == 5)
-      input_handle = argv[6];
-    else if (output_type > 0)
-      output_file = argv[6];
-
-    if ((3 == input_type || 4 == input_type) &&
-        (argv[5] && strlen(argv[5]) > 0))
-      class_name = std::string(argv[5]);
-  }
-
-  if (6 == argc) {
-    if (argv[5] && strlen(argv[5]) > 0) {
-      if (3 == input_type || 4 == input_type) {
-        class_name = argv[5];
-      } else {
-        output_file = argv[5];
-      }
-    }
-  }
-
-// validate inputs and assign inputs
-  if (3 == input_type) {
-    if (class_name.empty()) {
-      std::cout << "class_name is required for input_type: " << input_type << std::endl;
-      return -1;
-    }
-  } else if (4 == input_type) {
-    if (!input_file) {
-      std::cout << "input file required for input_type: " << input_type << std::endl;
-      return -1;
-    }
-  } else if (5 == input_type) {
-    if (!input_handle) {
-      std::cout << "input handle required for input_type: " << input_type << std::endl;
-      return -1;
-    }
-  }
-
-  if (output_type > 3) {
-    std::cout << "invalid output type: " << output_type << std::endl;
-    return -1;
-  }
-
-  if (1 == output_type) {
-    if (!output_file) {
-      std::cout << "output file required for output_type: " << output_type << std::endl;
-      return -1;
-    }
-    if (strlen(output_file) < 4) {
-      std::cout << "invalide output file name: " << output_file << std::endl;
-      return -1;
-    }
-  }
-
-  std::cout << "config_file: ";
-  if (config_file)
-    std::cout << config_file;
-  std::cout << std::endl;
-
-  std::cout << "keytuples_config: ";
-  if (keytuples_config_file)
-    std::cout << keytuples_config_file;
-  std::cout << std::endl;
-
-  std::cout << "input_type: " << input_type << std::endl;
-  std::cout << "output_type: " << output_type << std::endl;
-  std::cout << "class_name: " << class_name << std::endl;
-
-  std::cout << "input_file: ";
-  if (input_file)
-    std::cout << input_file;
-  std::cout << std::endl;
-
-  std::cout << "output_file: ";
-  if (output_file)
-    std::cout << output_file;
-  std::cout << std::endl;
-
-  std::cout << "input_handle: ";
-  if (input_handle)
-    std::cout << input_handle;
-  std::cout << std::endl;
 
   return 0;
 }

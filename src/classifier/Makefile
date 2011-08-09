@@ -10,7 +10,8 @@ LIBS = -l${PROJECT} -lngramsgenerator -lcorpusmanager -lutils -linagistapi -ltwi
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_classifier_config \
-       ${BIN_DIR}/t_setup_classifier
+       ${BIN_DIR}/t_setup_classifier \
+       ${BIN_DIR}/t_renumber_classifier_config
 
 OBJS = classifier_config.o naive_bayes_classifier.o classifier.o
 
@@ -40,6 +41,11 @@ ${BIN_DIR}/t_classifier_config: t_classifier_config.o ${LIB}
 ${BIN_DIR}/t_setup_classifier: t_setup_classifier.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_setup_classifier
+	@echo "done!"
+
+${BIN_DIR}/t_renumber_classifier_config: t_renumber_classifier_config.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_renumber_classifier_config
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

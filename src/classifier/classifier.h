@@ -81,19 +81,25 @@ class Classifier {
   // testing
 
   int GetTestData(const unsigned int& input_type,
-                  const char* input_file,
-                  const char* input_handle,
-                  const std::string& expected_class_name,
+                  const char* input_value,
                   const unsigned int& output_type,
                   const char* output_file);
 
   // leave handle blank for public timeline
-  int TestTwitterTimeline(const std::string& handle,
-                          const std::string& expected_class_name,
-                          Corpus& test_freq_map,
-                          CorpusMap& test_corpus_map,
-                          TestResult& test_result,
-                          std::ostream& output_stream);
+  int TestTimeline(const unsigned int& input_type,
+                   const char* input_value,
+                   const std::string& expected_class_name,
+                   Corpus& test_freq_map,
+                   CorpusMap& test_corpus_map,
+                   TestResult& test_result,
+                   std::ostream& output_stream);
+
+  int TestTimeline(const std::set<std::string>& texts,
+                   const std::string& expected_class_name,
+                   Corpus& test_freq_map,
+                   CorpusMap& test_corpus_map,
+                   TestResult& test_result,
+                   std::ostream &output_stream);
 
   int TestTrainingSources(const char* training_class,
                           Corpus& test_freq_map,
@@ -110,16 +116,6 @@ class Classifier {
                         std::ostream &output_stream);
 
   int WriteTestData(Corpus& corpus, const char* classes_freq_file);
-
-  static int ValidateTestDataInput(int argc, char* argv[],
-                            const char* &config_file,
-                            const char* &keytuples_config_file,
-                            unsigned int &input_type,
-                            unsigned int &output_type,
-                            const char* &input_file,
-                            const char* &output_file,
-                            const char* &input_handle,
-                            std::string &class_name);
 
   int NormalizeFrequencies();
   int NormalizeFrequencies(const char* raw_data_file, const char* relative_freq_file);

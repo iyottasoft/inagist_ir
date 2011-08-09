@@ -1,6 +1,7 @@
 #include "classifier_config.h"
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
 
 namespace inagist_classifiers {
 
@@ -35,7 +36,8 @@ int ClassifierConfig::Read(const char* config_file, Config& config) {
     std::string key;
     std::string value;
     std::string::size_type loc;
-    int line_count = 0;
+    unsigned int line_count = 0;
+    unsigned int class_count = 0;
     ClassStruct class_struct;
     while (getline(ifs, line)) {
       //std::cout << line << std::endl;
@@ -54,6 +56,8 @@ int ClassifierConfig::Read(const char* config_file, Config& config) {
         config.class_freqs_file = value;
       } else if (key.compare(0, 16, "test_frequencies") == 0) {
         config.test_freqs_file = value;
+      } else if (key.compare(0, 11, "num_classes") == 0) {
+        config.num_classes = atoi(value.c_str());
       } else {
         line_count++;
         if (key.compare(0, 10, "class_name") == 0) {
@@ -79,10 +83,17 @@ int ClassifierConfig::Read(const char* config_file, Config& config) {
           config.classes.insert(class_struct);
           line_count = 0;
           class_struct.clear();
+          class_count++;
+          if (class_count >= config.num_classes) {
+            break;
+          }
         }
       }
     }
     ifs.close();
+    if (class_count != config.num_classes) {
+      std::cerr << "WARNING: corrupt config file? invalid class_count." << std::endl;
+    }
   }
 
   return 0;
@@ -96,5 +107,38 @@ int ClassifierConfig::LoadClassLabelsMap(Config& config,
   return 0;
 }
 
+int ClassifierConfig::Write(Config& config, const char* config_file_name) {
+
+  if (config.classes.empty()) {
+    std::cerr << "ERROR: invalid config\n";
+    return -1;
+  }
+
+  std::ofstream ofs(config_file_name);
+  if (!ofs.is_open()) {
+    std::cerr << "ERROR: could not write to file: " << config_file_name << std::endl;
+    return -1;
+  }
+
+  ofs << "class_frequencies=" << config.class_freqs_file << std::endl; 
+  ofs << "test_frequencies=" << config.test_freqs_file << std::endl;
+  ofs << "num_classes=" << config.num_classes << std::endl;
+  unsigned int count = 0;
+  for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
+    ofs << "class_name." << count << "=" << config.iter->name << std::endl;
+    ofs << "class_label." << count << "=" << config.iter->label << std::endl;
+    ofs << "class_data." << count << "=" << config.iter->class_data_file << std::endl;
+    ofs << "testing_data." << count << "=" << config.iter->testing_data_file << std::endl;
+    ofs << "training_data." << count << "=" << config.iter->training_data_file << std::endl;
+    ofs << "handles." << count << "=" << config.iter->handles_file << std::endl;
+    ofs << "corpus." << count << "=" << config.iter->corpus_file << std::endl;
+    ofs << "tweets." << count << "=" << config.iter->tweets_file << std::endl; 
+    ofs << "seed." << count << "=" << config.iter->seed_file << std::endl;
+    count++;
+  }
+  ofs.close();
+
+  return 1;
+}
 
 } // namespace inagist_classifiers
