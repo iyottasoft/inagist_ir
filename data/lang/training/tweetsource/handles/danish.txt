@@ -1,4 +1,0 @@
-DRUPDATE=1
-Sportenkortdk=2
-politiken=1
-tv2newsdk=1

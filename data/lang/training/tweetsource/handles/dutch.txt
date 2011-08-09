@@ -1,5 +1,0 @@
-L1=1
-OLONederland=1
-PieterJanssenEU=2
-moriesbel=1
-ruudgreven=1

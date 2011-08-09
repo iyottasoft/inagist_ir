@@ -1,4 +1,0 @@
-as_roma=2
-ilgiornale=2
-juventusbrk=2
-politica_ai=1

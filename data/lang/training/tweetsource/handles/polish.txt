@@ -1,8 +1,0 @@
-KropkaNadI=2
-NewsweekPolska=1
-Radio_TOK_FM=1
-gazeta_wyborcza=2
-gazetapl_news=1
-rzeczpospolitaa=1
-sportpl=1
-tvn24=2
