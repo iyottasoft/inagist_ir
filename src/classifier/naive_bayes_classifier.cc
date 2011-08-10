@@ -371,9 +371,12 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
       continue;
 
     // what is this? why divide the product of term frequencies in class C with the number of words in document D?
+    /*
     if (temp_total_freq > 0) {
       freq = log(temp_total_freq/test_corpus.size());
     }
+    */
+    freq = temp_total_freq;
     if (freq <= 0)
       continue;
 

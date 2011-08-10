@@ -200,7 +200,7 @@ int CorpusManager::LoadCorpus(const std::string corpus_file_name, Corpus& corpus
   std::string line;
   std::string freq_str;
   std::string::size_type loc = 0;
-  int freq = 0;
+  double freq = 0;
   int num_docs = 0;
   while (getline(ifs, line)) {
     num_docs++;

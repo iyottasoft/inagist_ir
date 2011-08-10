@@ -245,6 +245,8 @@ I'LL
 i'm
 I'm
 I'M
+im
+Im
 i've
 I've
 I'VE
@@ -294,6 +296,8 @@ Likely
 LIKELY
 lmao
 LMAO
+lol
+Lol
 lt
 LT
 may

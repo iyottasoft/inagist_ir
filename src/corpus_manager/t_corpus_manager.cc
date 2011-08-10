@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
 */
 
   if (argc != 3) {
-    std::cout << "Usage: " << argv[0] << " <input_file_name> <0/1, 0-read corpus/1-read corpus map>\n";
+    std::cout << "Usage: " << argv[0] << " <input_file_name> <0/1, 0-lookup/1-print corpus>\n";
     return -1;
   }
 
@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
       return -1;
     }
     std::string line;
-    int freq = 0;
+    double freq = 0;
     while (getline(std::cin, line)) {
       if (line.compare("exit") == 0)
         break;
@@ -46,31 +46,12 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-/*
-  if (0 == test_type) {
-    int file_type = 0;
-    std::string output_file_name;
-    if (argc == 5) {
-      file_type = atoi(argv[3]);
-      if (file_type != 0 && file_type != 1) {
-        std::cout << "ERROR: invalid file type. 0 - tweet handles file, 1 - text file\n";
-        return -1;
-      }
-      output_file_name = std::string(argv[4]);
-    }
-    if (0 == file_type) { 
-      if (cm.GenerateLangModelFromTweets(input_file_name, "/tmp/tweets_file.txt", output_file_name) < 0) {
-        std::cout << "ERROR: could not generate lang model for handles in file " << input_file_name << std::endl; 
-        return -1;
-      }
-    } else {
-      if (cm.GenerateLangModel(input_file_name, output_file_name) < 0) {
-        std::cout << "ERROR: could not get language model for text in file " << input_file_name << std::endl;
-        return -1;
-      }
-    }
+  if (1 == test_type) {
+    inagist_classifiers::Corpus corpus;
+    inagist_classifiers::CorpusManager::LoadCorpus(input_file_name, corpus);
+    inagist_classifiers::CorpusManager::PrintCorpus(corpus);
   }
-*/
+
   return 0;
 }
 
