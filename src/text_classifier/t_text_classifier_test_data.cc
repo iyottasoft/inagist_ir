@@ -5,13 +5,13 @@
 
 using namespace inagist_classifiers;
 
-#define TEST_DEBUG 1
+//#define TEST_DEBUG 1
 
 int main(int argc, char* argv[]) {
 
-  if (argc < 5 || argc > 7) {
+  if (argc < 5 || argc > 8) {
     std::cout << "Usage: " << argv[0] << " <classifier_config> <keytuples_config> <input_type> <output_type>\n";
-    std::cout << "\t[input file/handle/class] [output file/expected_class]\n";
+    std::cout << "\t[debug_value]\n\t[input file/handle/class]\n\t[output file/expected_class]\n";
     std::cout << "input_type:\n\t0-9 - regular testing options\n\t10 - random selection of handles from training sources\n\t11 - all training sources (all handles)\n\t12 - given class (random handles)\n\t13 - use training files\noutput_type:\n\t0 - stdout\n\t1 - class frequency file\n\t2 - html version\n\t3 - all test data files (prod version)\n";
     return -1;
   }
@@ -20,13 +20,17 @@ int main(int argc, char* argv[]) {
   const char* keytuples_config_file = argv[2];
   unsigned int input_type = atoi(argv[3]); 
   unsigned int output_type = atoi(argv[4]); 
+  unsigned int debug_level = 0;
   const char* input_value = NULL;
   const char* output_value = NULL;
   if (argc == 6) {
-    input_value = argv[5];
+    debug_level = atoi(argv[5]);
   }
   if (argc == 7) {
-    output_value = argv[6];
+    input_value = argv[6];
+  }
+  if (argc == 8) {
+    output_value = argv[7];
   }
 
 #ifdef TEST_DEBUG
@@ -73,6 +77,10 @@ int main(int argc, char* argv[]) {
     return -1;
   }
   free(my_argv[0]);
+
+  if (debug_level > 0) {
+    tc->SetDebugLevel(debug_level);
+  }
 
   int ret_val = 0;
   if (tc->GetTestData(input_type, input_value, output_type, output_value) < 0) {

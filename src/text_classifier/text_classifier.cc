@@ -211,6 +211,7 @@ int TextClassifier::Classify(const unsigned char* text_word_list,
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                                         , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
+                                        , m_debug_level
                                        ) < 0) {
     std::cout << "ERROR: naive bayes classifiers could not guess the text class\n";
     test_corpus.clear();
@@ -352,6 +353,7 @@ int TextClassifier::Classify(Corpus& corpus,
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                                        , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
+                                       , m_debug_level
                                       )) < 0) {
     std::cout << "ERROR: naive bayes classifiers could not guess the text class\n";
     return -1;

@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
 
   const char* input_value = NULL;
   if (argc == 6) {
-    input_value = argv[4];
+    input_value = argv[5];
   }
 
   if (g_tc.Init(classifier_config) < 0) {

@@ -151,17 +151,14 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   }
 
 #ifdef NBC_DEBUG
-  if (!classes_freq_map.empty()) {
-    for (unsigned int i=0; i<classes_freq_map.size(); i++) {
-      if (debug_level > 3 || NBC_DEBUG > 3) {
-        std::cout << classes[i] << ": " << freqs[i] << " where prior freq is " << prior_freqs[i] << " (" \
-                  << prior_entry_for_class << " / " << prior_total_entries << ")" << std::endl;
+  if (debug_level > 3 || NBC_DEBUG > 3) {
+    if (!classes_freq_map.empty()) {
+      for (unsigned int i=0; i<count; i++) {
+          std::cout << classes[i] << ": " << freqs[i] << " prior: " << prior_freqs[i] << std::endl;
       }
-    }
-  } else {
-    for (unsigned int i=0; i<classes_freq_map.size(); i++) {
-      if (debug_level > 3 || NBC_DEBUG > 3) {
-        std::cout << classes[i] << ": " << freqs[i] << std::endl;
+    } else {
+      for (unsigned int i=0; i<count; i++) {
+          std::cout << classes[i] << ": " << freqs[i] << std::endl;
       }
     }
   }
@@ -239,7 +236,8 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                   , class_contributors
 #endif // CLASS_CONTRIBUTORS_ENABLED
-                  ) < 0) {
+                  , debug_level
+                 ) < 0) {
     std::cerr << "ERROR: could not get top classes set\n";
     return -1;
   }
@@ -406,21 +404,18 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
   }
 
 #ifdef NBC_DEBUG
-  if (!classes_freq_map.empty()) {
-    for (unsigned int i=0; i<classes_freq_map.size(); i++) {
-      if (debug_level > 3 || NBC_DEBUG > 3) {
-        std::cout << classes[i] << ": " << freqs[i] << " where prior freq is " << prior_freqs[i] << " (" \
-                  << prior_entry_for_class << " / " << prior_total_entries << ")" << std::endl;
+  if (debug_level > 3 || NBC_DEBUG > 3) {
+    if (!classes_freq_map.empty()) {
+      for (unsigned int i=0; i<count; i++) {
+          std::cout << classes[i] << ": " << freqs[i] << " prior: " << prior_freqs[i] << std::endl;
       }
-    }
-  } else {
-    for (unsigned int i=0; i<classes_freq_map.size(); i++) {
-      if (debug_level > 3 || NBC_DEBUG > 3) {
-        std::cout << classes[i] << ": " << freqs[i] << std::endl;
+    } else {
+      for (unsigned int i=0; i<count; i++) {
+          std::cout << classes[i] << ": " << freqs[i] << std::endl;
       }
     }
   }
-#endif
+#endif // NBC_DEBUG
 
   double max_freq = 0;
   unsigned int max_index = 0;
