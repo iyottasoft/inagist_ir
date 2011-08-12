@@ -72,10 +72,12 @@ class Classifier {
                       unsigned int& output_corpus_size,
                       bool get_user_info=false);
   int CleanCorpusFile(std::string& corpus_file_name,
-                      std::string& output_prefix);
-  int CleanCorpus(unsigned int input_type,
+                      std::string& output_prefix,
+                      unsigned int& clean_type);
+  int CleanCorpus(unsigned int& input_type,
                  std::string& file_name,
-                 std::string& output_prefix);
+                 std::string& output_prefix,
+                 unsigned int& clean_type);
 
 
   // testing

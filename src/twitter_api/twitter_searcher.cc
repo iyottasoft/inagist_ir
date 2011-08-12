@@ -78,8 +78,10 @@ int TwitterSearcher::GetTweetsFromUser(const std::string& user_name, std::set<st
 int TwitterSearcher::GetTweetsFromSearchUrl(const std::string& url, std::set<std::string>& tweets) {
 
 #ifdef TS_DEBUG
-  std::cout << url << std::endl;
-#endif
+  if (TS_DEBUG > 1) {
+    std::cout << url << std::endl;
+  }
+#endif // TS_DEBUG
   int num_docs = 0;
 
   bool ret_value = false;
@@ -119,16 +121,20 @@ int TwitterSearcher::GetTweetsFromSearchUrl(const std::string& url, std::set<std
               std::string tweeter = "unknown";
               JSONObject tweet_object = tweet_value->AsObject();
 #ifdef TS_DEBUG
-              if (tweet_object.find("from_user") != tweet_object.end() && tweet_object["from_user"]->IsString()) {
-                std::cout << tweet_object["from_user"]->AsString() << ": "; 
+              if (TS_DEBUG > 2) {
+                if (tweet_object.find("from_user") != tweet_object.end() && tweet_object["from_user"]->IsString()) {
+                  std::cout << tweet_object["from_user"]->AsString() << ": "; 
+                }
               }
-#endif
+#endif // TS_DEBUG
               if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
                 tweet = tweet_object["text"]->AsString(); 
                 tweets.insert(tweet);
 #ifdef TS_DEBUG
-                std::cout << tweet << std::endl;
-#endif
+                if (TS_DEBUG > 1) {
+                  std::cout << tweet << std::endl;
+                }
+#endif // TS_DEBUG
                 ++num_docs;
               }
             }

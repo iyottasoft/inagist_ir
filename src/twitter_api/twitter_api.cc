@@ -399,7 +399,7 @@ int TwitterAPI::GetUserInfo(const std::string& handle,
   }
 
 #ifdef TA_DEBUG
-  if (TA_DEBUG > 0) {
+  if (TA_DEBUG > 1) {
     std::set<std::string>::iterator set_iter;
     for (set_iter = user_info_tokens.begin(); set_iter != user_info_tokens.end(); set_iter++) {
       std::cout << *set_iter << std::endl;
@@ -501,7 +501,7 @@ int TwitterAPI::GetUserInfo(const std::string& handle,
   }
 
 #ifdef TA_DEBUG
-  if (TA_DEBUG > 0) {
+  if (TA_DEBUG > 1) {
     if (locations_count > 0) {
       std::cout << "locations: " << locations_buffer << std::endl;
     } else {
@@ -640,7 +640,9 @@ int TwitterAPI::GetFollowerTweets(const std::string& handle,
 
     std::string url = "http://api.twitter.com/1/followers/ids.json?screen_name=" + handle + "&cursor=" + cursor;
 #ifdef TA_DEBUG
-    std::cout << "Url: " << url << std::endl;
+    if (TA_DEBUG > 1) {
+      std::cout << "Url: " << url << std::endl;
+    }
 #endif // TA_DEBUG
 
     ret_value = curl_request_maker.GetTweets(url.c_str());
@@ -678,7 +680,9 @@ int TwitterAPI::GetFollowerTweets(const std::string& handle,
         for (unsigned int i=0; i < json_array.size(); i++) {
           follower_id = json_array[i]->AsString();
 #ifdef TA_DEBUG
-          std::cout << "follower id: " << follower_id << std::endl;
+          if (TA_DEBUG > 2) {
+            std::cout << "follower id: " << follower_id << std::endl;
+          }
 #endif // TA_DEBUG
           num_followers++;
           /*

@@ -7,6 +7,13 @@
 #include "twitter_api.h"
 #include "twitter_searcher.h"
 
+#ifdef DEBUG
+#if DEBUG>0
+#define ERL_NIF_DEBUG DEBUG
+#endif
+#endif
+//#define ERL_NIF_DEBUG 3
+
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
@@ -28,7 +35,7 @@ int GetTestTweetsFromFile(const char* file_name,
   unsigned int len = 0;
   unsigned int total_len = 0;
   while (getline(ifs, line)) {
-#ifdef LD_DEBUG
+#ifdef ERL_NIF_DEBUG
     if (line.length() <= 0) {
       std::cerr << "Empty file\n":
       continue;
@@ -44,7 +51,7 @@ int GetTestTweetsFromFile(const char* file_name,
       ptr++;
       num_docs++;
     } else {
-#ifdef LD_DEBUG
+#ifdef ERL_NIF_DEBUG
       std::cout << "Not enuf space in the tweets buffer\n";
 #endif
       break;
@@ -99,9 +106,7 @@ int GetTestTweets(const char* user_name,
       ptr++;
       num_docs++;
     } else {
-#ifdef LD_DEBUG
       std::cout << "Not enuf space in the tweets buffer\n";
-#endif
       break;
     }
   }

@@ -899,21 +899,24 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
   bool current_word_starts_num = false;
   bool current_word_precedes_punct = false;
   bool current_word_precedes_ignore_word = false;
-  // char* current_word_has_apostropheS = NULL;
+  unsigned char* current_word_has_apostropheS = NULL;
+  bool current_word_hashtag = false;
   bool prev_word_caps = false;
   bool prev_word_all_caps = false;
   bool prev_word_starts_num = false;
   bool prev_word_has_mixed_case = false;
   bool prev_word_precedes_punct = false;
   bool prev_word_precedes_ignore_word = false;
-  // char* prev_word_has_apostropheS = NULL;
+  unsigned char* prev_word_has_apostropheS = NULL;
+  bool prev_word_hashtag = false;
   bool next_word_caps = false;
   bool next_word_all_caps = false;
   bool next_word_starts_num = false;
   bool next_word_has_mixed_case = false;
   bool next_word_precedes_punct = false;
   bool next_word_precedes_ignore_word = false;
-  // char* next_word_has_apostropheS = NULL;
+  unsigned char* next_word_has_apostropheS = NULL;
+  bool next_word_hashtag = false;
 
   bool current_word_stop = false;
   bool current_word_dict = false;
@@ -988,6 +991,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
     return 0;
   }
 
+  if ('#' == *ptr) {
+    current_word_hashtag = true;
+    ptr++;
+  }
+
   current_word_start = ptr;
   sentence_start = ptr;
 #ifdef INTENT_ENABLED
@@ -1008,6 +1016,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
     if (isupper(*(ptr+1))) {
       current_word_all_caps = true;
     }
+    //*ptr += 32;
   } else if (isdigit(*ptr)) {
     current_word_starts_num = true; 
     num_numeric_words++;
@@ -1060,6 +1069,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       if (!current_word_all_caps) {
         current_word_has_mixed_case = true;
       }
+      //*ptr += 32;
     } else if (islower(*ptr)) {
       if (current_word_all_caps) {
         current_word_has_mixed_case = true;
@@ -1110,6 +1120,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
   current_word_delimiter = *ptr;
   current_word_len = current_word_end - current_word_start;
   *ptr = '\0';
+  if (current_word_len > 2 && strcmp((char *) current_word_end - 2, "'s") == 0) {
+    current_word_has_apostropheS = current_word_end-2;
+  }
   current_word_precedes_punct = is_punct;
   num_words++;
 
@@ -1188,25 +1201,30 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
 #ifdef LANG_ENABLED
   if (current_word_start &&
       (current_word_stop || current_word_dict) &&
-      *current_word_start != '#') {
+      !current_word_hashtag) {
     lang_words_set.insert(std::string((char *) current_word_start));
   }
 #endif // LANG_ENABLED
 
 #ifdef TEXT_CLASSIFICATION_ENABLED
-  bool is_apostrophe;
-  is_apostrophe = false;
+  //bool is_apostrophe;
+  //is_apostrophe = false;
   if (current_word_start &&
       !current_word_stop &&
       !current_word_dict &&
       !current_word_starts_num &&
-      *current_word_start != '#' &&
+      !current_word_hashtag &&
       current_word_len > 1) {
+    if (current_word_has_apostropheS) {
+      *current_word_has_apostropheS = '\0';
+    }
+    /*
     if (strncmp((char *) current_word_end-2, "\'s", 2) == 0) {
       is_apostrophe = true;
       ch = *(current_word_end-2);
       *(current_word_end-2) = '\0';
     }
+    */
     if (!current_word_caps || current_word_all_caps || current_word_has_mixed_case) {
       text_class_words_set.insert(std::string((char *) current_word_start));
     } else { 
@@ -1214,9 +1232,14 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       text_class_words_set.insert(std::string((char *) current_word_start));
       *current_word_start -= 32;
     }
+    if (current_word_has_apostropheS) {
+      *current_word_has_apostropheS = '\'';
+    }
+    /*
     if (is_apostrophe) {
       *(current_word_end-2) = ch;
     }
+    */
   }
 #endif // TEXT_CLASSIFICATION_ENABLED
 
@@ -1276,6 +1299,10 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
 #endif // KE_DEBUG
     return 0;
   } else {
+    if ('#' == *ptr) {
+      next_word_hashtag = true;
+      ptr++;
+    }
     next_word_start = ptr;
 #ifdef INTENT_ENABLED
     if (orig_start && !intent_start) {
@@ -1299,6 +1326,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       if (isupper(*(next_word_start + 1))) {
         next_word_all_caps = true;
       }
+      //*next_word_start += 32;
     } else if (isdigit(*next_word_start)) {
       next_word_starts_num = true;
       num_numeric_words++;
@@ -1330,7 +1358,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
     return -1;
   }
 
-  while (ptr && probe && *ptr != '\n' && *ptr != '\0') {
+  while (ptr && probe/* && *ptr != '\n' && *ptr != '\0'*/) {
     // this loop works between second letter to end punctuation for each word
     is_punct = false;
     if (' ' == *probe || '\0' == *probe ||
@@ -1353,6 +1381,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
         next_word_end = probe;
         *probe = '\0';
         next_word_len = next_word_end - next_word_start;
+        if (next_word_len > 2 && strcmp((char *) next_word_end - 2, "'s") == 0) {
+          next_word_has_apostropheS = next_word_end-2;
+        }
       }
 
 #ifdef LANG_ENABLED
@@ -1500,7 +1531,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
 #ifdef LANG_ENABLED
         if ((next_word_stop ||
              next_word_dict) &&
-             *next_word_start != '#') {
+             !next_word_hashtag) {
           lang_words_set.insert(std::string((char *) next_word_start));
         }
 #endif // LANG_ENABLED
@@ -1509,13 +1540,18 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
         if (!next_word_stop &&
             !next_word_dict &&
             !next_word_starts_num &&
-            *next_word_start != '#' &&
+            !next_word_hashtag &&
             next_word_len > 1) {
-          is_apostrophe = false;
+          //is_apostrophe = false;
+          /*
           if (strncmp((char *) next_word_end-2, "\'s", 2) == 0) {
             is_apostrophe = true;
             ch = *(next_word_end-2);
             *(next_word_end-2) = '\0';
+          }
+          */
+          if (next_word_has_apostropheS) {
+            *next_word_has_apostropheS = '\0';
           }
           if (!next_word_caps || next_word_all_caps || next_word_has_mixed_case) {
             text_class_words_set.insert(std::string((char *) next_word_start));
@@ -1524,8 +1560,13 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
             text_class_words_set.insert(std::string((char *) next_word_start));
             *next_word_start -= 32;
           }
+          /*
           if (is_apostrophe) {
             *(next_word_end-2) = ch;
+          }
+          */
+          if (next_word_has_apostropheS) {
+            *next_word_has_apostropheS = '\'';
           }
         }
 #endif // TEXT_CLASSIFICATION_ENABLED
@@ -1544,7 +1585,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
 
       if (!current_word_stop && !current_word_dict && !current_word_caps &&
           !current_word_starts_num && !current_word_has_mixed_case &&
-          (current_word_len > 1) && '#' != *current_word_start) {
+          (current_word_len > 1) && !current_word_hashtag) {
 #ifdef KE_DEBUG
         if (KE_DEBUG > 5) {
           cout << current_word_start << ": normal word" << endl;
@@ -1682,7 +1723,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
 #endif // I18N_ENABLED
             !current_word_stop &&
             !current_word_dict &&
-            '#' != *current_word_start &&
+            //!current_word_hashtag && // NOTE: hashtags can be start of keyphrases
             NULL != next_word_start &&
             !current_word_precedes_ignore_word &&
             ((current_word_len > 1) || isdigit(*current_word_start))) {
@@ -1695,7 +1736,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       } else {
         if (current_word_stop ||
             current_word_dict ||
-            '#' == *current_word_start ||
+            current_word_hashtag || // NOTE: using hashtag to end keyphrase
             ((current_word_len < 2) && !isdigit(*current_word_start))
            ) {
           if (stopwords_keyphrase_start != prev_word_start) {
@@ -1725,9 +1766,15 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
 #if defined NAMED_ENTITIES_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
       if (NULL == caps_entity_start) {
         caps_entity_end = NULL;
-        if ((current_word_len > 1 && (current_word_caps || ('#' == *current_word_start && isupper(*(current_word_start+1)))) &&
+        if ((current_word_len > 1 && (current_word_caps) &&
             !current_word_stop && !current_word_dict) && 
-            (!prev_word_start || prev_word_precedes_ignore_word || prev_word_precedes_punct || !prev_word_caps || '#' == *current_word_start)) {
+            (!prev_word_start ||
+             prev_word_precedes_ignore_word ||
+             prev_word_precedes_punct ||
+             !prev_word_caps ||
+             current_word_hashtag
+            )
+           ) {
 
           if (' ' == current_word_delimiter &&
               NULL != next_word_start &&
@@ -1866,8 +1913,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       // write entities
       if (NULL != stopwords_entity_start && NULL != stopwords_entity_end) {
         if (stopwords_entity_start < stopwords_entity_end) {
-          if ('#' == *stopwords_entity_start)
-            stopwords_entity_start++;
 #ifdef KE_DEBUG
           if (KE_DEBUG > 1) {
             cout << endl << string((char *) stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) << " :entity by stopword";
@@ -1968,8 +2013,6 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       //  note, keyphrase code above refers to start of caps_entity_start; any change here, will also affect that
       if (NULL != caps_entity_start && NULL != caps_entity_end) {
         if (caps_entity_start < caps_entity_end) {
-          if ('#' == *caps_entity_start)
-            caps_entity_start++;
 #ifdef KE_DEBUG
           if (KE_DEBUG > 2) {
             cout << endl \
@@ -2069,20 +2112,32 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
 
 #ifdef KEYWORDS_ENABLED 
       // hash tags
-      if ('#' == *current_word_start && current_word_len >= 2) {
-        // avoiding #, hence note the length
-        if ((keywords_len + current_word_len/* + 1*/) < keywords_buffer_len) {
+      if (current_word_hashtag) {
+        if ((keywords_len + current_word_len + 1) < keywords_buffer_len) {
           Insert(keywords_buffer, keywords_len,
-                 current_word_start + 1, current_word_len-1,
+                 current_word_start, current_word_len,
+                 keywords_count); 
+        }
+      }
+      if (!current_word_stop && !current_word_dict && current_word_has_apostropheS) {
+        if ((keywords_len + current_word_len - 1) < keywords_buffer_len) {
+          Insert(keywords_buffer, keywords_len,
+                 current_word_start, current_word_len-2,
                  keywords_count); 
         }
       }
 #elif TEXT_CLASSIFICATION_ENABLED
-      if ('#' == *current_word_start && current_word_len >= 2) {
-        // avoiding #, hence note the length
-        if ((text_class_words_len + current_word_len/* + 1*/) < text_class_words_buffer_len) {
+      if (current_word_hashtag) {
+        if ((text_class_words_len + current_word_len + 1) < text_class_words_buffer_len) {
           Insert(text_class_words_buffer, text_class_words_len,
-                 current_word_start + 1, current_word_len-1,
+                 current_word_start, current_word_len,
+                 text_class_words_count); 
+        }
+      }
+      if (!current_word_stop && !current_word_dict && current_word_has_apostropheS) {
+        if ((text_class_words_len + current_word_len - 1) < text_class_words_buffer_len) {
+          Insert(text_class_words_buffer, text_class_words_len,
+                 current_word_start, current_word_len-2,
                  text_class_words_count); 
         }
       }
@@ -2119,7 +2174,8 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       prev_word_delimiter = current_word_delimiter;
       prev_word_precedes_ignore_word = current_word_precedes_ignore_word;
       prev_word_precedes_punct = current_word_precedes_punct;
-      // prev_word_has_apostropheS = current_word_has_apostropheS;
+      prev_word_has_apostropheS = current_word_has_apostropheS;
+      prev_word_hashtag = current_word_hashtag;
 
       current_word_end = next_word_end;
       current_word_start = next_word_start;
@@ -2135,7 +2191,8 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       current_word_precedes_punct = next_word_precedes_punct;
       current_word_len = next_word_len;
       current_word_ascii = next_word_ascii;
-      // current_word_has_apostropheS = next_word_has_apostropheS;
+      current_word_has_apostropheS = next_word_has_apostropheS;
+      current_word_hashtag = next_word_hashtag;
 
       next_word_start = NULL;
       next_word_end = NULL;
@@ -2149,7 +2206,8 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
       next_word_precedes_ignore_word = false;
       next_word_precedes_punct = false;
       next_word_ascii = false;
-      // next_word_has_apostropheS = NULL;
+      next_word_has_apostropheS = NULL;
+      next_word_hashtag = false;
 
       // BE CAREFUL ABOUT WHAT IS NEXT WORD OR CURRENT WORD NOW
 
@@ -2179,6 +2237,10 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
         }
 
         if (ptr && '\0' != *ptr) {
+          if ('#' == *ptr) {
+            next_word_hashtag = true;
+            ptr++;
+          }
           next_word_start = ptr;
           num_words++;
           if (current_word_precedes_ignore_word) {
@@ -2253,6 +2315,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
             if (isupper(*(next_word_start+1))) {
               next_word_all_caps = true;
             }
+            //*next_word_start += 32;
           } else if (isdigit(*next_word_start)) {
             next_word_starts_num = true;
             num_numeric_words++;
@@ -2270,6 +2333,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
         if (!next_word_all_caps) {
           next_word_has_mixed_case = true;
         }
+        //*probe += 32;
       } else if (islower(*probe)) {
         if (next_word_all_caps) {
           next_word_has_mixed_case = true;

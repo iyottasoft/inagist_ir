@@ -353,8 +353,8 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
   inagist_api::TwitterAPI twitter_api;
   inagist_api::TwitterSearcher twitter_searcher;
 
-  unsigned int count = 0;
-  unsigned int user_info_count = 0;
+  int count = 0;
+  int user_info_count = 0;
   unsigned int self_docs_count = 0;
   unsigned int others_docs_count = 0;
   unsigned int corpus_size = 0;
@@ -581,7 +581,7 @@ int Profiler::ProfileFromFile(const char* docs_file_name, unsigned int docs_file
   }
 
   inagist_classifiers::Corpus corpus;
-  unsigned int init_corpus_size = 0;
+  int init_corpus_size = 0;
 
   if (profile_name && (strlen(profile_name) > 4)) {
     if ((init_corpus_size = inagist_classifiers::CorpusManager::LoadCorpus(profile_name, corpus)) < 0) {
@@ -591,7 +591,7 @@ int Profiler::ProfileFromFile(const char* docs_file_name, unsigned int docs_file
   }
 
   // genrate profile
-  unsigned int count = 0;
+  int count = 0;
   unsigned int corpus_size = 0;
   if ((count += GetGist(tweets,
                         self_languages_buffer, self_languages_buffer_len,
@@ -723,7 +723,7 @@ int Profiler::GetGist(std::set<std::string>& tweets,
   std::set<std::string>::iterator set_iter;
   std::string tweet;
   std::string language;
-  unsigned int count = 0;
+  int count = 0;
 
   int ret_value = 0;
   for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {

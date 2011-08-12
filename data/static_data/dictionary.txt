@@ -936,6 +936,7 @@ sticky
 stiff
 still
 Still
+STILL
 straight
 strange
 stretch

@@ -1,7 +1,6 @@
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
-#include <cassert>
 #include <string>
 #include <set>
 #include "keytuples_extracter.h"
@@ -39,7 +38,7 @@ int GetSentiment(std::string text) {
 int main(int argc, char *argv[]) {
 
   if (argc < 3 || argc > 4) {
-    std::cout << "Usage: " << argv[0] << "\n\t<keytuples_config_file_name>\n\t<0/1/2, 0-interactive, 1-file, 2-tweet, 3-many tweets, 4-inagist>\n\t[<file>/<handle>]\n";
+    std::cout << "Usage: " << argv[0] << "\n\t<keytuples_config_file_name>\n\t<0/1/2, 0-interactive, 1-file, 2-tweet, 3-many tweets, 4-inagist, 5-twitter search, 7-follower tweets>\n\t[<file>/<handle>]\n";
     return -1;
   }
 
@@ -50,7 +49,6 @@ int main(int argc, char *argv[]) {
   }
 
   unsigned int input_type = atoi(argv[2]);
-  assert(input_type >=0 && input_type <=4);
   const char* input_value = NULL;
 
   // initialize keytuples extracter

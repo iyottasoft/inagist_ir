@@ -50,6 +50,7 @@ int Init(const char* keytuples_extracter_config_file
                        , std::set<std::string>& keyphrases
 #endif // KEYPHRASE_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
+                       , std::set<std::string>& text_class_words
                        , std::set<std::string>& text_classes
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                        , std::map<std::string, std::string>& text_class_contributors_map
@@ -122,6 +123,8 @@ int GetGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
        );
 #endif // TEXT_CLASSIFICATION_ENABLED
 
+  int SetDebugLevel(unsigned int debug_level);
+
  private:
 
   inagist_trends::KeyTuplesExtracter m_keytuples_extracter;
@@ -133,6 +136,7 @@ int GetGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
 #endif // TEXT_CLASSIFICATION_ENABLED
 
   char m_buffer[1024];
+  unsigned int m_debug_level;
 };
 
 } // namespace inagist

@@ -23,6 +23,8 @@ int GetKeyTuples(std::string text) {
   std::string sentiment;
 
   strcpy(buffer, text.c_str()); 
+  std::cout << std::endl << buffer << std::endl;
+
   int keytuples_count = 0;
   if ((keytuples_count = g_ke.GetKeyTuples(buffer, safe_status, script
 #ifdef NAMED_ENTITIES_ENABLED
@@ -51,10 +53,9 @@ int GetKeyTuples(std::string text) {
     return -1;
   }
 
-#ifndef KE_DEBUG
-  std::cout << std::endl << buffer << std::endl;
   memset(buffer, 0, 1024);
 
+#ifndef KE_DEBUG
   if (!safe_status.empty()) {
     std::cout << "safe_status: " << safe_status << std::endl;
   }
@@ -134,7 +135,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  unsigned int input_type = atoi(argv[2]);
+  int input_type = atoi(argv[2]);
   assert(input_type >=0 && input_type <=5);
   const char* input_value = NULL;
 

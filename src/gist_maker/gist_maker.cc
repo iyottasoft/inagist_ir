@@ -21,9 +21,17 @@
 namespace inagist {
 
 GistMaker::GistMaker() {
+#ifdef GIST_DEBUG
+  m_debug_level = GIST_DEBUG;
+#endif
 }
 
 GistMaker::~GistMaker() {
+}
+
+int GistMaker::SetDebugLevel(unsigned int debug_level) {
+  m_debug_level = debug_level;
+  return 0;
 }
 
 int GistMaker::Init(const char* keytuples_extracter_config_file
@@ -62,8 +70,10 @@ int GistMaker::Init(const char* keytuples_extracter_config_file
 #endif // TEXT_CLASSIFICATION_ENABLED
 
 #ifdef GIST_DEBUG
-  std::cout << "INFO: initializing keytuples_extracter with config: " \
-            << keytuples_extracter_config_file << std::endl;
+  if (m_debug_level > 2) {
+    std::cout << "INFO: initializing keytuples_extracter with config: " \
+              << keytuples_extracter_config_file << std::endl;
+  }
 #endif // GIST_DEBUG
 
   bool load_classifier_dictionary = false;
@@ -74,8 +84,10 @@ int GistMaker::Init(const char* keytuples_extracter_config_file
 
 #ifdef LANG_ENABLED
 #ifdef GIST_DEBUG
-  std::cout << "INFO: initializing language_detector with config: " \
-            << language_detection_config_file << std::endl;
+  if (m_debug_level > 2) {
+    std::cout << "INFO: initializing language_detector with config: " \
+              << language_detection_config_file << std::endl;
+  }
 #endif // GIST_DEBUG
   if (m_language_detector.Init(language_detection_config_file) < 0) {
     std::cerr << "ERROR: could not initialize LanguageDetector\n";
@@ -85,8 +97,10 @@ int GistMaker::Init(const char* keytuples_extracter_config_file
 
 #ifdef TEXT_CLASSIFICATION_ENABLED
 #ifdef GIST_DEBUG
-  std::cout << "INFO: initializing text_classifier with config: " \
-            << text_classification_config_file << std::endl;
+  if (m_debug_level > 2) {
+    std::cout << "INFO: initializing text_classifier with config: " \
+              << text_classification_config_file << std::endl;
+  }
 #endif // GIST_DEBUG
   if (m_text_classifier.Init(text_classification_config_file) < 0) {
     std::cerr << "ERROR: could not initialize TextClassifier\n";
@@ -114,6 +128,7 @@ int GistMaker::GetGist(const std::string& text) {
   std::set<std::string> keywords;
 #endif // KEYWORDS_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
+  std::set<std::string> text_class_words;
   std::set<std::string> text_classes;
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   std::map<std::string, std::string> text_class_contributors_map;
@@ -140,6 +155,7 @@ int GistMaker::GetGist(const std::string& text) {
               , keyphrases
 #endif // KEYPHRASE_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
+              , text_class_words
               , text_classes
 #ifdef CLASS_CONTRIBUTORS_ENABLED
               , text_class_contributors_map
@@ -186,6 +202,11 @@ int GistMaker::GetGist(const std::string& text) {
     keyphrases.clear();
 #endif // KEYPHRASE_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
+    std::cout << "text_class_words: ";
+    for (set_iter = text_class_words.begin(); set_iter != text_class_words.end(); set_iter++) {
+      std::cout << *set_iter << " | ";
+    }
+    std::cout << std::endl;
     std::cout << "text_classes: ";
     for (set_iter = text_classes.begin(); set_iter != text_classes.end(); set_iter++) {
       std::cout << *set_iter << " | ";
@@ -229,6 +250,7 @@ int GistMaker::GetGist(const std::string& text,
                        , std::set<std::string>& keyphrases
 #endif // KEYPHRASE_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
+                       , std::set<std::string>& text_class_words
                        , std::set<std::string>& text_classes
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                        , std::map<std::string, std::string>& text_class_contributors_map
@@ -400,7 +422,7 @@ int GistMaker::GetGist(const std::string& text,
                 , (char *) sentiment_buffer, sentiment_buffer_len
 #endif // SENTIMENT_ENABLED
                )) < 0) {
-    std::cerr << "ERROR: could not get named_entities\n";
+    std::cerr << "ERROR: could not get gist\n";
   } else {
     safe_status = std::string(safe_status_buffer);
     script = std::string(script_buffer);
@@ -417,6 +439,7 @@ int GistMaker::GetGist(const std::string& text,
     lang = std::string(lang_class_buffer);
 #endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
+    inagist_utils::PipeListToSet(text_class_words_buffer, text_class_words);
     if (top_text_classes_len > 0 && top_text_classes_count > 0) {
       text_classes.insert(std::string(top_text_classes_buffer));
     }
@@ -424,11 +447,15 @@ int GistMaker::GetGist(const std::string& text,
 #ifdef INTENT_ENABLED
     if (strlen(intent_buffer) > 0) {
       intent = std::string(intent_buffer);
+    } else {
+      intent.clear();
     }
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
     if (strlen(sentiment_buffer) > 0) {
       sentiment = std::string(sentiment_buffer);
+    } else {
+      sentiment.clear();
     }
 #endif // SENTIMENT_ENABLED
   }
@@ -603,25 +630,6 @@ int GistMaker::GetGist(unsigned char* text_buffer,  const unsigned int text_buff
       return -1;
 #endif // GIST_DEBUG
     }
-/*
-    *named_entities_buffer = '\0';
-    *named_entities_len_ptr = 0;
-    *named_entities_count_ptr = 0;
-    *keywords_buffer = '\0';
-    *keywords_len_ptr = 0;
-    *keywords_count_ptr = 0;
-    *keyphrases_buffer = '\0';
-    *keyphrases_len_ptr = 0;
-    *keyphrases_count_ptr = 0;
-    *lang_class_words_buffer = '\0';
-    *lang_class_words_len_ptr = 0;
-    *lang_class_words_count_ptr = 0;
-    *text_class_words_buffer = '\0';
-    *text_class_words_len_ptr = 0;
-    *text_class_words_count_ptr = 0;
-    *intent_buffer = '\0';
-    *sentiment_buffer = '\0';
-*/
 #ifdef GIST_DEBUG
     std::cout << "WARNING: no keytuples found\n";
 #endif // GIST_DEBUG
@@ -684,44 +692,67 @@ int GistMaker::GetGist(unsigned char* text_buffer,  const unsigned int text_buff
   }
 #endif // LANG_ENABLED
 
+  if (strcmp(lang_class_buffer, "en") != 0) {
+#ifdef NAMED_ENTITIES_ENABLED
+    *named_entities_buffer = '\0';
+    *named_entities_len_ptr = 0;
+    *named_entities_count_ptr = 0;
+#endif // NAMED_ENTITIES_ENABLED
+#ifdef KEYWORDS_ENABLED
+    *keywords_buffer = '\0';
+    *keywords_len_ptr = 0;
+    *keywords_count_ptr = 0;
+#endif // KEYWORDS_ENABLED
+#ifdef KEYPHRASE_ENABLED
+    *keyphrases_buffer = '\0';
+    *keyphrases_len_ptr = 0;
+    *keyphrases_count_ptr = 0;
+#endif // KEYPHRASE_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
-  unsigned int top_text_classes_len = 0;
-  unsigned int top_text_classes_count = 0;
-#ifdef CLASS_CONTRIBUTORS_ENABLED
-  unsigned int text_class_contributors_len = 0;
-  unsigned int text_class_contributors_count = 0;
-#endif // CLASS_CONTRIBUTORS_ENABLED
-
-  int ret_val = 0;
-  if ((ret_val = m_text_classifier.Classify(text_class_words_buffer, text_class_words_len, text_class_words_count,
-                                 text_class_buffer, text_class_buffer_len,
-                                 top_text_classes_buffer, top_text_classes_buffer_len,
-                                 top_text_classes_len, top_text_classes_count
-#ifdef CLASS_CONTRIBUTORS_ENABLED
-                                 , text_class_contributors_buffer,
-                                 text_class_contributors_buffer_len,
-                                 text_class_contributors_len,
-                                 text_class_contributors_count
-#endif // CLASS_CONTRIBUTORS_ENABLED
-                                )) < 0) {
-#ifdef GIST_DEBUG
-    std::cerr << "ERROR: could not find text class. assigning RR\n";
-#endif // GIST_DEBUG
-  } else {
-    *top_text_classes_len_ptr = top_text_classes_len;
-    *top_text_classes_count_ptr = top_text_classes_count;
-#ifdef CLASS_CONTRIBUTORS_ENABLED
-    *text_class_contributors_len_ptr = text_class_contributors_len;
-    *text_class_contributors_count_ptr = text_class_contributors_count;
-#endif // CLASS_CONTRIBUTORS_ENABLED
-  }
+    *text_class_words_buffer = '\0';
+    *text_class_words_len_ptr = 0;
+    *text_class_words_count_ptr = 0;
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+    *intent_buffer = '\0';
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+    *sentiment_buffer = '\0';
+#endif // SENTIMENT_ENABLED
+  } else {
+#ifdef TEXT_CLASSIFICATION_ENABLED
+    unsigned int top_text_classes_len = 0;
+    unsigned int top_text_classes_count = 0;
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+    unsigned int text_class_contributors_len = 0;
+    unsigned int text_class_contributors_count = 0;
+#endif // CLASS_CONTRIBUTORS_ENABLED
 
-/*
-  lang_words_buffer[0] = '\0';
-  top_lang_classes_buffer[0] = '\0';
-  text_class_buffer[0] = '\0';
-*/
+    int ret_val = 0;
+    if ((ret_val = m_text_classifier.Classify(text_class_words_buffer, text_class_words_len, text_class_words_count,
+                                   text_class_buffer, text_class_buffer_len,
+                                   top_text_classes_buffer, top_text_classes_buffer_len,
+                                   top_text_classes_len, top_text_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+                                   , text_class_contributors_buffer,
+                                   text_class_contributors_buffer_len,
+                                   text_class_contributors_len,
+                                   text_class_contributors_count
+#endif // CLASS_CONTRIBUTORS_ENABLED
+                                  )) < 0) {
+#ifdef GIST_DEBUG
+      std::cerr << "ERROR: could not find text class. assigning RR\n";
+#endif // GIST_DEBUG
+    } else {
+      *top_text_classes_len_ptr = top_text_classes_len;
+      *top_text_classes_count_ptr = top_text_classes_count;
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+      *text_class_contributors_len_ptr = text_class_contributors_len;
+      *text_class_contributors_count_ptr = text_class_contributors_count;
+#endif // CLASS_CONTRIBUTORS_ENABLED
+    }
+#endif // TEXT_CLASSIFICATION_ENABLED
+  } // check for english
 
 #ifdef GIST_DEBUG
   std::cout << "text: " << text_buffer << std::endl;
@@ -813,22 +844,30 @@ int GistMaker::FindTextClasses(inagist_classifiers::Corpus& corpus,
       strcpy(text_classes_buffer, top_classes.c_str());
       text_classes_count = top_classes_count;
     }
-#ifdef GIST_DEBUG
 #ifdef CLASS_CONTRIBUTORS_ENABLED
     if (text_class_contributors_map.empty()) {
-      std::cerr << "WARNING: no class_contributors found\n";
+#ifdef GIST_DEBUG
+      if (m_debug_level > 1) {
+        std::cerr << "WARNING: no class_contributors found\n";
+      }
+#endif // GIST_DEBUG
     } else {
       if (inagist_utils::StringMapToPipeList(text_class_contributors_map,
                             text_class_contributors_buffer, text_class_contributors_buffer_len,
                             text_class_contributors_len, text_class_contributors_count) < 0) {
+#ifdef GIST_DEBUG
         std::cerr << "ERROR: could not make a list of class_contributors\n";
+#endif // GIST_DEBUG
       } else {
-        std::cout << "INFO: " << text_class_contributors_count \
-                << "strings from map written to piped list\n";
-     }
+#ifdef GIST_DEBUG
+        if (m_debug_level > 2) {
+          std::cout << "INFO: " << text_class_contributors_count \
+                    << "strings from map written to piped list\n";
+        }
+#endif // GIST_DEBUG
+      }
     }
 #endif // CLASS_CONTRIBUTORS_ENABLED
-#endif // GIST_DEBUG
   }
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   text_class_contributors_map.clear();

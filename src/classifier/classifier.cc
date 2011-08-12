@@ -236,6 +236,7 @@ int Classifier::GetTrainingData(const char* config_file_name) {
 int Classifier::GetTrainingData(const std::string& class_name,
                                 const std::string& twitter_handles_file_name,
                                 const std::string& output_tweets_file_name,
+                                const std::string& manual_seed_file_name,
                                 unsigned int& output_num_docs,
                                 const std::string& output_corpus_file_name,
                                 unsigned int& output_corpus_size) {
@@ -563,7 +564,9 @@ int Classifier::GetTrainingData(const std::string& handle,
   return count + user_info_count;
 }
 
-int Classifier::CleanCorpusFile(std::string& corpus_file_name, std::string& output_suffix) {
+int Classifier::CleanCorpusFile(std::string& corpus_file_name,
+                                std::string& output_suffix,
+                                unsigned int& clean_type) {
 
   std::ifstream ifs(corpus_file_name.c_str());
   if (!ifs.is_open()) {
@@ -581,11 +584,12 @@ int Classifier::CleanCorpusFile(std::string& corpus_file_name, std::string& outp
   std::string key;
   std::string temp_key;
   std::string new_key;
-  int value = 0;
-  int temp_value = 0;
+  double value = 0;
+  double temp_value = 0;
   bool flag = false;
-  char str[10];
-  memset(str, '\0', 10);
+  char str[255];
+  memset(str, '\0', 255);
+  double temp_double = 0;
 
   if (CorpusManager::LoadCorpus(corpus_file_name, corpus) < 0) {
     std::cerr << "ERROR: could not load corpus file: " << corpus_file_name << std::endl;
@@ -598,69 +602,100 @@ int Classifier::CleanCorpusFile(std::string& corpus_file_name, std::string& outp
   std::string input;
 #endif // CLASSIFIER_DEBUG
 
+  unsigned int i=0;
   for (corpus_iter = corpus.begin(); corpus_iter != corpus.end(); corpus_iter++) {
     flag = false;
     // corpus_iter->first is a string. we are going to get corpus from that string and investigate
     key.assign(corpus_iter->first);
-    if (key.find(" ") != std::string::npos)
-      continue;
     value = corpus_iter->second;
 #ifdef CLASSIFIER_DEBUG
     temp_wait = false;
-    std::cout << "analysing " << key << " = " << value << std::endl;
+    if (m_debug_level > 1) {
+      std::cout << "analysing " << key << " = " << value << std::endl;
+    }
 #endif // CLASSIFIER_DEBUG
-    memset(str, '\0', 10);
-    sprintf(str, "%d", value);
-    new_key = key + " " + std::string(str);
-    if (GetCorpus(new_key, temp_corpus) < 0) {
-      std::cerr << "ERROR: could not get corpus for: " << key << std::endl;
-    } else {
-      for (temp_corpus_iter = temp_corpus.begin();
-           temp_corpus_iter != temp_corpus.end();
-           temp_corpus_iter++) {
-        temp_key.assign(temp_corpus_iter->first);
-        temp_value = temp_corpus_iter->second;
-        if (key.compare(temp_key) == 0) {
-#ifdef CLASSIFIER_DEBUG
-          // std::cout << temp_key << " is same as orig " << key << ". ignored." << std::endl;
-#endif // CLASSIFIER_DEBUG
-          flag = true;
-        } else {
-          if ((trojan_corpus_iter = corpus.find(temp_key)) != corpus.end()) {
-#ifdef CLASSIFIER_DEBUG
-            std::cout << "incrementing " << trojan_corpus_iter->first \
-                      << "=" << trojan_corpus_iter->second \
-                      << " by " << value << std::endl;
-            temp_wait = true;
-#endif // CLASSIFIER_DEBUG
-            trojan_corpus_iter->second += value;
-          } else {
-            new_corpus.insert(std::pair<std::string, unsigned int> (temp_corpus_iter->first, value));
-            corpus.insert(std::pair<std::string, unsigned int> (temp_corpus_iter->first, value));
-#ifdef CLASSIFIER_DEBUG
-            std::cout << "inserting " << temp_corpus_iter->first << std::endl;
-            temp_wait = true;
-#endif // CLASSIFIER_DEBUG
+    temp_corpus.clear();
+    switch (clean_type) {
+      case 0:
+        // case as in upper lower!
+        strcpy(str, key.c_str());
+        i = 0;
+        while (str[i]) {
+          char ch = str[i];
+          if (isupper(ch)) {
+            ch += 32;
+            str[i] = ch;
           }
+          i++;
+        }
+        temp_double = 1;
+        std::cout << str << std::endl;
+        temp_corpus.insert(std::pair<std::string, double> (std::string(str), temp_double));
+        break;
+      case 1:
+        // remove words from another test corpus
+        break;
+      case 2:
+        if (key.find(" ") != std::string::npos)
+          continue;
+        memset(str, '\0', 255);
+        sprintf(str, "%d", (unsigned int) value);
+        new_key = key + " " + std::string(str);
+        if (GetCorpus(new_key, temp_corpus) < 0) {
+          std::cerr << "ERROR: could not get corpus for: " << key << std::endl;
+        }
+        break;
+      default:
+        break;
+    }
+
+    for (temp_corpus_iter = temp_corpus.begin();
+         temp_corpus_iter != temp_corpus.end();
+         temp_corpus_iter++) {
+      temp_key.assign(temp_corpus_iter->first);
+      temp_value = temp_corpus_iter->second;
+      if (key.compare(temp_key) == 0) {
+#ifdef CLASSIFIER_DEBUG
+        // std::cout << temp_key << " is same as orig " << key << ". ignored." << std::endl;
+#endif // CLASSIFIER_DEBUG
+        flag = true;
+      } else {
+        if ((trojan_corpus_iter = corpus.find(temp_key)) != corpus.end()) {
+#ifdef CLASSIFIER_DEBUG
+          std::cout << "incrementing " << trojan_corpus_iter->first \
+                    << "=" << trojan_corpus_iter->second \
+                    << " by " << value << std::endl;
+          temp_wait = true;
+#endif // CLASSIFIER_DEBUG
+          trojan_corpus_iter->second += value;
+        } else {
+          new_corpus.insert(std::pair<std::string, double> (temp_corpus_iter->first, value));
+          corpus.insert(std::pair<std::string, double> (temp_corpus_iter->first, value));
+#ifdef CLASSIFIER_DEBUG
+          std::cout << "inserting " << temp_corpus_iter->first << std::endl;
+          temp_wait = true;
+#endif // CLASSIFIER_DEBUG
         }
       }
     }
     temp_corpus.clear();
     if (!flag) {
       //std::cout << key << ", " << value_str << " is invalid. ignoring." << std::endl;
-      invalid_corpus.insert(std::pair<std::string, unsigned int> (key, value));
+      invalid_corpus.insert(std::pair<std::string, double> (key, value));
 #ifdef CLASSIFIER_DEBUG
       std::cout << "removing " << corpus_iter->first << std::endl;
 #endif // CLASSIFIER_DEBUG
       corpus.erase(corpus_iter);
     }
 #ifdef CLASSIFIER_DEBUG
-    if (wait) {
-      if (temp_wait) {
-      std::cin >> input;
-      if (input.compare("enuf") == 0) {
-        wait = false;
-      }
+    if (m_debug_level > 1) {
+      if (wait) {
+        if (temp_wait) {
+        std::cin >> input;
+        if (input.compare("enuf") == 0) {
+          wait = false;
+        }
+        }
       }
     }
 #endif // CLASSIFIER_DEBUG
@@ -691,12 +726,13 @@ int Classifier::CleanCorpusFile(std::string& corpus_file_name, std::string& outp
   return 0;
 }
 
-int Classifier::CleanCorpus(unsigned int input_type,
+int Classifier::CleanCorpus(unsigned int& input_type,
                  std::string& file_name,
-                 std::string& output_suffix) {
+                 std::string& output_suffix,
+                 unsigned int& clean_type) {
 
   if (0 == input_type) {
-    return CleanCorpusFile(file_name, output_suffix);
+    return CleanCorpusFile(file_name, output_suffix, clean_type);
   }
 
   // this config file name should have corpus files
@@ -716,7 +752,7 @@ int Classifier::CleanCorpus(unsigned int input_type,
   std::string corpus_file_name;
   for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
     corpus_file_name = config.iter->corpus_file;
-    if (CleanCorpusFile(corpus_file_name, output_suffix) < 0) {
+    if (CleanCorpusFile(corpus_file_name, output_suffix, clean_type) < 0) {
       std::cerr << "ERROR: could not clean corpus in file: " \
                 << config.iter->corpus_file << std::endl; 
       break;
@@ -739,7 +775,7 @@ int Classifier::WriteTestData(Corpus& corpus, const char* classes_freq_file) {
   }
 
   inagist_classifiers::CorpusIter corpus_iter;
-  unsigned int sum = 0;
+  double sum = 0;
   for (corpus_iter = corpus.begin(); corpus_iter != corpus.end(); corpus_iter++) {
     std::cout << corpus_iter->first << ":" << corpus_iter->second << std::endl;
     if ((corpus_iter->first.compare("UU") == 0) ||
@@ -761,7 +797,7 @@ int Classifier::WriteTestData(Corpus& corpus, const char* classes_freq_file) {
   if ((corpus_iter = corpus.find("all_classes")) != corpus.end()) {
     corpus_iter->second = sum;
   } else {
-    corpus.insert(std::pair<std::string, unsigned int> ("all_classes", sum));
+    corpus.insert(std::pair<std::string, double> ("all_classes", sum));
   }
 
   // write to classes_freq file
@@ -1367,7 +1403,7 @@ int Classifier::NormalizeFrequencies(const char* raw_data_file,
   }
 
   for (corpus_iter = raw_data_corpus.begin(); corpus_iter != raw_data_corpus.end(); corpus_iter++) {
-    raw_data_corpus[corpus_iter->first] = (corpus_iter->second / (unsigned int) normalizing_denominator);
+    raw_data_corpus[corpus_iter->first] = (corpus_iter->second / normalizing_denominator);
   }
 
   if (CorpusManager::WriteCorpusToFile(raw_data_corpus, relative_freq_file) < 0) {

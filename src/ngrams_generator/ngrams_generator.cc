@@ -24,10 +24,9 @@ namespace inagist_classifiers {
 NgramsGenerator::NgramsGenerator() {
 #ifdef NG_DEBUG
   m_debug_level = NG_DEBUG;
-  std::cout << "NG_DEBUG (default): " << m_debug_level << std::endl;
 #else
   m_debug_level = 0;
-#endif
+#endif // NG_DEBUG
 }
 
 NgramsGenerator::~NgramsGenerator() {
@@ -48,7 +47,7 @@ int NgramsGenerator::PositionPointer(unsigned char*& prev, unsigned char*& curre
   if (!next) {
 #ifdef NG_DEBUG
     std::cout << "ERROR: next ptr cannot be null\n";
-#endif
+#endif // NG_DEBUG
     return -1;
   }
 
@@ -90,8 +89,8 @@ int NgramsGenerator::PositionPointer(unsigned char*& prev, unsigned char*& curre
   }
 
 #ifdef NG_DEBUG
-  std::cout << "ERROR: control should not come here\n";
-#endif
+  std::cerr << "ERROR: control should not come here\n";
+#endif // NG_DEBUG
   return -1;
 }
 
@@ -102,8 +101,8 @@ int NgramsGenerator::GetNgrams(const unsigned char* text,
 
   if (!text) {
 #ifdef NG_DEBUG
-    std::cout << "ERROR: invalid string\n";
-#endif
+    std::cerr << "ERROR: invalid string\n";
+#endif // NG_DEBUG
     return -1;
   }
 
@@ -159,8 +158,8 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
 
   if (tweet.length() < 1) {
 #ifdef NG_DEBUG
-    std::cout << "ERROR: empty string. no ngrams." << std::endl;
-#endif
+    std::cerr << "ERROR: empty string. no ngrams." << std::endl;
+#endif // NG_DEBUG
     return -1;
   }
 
@@ -201,7 +200,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
   if (m_debug_level > 1) {
     std::cout << std::endl << "original query: " << m_buffer << std::endl;
   }
-#endif
+#endif // NG_DEBUG
 
   // go to the first word, ignoring handles and punctuations
   unsigned char *prev_temp = NULL;
@@ -212,8 +211,8 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
 
   if (!ptr || '\0' == *ptr) {
 #ifdef NG_DEBUG
-    std::cout << "either the input is empty or has ignore words only" << std::endl;
-#endif
+    std::cout << "WARNING: either the input is empty or has ignore words only" << std::endl;
+#endif // NG_DEBUG
     return 0;
   }
 
@@ -243,7 +242,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
   } catch (...) {
 #ifdef NG_DEBUG
     std::cout << "EXCEPTION: utf8 returned exception" << std::endl;
-#endif
+#endif // NG_DEBUG
     return -1;
   }
 
@@ -264,7 +263,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
         if (word_has_all_latin) std::cout << "all_latin, ";
         std::cout << ") " << std::endl;
       }
-#endif
+#endif // NG_DEBUG
 
       // find ngrams
       if (word_has_all_latin && !current_word_all_caps && !word_starts_caps) {
@@ -278,8 +277,8 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
         */
         if (GetNgramsFromWord((const unsigned char*) current_word_start, current_word_len, corpus) < 0) {
 #ifdef NG_DEBUG
-          std::cout << "ERROR: could not get ngrams for word " << current_word_start << std::endl;
-#endif
+          std::cerr << "ERROR: could not get ngrams for word " << current_word_start << std::endl;
+#endif // NG_DEBUG
           return -1;
         }
 #ifdef NG_DEBUG
@@ -308,8 +307,8 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
         ptr = probe + 1;
         if (!ptr) {
 #ifdef NG_DEBUG
-          std::cout << "ERROR: Fatal Exception trying to access unallocated memory space\n";
-#endif
+          std::cerr << "ERROR: Fatal Exception trying to access unallocated memory space\n";
+#endif // NG_DEBUG
           return -1;
         }
 
@@ -391,7 +390,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
       } catch (...) {
 #ifdef NG_DEBUG
         std::cout << "Exception: " << code_point << " " << probe << std::endl;
-#endif
+#endif // NG_DEBUG
         corpus.clear();
         return -1;
       }
@@ -403,7 +402,7 @@ int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
     std::cout << "num words: " << num_words << std::endl;
     std::cout << "features map size: " << corpus.size() << std::endl;
   }
-#endif
+#endif // NG_DEBUG
 
   return corpus.size();
 }
@@ -414,8 +413,8 @@ int NgramsGenerator::GetNgramsFromFile(const std::string& input_file_name,
   std::ifstream ifs(input_file_name.c_str());
   if (!ifs) {
 #ifdef NG_DEBUG
-    std::cout << "ERROR: could not open file " << input_file_name << std::endl;
-#endif
+    std::cerr << "ERROR: could not open file " << input_file_name << std::endl;
+#endif // NG_DEBUG
     return -1;
   }
 
@@ -479,10 +478,10 @@ int NgramsGenerator::GetAllNgrams(const std::string& tweet,
   }
 
 #ifdef NG_DEBUG
-  if (m_debug_level) {
+  if (m_debug_level > 1) {
     std::cout << "Num ngrams: " << corpus.size() << std::endl;
   }
-#endif
+#endif // NG_DEBUG
 
   return corpus.size();
 }
@@ -504,8 +503,10 @@ int NgramsGenerator::GetAllNgrams(unsigned char* start,
       if (diff > 1 && diff <= NGRAM_DIFF) {
         ngram.assign((char *) ptr, (diff + 1));
 #ifdef NG_DEBUG
-        std::cout << ngram << std::endl;
-#endif
+        if (m_debug_level > 3) {
+          std::cout << ngram << std::endl;
+        }
+#endif // NG_DEBUG
         if (corpus.find(ngram) != corpus.end()) {
           corpus[ngram] += 1;
         } else {
@@ -626,8 +627,10 @@ int NgramsGenerator::GetNgramsFromWord(const unsigned char* word_str,
       if (diff > 1 && diff <= NGRAM_DIFF) {
         ngram.assign((char *) ptr, (diff + 1));
 #ifdef NG_DEBUG
-        std::cout << ngram << std::endl;
-#endif
+        if (m_debug_level > 3) {
+          std::cout << ngram << std::endl;
+        }
+#endif // NG_DEBUG
         if (corpus.find(ngram) != corpus.end()) {
           corpus[ngram] += 1;
         } else {

@@ -15,10 +15,10 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  unsigned int input_type = atoi(argv[1]);
+  int input_type = atoi(argv[1]);
   assert((input_type >= 0 && input_type <= 3));
 
-  unsigned int test_type = atoi(argv[2]);
+  int test_type = atoi(argv[2]);
   assert(test_type >= 0 && test_type <= 2);
 
   std::string arguments(argv[0]);
