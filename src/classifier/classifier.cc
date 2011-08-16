@@ -236,7 +236,6 @@ int Classifier::GetTrainingData(const char* config_file_name) {
 int Classifier::GetTrainingData(const std::string& class_name,
                                 const std::string& twitter_handles_file_name,
                                 const std::string& output_tweets_file_name,
-                                const std::string& manual_seed_file_name,
                                 unsigned int& output_num_docs,
                                 const std::string& output_corpus_file_name,
                                 unsigned int& output_corpus_size) {
