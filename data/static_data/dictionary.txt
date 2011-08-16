@@ -8,6 +8,7 @@ about
 About
 ABOUT
 across
+Across
 after
 After
 AFTER
@@ -16,6 +17,9 @@ AFAIK
 Afaik
 ah
 Ah
+aint
+ain't
+Ain't
 aka
 Aka
 AKA
@@ -48,8 +52,15 @@ ANY
 are
 Are
 ARE
+arent
+aren't
+Aren't
 argh
 Argh
+ARGH
+aargh
+Aargh
+AARGH
 as
 As
 AS
@@ -93,6 +104,8 @@ Can't
 CAN'T
 cant
 com
+cont'd
+contd
 cud
 could
 Could
@@ -146,6 +159,8 @@ Every
 EVERY
 everyone
 Everyone
+everyone's
+Everyone's
 every1
 Every1
 everything
@@ -173,6 +188,9 @@ GONNA
 had
 Had
 HAD
+hadnt
+hadn't
+Hadn't
 haha
 Haha
 HAHA
@@ -219,6 +237,10 @@ Hehe
 HEHE
 here
 Here
+here's
+Here's
+HERE's
+HERE'S
 hi
 Hi
 him
@@ -230,6 +252,11 @@ HIS
 how
 How
 HOW
+how's
+How's
+HOW's
+how'd
+How'd
 however
 However
 HOWEVER
@@ -269,6 +296,7 @@ isnt
 it
 It
 IT
+it'd
 it'll
 It'll
 IT'LL
@@ -401,6 +429,8 @@ Shld
 should
 Should
 SHOULD
+should've
+Should've
 shud
 Shud
 SHUD
@@ -441,6 +471,8 @@ THAN
 that
 That
 THAT
+that'd
+That'd
 thats
 Thats
 THATS
@@ -475,6 +507,8 @@ theres
 there's
 There's
 THERE'S
+there'll
+There'll
 these
 These
 THESE
@@ -485,14 +519,19 @@ they'll
 They'll
 THEY'LL
 theyll
+Theyll
 they've
+They've
 they're
+They're
 they'd
 this
 This
 THIS
 this'll
+This'll
 tis
+Tis
 to
 To
 TO
@@ -528,6 +567,7 @@ wasn't
 Wasn't
 WASN'T
 wasnt
+twasn't
 we
 We
 WE
@@ -648,6 +688,8 @@ your
 Your
 YOUR
 yourself
+yr's
+u'r
 u're
 you're
 You're
