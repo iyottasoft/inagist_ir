@@ -37,7 +37,7 @@ int GetTestTweetsFromFile(const char* file_name,
   while (getline(ifs, line)) {
 #ifdef ERL_NIF_DEBUG
     if (line.length() <= 0) {
-      std::cerr << "Empty file\n":
+      std::cerr << "Empty file\n";
       continue;
     }
 #endif

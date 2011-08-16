@@ -35,16 +35,16 @@ TEXT_CLASSIFICATION_OBJS = text_classifier.o
 TEXT_CLASSIFICATION_FLAGS = -DTEXT_CLASSIFICATION_ENABLED
 
 GIST_COMPONENTS =  -I${CPP_SRC_DIR}/gist_maker ${CPP_SRC_DIR}/gist_maker/gist_maker.cc gist_maker_eapi.cc \
-                  ${KEYTUPLES} \
+                  ${KEYTUPLES} #\
                   ${CLASSIFIER} \
                   ${TEXT_CLASSIFICATION} \
                   ${LANG}
 GIST_OBJS = gist_maker.o gist_maker_eapi.o \
-            ${KEYTUPLES_OBJS} \
+            ${KEYTUPLES_OBJS} #\
             ${CLASSIFIER_OBJS} \
             ${TEXT_CLASSIFICATION_OBJS} \
             ${LANG_OBJS}
-GIST_FLAGS = ${KEYTUPLES_FLAGS} ${LANG_FLAGS} ${TEXT_CLASSIFICATION_FLAGS}
+GIST_FLAGS = ${KEYTUPLES_FLAGS}# ${LANG_FLAGS} ${TEXT_CLASSIFICATION_FLAGS}
 
 all: tweets stem named_entities keytuples intent trends lang text_class gist channels profile
 	@echo "build done!"

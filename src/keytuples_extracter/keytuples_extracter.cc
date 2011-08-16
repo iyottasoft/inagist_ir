@@ -1503,24 +1503,22 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
 
 #ifdef INTENT_ENABLED
        bool flag = false;
-       if (m_intent_words_dictionary.Find(next_word_start, dict_value) == 1) {
-         intent_words[std::string((const char*) next_word_start)] = dict_value;
-         flag = true;
-         // std::cout << "intent_sentence: " << next_word_start << " value: " << dict_value << std::endl;
-       }
        if (orig_start) {
-         if (flag) {
-           if (intent_start) {
-             intent_end = orig_start + (next_word_end - text_buffer);
-             intent_phrase.assign((const char*) intent_start, 0, intent_end-intent_start);
-             if (m_intent_words_dictionary.Find(intent_phrase, dict_value) == 1) {
-               intent_words[intent_phrase] = dict_value;
-             }
-           } else {
-             intent_start = orig_start + (next_word_start - text_buffer);
+         if (intent_start) {
+           intent_end = orig_start + (next_word_end - text_buffer);
+           intent_phrase.assign((const char*) intent_start, 0, intent_end-intent_start);
+           if (m_intent_words_dictionary.Find(intent_phrase, dict_value) == 1) {
+             intent_words[intent_phrase] = dict_value;
+             flag = true;
            }
-         } else {
-           intent_start = NULL;
+         }
+         if (!flag) {
+           if (m_intent_words_dictionary.Find(next_word_start, dict_value) == 1) {
+             intent_words[std::string((const char*) next_word_start)] = dict_value;
+             flag = true;
+             intent_start = orig_start + (next_word_start - text_buffer);
+             // std::cout << "intent_sentence: " << next_word_start << " value: " << dict_value << std::endl;
+           }
          }
          if (!flag) {
            intent_start = NULL;

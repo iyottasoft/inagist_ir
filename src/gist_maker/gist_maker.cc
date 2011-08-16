@@ -692,6 +692,7 @@ int GistMaker::GetGist(unsigned char* text_buffer,  const unsigned int text_buff
   }
 #endif // LANG_ENABLED
 
+#ifdef LANG_ENABLED
   if (strcmp(lang_class_buffer, "en") != 0) {
 #ifdef NAMED_ENTITIES_ENABLED
     *named_entities_buffer = '\0';
@@ -720,6 +721,8 @@ int GistMaker::GetGist(unsigned char* text_buffer,  const unsigned int text_buff
     *sentiment_buffer = '\0';
 #endif // SENTIMENT_ENABLED
   } else {
+#endif // LANG_ENABLED
+
 #ifdef TEXT_CLASSIFICATION_ENABLED
     unsigned int top_text_classes_len = 0;
     unsigned int top_text_classes_count = 0;
@@ -752,7 +755,10 @@ int GistMaker::GetGist(unsigned char* text_buffer,  const unsigned int text_buff
 #endif // CLASS_CONTRIBUTORS_ENABLED
     }
 #endif // TEXT_CLASSIFICATION_ENABLED
+
+#ifdef LANG_ENABLED
   } // check for english
+#endif // LANG_ENABLED
 
 #ifdef GIST_DEBUG
   std::cout << "text: " << text_buffer << std::endl;

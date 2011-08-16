@@ -38,9 +38,14 @@ int main(int argc, char *argv[]) {
 
   inagist::GistMaker gm;
 
-  if (gm.Init(keytuples_extracter_config.c_str(),
-              language_detector_config.c_str(),
-              text_classifier_config.c_str()) < 0) {
+  if (gm.Init(keytuples_extracter_config.c_str()
+#ifdef LANG_ENABLED
+              , language_detector_config.c_str()
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+              , text_classifier_config.c_str()
+#endif // TEXT_CLASSIFICATION_ENABLED
+             ) < 0) {
     std::cerr << "ERROR: could not initialize gist maker\n";
     return -1;
   }

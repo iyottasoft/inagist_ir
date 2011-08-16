@@ -1,6 +1,6 @@
 include ../../Makefile.incl
 PROJECT = gistmaker
-PROJECTFLAGS = -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL} -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -DCLASS_CONTRIBUTORS_ENABLED
+PROJECTFLAGS = -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL} -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED #-DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DCLASS_CONTRIBUTORS_ENABLED
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../twitter_api -I../inagist_api -I../utils -I../keytuples_extracter -I../script_detector -I../corpus_manager -I../ngrams_generator -I../classifier -I../language_detector -I../text_classifier
@@ -26,9 +26,11 @@ clean:
 	@rm *.o ${BINS} ${LIB}
 	@echo "done!"
 
-${LIB}: ${keytuples} ${classifier} ${text} ${lang} ${OBJS}
+#${LIB}: ${keytuples} ${classifier} ${text} ${lang} ${OBJS}
+${LIB}: ${keytuples} ${OBJS}
 	@echo "creating library file ..."
-	@${ARCHIVE} ${LIB} ${keytuples} ${classifier} ${text} ${lang} ${OBJS}
+#@${ARCHIVE} ${LIB} ${keytuples} ${classifier} ${text} ${lang} ${OBJS}
+	@${ARCHIVE} ${LIB} ${keytuples} ${OBJS}
 	@ranlib ${LIB} # this creates an index table
 	@echo "done!"
 
@@ -61,6 +63,11 @@ ${lang}:
 ${BIN_DIR}/t_gist_maker: t_gist_maker.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_gist_maker
+	@echo "done!"
+
+${BIN_DIR}/t_get_intent: t_get_intent.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_get_intent
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

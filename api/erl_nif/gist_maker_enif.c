@@ -353,6 +353,8 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   }
   lang_term = enif_make_binary(env, &lang_bin);
   lang[0] = '\0';
+#else
+  lang_term = enif_make_atom(env, "ok");
 #endif // LANG_ENABLED
 
   char* start = NULL;
