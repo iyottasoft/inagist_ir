@@ -1,0 +1,17 @@
+all_classes=3952
+de=26
+dk=41
+en=1793
+es=403
+fi=21
+fr=32
+hu=5
+id=36
+it=8
+ms=539
+nl=395
+nn=80
+pl=19
+pt=390
+sv=7
+tr=13
