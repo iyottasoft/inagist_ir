@@ -183,8 +183,8 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   unsigned int script_buffer_len = 4;
 
 #ifdef LANG_ENABLED
-  char lang[MAX_BUFFER_LEN];
-  lang[0] = '\0';
+  char lang_buffer[MAX_BUFFER_LEN];
+  lang_buffer[0] = '\0';
 #endif // LANG_ENABLED
 
 #ifdef NAMED_ENTITIES_ENABLED
@@ -233,11 +233,12 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #endif // SENTIMENT_ENABLED
 
   int ret_value = 0;
+
   if ((ret_value = InaGist((const unsigned char *) tweet_str, tweet_buffer_len, tweet_len,
                   (char *) safe_status_buffer, safe_status_buffer_len,
                   (char *) script_buffer, script_buffer_len
 #ifdef LANG_ENABLED
-                  , (char *) lang, MAX_BUFFER_LEN
+                  , (char *) lang_buffer, MAX_BUFFER_LEN
 #endif // LANG_ENABLED
 #ifdef NAMED_ENTITIES_ENABLED
                   , (unsigned char *) named_entities, MAX_BUFFER_LEN,
@@ -267,9 +268,10 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #ifndef GIST_DEBUG
     return enif_make_atom(env, "error");
 #else
-    return enif_make_atom(env, "error_GetGist_failed");
+    return enif_make_atom(env, "error_InaGist_failed");
 #endif // GIST_DEBUG
   }
+
   tweet_str[0] = '\0';
   tweet_len = 0;
 
@@ -278,80 +280,91 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   int ret_val = 0;
 
   // safe/unsafe status
+  if (!safe_status_buffer) {
+    return enif_make_atom(env, "error");
+  }
+  ERL_NIF_TERM safe_status_term;
   len = strlen(safe_status_buffer);
   if (len < 4 || len > 6) {
-    strcpy(safe_status_buffer, "ERROR");
-    len = 5;
-  }
-  ErlNifBinary safe_status_bin;
+    safe_status_term = enif_make_atom(env, "error");
+  } else {
+    ErlNifBinary safe_status_bin;
 #ifdef ERLANG_R14B02 
-  ret_val = enif_alloc_binary(len, &safe_status_bin);
+    ret_val = enif_alloc_binary(len, &safe_status_bin);
 #else
-  ret_val = enif_alloc_binary(env, len, &safe_status_bin);
+    ret_val = enif_alloc_binary(env, len, &safe_status_bin);
 #endif // ERLANG_R14B02
-  if (ret_val < 0) {
+    if (ret_val < 0) {
 #ifndef GIST_DEBUG
-    return enif_make_atom(env, "error");
+      return enif_make_atom(env, "error");
 #else
-    return enif_make_atom(env, "error_safe_status_bin_alloc");
+      return enif_make_atom(env, "error_safe_status_bin_alloc");
 #endif // GIST_DEBUG
+    }
+    for (i=0; i<len; i++) {
+      safe_status_bin.data[i] = *(safe_status_buffer + i);
+    }
+    safe_status_term = enif_make_binary(env, &safe_status_bin);
   }
-  for (i=0; i<len; i++) {
-    safe_status_bin.data[i] = *(safe_status_buffer + i);
-  }
-  ERL_NIF_TERM safe_status_term = enif_make_binary(env, &safe_status_bin);
   safe_status_buffer[0] = '\0';
 
   // script
-  len = strlen(script_buffer);
-  if (len != 2 && len != 3) {
-    strcpy(script_buffer, "00");
-    len = 2;
-  }
-  ErlNifBinary script_bin;
-#ifdef ERLANG_R14B02 
-  ret_val = enif_alloc_binary(len, &script_bin);
-#else
-  ret_val = enif_alloc_binary(env, len, &script_bin);
-#endif // ERLANG_R14B02
-  if (ret_val < 0) {
-#ifndef GIST_DEBUG
+  if (!script_buffer) {
     return enif_make_atom(env, "error");
+  }
+  ERL_NIF_TERM script_term; 
+  len = strlen(script_buffer);
+  if (len < 2 || len > 3) {
+    script_term = enif_make_atom(env, "error");
+  } else {
+    ErlNifBinary script_bin;
+#ifdef ERLANG_R14B02 
+    ret_val = enif_alloc_binary(len, &script_bin);
 #else
-    return enif_make_atom(env, "error_script_bin_alloc");
+    ret_val = enif_alloc_binary(env, len, &script_bin);
+#endif // ERLANG_R14B02
+    if (ret_val < 0) {
+#ifndef GIST_DEBUG
+      return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_script_bin_alloc");
 #endif // GIST_DEBUG
+    }
+    for (i=0; i<len; i++) {
+      script_bin.data[i] = *(script_buffer + i);
+    }
+    script_term = enif_make_binary(env, &script_bin);
   }
-  for (i=0; i<len; i++) {
-    script_bin.data[i] = *(script_buffer + i);
-  }
-  ERL_NIF_TERM script_term = enif_make_binary(env, &script_bin);
   script_buffer[0] = '\0';
 
   // language
   ERL_NIF_TERM lang_term;
 #ifdef LANG_ENABLED
-  len = strlen(lang);
-  if (len != 2 && len != 3) {
-    strcpy(lang, "00");
-    len = 2;
-  }
-  ErlNifBinary lang_bin;
-#ifdef ERLANG_R14B02 
-  ret_val = enif_alloc_binary(len, &lang_bin);
-#else
-  ret_val = enif_alloc_binary(env, len, &lang_bin);
-#endif // ERLANG_R14B02
-  if (ret_val < 0) {
-#ifndef GIST_DEBUG
+  if (!lang_buffer) {
     return enif_make_atom(env, "error");
+  }
+  len = strlen(lang_buffer);
+  if (len < 2 || len > 3) {
+    lang_term = enif_make_atom(env, "error");
+  } else {
+    ErlNifBinary lang_bin;
+#ifdef ERLANG_R14B02 
+    ret_val = enif_alloc_binary(len, &lang_bin);
 #else
-    return enif_make_atom(env, "error_lang_bin_alloc");
+    ret_val = enif_alloc_binary(env, len, &lang_bin);
+#endif // ERLANG_R14B02
+    if (ret_val < 0) {
+#ifndef GIST_DEBUG
+      return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_lang_bin_alloc");
 #endif // GIST_DEBUG
+    }
+    for (i=0; i<len; i++) {
+      lang_bin.data[i] = *(lang_buffer + i);
+    }
+    lang_term = enif_make_binary(env, &lang_bin);
   }
-  for (i=0; i<len; i++) {
-    lang_bin.data[i] = *(lang + i);
-  }
-  lang_term = enif_make_binary(env, &lang_bin);
   lang[0] = '\0';
 #else
   lang_term = enif_make_atom(env, "ok");
@@ -515,7 +528,9 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   ERL_NIF_TERM intent_term;
 #ifdef INTENT_ENABLED
   len = strlen(intent_buffer);
-  if (len > 0) {
+  if (len < 1) {
+    intent_term = enif_make_atom(env, "error");
+  } else {
     ErlNifBinary intent_bin;
 #ifdef ERLANG_R14B02
     ret_val = enif_alloc_binary(len, &intent_bin);
@@ -528,7 +543,7 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #else
       return enif_make_atom(env, "error_intent_bin_alloc");
 #endif // GIST_DEBUG
-  }
+    }
     for (i=0; i<len; i++) {
       intent_bin.data[i] = *(intent_buffer + i);
     }
@@ -541,7 +556,9 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   ERL_NIF_TERM sentiment_term;
 #ifdef SENTIMENT_ENABLED
   len = strlen(sentiment_buffer);
-  if (len > 0) {
+  if (len < 1) {
+    sentiment_term = enif_make_atom(env, "error");
+  } else {
     ErlNifBinary sentiment_bin;
 #ifdef ERLANG_R14B02
     ret_val = enif_alloc_binary(len, &sentiment_bin);
