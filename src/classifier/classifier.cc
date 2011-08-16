@@ -247,10 +247,13 @@ int Classifier::GetTrainingData(const std::string& class_name,
   }
 
 #ifdef CLASSIFIER_DEBUG
-  if (m_debug_level > 1) {
+  if (m_debug_level > 3) {
     std::cout << "INFO: training data from handles file: " << twitter_handles_file_name << std::endl;
   }
 #endif
+
+  std::ofstream ofs(output_tweets_file_name.c_str());
+  std::ostream* output_stream = &ofs;
 
   std::string line;
   std::string handle;
@@ -280,6 +283,7 @@ int Classifier::GetTrainingData(const std::string& class_name,
 
   if (handles.size() < 1) {
     std::cerr << "ERROR: no handles found in file " << twitter_handles_file_name << std::endl;
+    ofs.close();
     return 0;
   }
 
@@ -313,9 +317,11 @@ int Classifier::GetTrainingData(const std::string& class_name,
 
     // need user info. 0 indicates its the first time this handles is being processed
     if (handle_iter->second == 0) {
-      count_temp = GetTrainingData(handle, local_num_docs, corpus, local_corpus_size, get_user_info=true);
+      count_temp = GetTrainingData(handle, local_num_docs, corpus,
+                                   local_corpus_size, *output_stream, get_user_info=true);
     } else {
-      count_temp = GetTrainingData(handle, local_num_docs, corpus, local_corpus_size, get_user_info=false);
+      count_temp = GetTrainingData(handle, local_num_docs, corpus,
+                                   local_corpus_size, *output_stream, get_user_info=false);
     }
     usleep(100000);
 
@@ -361,9 +367,11 @@ int Classifier::GetTrainingData(const std::string& class_name,
 
       // need user info
       if (handle_iter->second == 0) {
-        count_temp = GetTrainingData(handle, local_num_docs, corpus, local_corpus_size, get_user_info=true);
+        count_temp = GetTrainingData(handle, local_num_docs, corpus,
+                                     local_corpus_size, *output_stream, get_user_info=true);
       } else {
-        count_temp = GetTrainingData(handle, local_num_docs, corpus, local_corpus_size, get_user_info=false);
+        count_temp = GetTrainingData(handle, local_num_docs, corpus,
+                                     local_corpus_size, *output_stream, get_user_info=false);
       }
       usleep(100000);
 
@@ -390,6 +398,8 @@ int Classifier::GetTrainingData(const std::string& class_name,
       }
     }
   }
+
+  ofs.close();
 
   if (no_fresh_handle) {
     // all the entries in the handles file may have been examined and hence have "1".
@@ -470,6 +480,7 @@ int Classifier::GetTrainingData(const std::string& handle,
                                 unsigned int& output_num_docs,
                                 Corpus& corpus,
                                 unsigned int& output_corpus_size,
+                                std::ostream &output_stream,
                                 bool get_user_info) {
 
   std::set<std::string> tweets;
@@ -542,9 +553,10 @@ int Classifier::GetTrainingData(const std::string& handle,
       // this GetCorpus is a pure virtual function
       // ensure your derivation of this classifier provides this function
       if ((count_temp = GetCorpus(*set_iter, corpus)) < 0) {
-        std::cerr << "ERROR: could not find ngrams from tweet: " << *set_iter << std::endl;
+        std::cerr << "ERROR: could not get corpus for tweet: " << *set_iter << std::endl;
       } else {
         count += count_temp;
+        output_stream << *set_iter << std::endl;
       }
     }
     output_num_docs += tweets.size();

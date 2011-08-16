@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
       } else {
         unsigned int num_docs = 0;
         unsigned int corpus_size = 0;
-        if ((count = tc.GetTrainingData(handle, num_docs, corpus, corpus_size)) < 0) {
+        if ((count = tc.GetTrainingData(handle, num_docs, corpus, corpus_size, std::cout)) < 0) {
           std::cerr << "ERROR: could not get training data for handle: " << handle << std::endl;
         } else {
           std::cout << "Corpus of size " << count << " generated for " << handle << std::endl;

@@ -70,6 +70,7 @@ class Classifier {
                       unsigned int& output_num_docs,
                       Corpus& corpus,
                       unsigned int& output_corpus_size,
+                      std::ostream& output_stream,
                       bool get_user_info=false);
   int CleanCorpusFile(std::string& corpus_file_name,
                       std::string& output_prefix,
