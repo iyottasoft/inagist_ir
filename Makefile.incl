@@ -1,14 +1,16 @@
 HOME_DIR = /home/balaji/inagist/ir_cpp
 
 CXX = g++
-CXXFLAGS = -Wextra -g -Wno-deprecated #-fprofile-arcs -ftest-coverage #-pg
-#CXXFLAGS = -O3
+#CXXFLAGS = -Wextra -g -Wno-deprecated #-fprofile-arcs -ftest-coverage #-pg
+CXXFLAGS = -O3
 DEBUG_LEVEL=0
 
 CPP_INCLUDE_DIR = ${HOME_DIR}/include
 CPP_LINK_DIR = ${HOME_DIR}/local/lib
 CPP_LIB_DIR = ${HOME_DIR}/local/lib
 CPP_SRC_DIR = ${HOME_DIR}/src
+
+EXTERN_DIR = ${HOME_DIR}/extern
 
 # used internally and hence retative to ${HOME_DIR}/src/*
 LINK_DIR = -L../../local/lib

@@ -54,7 +54,7 @@ gist: gist_cppi
 
 gist_cppi:
 	@echo "creating library ${LOCAL_LIB_DIR}/libgist_collector_cppi.a ..."
-	@g++ ${CXXFLAGS} ${PROJECTFLAGS} -fPIC -shared ${GIST_FLAGS} -c ${GIST_COMPONENTS} -I${CPP_INCLUDE_DIR}/utfcpp -I${CPP_SRC_DIR}/twitter_api -I${CPP_SRC_DIR}/inagist_api -I${CPP_SRC_DIR}/script_detector -I${CPP_SRC_DIR}/utils
+	@g++ ${CXXFLAGS} ${PROJECTFLAGS} -fPIC -shared ${GIST_FLAGS} -c ${GIST_COMPONENTS} -I${CPP_INCLUDE_DIR}/utfcpp -I${EXTERN_DIR}/twitter_api -I${EXTERN_DIR}/inagist_api -I${CPP_SRC_DIR}/script_detector -I${CPP_SRC_DIR}/utils
 	@ar -r ${LOCAL_LIB_DIR}/libgist_collector_cppi.a ${GIST_OBJS}
 	@ranlib ${LOCAL_LIB_DIR}/libgist_collector_cppi.a
 	@rm ${GIST_OBJS}
@@ -65,7 +65,7 @@ tweets: twitter_api_cppi
 
 twitter_api_cppi:
 	@echo "creating library ${LOCAL_LIB_DIR}/libtwitter_api_cppi.a ..."
-	@g++ ${CXXFLAGS} ${PROJECTFLAGS} -fPIC -shared -c twitter_api_cppi.cc -I${CPP_SRC_DIR}/twitter_api
+	@g++ ${CXXFLAGS} ${PROJECTFLAGS} -fPIC -shared -c twitter_api_cppi.cc -I${EXTERN_DIR}/twitter_api
 	@ar -r ${LOCAL_LIB_DIR}/libtwitter_api_cppi.a twitter_api_cppi.o
 	@ranlib ${LOCAL_LIB_DIR}/libtwitter_api_cppi.a
 	@echo "done!"
@@ -128,7 +128,7 @@ lang: language_classifier
 
 language_classifier:
 	@echo "creating library ${LOCAL_LIB_DIR}/liblanguage_classifier_cppi.a ..."
-	@g++ ${CXXFLAGS} ${PROJECTFLAGS} -fPIC -shared -c -DLANG_ENABLED ${CPP_SRC_DIR}/keytuples_extracter/keytuples_config.cc ${CPP_SRC_DIR}/keytuples_extracter/keytuples_extracter.cc ${CPP_SRC_DIR}/classifier/classifier_config.cc ${CPP_SRC_DIR}/classifier/naive_bayes_classifier.cc ${CPP_SRC_DIR}/classifier/classifier.cc ${CPP_SRC_DIR}/language_classifier/language_classifier.cc language_classifier_cppi.cc -I${CPP_INCLUDE_DIR}/utfcpp -I${CPP_SRC_DIR}/script_detector -I${CPP_SRC_DIR}/utils -I${CPP_SRC_DIR}/twitter_api -I${CPP_SRC_DIR}/inagist_api -I${CPP_SRC_DIR}/keytuples_extracter -I${CPP_SRC_DIR}/corpus_manager -I${CPP_SRC_DIR}/ngrams_generator -I${CPP_SRC_DIR}/classifier -I${CPP_SRC_DIR}/language_classifier
+	@g++ ${CXXFLAGS} ${PROJECTFLAGS} -fPIC -shared -c -DLANG_ENABLED ${CPP_SRC_DIR}/keytuples_extracter/keytuples_config.cc ${CPP_SRC_DIR}/keytuples_extracter/keytuples_extracter.cc ${CPP_SRC_DIR}/classifier/classifier_config.cc ${CPP_SRC_DIR}/classifier/naive_bayes_classifier.cc ${CPP_SRC_DIR}/classifier/classifier.cc ${CPP_SRC_DIR}/language_classifier/language_classifier.cc language_classifier_cppi.cc -I${CPP_INCLUDE_DIR}/utfcpp -I${EXTERN_DIR}/twitter_api -I${EXTERN_DIR}/inagist_api -I${CPP_SRC_DIR}/script_detector -I${CPP_SRC_DIR}/utils -I${CPP_SRC_DIR}/keytuples_extracter -I${CPP_SRC_DIR}/corpus_manager -I${CPP_SRC_DIR}/ngrams_generator -I${CPP_SRC_DIR}/classifier -I${CPP_SRC_DIR}/language_classifier
 	@ar -r ${LOCAL_LIB_DIR}/liblanguage_classifier_cppi.a keytuples_config.o keytuples_extracter.o classifier_config.o naive_bayes_classifier.o classifier.o language_classifier.o language_classifier_cppi.o
 	@ranlib ${LOCAL_LIB_DIR}/liblanguage_classifier_cppi.a
 	@echo "done!"
