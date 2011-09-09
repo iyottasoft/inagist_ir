@@ -3,7 +3,7 @@ PROJECT = test_utf8
 PROJECTFLAGS = -DDEBUG -D_CPLUSPLUS
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../src/curl_request_maker -I../../include/utfcpp -I../../src/twitter_api -I../../src/script_detector
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../src/curl_request_maker -I../../include/utfcpp -I../../extern/twitter_api -I../../src/script_detector
 
 LIBS = -l${PROJECT} -lscriptdetector -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
