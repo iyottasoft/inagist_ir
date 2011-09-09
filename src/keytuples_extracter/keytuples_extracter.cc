@@ -2511,6 +2511,10 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
   for (intent_iter = intent_words.begin(); intent_iter != intent_words.end(); intent_iter++) {
     intent_valence += intent_iter->second;
   }
+  if (intent_valence > 10) {
+    intent_valence %= 10;
+    intent_valence += 1;
+  }
   if (intent_valence < 4) {
     strcpy(intent_buffer, "none");
   } else {
@@ -2523,6 +2527,8 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
   if (KE_DEBUG) {
     std::cout << "keytuples_extracter summary:" << std::endl;
     std::cout << "input: " << text_buffer << std::endl;
+    std::cout << "script: " << script_buffer << std::endl;
+    std::cout << "safe_status: " << safe_status_buffer << std::endl;
 #ifdef NAMED_ENTITIES_ENABLED
     std::cout << "named_entities (" << named_entities_count << "): " << named_entities_buffer << std::endl;
 #endif // NAMED_ENTITIES_ENABLED

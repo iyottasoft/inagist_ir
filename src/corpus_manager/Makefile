@@ -3,9 +3,9 @@ PROJECT = corpusmanager
 PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ # -I../../include/json_parser -I../utils -I../curl_request_maker -I../twitter_api -I../inagist_api -I../ngrams_generator
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/
 
-LIBS = -l${PROJECT} # -lngramsgenerator -lutils -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+LIBS = -l${PROJECT}
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 

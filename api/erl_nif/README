@@ -8,4 +8,4 @@ Project Name: ERL_NIF
 
 4. 'make clean; make all' will produce all the libraries, but will take some time to compile.
 
-5. 'make clean; make gist' for example will produce libgist_maker.so library file in the specified directory. (default export lib directory is ../../lib/. you can change this by modifying ../Makefile.incl)
+5. 'make clean; make gist' for example will produce libgist_collector.so library file in the specified directory. (default export lib directory is ../../lib/. you can change this by modifying ../Makefile.incl)

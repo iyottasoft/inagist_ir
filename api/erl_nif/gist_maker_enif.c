@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include "tweets.h"
-#include "gist_maker_eapi.h"
+#include "twitter_api_cppi.h"
+#include "gist_maker_cppi.h"
 
 #define ULTIMATE_BUFFER_LEN 10240
 #define MAX_BUFFER_LEN 1024
@@ -13,12 +13,12 @@
 #define MAX_CLASS_NAME 32
 #define MAX_LIST_BUFFER_LEN 20480
 
-//#define GIST_DEBUG 1
+#define GIST_DEBUG 1
 #define ERLANG_R14B02 1
 
 ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
-  if (argc < 1 || argc > 3) {
+  if (argc != 1) {
 #ifndef GIST_DEBUG
     return enif_make_atom(env, "error");
 #else
@@ -30,14 +30,14 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   int arg_index = 0;
 
-  char keytuples_config_file_path[MAX_NAME_LEN];
-  memset(keytuples_config_file_path, '\0', MAX_NAME_LEN);
+  char gist_maker_config_file_path[MAX_NAME_LEN];
+  memset(gist_maker_config_file_path, '\0', MAX_NAME_LEN);
   bool success = enif_inspect_binary(env, argv[arg_index], &file_path);
   if (success && (file_path.size < MAX_NAME_LEN)) {
-    memcpy(keytuples_config_file_path, file_path.data, file_path.size);
-    keytuples_config_file_path[file_path.size] = '\0';
+    memcpy(gist_maker_config_file_path, file_path.data, file_path.size);
+    gist_maker_config_file_path[file_path.size] = '\0';
 #ifdef GIST_DEBUG
-    printf("keytuples_config: %s\n", keytuples_config_file_path);
+    printf("gist_maker_config: %s\n", gist_maker_config_file_path);
 #endif // GIST_DEBUG
 #ifdef ERLANG_R14B02 
     enif_release_binary(&file_path);
@@ -53,79 +53,12 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #ifndef GIST_DEBUG
     return enif_make_atom(env, "error");
 #else
-    return enif_make_atom(env, "error_keytuples_config_file_path_inspect_bin");
+    return enif_make_atom(env, "error_gist_maker_config_file_path_inspect_bin");
 #endif // GIST_DEBUG
   }
   arg_index++;
 
-#ifdef LANG_ENABLED
-  char language_detector_config_file_path[MAX_NAME_LEN];
-  memset(language_detector_config_file_path, '\0', MAX_NAME_LEN);
-  success = enif_inspect_binary(env, argv[arg_index], &file_path);
-  if (success && (file_path.size < MAX_NAME_LEN)) {
-    memcpy(language_detector_config_file_path, file_path.data, file_path.size);
-    language_detector_config_file_path[file_path.size] = '\0';
-#ifdef GIST_DEBUG
-    printf("lang config: %s\n", language_detector_config_file_path);
-#endif // GIST_DEBUG
-#ifdef ERLANG_R14B02 
-    enif_release_binary(&file_path);
-#else
-    enif_release_binary(env, &file_path);
-#endif // ERLANG_R14B02
-  } else {
-#ifdef ERLANG_R14B02 
-    enif_release_binary(&file_path);
-#else
-    enif_release_binary(env, &file_path);
-#endif // ERLANG_R14B02
-#ifndef GIST_DEBUG
-    return enif_make_atom(env, "error");
-#else
-    return enif_make_atom(env, "error_language_detector_config_file_path_inspect_bin");
-#endif // GIST_DEBUG
-  }
-  arg_index++;
-#endif // LANG_ENABLED
-
-#ifdef TEXT_CLASSIFICATION_ENABLED
-  char text_classifier_config_file_path[MAX_NAME_LEN];
-  memset(text_classifier_config_file_path, '\0', MAX_NAME_LEN);
-  success = enif_inspect_binary(env, argv[arg_index], &file_path);
-  if (success && (file_path.size < MAX_NAME_LEN)) {
-    memcpy(text_classifier_config_file_path, file_path.data, file_path.size);
-    text_classifier_config_file_path[file_path.size] = '\0';
-#ifdef GIST_DEBUG
-    printf("text_classification config: %s\n", text_classifier_config_file_path);
-#endif // GIST_DEBUG
-#ifdef ERLANG_R14B02 
-    enif_release_binary(&file_path);
-#else
-    enif_release_binary(env, &file_path);
-#endif // ERLANG_R14B02
-  } else {
-#ifdef ERLANG_R14B02 
-    enif_release_binary(&file_path);
-#else
-    enif_release_binary(env, &file_path);
-#endif // ERLANG_R14B02
-#ifndef GIST_DEBUG
-    return enif_make_atom(env, "error");
-#else
-    return enif_make_atom(env, "error_unsafe_dict_file_path_inspect_bin");
-#endif // GIST_DEBUG
-  }
-  arg_index++;
-#endif // TEXT_CLASSIFICATION_ENABLED
-
-  if (InitGistMaker(keytuples_config_file_path
-#ifdef LANG_ENABLED
-                    , language_detector_config_file_path
-#endif // LANG_ENABLED
-#ifdef TEXT_CLASSIFICATION_ENABLED
-                    , text_classifier_config_file_path
-#endif // TEXT_CLASSIFICATION_ENABLED
-                   ) < 0) {
+  if (InitGistMaker(gist_maker_config_file_path) < 0) {
 #ifndef GIST_DEBUG
     return enif_make_atom(env, "error");
 #else
@@ -152,8 +85,8 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   memset((char *) tweet_str, '\0', MAX_BUFFER_LEN);
 
   bool success = enif_inspect_binary(env, argv[0], &tweet);
-  int tweet_len = tweet.size;
-  if (success && tweet_len > 1 && tweet_len < MAX_BUFFER_LEN) {
+  unsigned int tweet_len = tweet.size;
+  if (success && tweet_len > 1 && tweet_len < tweet_buffer_len) {
     memcpy(tweet_str, tweet.data, tweet_len);
     tweet_str[tweet_len] = '\0';
 #ifdef ERLANG_R14B02 
@@ -175,100 +108,98 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   }
 
   char safe_status_buffer[10];
-  memset(safe_status_buffer, '\0', 10);
   unsigned int safe_status_buffer_len = 10;
+  memset(safe_status_buffer, '\0', 10);
 
   char script_buffer[4];
-  memset(script_buffer, '\0', 4);
   unsigned int script_buffer_len = 4;
+  memset(script_buffer, '\0', 4);
 
 #ifdef LANG_ENABLED
-  char lang_buffer[MAX_BUFFER_LEN];
+  char lang_buffer[MAX_CLASS_NAME];
+  unsigned int lang_buffer_len = MAX_CLASS_NAME;
   lang_buffer[0] = '\0';
 #endif // LANG_ENABLED
 
 #ifdef NAMED_ENTITIES_ENABLED
-  unsigned char named_entities[MAX_BUFFER_LEN];
-  named_entities[0] = '\0';
-  int named_entities_len = 0;
-  int named_entities_count = 0;
+  unsigned char named_entities_buffer[MAX_BUFFER_LEN];
+  unsigned int named_entities_buffer_len = MAX_BUFFER_LEN;
+  named_entities_buffer[0] = '\0';
+  unsigned int named_entities_len = 0;
+  unsigned int named_entities_count = 0;
 #endif // NAMED_ENTITIES_ENABLED
 
 #ifdef KEYWORDS_ENABLED
-  unsigned char keywords[MAX_BUFFER_LEN];
-  keywords[0] = '\0';
-  int keywords_len = 0;
-  int keywords_count = 0;
+  unsigned char keywords_buffer[MAX_BUFFER_LEN];
+  unsigned int keywords_buffer_len = MAX_BUFFER_LEN;
+  keywords_buffer[0] = '\0';
+  unsigned int keywords_len = 0;
+  unsigned int keywords_count = 0;
 #endif // KEYWORDS_ENABLED
 
 #ifdef KEYPHRASE_ENABLED
-  unsigned char keyphrases[MAX_BUFFER_LEN];
-  keyphrases[0] = '\0';
-  int keyphrases_len = 0;
-  int keyphrases_count = 0;
+  unsigned char keyphrases_buffer[MAX_BUFFER_LEN];
+  unsigned int keyphrases_buffer_len = MAX_BUFFER_LEN;
+  keyphrases_buffer[0] = '\0';
+  unsigned int keyphrases_len = 0;
+  unsigned int keyphrases_count = 0;
 #endif // KEYPHRASE_ENABLED
 
 #ifdef TEXT_CLASSIFICATION_ENABLED
-  unsigned char text_class_words_buffer[MAX_BUFFER_LEN];
-  text_class_words_buffer[0] = '\0';
-  int text_class_words_len = 0;
-  int text_class_words_count = 0;
-
   char text_classes_buffer[MAX_BUFFER_LEN];
+  unsigned int text_classes_buffer_len = MAX_BUFFER_LEN;
   text_classes_buffer[0] = '\0';
-  int text_classes_len = 0;
-  int text_classes_count = 0;
+  unsigned int text_classes_len = 0;
+  unsigned int text_classes_count = 0;
 #endif // TEXT_CLASSIFICATION_ENABLED
 
 #ifdef INTENT_ENABLED
   char intent_buffer[MAX_CLASS_NAME];
-  intent_buffer[0] = '\0';
   unsigned int intent_buffer_len = MAX_CLASS_NAME;
+  intent_buffer[0] = '\0';
 #endif // INTENT_ENABLED
 
 #ifdef SENTIMENT_ENABLED
   char sentiment_buffer[MAX_CLASS_NAME];
-  sentiment_buffer[0] = '\0';
   unsigned int sentiment_buffer_len = MAX_CLASS_NAME;
+  sentiment_buffer[0] = '\0';
 #endif // SENTIMENT_ENABLED
 
   int ret_value = 0;
 
-  if ((ret_value = InaGist((const unsigned char *) tweet_str, tweet_buffer_len, tweet_len,
+  if ((ret_value = CallMakeGist((unsigned char *) tweet_str, tweet_buffer_len, tweet_len,
                   (char *) safe_status_buffer, safe_status_buffer_len,
                   (char *) script_buffer, script_buffer_len
 #ifdef LANG_ENABLED
-                  , (char *) lang_buffer, MAX_BUFFER_LEN
+                  , (char *) lang_buffer, lang_buffer_len
 #endif // LANG_ENABLED
 #ifdef NAMED_ENTITIES_ENABLED
-                  , (unsigned char *) named_entities, MAX_BUFFER_LEN,
+                  , (unsigned char *) named_entities_buffer, named_entities_buffer_len,
                   &named_entities_len, &named_entities_count
 #endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
-                  , (unsigned char *) keywords, MAX_BUFFER_LEN,
+                  , (unsigned char *) keywords_buffer, keywords_buffer_len,
                   &keywords_len, &keywords_count
 #endif // KEYWORDS_ENABLED
 #ifdef KEYPHRASE_ENABLED
-                  , (unsigned char *) keyphrases, MAX_BUFFER_LEN,
+                  , (unsigned char *) keyphrases_buffer, keyphrases_buffer_len,
                   &keyphrases_len, &keyphrases_count
 #endif // KEYPHRASE_ENABLED
-                  //, (unsigned char *) text_class_words_buffer, MAX_BUFFER_LEN,
-                  //&text_class_words_len, &text_class_words_count,
 #ifdef TEXT_CLASSIFICATION_ENABLED
-                  , (char *) text_classes_buffer, MAX_BUFFER_LEN,
+                  , (char *) text_classes_buffer, text_classes_buffer_len,
                   &text_classes_len, &text_classes_count
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-                  , (char *) intent_buffer, MAX_CLASS_NAME
+                  , (char *) intent_buffer, intent_buffer_len
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                  , (char *) sentiment_buffer, MAX_CLASS_NAME
+                  , (char *) sentiment_buffer, sentiment_buffer_len
 #endif // SENTIMENT_ENABLED
                  )) < 0) {
 #ifndef GIST_DEBUG
     return enif_make_atom(env, "error");
 #else
-    return enif_make_atom(env, "error_InaGist_failed");
+    return enif_make_atom(env, "error_call_make_gist_failed");
 #endif // GIST_DEBUG
   }
 
@@ -281,7 +212,11 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   // safe/unsafe status
   if (!safe_status_buffer) {
+#ifndef GIST_DEBUG
     return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_invalid_safe_status_buffer");
+#endif // GIST_DEBUG
   }
   ERL_NIF_TERM safe_status_term;
   len = strlen(safe_status_buffer);
@@ -310,7 +245,11 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   // script
   if (!script_buffer) {
+#ifndef GIST_DEBUG
     return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_invalid_script_buffer");
+#endif // GIST_DEBUG
   }
   ERL_NIF_TERM script_term; 
   len = strlen(script_buffer);
@@ -377,7 +316,7 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   ERL_NIF_TERM named_entities_list = enif_make_list(env, 0);
 #ifdef NAMED_ENTITIES_ENABLED
   if (named_entities_count > 0) {
-    start = named_entities;
+    start = named_entities_buffer;
     end = strstr(start, "|");
     len = 0;
     ErlNifBinary named_entities_bin;
@@ -408,14 +347,14 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       start = end + 1;
     }
   }
-  named_entities[0] = '\0';
+  named_entities_buffer[0] = '\0';
 #endif // NAMED_ENTITIES_ENABLED
 
   // keywords
   ERL_NIF_TERM keywords_list = enif_make_list(env, 0);
 #ifdef KEYWORDS_ENABLED
   if (keywords_count > 0) {
-    start = keywords;
+    start = keywords_buffer;
     end = strstr(start, "|");
     len = 0;
     ErlNifBinary keywords_bin;
@@ -446,14 +385,14 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       start = end + 1;
     }
   }
-  keywords[0] = '\0';
+  keywords_buffer[0] = '\0';
 #endif // KEYWORDS_ENABLED
 
   // keyphrases
   ERL_NIF_TERM keyphrases_list = enif_make_list(env, 0);
 #ifdef KEYPHRASE_ENABLED
   if (keyphrases_count > 0) {
-    start = keyphrases;
+    start = keyphrases_buffer;
     end = strstr(start, "|");
     len = 0;
     ErlNifBinary keyphrases_bin;
@@ -484,7 +423,7 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       start = end + 1;
     }
   }
-  keyphrases[0] = 0;
+  keyphrases_buffer[0] = 0;
 #endif // KEYPHRASE_ENABLED
 
   // text_class
@@ -550,6 +489,8 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     intent_term = enif_make_binary(env, &intent_bin);
     intent_buffer[0] = '\0';
   }
+#else
+  intent_term = enif_make_atom(env, "ok");
 #endif // INTENT_ENABLED
 
   // sentiment
@@ -578,6 +519,8 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     sentiment_term = enif_make_binary(env, &sentiment_bin);
     sentiment_buffer[0] = '\0';
   }
+#else
+  sentiment_term = enif_make_atom(env, "ok");
 #endif // SENTIMENT_ENABLED
 
   start = NULL;
@@ -600,7 +543,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   char tweets_buffer[MAX_LIST_BUFFER_LEN];
   memset(tweets_buffer, 0, MAX_LIST_BUFFER_LEN);
 
-  int out_length = 0;
+  unsigned int out_length = 0;
   if (argc == 1) {
     char user_name_str[MAX_NAME_LEN];
     memset(user_name_str, 0, MAX_NAME_LEN);
@@ -736,7 +679,7 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
   char tweets_buffer[MAX_LIST_BUFFER_LEN];
   memset(tweets_buffer, 0, MAX_LIST_BUFFER_LEN);
 
-  int out_length = 0;
+  unsigned int out_length = 0;
   if (argc != 1) {
 #ifndef GIST_DEBUG
      return enif_make_atom(env, "error"); 
@@ -848,7 +791,7 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
 
 static ErlNifFunc nif_funcs[] =
 {
-  {"init_c", 3, nif_init_c},
+  {"init_c", 1, nif_init_c},
   {"get_gist", 1, nif_get_gist},
   {"test_gist_twitter_timeline", 0, nif_test_twitter_timeline},
   {"test_gist_twitter_timeline", 1, nif_test_twitter_timeline},

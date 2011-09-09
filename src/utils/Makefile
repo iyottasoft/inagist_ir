@@ -3,7 +3,7 @@ PROJECT = utils
 PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../twitter_api -I../inagist_api -I../script_detector
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../script_detector
 
 LIBS = -l${PROJECT} -lscriptdetector -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
@@ -15,7 +15,7 @@ BINS = ${BIN_DIR}/t_string_utils \
        ${BIN_DIR}/t_int_dictionary_map \
        ${BIN_DIR}/t_test_utils
 
-OBJS = string_utils.o dictionary_set.o dictionary_map.o int_dictionary_map.o test_utils.o
+OBJS = string_utils.o dictionary_set.o dictionary_map.o int_dictionary_map.o string_to_map_dictionary.o test_utils.o
 
 all: ${LIB} ${BINS}
 	@echo "build done!"

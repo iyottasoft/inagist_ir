@@ -1,4 +1,4 @@
-SUBDIRS = erl_nif
+SUBDIRS = cpp_i c_mains erl_nif
 
 .PHONY: subdirs $(SUBDIRS)
 

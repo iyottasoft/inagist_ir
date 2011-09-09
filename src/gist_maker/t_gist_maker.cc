@@ -1,94 +1,173 @@
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
+#include <cassert>
+#include <string>
 #include <set>
 #include "gist_maker.h"
-#include "twitter_api.h"
-#include "twitter_searcher.h"
 #include "test_utils.h"
 
-#define T_MAX_BUFFER_LEN 1024 
+inagist::GistMaker g_gm;
+
+int MakeGist(std::string text) {
+
+  char buffer[1024];
+  std::string safe_status;
+  std::string script;
+  std::set<std::string> named_entities_set;
+  std::set<std::string> keywords_set;
+  std::set<std::string> keyphrases_set;
+  std::string language;
+  std::set<std::string> text_classes_set;
+  std::string intent;
+  std::string sentiment;
+
+  strcpy(buffer, text.c_str()); 
+  std::cout << std::endl << buffer << std::endl;
+
+  int gist_elements_count = 0;
+  if ((gist_elements_count = g_gm.MakeGist(buffer, safe_status, script
+#ifdef NAMED_ENTITIES_ENABLED
+                        , named_entities_set
+#endif // NAMED_ENTITIES_ENABLED
+#ifdef KEYWORDS_ENABLED
+                        , keywords_set
+#endif // KEYWORDS_ENABLED
+#ifdef KEYPHRASE_ENABLED
+                        , keyphrases_set
+#endif // KEYPHRASE_ENABLED
+#ifdef LANG_ENABLED
+                        , language 
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+                        , text_classes_set
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+                        , intent
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+                        , sentiment
+#endif // SENTIMENT_ENABLED
+                       )) < 0) {
+    std::cout << "ERROR: could not get gist\n";
+    return -1;
+  }
+
+  memset(buffer, 0, 1024);
+
+  if (!safe_status.empty()) {
+    std::cout << "safe_status: " << safe_status << std::endl;
+  }
+  if (!script.empty()) {
+    std::cout << "script: " << script << std::endl;
+  }
+#ifdef NAMED_ENTITIES_ENABLED
+  if (named_entities_set.size() > 0) {
+    std::cout << "named_entities:\n";
+    g_gm.PrintKeywords(named_entities_set);
+    named_entities_set.clear();
+  }
+#endif // NAMED_ENTITIES_ENABLED
+#ifdef KEYWORDS_ENABLED
+  if (keywords_set.size() > 0) {
+    std::cout << "keywords:\n";
+    g_gm.PrintKeywords(keywords_set);
+    keywords_set.clear();
+  }
+#endif // KEYWORDS_ENABLED
+#ifdef KEYPHRASE_ENABLED
+  if (keyphrases_set.size() > 0) {
+    std::cout << "keyphrases:\n";
+    g_gm.PrintKeywords(keyphrases_set);
+    keyphrases_set.clear();
+  }
+#endif // KEYPHRASE_ENABLED
+#ifdef LANG_ENABLED
+  if (!language.empty()) {
+    std::cout << "language: " << language << std::endl;
+  }
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+  if (text_classes_set.size() > 0) {
+    std::cout << "text_classes:\n";
+    g_gm.PrintKeywords(text_classes_set);
+    text_classes_set.clear();
+  }
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef INTENT_ENABLED
+  if (!intent.empty()) {
+    std::cout << "intent: " << intent << std::endl;
+  }
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+  if (!sentiment.empty()) {
+    std::cout << "sentiment: " << sentiment << std::endl;
+  }
+#endif // SENTIMENT_ENABLED
+
+  return 0;
+}
 
 int main(int argc, char *argv[]) {
 
-  if (argc < 5 || argc > 6) {
-    std::cout << "Usage: " << argv[0] << " <keytuples_config> <lang_config> " \
-              << "<text_classifier_config> <input_type> [input_value]\n";
+  if (argc < 3 || argc > 4) {
+    std::cout << "Usage: " << argv[0] << "\n\t<config_file_name>\n\t<0-5, 0-interactive, 1-file, 2-tweet, 3-many tweets, 4-inagist, 5-twitter search>\n\t[file_name/<handle/query>]\n";
     return -1;
   }
 
-  std::string keytuples_extracter_config = std::string(argv[1]);
-  std::string language_detector_config = std::string(argv[2]);
-  std::string text_classifier_config = std::string(argv[3]);
+  std::string bin_location = std::string(argv[0]);
+  std::string::size_type loc = bin_location.find("bin", 0);
+  std::string root_dir;
+  if (loc == std::string::npos) {
+    std::cout << "ERROR: could not find bin location\n" << std::endl;
+    return -1;
+  } else {
+    root_dir = std::string(bin_location, 0, loc);
+  }
 
-  unsigned int input_type = atoi(argv[4]);
+  std::string gist_maker_config_file = std::string(argv[1]);
+  if (gist_maker_config_file.size() < 5) {
+    std::cout << "ERROR: invalid config file\n";
+    return -1;
+  }
+
+  int input_type = atoi(argv[2]);
+  assert(input_type >=0 && input_type <=5);
   const char* input_value = NULL;
-  if (6 == argc) {
-    input_value = argv[5];
-  }
-  unsigned int stress_count = 1;
-  if (6 == input_type) {
-    stress_count = atoi(input_value);
-    if (stress_count < 1 || stress_count > 10000) {
-      std::cerr << "ERROR: valid value for stress_count is between 1 and 10k" << std::endl;
-    }
-    input_type = 3;
-    input_value = NULL;
+
+  // initialize keytuples extracter
+  if (g_gm.Init(gist_maker_config_file) < 0) {
+    std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
+    return -1; 
   }
 
-  inagist::GistMaker gm;
-
-  if (gm.Init(keytuples_extracter_config.c_str()
-#ifdef LANG_ENABLED
-              , language_detector_config.c_str()
-#endif // LANG_ENABLED
-#ifdef TEXT_CLASSIFICATION_ENABLED
-              , text_classifier_config.c_str()
-#endif // TEXT_CLASSIFICATION_ENABLED
-             ) < 0) {
-    std::cerr << "ERROR: could not initialize gist maker\n";
-    return -1;
+  if (4 == argc) {
+    input_value = argv[3];
   }
 
-  std::string doc;
-  std::set<std::string> docs;
+  std::string text;
+  std::set<std::string> tweets;
+  std::set<std::string>::iterator set_iter;
+
   if (0 == input_type) {
-    // interactive
-    while (getline(std::cin, doc)) {
-      if (doc.compare("quit") == 0)
+    while (getline(std::cin, text)) {
+      if (text.compare("exit") == 0 || text.compare("quit") == 0)
         break;
-      if (gm.GetGist(doc) < 0) {
-        std::cerr << "ERROR: coult not get gist for doc:" << doc << std::endl;
-      }
+      MakeGist(text);
     }
-    return 0;
-  }
-
-  for (unsigned int i=0; i < stress_count; i++) {
-    if (inagist_utils::GetInputText(input_type,
-                                    input_value,
-                                    docs) < 0) {
-      std::cerr << "ERROR: could not get test input\n";
+  } else {
+    if (inagist_utils::GetInputText(input_type, input_value, tweets) < 0) {
+      std::cerr << "ERROR: could not input texts\n";
       return -1;
     }
-
-    if (docs.empty()) {
-      std::cerr << "WARNING: no input text found\n";
-      return 0;
+    for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
+      MakeGist(*set_iter);
+      if (2 == input_type)
+        break;
     }
-
-    std::set<std::string>::iterator doc_iter;
-    for (doc_iter = docs.begin(); doc_iter != docs.end(); doc_iter++) {
-      doc = *doc_iter;
-      std::cout << std::endl;
-      std::cout << doc << std::endl;
-      if (gm.GetGist(doc) < 0) {
-        std::cerr << "ERROR: could not get gist for doc:" << doc << std::endl;
-      }
-    }
-    docs.clear();
   }
-  input_value = NULL;
+
+  tweets.clear();
 
   return 0;
 }

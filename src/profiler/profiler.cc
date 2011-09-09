@@ -47,7 +47,7 @@ int Profiler::Init(const char* keytuples_extracter_config,
     return -1;
   }
 
-  if (m_gist_maker.Init(keytuples_extracter_config,
+  if (m_gist_collector.Init(keytuples_extracter_config,
                         language_detection_config,
                         self_text_classification_config) < 0) {
 #ifdef PROFILE_DEBUG
@@ -733,7 +733,7 @@ int Profiler::GetGist(std::set<std::string>& tweets,
       continue;
     strcpy((char*) text_buffer, tweet.c_str());
     text_len = tweet.length();
-    if ((ret_value = m_gist_maker.GetGist((unsigned char*) text_buffer, text_buffer_len, text_len,
+    if ((ret_value = m_gist_collector.GetGist((unsigned char*) text_buffer, text_buffer_len, text_len,
                   (char*) safe_status_buffer, safe_status_buffer_len,
                   (char*) scripts_buffer, scripts_buffer_len,
                   (unsigned char*) named_entities_buffer, named_entities_buffer_len,
@@ -832,7 +832,7 @@ int Profiler::GetGist(std::set<std::string>& tweets,
 #endif
   } else {
     // TODO (balaji) forgot what should be sent here. sending some variable. fix this later
-    if (m_gist_maker.FindTextClasses(corpus,
+    if (m_gist_collector.FindTextClasses(corpus,
                                      text_classes_buffer, text_classes_buffer_len,
                                      text_classes_len, text_classes_count,
                                      text_class_contributors_buffer, text_class_contributors_buffer_len,

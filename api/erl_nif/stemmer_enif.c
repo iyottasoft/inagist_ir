@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include "tweets.h"
-#include "stemmer_eapi.h"
+#include "twitter_api_cppi.h"
+#include "stemmer_cppi.h"
 
 #define MAX_BUFFER_LEN 1024
 #define MAX_NAME_LEN 255

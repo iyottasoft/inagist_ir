@@ -123,6 +123,8 @@ class Classifier {
   int NormalizeFrequencies();
   int NormalizeFrequencies(const char* raw_data_file, const char* relative_freq_file);
 
+  int MakeDictionary(const char* classifier_dictionary_file);
+
  protected:
   CorpusManager m_corpus_manager;
   std::map<std::string, std::string> m_class_labels_map;

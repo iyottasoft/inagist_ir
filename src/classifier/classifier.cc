@@ -1448,6 +1448,98 @@ int Classifier::NormalizeFrequencies() {
   return 0;
 }
 
+int Classifier::MakeDictionary(const char* classifier_dictionary_file) {
+
+  if (m_corpus_manager.m_corpus_map.empty() || !classifier_dictionary_file) {
+    std::cerr << "ERROR: invalid input\n";
+    return -1;
+  }
+
+  CorpusMap* corpus_map = &(m_corpus_manager.m_corpus_map);
+
+  std::ofstream ofs(classifier_dictionary_file);
+  if (!ofs.is_open()) {
+    std::cerr << "ERROR: could not open classifier dictionary file: " \
+              << classifier_dictionary_file << std::endl;
+    return -1;
+  }
+  ofs.close();
+
+  CorpusMapIter corpus_map_iter;
+  CorpusIter corpus_iter;
+  Corpus* corpus_ptr;
+  std::string class_name;
+  std::string word;
+  double freq;
+
+  std::map<std::string, std::map<std::string, double> > classifier_dictionary_map;
+  std::map<std::string, std::map<std::string, double> >::iterator dict_iter;
+  for (corpus_map_iter = corpus_map->begin(); corpus_map_iter != corpus_map->end(); corpus_map_iter++) {
+    // for this iteration, what is the class name and corpus?
+    class_name = corpus_map_iter->first;
+    if (class_name.empty()) {
+      std::cerr << "ERROR: invalid class name. fatal error\n";
+      break;
+    }
+    corpus_ptr = &(corpus_map_iter->second);
+    if (corpus_ptr->empty()) {
+#ifdef NBC_DEBUG
+      std::cout << "WARNING: no entries found in corpus for class: " << class_name << std::endl;
+#endif // NBC_DEBUG
+      continue;
+    }
+
+    for (corpus_iter = corpus_ptr->begin();
+         corpus_iter != corpus_ptr->end();
+         corpus_iter++) {
+#ifdef CLASSIFIER_DEBUG
+      if (CLASSIFIER_DEBUG > 3) {
+          std::cout << (*corpus_iter).first << " : " << (*corpus_iter).second \
+                    << " in " << class_name << std::endl;
+      }
+#endif // CLASSIFIER_DEBUG
+      word = (*corpus_iter).first;
+      freq = (*corpus_iter).second;
+      if ((dict_iter = classifier_dictionary_map.find(word)) != classifier_dictionary_map.end()) {
+        dict_iter->second.insert(std::pair<std::string, double>(class_name, freq)); 
+      } else {
+        std::map<std::string, double> class_map;
+        class_map.insert(std::pair<std::string, double> (class_name, (*corpus_iter).second)); 
+        classifier_dictionary_map.insert(std::pair<std::string, std::map<std::string, double> >(word, class_map));
+      }
+    }
+  }
+
+  ofs.open(classifier_dictionary_file);
+  if (!ofs.is_open()) {
+    std::cerr << "ERROR: could not open classifier dictionary file: " \
+              << classifier_dictionary_file << std::endl;
+  } else {
+    std::map<std::string, double>::iterator class_map_iter;
+    for (dict_iter = classifier_dictionary_map.begin();
+         dict_iter != classifier_dictionary_map.end();
+         dict_iter++) {
+      ofs << dict_iter->first << "=";
+      for (class_map_iter = dict_iter->second.begin();
+           class_map_iter != dict_iter->second.end();
+           class_map_iter++) {
+        ofs << class_map_iter->first << ":" << class_map_iter->second << "|";
+      }
+      ofs << std::endl;
+    }
+    ofs.close();
+  }
+
+  for (dict_iter = classifier_dictionary_map.begin();
+       dict_iter != classifier_dictionary_map.end();
+       dict_iter++) {
+    dict_iter->second.clear();
+  }
+  classifier_dictionary_map.clear();
+
+  return 0;
+}
+
 #endif // CLASSIFIER_DATA_TRAINING_ENABLED || CLASSIFIER_DATA_TESTING_ENABLED
 
 } // namespace inagist_classifiers

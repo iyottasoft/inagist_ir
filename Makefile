@@ -1,4 +1,4 @@
-SUBDIRS = include src api test
+SUBDIRS = include extern src api test
 
 .PHONY: subdirs $(SUBDIRS)
 

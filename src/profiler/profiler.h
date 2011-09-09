@@ -9,7 +9,7 @@
 
 #include <string>
 #include <set>
-#include "gist_maker.h"
+#include "gist_collector.h"
 
 namespace inagist_dashboard {
 
@@ -105,7 +105,7 @@ int GetGist(std::set<std::string>& tweets,
             inagist_classifiers::Corpus& corpus, unsigned int& corpus_size);
 
  private:
-  inagist::GistMaker m_gist_maker;
+  inagist::GistCollector m_gist_collector;
   unsigned int m_debug_level;
 
   DISALLOW_COPY_AND_ASSIGN(Profiler); 

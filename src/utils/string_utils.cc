@@ -110,10 +110,12 @@ bool IsIgnore(char *&ptr) {
       ptr++;
     }
 #ifdef UTILS_DEBUG
-    char temp = *(ptr+1);
-    *(ptr+1) = '\0'; 
-    std::cout << "Ignore word: " << word << std::endl;
-    *(ptr+1) = temp;
+    if (UTILS_DEBUG > 3) {
+      char temp = *(ptr+1);
+      *(ptr+1) = '\0'; 
+      std::cout << "Ignore word: " << word << std::endl;
+      *(ptr+1) = temp;
+    }
 #endif
     return true;
   }
@@ -427,7 +429,9 @@ int TestUtils(const std::string& text, unsigned int text_len) {
 
   if (!ptr || '\0' == *ptr) {
 #ifdef UTILS_DEBUG
-    std::cout << "either the input is empty or has ignore words only" << std::endl;
+    if (UTILS_DEBUG > 1) {
+      std::cout << "either the input is empty or has ignore words only" << std::endl;
+    }
     return 0;
 #endif
   }

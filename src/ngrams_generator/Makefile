@@ -3,7 +3,7 @@ PROJECT = ngramsgenerator
 PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../include/utfcpp -I../utils -I../curl_request_maker -I../twitter_api -I../script_detector -I../corpus_manager
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../include/utfcpp -I../utils -I../curl_request_maker -I../../extern/twitter_api -I../script_detector -I../corpus_manager
 
 LIBS = -l${PROJECT} -lscriptdetector -lutils -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
