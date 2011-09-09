@@ -3,7 +3,7 @@ PROJECT = gist_maker
 PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL} -DINTENT_ENABLED -DSENTIMENT_ENABLED -DKEYPHRASE_ENABLED -DNAMED_ENTITIES_ENABLED -DKEYWORDS_ENABLED -DTEXT_CLASSIFICATION_ENABLED #-DLANG_ENABLED
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../../extern/inagist_api -I../../extern/twitter_api -I../utils -I../script_detector
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../../extern/curl_request_maker -I../../extern/inagist_api -I../../extern/twitter_api -I../utils -I../script_detector
 
 LIBS = -l${PROJECT} -lscriptdetector -lutils -ltwitterapi -linagistapi -lcurlrequestmaker -ljsonparser -lcurl
 

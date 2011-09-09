@@ -3,7 +3,7 @@ PROJECT = utils
 PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../script_detector
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../../extern/curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../script_detector
 
 LIBS = -l${PROJECT} -lscriptdetector -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 

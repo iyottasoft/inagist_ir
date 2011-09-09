@@ -3,7 +3,7 @@ PROJECT = classifier
 PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL} -DCLASSIFIER_DATA_TRAINING_ENABLED -DCLASSIFIER_DATA_TESTING_ENABLED -DCLASS_CONTRIBUTORS_ENABLED
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../utils -I../curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../corpus_manager -I../ngrams_generator
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../utils -I../../extern/curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../corpus_manager -I../ngrams_generator
 
 LIBS = -l${PROJECT} -lngramsgenerator -lcorpusmanager -lutils -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 

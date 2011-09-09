@@ -1,4 +1,4 @@
-SUBDIRS = twitter_api inagist_api #amazon_api
+SUBDIRS = curl_request_maker twitter_api inagist_api #amazon_api
 
 .PHONY: subdirs $(SUBDIRS)
 

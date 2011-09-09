@@ -3,7 +3,7 @@ PROJECT = textclassifier
 PROJECTFLAGS = -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL} -DTEXT_CLASSIFICATION_ENABLED -DCLASSIFIER_DATA_TRAINING_ENABLED -DCLASSIFIER_DATA_TESTING_ENABLED #-DCLASS_CONTRIBUTORS_ENABLED #-DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../include/utfcpp -I../curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../script_detector -I../utils -I../keytuples_extracter -I../corpus_manager -I../ngrams_generator -I../classifier
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../include/utfcpp -I../../extern/curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../script_detector -I../utils -I../keytuples_extracter -I../corpus_manager -I../ngrams_generator -I../classifier
 
 LIBS = -l${PROJECT} -lngramsgenerator -lcorpusmanager -lutils -lscriptdetector -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 

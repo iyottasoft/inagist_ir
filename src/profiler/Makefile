@@ -3,7 +3,7 @@ PROJECT = profiler
 PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL} -DNAMED_ENTITIES_ENABLED -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DCLASS_CONTRIBUTORS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../../include/json_parser -I../curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../utils -I../script_detector -I../keytuples_extracter -I../corpus_manager -I../ngrams_generator -I../classifier -I../language_classifier -I../text_classifier -I../gist_collector
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../../include/json_parser -I../../extern/curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../utils -I../script_detector -I../keytuples_extracter -I../corpus_manager -I../ngrams_generator -I../classifier -I../language_classifier -I../text_classifier -I../gist_collector
 
 LIBS = -l${PROJECT} -lngramsgenerator -lcorpusmanager -lutils -lscriptdetector -linagistapi -ltwitterapi -lcurlrequestmaker -ljsonparser -lcurl
 

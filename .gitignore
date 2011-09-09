@@ -5,8 +5,10 @@ log/[^.]*.log
 data/*.*
 src/*/*.o
 api/*/*.o
+extern/*/*.o
 src/*/*.so
 api/*/*.so
+extern/*/*.so
 src/*/*.beam
 api/*/*.beam
 api/*/lib/*.so

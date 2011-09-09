@@ -3,7 +3,7 @@ PROJECT = gist_collector
 PROJECTFLAGS = -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL} -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED #-DCLASS_CONTRIBUTORS_ENABLED
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../utils -I../keytuples_extracter -I../script_detector -I../corpus_manager -I../ngrams_generator -I../classifier -I../language_classifier -I../text_classifier
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../../extern/curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../utils -I../keytuples_extracter -I../script_detector -I../corpus_manager -I../ngrams_generator -I../classifier -I../language_classifier -I../text_classifier
 
 LIBS = -l${PROJECT} -lngramsgenerator -lcorpusmanager -lutils -lscriptdetector -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 

@@ -3,7 +3,7 @@ PROJECT = scriptdetector
 PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../../include/utfcpp
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../extern/curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../../include/utfcpp
 
 LIBS = -l${PROJECT} -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 

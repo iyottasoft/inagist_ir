@@ -3,7 +3,7 @@ PROJECT = twitterapi
 PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL}
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../src/curl_request_maker
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../curl_request_maker
 
 LIBS = -l${PROJECT} -ljsonparser -lcurlrequestmaker -lcurl
 
