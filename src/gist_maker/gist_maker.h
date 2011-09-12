@@ -149,7 +149,7 @@ class GistMaker {
 
   DISALLOW_COPY_AND_ASSIGN(GistMaker);
   // using char* for word_has_apostrophe instead of bool&
-  bool IsPunct(char*& ptr, char* prev=NULL, char* next=NULL/*, bool word_has_apostrophe=false*/);
+  bool IsPunct(char*& ptr, char* prev=NULL, char* next=NULL, int* punct_intent=NULL, int* punct_senti=NULL);
   bool IsIgnore(char*& ptr);
   inline void Insert(unsigned char* buffer, unsigned int& current_len,
                      unsigned char* str_to_add, const unsigned int& str_len,

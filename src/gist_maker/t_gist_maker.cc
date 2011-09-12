@@ -148,6 +148,8 @@ int main(int argc, char *argv[]) {
     if (g_gm.Init(gist_maker_config_file) < 0) {
       std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
       return -1; 
+    } else {
+      std::cout << "INFO: init done\n";
     }
 
     while (getline(std::cin, text)) {
