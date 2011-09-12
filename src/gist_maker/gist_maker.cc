@@ -189,7 +189,7 @@ void GistMaker::PrintKeywords(std::set<std::string> &named_entities_set) {
 
 // this function isn't unicode safe
 // TODO (balaji) for ascii, we can ofcourse use an array lookup to speed up
-bool GistMaker::IsPunct(char*& ptr, char* prev, char* next/*, bool word_has_apostrophe*/) {
+bool GistMaker::IsPunct(char*& ptr, char* prev, char* next, int* punct_intent, int* punct_senti) {
 
   if (!ptr || *ptr == ' ' || *ptr == '\0')
     return true;
@@ -198,6 +198,22 @@ bool GistMaker::IsPunct(char*& ptr, char* prev, char* next/*, bool word_has_apos
     return false;
 
   switch (*ptr) {
+    case ',':
+      if (prev && next)
+        if (isdigit(*prev) && isdigit(*next))
+          return false;
+      break;
+    case '.':
+      if (prev && next)
+        if (isdigit(*prev) && isdigit(*next))
+          return false;
+      if (next) {
+        if (*next == ' ')
+          return true;
+        if (!strncmp(ptr, ".com", 4) || !strncmp(ptr, ".org", 4))
+          return false; // not handling .come on or .organization etc
+      }
+      break;
     case '\'':
       if (!prev || IsPunct(prev)) {
         return true;
@@ -242,21 +258,33 @@ bool GistMaker::IsPunct(char*& ptr, char* prev, char* next/*, bool word_has_apos
           return false;
       break;
     case ':':
-    case ',':
+      if (next) {
+        if (')' == *next || strcmp(next, "-)") == 0) {
+          (*punct_senti)++;
+        }
+        if ('(' == *next || strcmp(next, "-(") == 0) {
+          (*punct_senti)--;
+        }
+      }
       if (prev && next)
         if (isdigit(*prev) && isdigit(*next))
           return false;
       break;
-    case '.':
-      if (prev && next)
-        if (isdigit(*prev) && isdigit(*next))
-          return false;
+    case ';':
       if (next) {
-        if (*next == ' ')
-          return true;
-        if (!strncmp(ptr, ".com", 4) || !strncmp(ptr, ".org", 4))
-          return false; // not handling .come on or .organization etc
+        if (')' == *next || strcmp(next, "-)") == 0) {
+          (*punct_senti)++;
+        }
+        if ('(' == *next || strcmp(next, "-(") == 0) {
+          (*punct_senti)--;
+        }
       }
+      break;
+    case '!':
+      (*punct_senti)++;
+      break;
+    case '?':
+      (*punct_intent)++;
       break;
     case '&':
       return true;
@@ -853,6 +881,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   bool next_word_dict = false;
   bool is_ignore_word = false;
   bool is_punct = false;
+  int punct_intent = 0;
+  int punct_senti = 0;
 
   // misc
 #if defined NAMED_ENTITIES_ENABLED || defined KEYWORDS_ENABLED || defined KEYPHRASE_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
@@ -925,7 +955,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
   // go to the first word, ignoring handles and punctuations
   unsigned char *prev = NULL;
-  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && IsPunct((char *&) ptr, (char *) prev, (char *) ptr+1)) || IsIgnore((char *&) ptr))) {
+  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && IsPunct((char *&) ptr, (char *) prev, (char *) ptr+1, &punct_intent, &punct_senti)) || IsIgnore((char *&) ptr))) {
     prev = ptr;
     ptr++;
   }
@@ -1000,7 +1030,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   }
 
   while (ptr && ' ' != *ptr && '\0' != *ptr &&
-         !(is_punct = IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1/*, current_word_has_apostropheS*/))) {
+         !(is_punct = IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))) {
 
     if (!ptr || '\0' == *ptr) {
 #ifdef GM_DEBUG
@@ -1010,7 +1040,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // GM_DEBUG
       return 0;
     }
-
 
     if (isupper(*ptr)) {
       if (!current_word_all_caps) {
@@ -1234,7 +1263,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   is_punct = false;
   while ('\0' != *ptr &&
          (' ' == *ptr ||
-          (ispunct(*ptr) && (is_punct = IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1))) ||
+          (ispunct(*ptr) &&
+           (is_punct = IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))) ||
           (is_ignore_word = IsIgnore((char *&) ptr))
          )
         ) {
@@ -1316,7 +1346,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     is_punct = false;
     if (' ' == *probe || '\0' == *probe ||
         (ispunct(*probe) &&
-         (is_punct = IsPunct((char *&) probe, (char *) probe-1, (char *) probe+1/*, next_word_has_apostropheS*/))
+         (is_punct = IsPunct((char *&) probe, (char *) probe-1, (char *) probe+1, &punct_intent, &punct_senti))
         )
        ) {
 
@@ -2192,7 +2222,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         while (('\0' != *ptr)
                && (' ' == *ptr
                    || (ispunct(*ptr) &&
-                      (is_punct = IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1))
+                      (is_punct = IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))
                       )
                    || (is_ignore_word = IsIgnore((char *&) ptr))
                   )
@@ -2527,6 +2557,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // TEXT_CLASSIFICATION_ENABLED
 
 #ifdef SENTIMENT_ENABLED
+  sentiment_valence += punct_senti;
   if (sentiment_valence == 0) {
     strcpy(sentiment_buffer, "neutral");
   } else if (sentiment_valence < 0) {
@@ -2546,6 +2577,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     intent_valence %= 10;
     intent_valence += 1;
   }
+  intent_valence += punct_intent;
   if (intent_valence < 4) {
     strcpy(intent_buffer, "none");
   } else {
