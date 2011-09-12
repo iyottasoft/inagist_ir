@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstring>
+#include <cmath>
 #include "twitter_searcher.h"
 #include "twitter_api.h"
 #include "inagist_api.h"
@@ -1515,15 +1516,24 @@ int Classifier::MakeDictionary(const char* classifier_dictionary_file) {
     std::cerr << "ERROR: could not open classifier dictionary file: " \
               << classifier_dictionary_file << std::endl;
   } else {
+    double idf = 0;
     std::map<std::string, double>::iterator class_map_iter;
     for (dict_iter = classifier_dictionary_map.begin();
          dict_iter != classifier_dictionary_map.end();
          dict_iter++) {
       ofs << dict_iter->first << "=";
+      /*
+      if (dict_iter->second.size() > 10) {
+        std::cout << "WARNING: " << dict_iter->first \
+                  << " occurs " << dict_iter->second.size() << " times" << std::endl;
+      }
+      */
       for (class_map_iter = dict_iter->second.begin();
            class_map_iter != dict_iter->second.end();
            class_map_iter++) {
-        ofs << class_map_iter->first << ":" << class_map_iter->second << "|";
+        idf = log((double)corpus_map->size()/(double)dict_iter->second.size());
+        idf *= 0.001;
+        ofs << class_map_iter->first << ":" << (class_map_iter->second + idf) << "|";
       }
       ofs << std::endl;
     }

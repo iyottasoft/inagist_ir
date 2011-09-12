@@ -13,7 +13,7 @@
 #define MAX_CLASS_NAME 32
 #define MAX_LIST_BUFFER_LEN 20480
 
-#define GIST_DEBUG 1
+//#define GIST_DEBUG 1
 #define ERLANG_R14B02 1
 
 ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {

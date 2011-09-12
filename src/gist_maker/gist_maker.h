@@ -129,6 +129,9 @@ class GistMaker {
   int DetectScript(int code_point, std::string &script);
   int ProcessTextClassWord(std::string& text_class_word, std::map<std::string, double>& text_class_map);
   void inline Initialize(double array[], unsigned int size);
+  int Heapify(double& top1, std::string& top1_class,
+              double& top2, std::string& top2_class,
+              double& top3, std::string& top3_class);
 
  private:
   inagist_utils::DictionarySet m_stopwords_dictionary;

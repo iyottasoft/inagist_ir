@@ -2511,7 +2511,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer,
   for (intent_iter = intent_words.begin(); intent_iter != intent_words.end(); intent_iter++) {
     intent_valence += intent_iter->second;
   }
-  if (intent_valence > 10) {
+  if (intent_valence >= 10) {
     intent_valence %= 10;
     intent_valence += 1;
   }

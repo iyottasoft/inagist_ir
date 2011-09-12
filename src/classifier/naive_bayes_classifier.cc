@@ -425,11 +425,13 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
   unsigned int max_duplicate_count = 0;
   double sum = 0;
   freqs[0] = exp(freqs[0]);
+  sum += freqs[0];
   max_freq = freqs[0];
   max_index = 0;
   for (unsigned int j=1; j<count; j++) {
     freqs[j] = exp(freqs[j]);
-    sum += freqs[count];
+    //sum += freqs[count];
+    sum += freqs[j];
 #ifdef NBC_DEBUG
     if (debug_level > 2 || NBC_DEBUG > 2) {
       std::cout << classes[j] << " freqs: " << freqs[j] << std::endl;

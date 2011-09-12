@@ -135,12 +135,6 @@ int main(int argc, char *argv[]) {
   assert(input_type >=0 && input_type <=5);
   const char* input_value = NULL;
 
-  // initialize keytuples extracter
-  if (g_gm.Init(gist_maker_config_file) < 0) {
-    std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
-    return -1; 
-  }
-
   if (4 == argc) {
     input_value = argv[3];
   }
@@ -150,6 +144,12 @@ int main(int argc, char *argv[]) {
   std::set<std::string>::iterator set_iter;
 
   if (0 == input_type) {
+    // initialize keytuples extracter
+    if (g_gm.Init(gist_maker_config_file) < 0) {
+      std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
+      return -1; 
+    }
+
     while (getline(std::cin, text)) {
       if (text.compare("exit") == 0 || text.compare("quit") == 0)
         break;
@@ -160,14 +160,22 @@ int main(int argc, char *argv[]) {
       std::cerr << "ERROR: could not input texts\n";
       return -1;
     }
-    for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
-      MakeGist(*set_iter);
-      if (2 == input_type)
-        break;
+
+    if (!tweets.empty()) {
+      // initialize keytuples extracter
+      if (g_gm.Init(gist_maker_config_file) < 0) {
+        std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
+        return -1; 
+      }
+
+      for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
+        MakeGist(*set_iter);
+        if (2 == input_type)
+          break;
+      }
+      tweets.clear();
     }
   }
-
-  tweets.clear();
 
   return 0;
 }

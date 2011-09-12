@@ -9,6 +9,7 @@ extern/*/*.o
 src/*/*.so
 api/*/*.so
 extern/*/*.so
+api/*/bin/*
 src/*/*.beam
 api/*/*.beam
 api/*/lib/*.so
