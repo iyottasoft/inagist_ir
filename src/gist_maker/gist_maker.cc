@@ -415,6 +415,7 @@ int GistMaker::MakeGist(char* str,
   unsigned int named_entities_buffer_len = MAX_DEBUG_BUFFER_LEN;
   unsigned int named_entities_len = 0;
   unsigned int named_entities_count = 0;
+  named_entities_set.clear();
 #endif
 
 #ifdef KEYWORDS_ENABLED
@@ -423,6 +424,7 @@ int GistMaker::MakeGist(char* str,
   unsigned int keywords_buffer_len = MAX_DEBUG_BUFFER_LEN;
   unsigned int keywords_len = 0;
   unsigned int keywords_count = 0;
+  keywords_set.clear();
 #endif
 
 #ifdef KEYPHRASE_ENABLED
@@ -431,6 +433,7 @@ int GistMaker::MakeGist(char* str,
   unsigned int keyphrases_buffer_len = MAX_DEBUG_BUFFER_LEN;
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
+  keyphrases_set.clear();
 #endif
 
 #ifdef LANG_ENABLED
@@ -439,6 +442,7 @@ int GistMaker::MakeGist(char* str,
   memset(lang_class_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
   unsigned int lang_class_len = 0;
   unsigned int lang_class_count = 0;
+  language.clear();
 #endif
 
 #ifdef TEXT_CLASSIFICATION_ENABLED
@@ -447,18 +451,21 @@ int GistMaker::MakeGist(char* str,
   memset(text_classes_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
   unsigned int text_classes_len = 0;
   unsigned int text_classes_count = 0;
+  text_classes_set.clear();
 #endif
 
 #ifdef INTENT_ENABLED
   char intent_buffer[MAX_DEBUG_BUFFER_LEN];
   unsigned int intent_buffer_len = MAX_DEBUG_BUFFER_LEN;
   memset(intent_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
+  intent.clear();
 #endif // INTENT_ENABLED
 
 #ifdef SENTIMENT_ENABLED
   char sentiment_buffer[MAX_DEBUG_BUFFER_LEN];
   unsigned int sentiment_buffer_len = MAX_DEBUG_BUFFER_LEN;
   memset(sentiment_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
+  sentiment.clear();
 #endif // SENTIMENT_ENABLED
 
   int count = 0;
@@ -607,11 +614,15 @@ int GistMaker::MakeGist(char* str,
 #endif // TEXT_CLASSIFICATION_ENABLED
 
 #ifdef INTENT_ENABLED
-  intent.assign(intent_buffer, intent_buffer_len);
+  if (strlen(intent_buffer)) {
+    intent.assign(intent_buffer, intent_buffer_len);
+  }
 #endif // INTENT_ENABLED
 
 #ifdef SENTIMENT_ENABLED
-  sentiment.assign(sentiment_buffer, sentiment_buffer_len);
+  if (strlen(sentiment_buffer)) {
+    sentiment.assign(sentiment_buffer, sentiment_buffer_len);
+  }
 #endif // SENTIMENT_ENABLED
 
   return count;
@@ -716,9 +727,71 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     return -1;
   }
 
-  // initialize output parameters
-  *safe_status_buffer = '\0';
+  // script detection
+  // initialize output parameter for script
   *script_buffer = '\0';
+  unsigned char *end = (unsigned char*) strchr((char *) text_buffer, '\0');
+  std::string script = "UU";
+  strcpy(script_buffer, "UU");
+  unsigned int code_point = 0;
+  string script_temp;
+  unsigned int script_count = 0;
+  unsigned int english_count = 0;
+  bool current_word_ascii = false;
+  bool next_word_ascii = false;
+  unsigned char *ptr = NULL;
+
+  // whole thing starts here
+  ptr = text_buffer;
+
+  while (ptr && *ptr != '\0') {
+    try {
+      code_point = utf8::next(ptr, end);
+      if (code_point > 0x7F) {
+        if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
+          if (script_temp != "en") {
+            if (script_temp != script) {
+              script_count = 0;
+              script = script_temp;
+            }
+            else {
+              script_count++;
+            }
+          }
+        }
+      } else {
+        if (code_point > 0x40 && code_point < 0x7B)
+          english_count++;
+      }
+    } catch (...) {
+#ifdef GM_DEBUG
+      if (GM_DEBUG > 0) {
+        std::cout << "EXCEPTION 1: utf8 returned exception" << std::endl;
+        cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+      }
+#endif // GM_DEBUG
+      return -1;
+    }
+  }
+
+  bool script_flag = false;
+  if (script_count == 0 && english_count > 10) {
+    script = "en";
+    script_flag = true;
+  } else if (script_count > 0 && (script_count < 11 || script_count < english_count)) {
+    script = "UU";
+  }
+  strcpy(script_buffer, script.c_str());
+
+  // prepare for return
+  int ret_val = 1;
+
+  if (!script_flag) {
+    return ret_val;
+  }
+
+  // initialize parameters for other outputs
+  *safe_status_buffer = '\0';
 
 #ifdef NAMED_ENTITIES_ENABLED
   if (!named_entities_buffer) {
@@ -801,7 +874,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   sentiment_buffer[0] = '\0';
 #endif // SENTIMENT_ENABLED
 
-  unsigned char *ptr = NULL;
   unsigned char *probe = NULL;
   unsigned char current_word_delimiter;
   unsigned char prev_word_delimiter;
@@ -914,17 +986,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   strcpy(safe_status_buffer, "safe");
   bool text_has_unsafe_words = false;
 
-  // script detection
-  unsigned char *end = (unsigned char*) strchr((char *) text_buffer, '\0');
-  std::string script = "UU";
-  strcpy(script_buffer, "UU");
-  unsigned int code_point = 0;
-  string script_temp;
-  unsigned int script_count = 0;
-  unsigned int english_count = 0;
-  bool current_word_ascii = false;
-  bool next_word_ascii = false;
-
   // text classification
 #ifdef TEXT_CLASSIFICATION_ENABLED
   double prior_freqs[MAX_CORPUS_NUMBER];
@@ -945,7 +1006,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   std::map<std::string, double> text_class_map;
 #endif // TEXT_CLASSIFICATION_ENABLED
 
-  // the whole thing starts here
+  // the whole thing starts here again!
   ptr = text_buffer;
 
 #ifdef GM_DEBUG
@@ -2423,22 +2484,11 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   }
 #endif // NAMED_ENTITIES_ENABLED
 
-  // prepare for return
-  int ret_val = 0;
-
   // safe status
   if (text_has_unsafe_words)
     strcpy(safe_status_buffer, "unsafe");
   else
     strcpy(safe_status_buffer, "safe");
-  ret_val += 1;
-
-  if (script_count == 0 && english_count > 10) {
-    script = "en";
-  } else if (script_count > 0 && (script_count < 11 || script_count < english_count)) {
-    script = "UU";
-  }
-  strcpy(script_buffer, script.c_str());
   ret_val += 1;
 
 #ifdef NAMED_ENTITIES_ENABLED
