@@ -973,6 +973,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
 #ifdef INTENT_ENABLED
   int intent_valence = 0;
+  int first_person_valence = 0;
   std::string intent_str;
   if ((2 * (text_len + 1)) < text_buffer_len) {
     text_buffer[(2 * text_len) + 1] = '\0';
@@ -1222,8 +1223,12 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef INTENT_ENABLED
     bool flag = false;
     if (m_intent_words_dictionary.Find(current_word_start, dict_value) == 1) {
-      intent_words[std::string((const char*) current_word_start)] = dict_value;
-      flag = true;
+      if (dict_value == 10) {
+        first_person_valence = 1;
+      } else {
+        intent_words[std::string((const char*) current_word_start)] = dict_value;
+        flag = true;
+      }
       // std::cout << "intent_sentence: " << current_word_start << " value: " << dict_value << std::endl;
     }
     if (orig_start) {
@@ -1552,15 +1557,23 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
            intent_end = orig_start + (next_word_end - text_buffer);
            intent_phrase.assign((const char*) intent_start, 0, intent_end-intent_start);
            if (m_intent_words_dictionary.Find(intent_phrase, dict_value) == 1) {
-             intent_words[intent_phrase] = dict_value;
-             flag = true;
+             if (dict_value == 10) {
+               first_person_valence = 1;
+             } else {
+               intent_words[intent_phrase] = dict_value;
+               flag = true;
+             }
            }
          }
          if (!flag) {
            if (m_intent_words_dictionary.Find(next_word_start, dict_value) == 1) {
-             intent_words[std::string((const char*) next_word_start)] = dict_value;
-             flag = true;
-             intent_start = orig_start + (next_word_start - text_buffer);
+             if (dict_value == 10) {
+               first_person_valence = 1;
+             } else {
+               intent_words[std::string((const char*) next_word_start)] = dict_value;
+               flag = true;
+               intent_start = orig_start + (next_word_start - text_buffer);
+             }
              // std::cout << "intent_sentence: " << next_word_start << " value: " << dict_value << std::endl;
            }
          }
@@ -2621,13 +2634,26 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef INTENT_ENABLED
   std::map<std::string, int>::iterator intent_iter;
   for (intent_iter = intent_words.begin(); intent_iter != intent_words.end(); intent_iter++) {
+#ifdef GM_DEBUG
+  if (GM_DEBUG > 2) {
+    std::cout << "intent= " << intent_iter->first << ":" << intent_iter->second << std::endl;
+  }
+#endif // GM_DEBUG
     intent_valence += intent_iter->second;
   }
-  if (intent_valence >= 10) {
-    intent_valence %= 10;
-    intent_valence += 1;
+#ifdef GM_DEBUG
+  if (GM_DEBUG > 2) {
+    std::cout << "init intent_valence: " << intent_valence << std::endl;
   }
+#endif // GM_DEBUG
+  intent_valence += first_person_valence;
   intent_valence += punct_intent;
+#ifdef GM_DEBUG
+  if (GM_DEBUG > 2) {
+    std::cout << "punct_intent:" << punct_intent << std::endl;
+    std::cout << "intent_valence: " << intent_valence << std::endl;
+  }
+#endif // GM_DEBUG
   if (intent_valence < 4) {
     strcpy(intent_buffer, "none");
   } else {
