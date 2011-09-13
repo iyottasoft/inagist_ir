@@ -262,7 +262,7 @@ bool GistMaker::IsPunct(char*& ptr, char* prev, char* next, int* punct_intent, i
     case ';':
       // fall thru
     case ':':
-      if (next && *next != '\0') {
+      if (next && *next != '\0' && punct_senti) {
         switch (*next) {
           case ')':
           case 'P':
@@ -289,10 +289,12 @@ bool GistMaker::IsPunct(char*& ptr, char* prev, char* next, int* punct_intent, i
           return false;
       break;
     case '!':
-      (*punct_senti)++;
+      if (punct_senti)
+        (*punct_senti)++;
       break;
     case '?':
-      (*punct_intent)++;
+      if (punct_intent)
+        (*punct_intent)++;
       break;
     case '&':
       return true;
