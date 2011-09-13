@@ -784,7 +784,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   strcpy(script_buffer, script.c_str());
 
   // prepare for return
-  int ret_val = 1;
+  int ret_val = 0;
+  if (script.compare("UU") != 0) {
+    ret_val++;
+  }
 
   if (!script_flag) {
     return ret_val;
