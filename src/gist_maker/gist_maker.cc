@@ -785,7 +785,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
   // prepare for return
   int ret_val = 0;
-  if (script.compare("UU") != 0) {
+  if ((script.compare("UU") != 0) &&
+      (script.compare("uu") != 0) &&
+      (script.compare("XX") != 0) &&
+      (script.compare("xx") != 0)) {
     ret_val++;
   }
 
