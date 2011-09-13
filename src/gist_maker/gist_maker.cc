@@ -207,7 +207,7 @@ bool GistMaker::IsPunct(char*& ptr, char* prev, char* next, int* punct_intent, i
       if (prev && next)
         if (isdigit(*prev) && isdigit(*next))
           return false;
-      if (next) {
+      if (next && *next != '\0') {
         if (*next == ' ')
           return true;
         if (!strcmp(ptr, ".com") || !strcmp(ptr, ".org") || !strcmp(ptr, ".ly"))
@@ -244,7 +244,7 @@ bool GistMaker::IsPunct(char*& ptr, char* prev, char* next, int* punct_intent, i
       return IsPunct(next);
       break;
     case '#':
-      if (!next)
+      if (!next || (*next == '\0'))
         return true;
       else
         if (*next == ' ' || IsPunct(next))
@@ -273,7 +273,7 @@ bool GistMaker::IsPunct(char*& ptr, char* prev, char* next, int* punct_intent, i
             (*punct_senti)--;
             break;
           case '-':
-            if (next+1 && *(next+1) != '\0') {
+            if ((next+1) && (*(next+1) != '\0')) {
               if (*(next+1) == '(') {
                 (*punct_senti)--;
               } else if (*(next+1) == ')') {
