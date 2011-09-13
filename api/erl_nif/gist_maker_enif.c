@@ -165,9 +165,9 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   sentiment_buffer[0] = '\0';
 #endif // SENTIMENT_ENABLED
 
-  int ret_value = 0;
+  int ret_val = 0;
 
-  if ((ret_value = CallMakeGist((unsigned char *) tweet_str, tweet_buffer_len, tweet_len,
+  if ((ret_val = CallMakeGist((unsigned char *) tweet_str, tweet_buffer_len, tweet_len,
                   (char *) safe_status_buffer, safe_status_buffer_len,
                   (char *) script_buffer, script_buffer_len
 #ifdef LANG_ENABLED
@@ -203,12 +203,24 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #endif // GIST_DEBUG
   }
 
+  if (ret_val == 0) {
+    return enif_make_tuple9(env,
+                            enif_make_atom(env, "ok"),
+                            enif_make_atom(env, "ok"),
+                            enif_make_atom(env, "ok"),
+                            enif_make_list(env, 0),
+                            enif_make_list(env, 0),
+                            enif_make_list(env, 0),
+                            enif_make_list(env, 0),
+                            enif_make_atom(env, "ok"),
+                            enif_make_atom(env, "ok"));
+  }
+
   tweet_str[0] = '\0';
   tweet_len = 0;
 
   unsigned int len = 0;
   unsigned int i = 0;
-  int ret_val = 0;
 
   // safe/unsafe status
   if (!safe_status_buffer) {

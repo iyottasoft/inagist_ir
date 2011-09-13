@@ -110,9 +110,11 @@ int CallMakeGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
 #ifdef SENTIMENT_ENABLED
     , sentiment_buffer, sentiment_buffer_len
 #endif // SENTIMENT_ENABLED
-   )) < 0) {
+   )) <= 0) {
+#ifdef GIST_DEBUG
     std::cerr << "ERROR: error calling MakeGist for: " << text_buffer << std::endl;
-    return -1;
+#endif // GIST_DEBUG
+    return ret_value;
   }
 
 #ifdef NAMED_ENTITIES_ENABLED
