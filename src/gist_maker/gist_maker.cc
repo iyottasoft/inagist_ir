@@ -210,7 +210,7 @@ bool GistMaker::IsPunct(char*& ptr, char* prev, char* next, int* punct_intent, i
       if (next) {
         if (*next == ' ')
           return true;
-        if (!strncmp(ptr, ".com", 4) || !strncmp(ptr, ".org", 4))
+        if (!strcmp(ptr, ".com") || !strcmp(ptr, ".org") || !strcmp(ptr, ".ly"))
           return false; // not handling .come on or .organization etc
       }
       break;
@@ -221,6 +221,7 @@ bool GistMaker::IsPunct(char*& ptr, char* prev, char* next, int* punct_intent, i
       if (!next || IsPunct(next)) {
         return true;
       }
+      /*
       if (strncmp(ptr, "'s ", 3) == 0) {
         // its callers responsibility to initialize this to false
         //word_has_apostrophe = true;
@@ -229,6 +230,7 @@ bool GistMaker::IsPunct(char*& ptr, char* prev, char* next, int* punct_intent, i
       } else {
         return false;
       }
+      */
       /*
       if (!strncmp(ptr, "'t", 2) || !strncmp(ptr, "'ve", 2) ||
           !strncmp(ptr, "'ll", 2) || !strncmp(ptr, "'re", 2) || !strncmp(ptr, "'m", 2) ||
@@ -257,28 +259,34 @@ bool GistMaker::IsPunct(char*& ptr, char* prev, char* next, int* punct_intent, i
         if (isalnum(*prev) && (isalnum(*next)))
           return false;
       break;
+    case ';':
+      // fall thru
     case ':':
-      if (next) {
-        if (')' == *next || strcmp(next, "-)") == 0) {
-          (*punct_senti)++;
-        }
-        if ('(' == *next || strcmp(next, "-(") == 0) {
-          (*punct_senti)--;
+      if (next && *next != '\0') {
+        switch (*next) {
+          case ')':
+          case 'P':
+          case 'D':
+            (*punct_senti)++;
+            break;
+          case '(':
+            (*punct_senti)--;
+            break;
+          case '-':
+            if (next+1 && *(next+1) != '\0') {
+              if (*(next+1) == '(') {
+                (*punct_senti)--;
+              } else if (*(next+1) == ')') {
+                (*punct_senti)++;
+              }
+            }
+          default:
+            break;
         }
       }
       if (prev && next)
         if (isdigit(*prev) && isdigit(*next))
           return false;
-      break;
-    case ';':
-      if (next) {
-        if (')' == *next || strcmp(next, "-)") == 0) {
-          (*punct_senti)++;
-        }
-        if ('(' == *next || strcmp(next, "-(") == 0) {
-          (*punct_senti)--;
-        }
-      }
       break;
     case '!':
       (*punct_senti)++;
@@ -2522,15 +2530,16 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   ret_val += keyphrases_count;
 #endif // KEYPHRASE_ENABLED
 
+#ifdef LANG_ENABLED
   std::set<std::string>::iterator words_iter;
   std::string word;
 
-#ifdef LANG_ENABLED
   for (words_iter = lang_class_set.begin(); words_iter != lang_class_set.end(); words_iter++) {
     word.assign(*words_iter);
     Insert(lang_class_buffer, lang_class_len, word, lang_class_count);
     word.clear();
   }
+  lang_class_set.clear();
   ret_val += lang_class_count;
 #endif // LANG_ENABLED
 
