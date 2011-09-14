@@ -30,5 +30,5 @@ gist_collector:
 
 gist_maker:
 	@echo "creating binary ${LOCAL_BIN_DIR}/t_gist_maker ..."
-	@gcc -g -Wall t_gist_maker.c -o ${LOCAL_BIN_DIR}/t_gist_maker -I. -I${CPP_INCLUDE_DIR} -L${CPP_LINK_DIR} -lstdc++ -ltwitter_api_cppi -lgist_maker_cppi -L${CPP_LIB_DIR} -lscriptdetector -lutils -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -DTEXT_CLASSIFICATION_ENABLED
+	@gcc -g -Wall t_gist_maker.c -o ${LOCAL_BIN_DIR}/t_gist_maker -I. -I${CPP_INCLUDE_DIR} -L${CPP_LINK_DIR} -lstdc++ -ltwitter_api_cppi -lgist_maker_cppi -L${CPP_LIB_DIR} -lngramsgenerator -lscriptdetector -lutils -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DLANG_ENABLED
 	@echo "done!"

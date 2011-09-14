@@ -44,6 +44,10 @@ int GistMaker::Init(std::string config_file) {
 #ifdef SENTIMENT_ENABLED
            config.sentiment_words_file.c_str(),
 #endif // SENTIMENT_ENABLED
+#ifdef LANG_ENABLED
+           config.language_dictionary_file.c_str(),
+           config.language_prior_freqs_file.c_str(),
+#endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
            config.classifier_dictionary_file.c_str(),
 #endif // TEXT_CLASSIFICATION_ENABLED
@@ -73,6 +77,10 @@ int GistMaker::Init(const char *stopwords_file,
 #ifdef SENTIMENT_ENABLED
     const char *sentiment_words_file,
 #endif // SENTIMENT_ENABLED
+#ifdef LANG_ENABLED
+    const char *language_dictionary_file,
+    const char *language_prior_freqs_file,
+#endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
     const char *classifier_dictionary_file,
 #endif // TEXT_CLASSIFICATION_ENABLED
@@ -152,6 +160,28 @@ int GistMaker::Init(const char *stopwords_file,
     }
   }
 #endif // SENTIMENT_ENABLED
+
+#ifdef LANG_ENABLED
+  if (language_dictionary_file) {
+#ifdef GM_DEBUG
+    if (GM_DEBUG > 3) {
+      std::cout << "Info: loading language dictionary file - " << language_dictionary_file << std::endl;
+    }
+#endif // GM_DEBUG
+    int ret = m_language_dictionary.Load(language_dictionary_file);
+    if (ret < 0) {
+      std::cerr << "ERROR: could not load language dictionary file: " \
+                << language_dictionary_file << " into dictionary map\n";
+      return -1;
+    }
+    ret = m_language_prior_freqs.Load(language_prior_freqs_file);
+    if (ret < 0) {
+      std::cerr << "ERROR: could not load language prior freqs file: " \
+                << language_prior_freqs_file << " into dictionary map\n";
+      return -1;
+    }
+  }
+#endif // LANG_ENABLED
 
 #ifdef TEXT_CLASSIFICATION_ENABLED
   if (classifier_dictionary_file) {
@@ -331,6 +361,61 @@ bool GistMaker::IsIgnore(char *&ptr) {
     return true;
   }
   return false;
+}
+
+int GistMaker::ProcessLangClassWord(std::string& lang_class_word,
+                                    std::map<std::string, double>& lang_class_map) {
+
+#ifdef LANG_ENABLED
+  std::set<std::string> ngrams_set;
+  std::set<std::string>::iterator ngrams_iter;
+
+  if (m_ngrams_generator.GetNgrams((const unsigned char*) lang_class_word.c_str(),
+                                   lang_class_word.length(),
+                                   ngrams_set) < 0) {
+#ifdef GM_DEBUG
+    std::cerr << "ERROR: could not get ngrams for word: " << lang_class_word << std::endl;
+#endif // GM_DEBUG
+    return -1;
+  }
+
+  std::map<std::string, double>::iterator lang_class_map_iter;
+  // TODO (balaji) optimize, remove this temp_map
+  std::map<std::string, double> temp_map;
+  std::map<std::string, double>::iterator temp_iter;
+  std::string ngram;
+
+  for (ngrams_iter = ngrams_set.begin(); ngrams_iter != ngrams_set.end(); ngrams_iter++) {
+    ngram.assign(*ngrams_iter);
+    if (m_language_dictionary.Find((const unsigned char*) ngram.c_str(), temp_map) == 1) {
+#ifdef GM_DEBUG
+        if (GM_DEBUG > 3) {
+          std::cout << std::endl << lang_class_word << " = ";
+        }
+#endif // GM_DEBUG
+      for (temp_iter = temp_map.begin(); temp_iter != temp_map.end(); temp_iter++) {
+#ifdef GM_DEBUG
+        if (GM_DEBUG > 3) {
+          std::cout << temp_iter->first << " : " << temp_iter->second << "; ";
+        }
+#endif // GM_DEBUG
+        if ((lang_class_map_iter = lang_class_map.find(temp_iter->first)) != lang_class_map.end()) {
+          lang_class_map_iter->second += temp_iter->second;
+        } else {
+          lang_class_map[temp_iter->first] += temp_iter->second;
+        }
+      }
+#ifdef GM_DEBUG
+      if (GM_DEBUG > 3) {
+        std::cout << std::endl;
+      }
+#endif // GM_DEBUG
+    }
+  }
+  ngrams_set.clear();
+#endif // LANG_ENABLED
+
+  return 0;
 }
 
 int GistMaker::ProcessTextClassWord(std::string& text_class_word, std::map<std::string, double>& text_class_map) {
@@ -599,7 +684,9 @@ int GistMaker::MakeGist(char* str,
 #endif // KEYPHRASE_ENABLED
 
 #ifdef LANG_ENABLED
-  language.assign((char *) lang_class_buffer, lang_class_buffer_len);
+  if (strlen((char *) lang_class_buffer) >= 2) {
+    language.assign((char *) lang_class_buffer);
+  }
   lang_class_buffer[0] = '\0';
 #endif // LANG_ENABLED
 
@@ -624,14 +711,14 @@ int GistMaker::MakeGist(char* str,
 #endif // TEXT_CLASSIFICATION_ENABLED
 
 #ifdef INTENT_ENABLED
-  if (strlen(intent_buffer)) {
-    intent.assign(intent_buffer, intent_buffer_len);
+  if (strlen(intent_buffer) > 1) {
+    intent.assign(intent_buffer);
   }
 #endif // INTENT_ENABLED
 
 #ifdef SENTIMENT_ENABLED
-  if (strlen(sentiment_buffer)) {
-    sentiment.assign(sentiment_buffer, sentiment_buffer_len);
+  if (strlen(sentiment_buffer) > 1) {
+    sentiment.assign(sentiment_buffer);
   }
 #endif // SENTIMENT_ENABLED
 
@@ -855,7 +942,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   *lang_class_buffer = '\0';
   lang_class_len = 0;
   lang_class_count = 0;
-  std::set<std::string> lang_class_set;
+  std::string lang_class_word;
+  std::map<std::string, double> lang_class_map;
 #endif // LANG_ENABLED
 
 #ifdef TEXT_CLASSIFICATION_ENABLED
@@ -984,7 +1072,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
 #ifdef SENTIMENT_ENABLED
   int sentiment_valence = 0;
-  strcpy(sentiment_buffer, "neutral");
 #endif // SENTIMENT_ENABLED
 
 #ifdef INTENT_ENABLED
@@ -1000,7 +1087,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // INTENT_ENABLED
 
   // unsafe
-  strcpy(safe_status_buffer, "safe");
   bool text_has_unsafe_words = false;
 
   // text classification
@@ -1262,7 +1348,11 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   if (current_word_start &&
       (current_word_stop || current_word_dict) &&
       !current_word_hashtag) {
-    lang_class_set.insert(std::string((char *) current_word_start));
+    lang_class_word.assign((char*) current_word_start);
+    if (ProcessLangClassWord(lang_class_word, lang_class_map) < 0) {
+      std::cerr << "Error: could not find lang_class_map for word: " \
+                << lang_class_word << std::endl;
+    }
   }
 #endif // LANG_ENABLED
 
@@ -1451,30 +1541,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         }
       }
 
-#ifdef LANG_ENABLED
-      // TODO (balaji) - not sure what is being tried here!
-      /*
-      if (current_word_start == sentence_start &&
-          current_word_caps &&
-          (!next_word_start || !next_word_caps)) {
-        *current_word_start += 32;
-        lang_class_set.insert(std::string((char *) current_word_start));
-        *current_word_start -= 32;
-      }
-
-      if (!next_word_start) {
-        if (!current_word_caps) {
-          lang_class_set.insert(std::string((char *) current_word_start));
-        }
-        if (current_word_caps && current_word_start == sentence_start) {
-          *current_word_start += 32;
-          lang_class_set.insert(std::string((char *) current_word_start));
-          *current_word_start -= 32;
-        }
-      }
-      */
-#endif // LANG_ENABLED
-
 #ifdef GM_DEBUG
       if (GM_DEBUG > 5) {
         cout << endl;
@@ -1603,7 +1669,11 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         if ((next_word_stop ||
              next_word_dict) &&
              !next_word_hashtag) {
-          lang_class_set.insert(std::string((char *) next_word_start));
+          lang_class_word.assign((char *) next_word_start);
+          if (ProcessLangClassWord(lang_class_word, lang_class_map) < 0) {
+            std::cerr << "Error: could not find lang_class_map for word: " \
+                      << lang_class_word << std::endl;
+          }
         }
 #endif // LANG_ENABLED
 
@@ -1668,7 +1738,11 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // GM_DEBUG
         num_normal_words++;
 #ifdef LANG_ENABLED
-        lang_class_set.insert(std::string((char *) current_word_start));
+        lang_class_word.assign((char *) current_word_start);
+        if (ProcessLangClassWord(lang_class_word, lang_class_map) < 0) {
+          std::cerr << "Error: could not find lang_class_map for word: " \
+                    << lang_class_word << std::endl;
+        }
 #endif // LANG_ENABLED
       }
       if (current_word_has_mixed_case)
@@ -2464,23 +2538,88 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     }
   }
   } // end of gigantic if
+  probe = NULL;
+  ptr = NULL;
 
-#ifndef LANG_ENABLED
-  if (num_mixed_words > 2) {
+#ifdef LANG_ENABLED
+  double lang_freq = 0;
+  double lang_prior_freq = 0;
+  double max_lang_freq = 0;
+  std::string max_lang_class;
+  unsigned int max_lang_duplicate_count = 0;
+  double lang_freq_sum = 0;
+  max_lang_freq = 0;
+  std::map<std::string, double>::iterator lang_class_map_iter;
+  std::map<std::string, double>::iterator lang_prior_freqs_iter;
+  for (lang_class_map_iter = lang_class_map.begin();
+       lang_class_map_iter != lang_class_map.end();
+       lang_class_map_iter++) {
+#ifdef GM_DEBUG
+    if (GM_DEBUG > 3) {
+      std::cout << lang_class_map_iter->first << ":" << lang_class_map_iter->second << std::endl;
+    }
+#endif // GM_DEBUG
+    lang_freq = lang_class_map_iter->second;
+    /*
+    if (m_language_prior_freqs.Find((const unsigned char*) lang_class_map_iter->first.c_str(),
+                                    lang_prior_freq) != 0) {
+      lang_freq += lang_prior_freq;
+    }
+    */
+    lang_freq = exp(lang_freq);
+    lang_freq_sum += lang_freq;
+    if (max_lang_freq == lang_freq) {
+      max_lang_duplicate_count++;
+    } else if (max_lang_freq < lang_freq) {
+      max_lang_freq = lang_freq;
+      max_lang_class = lang_class_map_iter->first;
+      max_lang_duplicate_count = 0;
+    }
+  }
+  if (!max_lang_class.empty()) {
+    strcpy((char *) lang_class_buffer, max_lang_class.c_str());
+    lang_class_len = max_lang_class.length();
+    lang_class_count = 1;
+  }
+  ret_val += lang_class_count;
+#endif // LANG_ENABLED
+
+#ifdef LANG_ENABLED
+  if (max_lang_class.compare("en") != 0) {
 #ifdef GM_DEBUG
     if (GM_DEBUG > 1) {
       cout << "suspected non-english tweet. ignoring named_entities and keyphrases" << endl;
-      cout << "num mixed words: " << num_mixed_words << endl;
     }
 #endif // GM_DEBUG
 #ifdef NAMED_ENTITIES_ENABLED
     *named_entities_buffer = '\0';
     named_entities_len = 0;
+    named_entities_count = 0;
 #endif // NAMED_ENTITIES_ENABLED
+#ifdef KEYWORDS_ENABLED
+    *keywords_buffer = '\0';
+    keywords_len = 0;
+    keywords_count = 0;
+#endif // KEYWORDS_ENABLED
 #ifdef KEYPHRASE_ENABLED
     *keyphrases_buffer = '\0';
     keyphrases_len = 0;
+    keyphrases_count = 0;
 #endif // KEYPHRASE_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+    text_class_map.clear();
+    *text_classes_buffer = '\0';
+    text_classes_len = 0;
+    text_classes_count = 0;
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef SENTIMENT_ENABLED
+    *sentiment_buffer = '\0';
+#endif // SENTIMENT_ENABLED
+#ifdef INTENT_ENABLED
+    intent_words.clear();
+    *intent_buffer = '\0';
+#endif // INTENT_ENABLED
+    return ret_val;
   }
 #endif // LANG_ENABLED
 
@@ -2531,19 +2670,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef KEYPHRASE_ENABLED
   ret_val += keyphrases_count;
 #endif // KEYPHRASE_ENABLED
-
-#ifdef LANG_ENABLED
-  std::set<std::string>::iterator words_iter;
-  std::string word;
-
-  for (words_iter = lang_class_set.begin(); words_iter != lang_class_set.end(); words_iter++) {
-    word.assign(*words_iter);
-    Insert(lang_class_buffer, lang_class_len, word, lang_class_count);
-    word.clear();
-  }
-  lang_class_set.clear();
-  ret_val += lang_class_count;
-#endif // LANG_ENABLED
 
 #ifdef TEXT_CLASSIFICATION_ENABLED
   double freq = 0;

@@ -14,6 +14,10 @@ int GistMakerConfig::Clear(Config& config) {
   config.stopwords_file.clear();
   config.dictionary_file.clear();
   config.unsafe_dictionary_file.clear();
+#ifdef LANG_ENABLED
+  config.language_dictionary_file.clear();
+  config.language_prior_freqs_file.clear();
+#endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
   config.classifier_dictionary_file.clear();
 #endif // TEXT_CLASSIFICATION_ENABLED
@@ -62,6 +66,12 @@ int GistMakerConfig::Read(const char* config_file_name, Config& config) {
         config.dictionary_file = value;
       } else if (key.compare(0, 17, "unsafe_dictionary") == 0) {
         config.unsafe_dictionary_file = value;
+#ifdef LANG_ENABLED
+      } else if (key.compare(0, 19, "language_dictionary") == 0) {
+        config.language_dictionary_file = value;
+      } else if (key.compare(0, 20, "language_prior_freqs") == 0) {
+        config.language_prior_freqs_file = value;
+#endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
       } else if (key.compare(0, 21, "classifier_dictionary") == 0) {
         config.classifier_dictionary_file = value;

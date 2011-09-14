@@ -12,7 +12,9 @@ LIB = ${LIB_DIR}/lib${PROJECT}.so
 BINS = ${BIN_DIR}/t_language_classifier \
        ${BIN_DIR}/t_get_lang_corpus \
        ${BIN_DIR}/x_language_classifier_training_data \
-       ${BIN_DIR}/t_language_classifier_test_data# \
+       ${BIN_DIR}/t_language_classifier_test_data \
+       ${BIN_DIR}/t_make_lang_dictionary \
+       ${BIN_DIR}/t_make_lang_prior_freqs_file# \
        #${BIN_DIR}/t_clean_lang_corpus
 
 keytuples = keytuples_config.o keytuples_extracter.o
@@ -70,6 +72,16 @@ ${BIN_DIR}/t_language_classifier_test_data: t_language_classifier_test_data.o ${
 ${BIN_DIR}/t_get_lang_corpus: t_get_lang_corpus.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_get_lang_corpus
+	@echo "done!"
+
+${BIN_DIR}/t_make_lang_dictionary: t_make_lang_dictionary.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_make_lang_dictionary
+	@echo "done!"
+
+${BIN_DIR}/t_make_lang_prior_freqs_file: t_make_lang_prior_freqs_file.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_make_lang_prior_freqs_file
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

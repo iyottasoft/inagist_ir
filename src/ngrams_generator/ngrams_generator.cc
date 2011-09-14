@@ -151,6 +151,53 @@ int NgramsGenerator::GetNgrams(const unsigned char* text,
 }
 
 // returns the number of bigrams + trigrams + ngrams (words)
+int NgramsGenerator::GetNgrams(const unsigned char* text,
+                               const unsigned int& text_len,
+                               std::set<std::string>& ngrams_set) {
+
+  if (!text) {
+#ifdef NG_DEBUG
+    std::cerr << "ERROR: invalid string\n";
+#endif // NG_DEBUG
+    return -1;
+  }
+
+  //char* end_text = (char*) text + text_len;
+
+  unsigned char* prev = NULL;
+  unsigned char* current = NULL;
+  unsigned char* next = prev = current = (unsigned char *) text;
+
+  int count = 0;
+  int ret_value = 0;
+  std::string bigram;
+  std::string trigram;
+  while (next && *next != '\0') {
+    if ((ret_value = PositionPointer(prev, current, next)) < 0) {
+      std::cout << "Error: invalid pointer position\n";
+      return count;
+    }
+
+    switch (ret_value) {
+      case 3:
+        trigram = std::string((char *) prev, 3);
+        ngrams_set.insert(trigram);
+        // fall through
+      case 2:
+        bigram = std::string((char *) prev, 2);
+        ngrams_set.insert(bigram);
+        break;
+      case 1:
+        break;
+      case 0:
+        return count;
+    }
+  }
+
+  return count;
+}
+
+// returns the number of bigrams + trigrams + ngrams (words)
 // this handles the ignore words, utf codepoints present in tweets
 int NgramsGenerator::GetNgramsFromTweet(const std::string& tweet,
                                         Corpus& corpus,

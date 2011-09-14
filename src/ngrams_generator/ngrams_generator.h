@@ -46,10 +46,13 @@ class NgramsGenerator {
                         unsigned int word_len,
                         Corpus& corpus);
   int SetDebugLevel(unsigned int debug_level);
+  static int GetNgrams(const unsigned char* text,
+                       const unsigned int& text_len,
+                       std::set<std::string>& ngrams_set);
+  static int PositionPointer(unsigned char*& prev, unsigned char*& current, unsigned char*& next);
 
  private:
   unsigned char m_buffer[MAX_STEM_TEXT_LEN];
-  int PositionPointer(unsigned char*& prev, unsigned char*& current, unsigned char*& next);
 
   unsigned int m_debug_level;
 

@@ -15,7 +15,9 @@
 #include "dictionary_set.h"
 #include "dictionary_map.h"
 #include "int_dictionary_map.h"
+#include "double_dictionary_map.h"
 #include "string_to_map_dictionary.h"
+#include "ngrams_generator.h"
 
 #ifdef DEBUG
 #if DEBUG>0
@@ -44,6 +46,10 @@ class GistMaker {
 #ifdef SENTIMENT_ENABLED
            , const char* sentiment_words_file=NULL
 #endif // SENTIMENT_ENABLED
+#ifdef LANG_ENABLED
+           , const char *language_dictionary_file=NULL
+           , const char *language_prior_freqs_file=NULL
+#endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
            , const char *classifier_dictionary_file=NULL
 #endif // TEXT_CLASSIFICATION_ENABLED
@@ -133,6 +139,9 @@ class GistMaker {
               double& top2, std::string& top2_class,
               double& top3, std::string& top3_class);
 
+  int ProcessLangClassWord(std::string& lang_class_word,
+                           std::map<std::string, double>& lang_class_map);
+
  private:
   inagist_utils::DictionarySet m_stopwords_dictionary;
   inagist_utils::DictionarySet m_dictionary;
@@ -143,6 +152,11 @@ class GistMaker {
 #ifdef SENTIMENT_ENABLED
   inagist_utils::IntDictionaryMap m_sentiment_words_dictionary;
 #endif // SENTIMENT_ENABLED
+#ifdef LANG_ENABLED
+  inagist_classifiers::NgramsGenerator m_ngrams_generator;
+  inagist_utils::StringToMapDictionary m_language_dictionary;
+  inagist_utils::DoubleDictionaryMap m_language_prior_freqs;
+#endif // LANG_ENABLED 
 #ifdef TEXT_CLASSIFICATION_ENABLED
   inagist_utils::StringToMapDictionary m_classifier_dictionary;
 #endif // TEXT_CLASSIFICATION_ENABLED

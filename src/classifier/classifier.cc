@@ -1550,6 +1550,55 @@ int Classifier::MakeDictionary(const char* classifier_dictionary_file) {
   return 0;
 }
 
+int Classifier::MakePriorFreqsFile(const char* classifier_prior_freqs_file) {
+
+  if (!classifier_prior_freqs_file) {
+    std::cerr << "ERROR: invalid input\n";
+    return -1;
+  }
+
+  if (m_corpus_manager.m_classes_freq_map.empty()) {
+    std::cerr << "ERROR: classes freq map empty\n";
+    return -1;
+  }
+
+  Corpus* classes_freq_map = &(m_corpus_manager.m_classes_freq_map);
+
+  CorpusIter corpus_iter;
+  double prior_total_entries = 0;
+  if ((corpus_iter = classes_freq_map->find("all_classes")) != classes_freq_map->end()) {
+    prior_total_entries = (*corpus_iter).second;
+  } else {
+    return -1;
+  }
+
+  if (prior_total_entries <= 0) {
+    std::cerr << "ERROR: invalid prior total entries\n";
+    return -1;
+  }
+
+  std::ofstream ofs(classifier_prior_freqs_file);
+  if (!ofs.is_open()) {
+    std::cerr << "ERROR: could not open classifier prior freqs file: " \
+              << classifier_prior_freqs_file << std::endl;
+    return -1;
+  }
+  std::string class_name;
+  double class_freq = 0;
+  for (corpus_iter = classes_freq_map->begin();
+       corpus_iter != classes_freq_map->end();
+       corpus_iter++) {
+    class_name = corpus_iter->first;
+    class_freq = corpus_iter->second;
+    if (class_name.compare("all_classes") == 0)
+      continue;
+    ofs << class_name << "=" << log(class_freq/prior_total_entries) << std::endl;
+  }
+  ofs.close();
+
+  return 0;
+}
+
 #endif // CLASSIFIER_DATA_TRAINING_ENABLED || CLASSIFIER_DATA_TESTING_ENABLED
 
 } // namespace inagist_classifiers

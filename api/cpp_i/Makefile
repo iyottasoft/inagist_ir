@@ -155,7 +155,7 @@ channel_manager:
 
 gist_maker:
 	@echo "creating library ${LOCAL_LIB_DIR}/libgist_maker_cppi.a ..."
-	@g++ ${CXXFLAGS} ${PROJECTFLAGS} -fPIC -shared -c ${CPP_SRC_DIR}/gist_maker/gist_maker_config.cc ${CPP_SRC_DIR}/gist_maker/gist_maker.cc gist_maker_cppi.cc -I${CPP_INCLUDE_DIR}/utfcpp -I${CPP_SRC_DIR}/utils -I${CPP_SRC_DIR}/script_detector -I${CPP_SRC_DIR}/gist_maker -DKEYPHRASE_ENABLED -DNAMED_ENTITIES_ENABLED -DKEYWORDS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -DTEXT_CLASSIFICATION_ENABLED
+	@g++ ${CXXFLAGS} ${PROJECTFLAGS} -fPIC -shared -c ${CPP_SRC_DIR}/gist_maker/gist_maker_config.cc ${CPP_SRC_DIR}/gist_maker/gist_maker.cc gist_maker_cppi.cc -I${CPP_INCLUDE_DIR}/utfcpp -I${CPP_SRC_DIR}/utils -I${CPP_SRC_DIR}/script_detector -I${CPP_SRC_DIR}/corpus_manager -I${CPP_SRC_DIR}/ngrams_generator -I${CPP_SRC_DIR}/gist_maker -DKEYPHRASE_ENABLED -DNAMED_ENTITIES_ENABLED -DKEYWORDS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DLANG_ENABLED
 	@ar -r ${LOCAL_LIB_DIR}/libgist_maker_cppi.a gist_maker_config.o gist_maker.o gist_maker_cppi.o
 	@rm gist_maker_config.o gist_maker.o
 	@ranlib ${LOCAL_LIB_DIR}/libgist_maker_cppi.a

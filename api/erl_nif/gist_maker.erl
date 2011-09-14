@@ -25,6 +25,7 @@ test_init() ->
 
 test() ->
   Tuples_list = test_gist_twitter_timeline(),
+  %Tuples_list = get_gist(<<"this is a Test Tweet. this #tests @balaji's program http://caput.in">>),
   case is_atom(Tuples_list) of
     false -> false;
     true -> io:format("error")

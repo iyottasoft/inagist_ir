@@ -13,9 +13,10 @@ BINS = ${BIN_DIR}/t_string_utils \
        ${BIN_DIR}/t_dictionary_set \
        ${BIN_DIR}/t_dictionary_map \
        ${BIN_DIR}/t_int_dictionary_map \
+       ${BIN_DIR}/t_double_dictionary_map \
        ${BIN_DIR}/t_test_utils
 
-OBJS = string_utils.o dictionary_set.o dictionary_map.o int_dictionary_map.o string_to_map_dictionary.o test_utils.o
+OBJS = string_utils.o dictionary_set.o dictionary_map.o int_dictionary_map.o double_dictionary_map.o string_to_map_dictionary.o test_utils.o
 
 all: ${LIB} ${BINS}
 	@echo "build done!"
@@ -53,6 +54,11 @@ ${BIN_DIR}/t_dictionary_map: t_dictionary_map.o ${LIB}
 ${BIN_DIR}/t_int_dictionary_map: t_int_dictionary_map.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_int_dictionary_map
+	@echo "done!"
+
+${BIN_DIR}/t_double_dictionary_map: t_double_dictionary_map.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_double_dictionary_map
 	@echo "done!"
 
 ${BIN_DIR}/t_test_utils: t_test_utils.o ${LIB}

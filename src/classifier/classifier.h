@@ -124,6 +124,7 @@ class Classifier {
   int NormalizeFrequencies(const char* raw_data_file, const char* relative_freq_file);
 
   int MakeDictionary(const char* classifier_dictionary_file);
+  int MakePriorFreqsFile(const char* classifier_prior_freqs_file);
 
  protected:
   CorpusManager m_corpus_manager;

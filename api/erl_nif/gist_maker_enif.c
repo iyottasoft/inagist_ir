@@ -222,39 +222,6 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   unsigned int len = 0;
   unsigned int i = 0;
 
-  // safe/unsafe status
-  if (!safe_status_buffer) {
-#ifndef GIST_DEBUG
-    return enif_make_atom(env, "error");
-#else
-    return enif_make_atom(env, "error_invalid_safe_status_buffer");
-#endif // GIST_DEBUG
-  }
-  ERL_NIF_TERM safe_status_term;
-  len = strlen(safe_status_buffer);
-  if (len < 4 || len > 6) {
-    safe_status_term = enif_make_atom(env, "error");
-  } else {
-    ErlNifBinary safe_status_bin;
-#ifdef ERLANG_R14B02 
-    ret_val = enif_alloc_binary(len, &safe_status_bin);
-#else
-    ret_val = enif_alloc_binary(env, len, &safe_status_bin);
-#endif // ERLANG_R14B02
-    if (ret_val < 0) {
-#ifndef GIST_DEBUG
-      return enif_make_atom(env, "error");
-#else
-      return enif_make_atom(env, "error_safe_status_bin_alloc");
-#endif // GIST_DEBUG
-    }
-    for (i=0; i<len; i++) {
-      safe_status_bin.data[i] = *(safe_status_buffer + i);
-    }
-    safe_status_term = enif_make_binary(env, &safe_status_bin);
-  }
-  safe_status_buffer[0] = '\0';
-
   // script
   if (!script_buffer) {
 #ifndef GIST_DEBUG
@@ -320,6 +287,39 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #else
   lang_term = enif_make_atom(env, "ok");
 #endif // LANG_ENABLED
+
+  // safe/unsafe status
+  if (!safe_status_buffer) {
+#ifndef GIST_DEBUG
+    return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_invalid_safe_status_buffer");
+#endif // GIST_DEBUG
+  }
+  ERL_NIF_TERM safe_status_term;
+  len = strlen(safe_status_buffer);
+  if (len < 4 || len > 6) {
+    safe_status_term = enif_make_atom(env, "ok");
+  } else {
+    ErlNifBinary safe_status_bin;
+#ifdef ERLANG_R14B02 
+    ret_val = enif_alloc_binary(len, &safe_status_bin);
+#else
+    ret_val = enif_alloc_binary(env, len, &safe_status_bin);
+#endif // ERLANG_R14B02
+    if (ret_val < 0) {
+#ifndef GIST_DEBUG
+      return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_safe_status_bin_alloc");
+#endif // GIST_DEBUG
+    }
+    for (i=0; i<len; i++) {
+      safe_status_bin.data[i] = *(safe_status_buffer + i);
+    }
+    safe_status_term = enif_make_binary(env, &safe_status_bin);
+  }
+  safe_status_buffer[0] = '\0';
 
   char* start = NULL;
   char* end = NULL;
@@ -480,7 +480,7 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #ifdef INTENT_ENABLED
   len = strlen(intent_buffer);
   if (len < 1) {
-    intent_term = enif_make_atom(env, "error");
+    intent_term = enif_make_atom(env, "ok");
   } else {
     ErlNifBinary intent_bin;
 #ifdef ERLANG_R14B02
@@ -510,7 +510,7 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #ifdef SENTIMENT_ENABLED
   len = strlen(sentiment_buffer);
   if (len < 1) {
-    sentiment_term = enif_make_atom(env, "error");
+    sentiment_term = enif_make_atom(env, "ok");
   } else {
     ErlNifBinary sentiment_bin;
 #ifdef ERLANG_R14B02

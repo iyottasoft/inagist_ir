@@ -10,6 +10,8 @@ typedef struct _gm_config_struct {
   std::string stopwords_file;
   std::string dictionary_file;
   std::string classifier_dictionary_file;
+  std::string language_dictionary_file;
+  std::string language_prior_freqs_file;
   std::string intent_words_file;
   std::string sentiment_words_file;
   std::string unsafe_dictionary_file;
