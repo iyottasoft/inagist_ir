@@ -51,6 +51,9 @@ int GistMaker::Init(std::string config_file) {
 #ifdef TEXT_CLASSIFICATION_ENABLED
            config.classifier_dictionary_file.c_str(),
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+           config.location_dictionary_file.c_str(),
+#endif // LOCATION_ENABLED
            config.stemmer_dictionary_file.c_str()
           ) < 0) {
     std::cerr << "ERROR: could not initialize GistMaker\n";
@@ -84,6 +87,9 @@ int GistMaker::Init(const char *stopwords_file,
 #ifdef TEXT_CLASSIFICATION_ENABLED
     const char *classifier_dictionary_file,
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+    const char *location_dictionary_file,
+#endif // LOCATION_ENABLED
     const char *stemmer_dictionary_file) {
 
   // load dictionaries
@@ -198,6 +204,22 @@ int GistMaker::Init(const char *stopwords_file,
     }
   }
 #endif // TEXT_CLASSIFICATION_ENABLED
+
+#ifdef LOCATION_ENABLED
+  if (location_dictionary_file) {
+#ifdef GM_DEBUG
+    if (GM_DEBUG > 3) {
+      std::cout << "Info: loading location dictionary file - " << location_dictionary_file << std::endl;
+    }
+#endif // GM_DEBUG
+    int ret = m_location_dictionary.Load(location_dictionary_file);
+    if (ret < 0) {
+      std::cerr << "ERROR: could not load location dictionary file: " \
+                << location_dictionary_file << " into dictionary map\n";
+      return -1;
+    }
+  }
+#endif // LOCATION_ENABLED
 
   return 0;
 }
@@ -420,7 +442,7 @@ int GistMaker::ProcessLangClassWord(std::string& lang_class_word,
 
 int GistMaker::ProcessTextClassWord(std::string& text_class_word, std::map<std::string, double>& text_class_map) {
 
-#ifdef TEXT_CLASSIFICATION_ENABLED
+#if defined TEXT_CLASSIFICATION_ENABLED || LOCATION_ENABLED
   std::map<std::string, double>::iterator text_class_map_iter;
   std::map<std::string, double> temp_map;
   std::map<std::string, double>::iterator temp_iter;
@@ -449,7 +471,43 @@ int GistMaker::ProcessTextClassWord(std::string& text_class_word, std::map<std::
     }
 #endif // GM_DEBUG
   }
-#endif // TEXT_CLASSIFICATION_ENABLED
+#endif // TEXT_CLASSIFICATION_ENABLED || LOCATION_ENABLED
+
+  return 0;
+}
+
+int GistMaker::ProcessLocationWord(std::string& locations_word, std::map<std::string, double>& locations_map) {
+
+#ifdef LOCATION_ENABLED
+  std::map<std::string, double>::iterator locations_map_iter;
+  std::map<std::string, double> temp_map;
+  std::map<std::string, double>::iterator temp_iter;
+
+  if (m_location_dictionary.Find((const unsigned char*) locations_word.c_str(), temp_map) == 1) {
+#ifdef GM_DEBUG
+      if (GM_DEBUG > 3) {
+        std::cout << std::endl << locations_word << " = ";
+      }
+#endif // GM_DEBUG
+    for (temp_iter = temp_map.begin(); temp_iter != temp_map.end(); temp_iter++) {
+#ifdef GM_DEBUG
+      if (GM_DEBUG > 3) {
+        std::cout << temp_iter->first << " : " << temp_iter->second << "; ";
+      }
+#endif // GM_DEBUG
+      if ((locations_map_iter = locations_map.find(temp_iter->first)) != locations_map.end()) {
+        locations_map_iter->second += temp_iter->second;
+      } else {
+        locations_map[temp_iter->first] += temp_iter->second;
+      }
+    }
+#ifdef GM_DEBUG
+    if (GM_DEBUG > 3) {
+      std::cout << std::endl;
+    }
+#endif // GM_DEBUG
+  }
+#endif //  LOCATION_ENABLED
 
   return 0;
 }
@@ -477,6 +535,9 @@ int GistMaker::MakeGist(char* str,
 #ifdef TEXT_CLASSIFICATION_ENABLED
                         , std::set<std::string>& text_classes_set
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+                        , std::set<std::string>& locations_set
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
                         , std::string& intent
 #endif // INTENT_ENABLED
@@ -547,7 +608,16 @@ int GistMaker::MakeGist(char* str,
   unsigned int text_classes_len = 0;
   unsigned int text_classes_count = 0;
   text_classes_set.clear();
-#endif
+#endif // TEXT_CLASSIFICATION_ENABLED
+
+#ifdef LOCATION_ENABLED
+  char locations_buffer[MAX_DEBUG_BUFFER_LEN];
+  unsigned int locations_buffer_len = MAX_DEBUG_BUFFER_LEN;
+  memset(locations_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
+  unsigned int locations_len = 0;
+  unsigned int locations_count = 0;
+  locations_set.clear();
+#endif // LOCATION_ENABLED
 
 #ifdef INTENT_ENABLED
   char intent_buffer[MAX_DEBUG_BUFFER_LEN];
@@ -588,6 +658,10 @@ int GistMaker::MakeGist(char* str,
                   , text_classes_buffer, text_classes_buffer_len,
                   text_classes_len, text_classes_count
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+                  , locations_buffer, locations_buffer_len,
+                  locations_len, locations_count
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
                   , intent_buffer, intent_buffer_len
 #endif // INTENT_ENABLED
@@ -612,6 +686,9 @@ int GistMaker::MakeGist(char* str,
 #ifdef TEXT_CLASSIFICATION_ENABLED
     text_classes_buffer[0] = '\0';
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+    locations_buffer[0] = '\0';
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
     intent_buffer[0] = '\0';
 #endif // INTENT_ENABLED
@@ -690,10 +767,11 @@ int GistMaker::MakeGist(char* str,
   lang_class_buffer[0] = '\0';
 #endif // LANG_ENABLED
 
-#ifdef TEXT_CLASSIFICATION_ENABLED
   char* pch3 = NULL;
   char* pch4 = NULL;
   char ch;
+
+#ifdef TEXT_CLASSIFICATION_ENABLED
   if (text_classes_len > 0) {
     pch3 = text_classes_buffer;
     pch4 = pch3;
@@ -710,14 +788,31 @@ int GistMaker::MakeGist(char* str,
   text_classes_buffer[0] = '\0';
 #endif // TEXT_CLASSIFICATION_ENABLED
 
+#ifdef LOCATION_ENABLED
+  if (locations_len > 0) {
+    pch3 = locations_buffer;
+    pch4 = pch3;
+    pch3 = strchr((char *) pch4, '|');
+    while (pch3 && pch3 != '\0') {
+      ch = *pch3;
+      *pch3 = '\0';
+      locations_set.insert((char *) pch4);
+      *pch3 = ch;
+      pch4 = pch3 + 1;
+      pch3 = strchr((char *) pch4, '|');
+    }
+  }
+  locations_buffer[0] = '\0';
+#endif // LOCATION_ENABLED
+
 #ifdef INTENT_ENABLED
-  if (strlen(intent_buffer) > 1) {
+  if (strlen(intent_buffer) > 0) {
     intent.assign(intent_buffer);
   }
 #endif // INTENT_ENABLED
 
 #ifdef SENTIMENT_ENABLED
-  if (strlen(sentiment_buffer) > 1) {
+  if (strlen(sentiment_buffer) > 0) {
     sentiment.assign(sentiment_buffer);
   }
 #endif // SENTIMENT_ENABLED
@@ -811,6 +906,12 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
                         unsigned int& text_classes_len,
                         unsigned int& text_classes_count
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+                        , char* locations_buffer,
+                        const unsigned int& locations_buffer_len,
+                        unsigned int& locations_len,
+                        unsigned int& locations_count
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
                         , char* intent_buffer, const unsigned int& intent_buffer_len
 #endif // INTENT_ENABLED
@@ -958,6 +1059,18 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   text_classes_count = 0;
 #endif // TEXT_CLASSIFICATION_ENABLED
 
+#ifdef LOCATION_ENABLED
+  if (!locations_buffer) {
+#ifdef GM_DEBUG
+    std::cerr << "ERROR: invalid locations buffer\n";
+#endif // GM_DEBUG
+    return -1;
+  }
+  *locations_buffer = '\0';
+  locations_len = 0;
+  locations_count = 0;
+#endif // LOCATION_ENABLED
+
 #ifdef INTENT_ENABLED
   if (!intent_buffer) {
 #ifdef GM_DEBUG
@@ -1091,23 +1204,12 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
   // text classification
 #ifdef TEXT_CLASSIFICATION_ENABLED
-  double prior_freqs[MAX_CORPUS_NUMBER];
-  Initialize(prior_freqs, MAX_CORPUS_NUMBER);
-  double freqs[MAX_CORPUS_NUMBER];
-  Initialize(freqs, MAX_CORPUS_NUMBER);
-  double temp_freq = 0;
-  double temp_total_freq = 0;
-  double prior_entry_for_class = 0;
-  double prior_total_entries = 0;
-  unsigned int count = 0;
-  std::string classes[MAX_CORPUS_NUMBER];
-  std::string class_name;
-  std::string test_element;
-  std::string key_str;
-  std::string value_str;
   std::string text_class_word;
   std::map<std::string, double> text_class_map;
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+  std::map<std::string, double> locations_map;
+#endif // LOCATION_ENABLED
 
   // the whole thing starts here again!
   ptr = text_buffer;
@@ -1384,6 +1486,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     }
     if (ProcessTextClassWord(text_class_word, text_class_map) < 0) {
       std::cerr << "Error: could not find text_class_map for word: " \
+                << text_class_word << std::endl;
+    }
+    if (ProcessLocationWord(text_class_word, locations_map) < 0) {
+      std::cerr << "Error: could not find entry in locations_map for word: " \
                 << text_class_word << std::endl;
     }
     if (current_word_has_apostropheS) {
@@ -1703,6 +1809,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
           }
           if (ProcessTextClassWord(text_class_word, text_class_map) < 0) {
             std::cerr << "Error: could not find text_class_map for word: " \
+                      << text_class_word << std::endl;
+          }
+          if (ProcessLocationWord(text_class_word, locations_map) < 0) {
+            std::cerr << "Error: could not find entry in locations_map for word: " \
                       << text_class_word << std::endl;
           }
           /*
@@ -2084,6 +2194,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
               std::cerr << "Error: could not find text_class_map for word: " \
                         << text_class_word << std::endl;
             }
+            if (ProcessLocationWord(text_class_word, locations_map) < 0) {
+              std::cerr << "Error: could not find locations_map for word: " \
+                        << text_class_word << std::endl;
+            }
 #endif // TEXT_CLASSIFICATION_ENABLED
             *(stopwords_entity_end-2) = ch;
           }
@@ -2106,6 +2220,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
                 std::cerr << "Error: could not find text_class_map for word: " \
                           << text_class_word << std::endl;
               }
+              if (ProcessLocationWord(text_class_word, locations_map) < 0) {
+                std::cerr << "Error: could not find locations_map for word: " \
+                          << text_class_word << std::endl;
+              }
 #endif // TEXT_CLASSIFICATION_ENABLED
             } else {
 #ifdef KEYWORDS_ENABLED
@@ -2119,6 +2237,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
               text_class_word.assign((const char*) stopwords_entity_start, temp_len);
               if (ProcessTextClassWord(text_class_word, text_class_map) < 0) {
                 std::cerr << "Error: could not find text_class_map for word: " \
+                          << text_class_word << std::endl;
+              }
+              if (ProcessLocationWord(text_class_word, locations_map) < 0) {
+                std::cerr << "Error: could not find locations_map for word: " \
                           << text_class_word << std::endl;
               }
 #endif // TEXT_CLASSIFICATION_ENABLED
@@ -2139,6 +2261,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
               std::cerr << "Error: could not find text_class_map for word: " \
                         << text_class_word << std::endl;
             }
+            if (ProcessLocationWord(text_class_word, locations_map) < 0) {
+              std::cerr << "Error: could not find text_class_map for word: " \
+                        << text_class_word << std::endl;
+            }
 #endif // TEXT_CLASSIFICATION_ENABLED
           } else {
             temp_len = stopwords_entity_end - stopwords_entity_start;
@@ -2153,6 +2279,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
             text_class_word.assign((const char *) stopwords_entity_start, temp_len);
             if (ProcessTextClassWord(text_class_word, text_class_map) < 0) {
               std::cerr << "Error: could not find text_class_map for word: " \
+                        << text_class_word << std::endl;
+            }
+            if (ProcessLocationWord(text_class_word, locations_map) < 0) {
+              std::cerr << "Error: could not find locations_map for word: " \
                         << text_class_word << std::endl;
             }
 #endif // TEXT_CLASSIFICATION_ENABLED
@@ -2191,6 +2321,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
               std::cerr << "Error: could not find text_class_map for word: " \
                         << text_class_word << std::endl;
             }
+            if (ProcessLocationWord(text_class_word, locations_map) < 0) {
+              std::cerr << "Error: could not find locations_map for word: " \
+                        << text_class_word << std::endl;
+            }
 #endif // TEXT_CLASSIFICATION_ENABLED
 
             *(caps_entity_end-2) = ch;
@@ -2213,6 +2347,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
               text_class_word.assign((const char*) caps_entity_start, temp_len);
               if (ProcessTextClassWord(text_class_word, text_class_map) < 0) {
                 std::cerr << "Error: could not find text_class_map for word: " \
+                          << text_class_word << std::endl;
+              }
+              if (ProcessLocationWord(text_class_word, locations_map) < 0) {
+                std::cerr << "Error: could not find locations_map for word: " \
                           << text_class_word << std::endl;
               }
 #endif // TEXT_CLASSIFICATION_ENABLED
@@ -2241,6 +2379,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
               std::cerr << "Error: could not find text_class_map for word: " \
                         << text_class_word << std::endl;
             }
+            if (ProcessLocationWord(text_class_word, locations_map) < 0) {
+              std::cerr << "Error: could not find locations_map for word: " \
+                        << text_class_word << std::endl;
+            }
 #endif // NAMED_ENTITIES_ENABLED elif TEXT_CLASSIFICATION_ENABLED
           } else { 
             temp_len = caps_entity_end - caps_entity_start;
@@ -2255,6 +2397,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
             text_class_word.assign((const char*) caps_entity_start, temp_len);
             if (ProcessTextClassWord(text_class_word, text_class_map) < 0) {
               std::cerr << "Error: could not find text_class_map for word: " \
+                        << text_class_word << std::endl;
+            }
+            if (ProcessLocationWord(text_class_word, locations_map) < 0) {
+              std::cerr << "Error: could not find locations_map for word: " \
                         << text_class_word << std::endl;
             }
 #endif // TEXT_CLASSIFICATION_ENABLED
@@ -2283,6 +2429,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
           std::cerr << "Error: could not find text_class_map for word: " \
                     << text_class_word << std::endl;
         }
+        if (ProcessLocationWord(text_class_word, locations_map) < 0) {
+          std::cerr << "Error: could not find locations_map for word: " \
+                    << text_class_word << std::endl;
+        }
 #endif // TEXT_CLASSIFICATION_ENABLED
       }
       if (!current_word_stop && !current_word_dict && current_word_has_apostropheS) {
@@ -2297,6 +2447,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         text_class_word.assign((const char*) current_word_start, current_word_len-2);
         if (ProcessTextClassWord(text_class_word, text_class_map) < 0) {
           std::cerr << "Error: could not find text_class_map for word: " \
+                    << text_class_word << std::endl;
+        }
+        if (ProcessLocationWord(text_class_word, locations_map) < 0) {
+          std::cerr << "Error: could not find locations_map for word: " \
                     << text_class_word << std::endl;
         }
 #endif // TEXT_CLASSIFICATION_ENABLED
@@ -2585,6 +2739,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // LANG_ENABLED
 
 #ifdef LANG_ENABLED
+/*
   if (max_lang_class.compare("en") != 0) {
 #ifdef GM_DEBUG
     if (GM_DEBUG > 1) {
@@ -2612,6 +2767,12 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     text_classes_len = 0;
     text_classes_count = 0;
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+    locations_map.clear();
+    *locations_buffer = '\0';
+    locations_len = 0;
+    locations_count = 0;
+#endif // LOCATION_ENABLED
 #ifdef SENTIMENT_ENABLED
     *sentiment_buffer = '\0';
 #endif // SENTIMENT_ENABLED
@@ -2621,6 +2782,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // INTENT_ENABLED
     return ret_val;
   }
+*/
 #endif // LANG_ENABLED
 
 #ifdef GM_DEBUG
@@ -2762,8 +2924,104 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   text_class_map.clear();
 #endif // TEXT_CLASSIFICATION_ENABLED
 
+#ifdef LOCATION_ENABLED
+  double location_freq = 0;
+  double max_location_freq = 0;
+  std::string max_location_class;
+  unsigned int max_location_duplicate_count = 0;
+  double location_sum = 0;
+  max_location_freq = 0;
+  std::map<std::string, double>::iterator locations_map_iter;
+  for (locations_map_iter = locations_map.begin();
+       locations_map_iter != locations_map.end();
+       locations_map_iter++) {
+#ifdef GM_DEBUG
+    if (GM_DEBUG > 3) {
+      std::cout << locations_map_iter->first << ":" << locations_map_iter->second << std::endl;
+    }
+#endif // GM_DEBUG
+    location_freq = exp(locations_map_iter->second);
+    location_sum += location_freq;
+    if (max_location_freq == freq) {
+      max_location_duplicate_count++;
+    } else if (max_location_freq < location_freq) {
+      max_location_freq = location_freq;
+      max_location_class = locations_map_iter->first;
+      max_location_duplicate_count = 0;
+    }
+  }
+  if (!max_location_class.empty()) {
+    Insert((unsigned char*) locations_buffer, locations_len,
+           (unsigned char*) max_location_class.c_str(), max_location_class.length(), locations_count);
+    ret_val += 1;
+  }
+
+  if (locations_map.size() > 1) {
+    double mean = sum/locations_map.size();
+    double top1_value = 0;
+    std::string top1_location_class;
+    double top2_value = 0;
+    std::string top2_location_class;
+    double top3_value = 0;
+    std::string top3_location_class;
+    if (locations_map.size() > 1) {
+      locations_map_iter = locations_map.begin();
+      top1_value = locations_map_iter->second;
+      top1_location_class = locations_map_iter->first;
+      locations_map_iter++;
+      if (top1_value < locations_map_iter->second) {
+        top2_value = top1_value;
+        top2_location_class = top1_location_class;
+        top1_value = locations_map_iter->second;
+        top1_location_class = locations_map_iter->first;
+      } else {
+        top2_value = locations_map_iter->second;
+        top2_location_class = locations_map_iter->first;
+      }
+      locations_map_iter++;
+    }
+    if (locations_map.size() > 2) {
+      top3_value = locations_map_iter->second;
+      top3_location_class = locations_map_iter->first;
+      Heapify(top1_value, top1_location_class,
+              top2_value, top2_location_class,
+              top3_value, top3_location_class);
+      locations_map_iter++;
+    }
+    for (locations_map.size() > 3;
+         locations_map_iter != locations_map.end();
+         locations_map_iter++) {
+      location_freq = locations_map_iter->second;
+      if (location_freq > top3_value) {
+        top3_value = location_freq;
+        top3_location_class = locations_map_iter->first;
+        Heapify(top1_value, top1_location_class,
+                top2_value, top2_location_class,
+                top3_value, top3_location_class);
+      }
+    }
+
+    Insert((unsigned char*) locations_buffer, locations_len,
+           (unsigned char*) top1_location_class.c_str(), top1_location_class.length(), locations_count);
+    if (locations_map.size() > 1) {
+      if (exp(top2_value) > mean) {
+        Insert((unsigned char*) locations_buffer, locations_len,
+               (unsigned char*) top2_location_class.c_str(), top2_location_class.length(), locations_count);
+      }
+    }
+    if (locations_map.size() > 2) {
+      if (exp(top3_value) > mean) {
+        Insert((unsigned char*) locations_buffer, locations_len,
+               (unsigned char*) top3_location_class.c_str(), top3_location_class.length(), locations_count);
+      }
+    }
+  }
+  locations_map.clear();
+#endif // LOCATION_ENABLED
+
 #ifdef SENTIMENT_ENABLED
   sentiment_valence += punct_senti;
+  /*
   if (sentiment_valence == 0) {
     strcpy(sentiment_buffer, "neutral");
   } else if (sentiment_valence < 0) {
@@ -2771,6 +3029,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   } else {
     strcpy(sentiment_buffer, "positive");
   }
+  */
+  sprintf(sentiment_buffer, "%d", sentiment_valence);
   ret_val += 1;
 #endif // SENTIMENT_ENABLED
 
@@ -2797,12 +3057,15 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     std::cout << "intent_valence: " << intent_valence << std::endl;
   }
 #endif // GM_DEBUG
+  /*
   if (intent_valence < 4) {
     strcpy(intent_buffer, "none");
   } else {
     strcpy(intent_buffer, "present");
     ret_val += 1;
   }
+  */
+  sprintf(intent_buffer, "%d", intent_valence);
 #endif // INTENT_ENABELD
 
 #ifdef GM_DEBUG
@@ -2824,6 +3087,9 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef TEXT_CLASSIFICATION_ENABLED
     std::cout << "text_classes (" << text_classes_count << "): " << text_classes_buffer << std::endl;
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+    std::cout << "locations (" << locations_count << "): " << locations_buffer << std::endl;
+#endif // LOCATION_ENABLED
     std::cout << "ret_val: " << ret_val << std::endl;
   }
 #endif // GM_DEBUG

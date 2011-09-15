@@ -21,6 +21,9 @@ int GistMakerConfig::Clear(Config& config) {
 #ifdef TEXT_CLASSIFICATION_ENABLED
   config.classifier_dictionary_file.clear();
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+  config.location_dictionary_file.clear();
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
   config.intent_words_file.clear();
 #endif // INTENT_ENABLED
@@ -76,6 +79,10 @@ int GistMakerConfig::Read(const char* config_file_name, Config& config) {
       } else if (key.compare(0, 21, "classifier_dictionary") == 0) {
         config.classifier_dictionary_file = value;
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+      } else if (key.compare(0, 19, "location_dictionary") == 0) {
+        config.location_dictionary_file = value;
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
       } else if (key.compare(0, 12, "intent_words") == 0) {
         config.intent_words_file = value;

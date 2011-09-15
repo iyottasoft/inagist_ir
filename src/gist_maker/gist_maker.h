@@ -53,6 +53,9 @@ class GistMaker {
 #ifdef TEXT_CLASSIFICATION_ENABLED
            , const char *classifier_dictionary_file=NULL
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+           , const char *location_dictionary_file=NULL
+#endif // LOCATION_ENABLED
            , const char* stemmer_dictionary_file=NULL
          );
   int DeInit();
@@ -90,6 +93,9 @@ class GistMaker {
 #ifdef TEXT_CLASSIFICATION_ENABLED
                    , std::set<std::string>& text_classes_set
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+                   , std::set<std::string>& locations_set
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
                    , std::string& intent
 #endif // INTENT_ENABLED
@@ -123,6 +129,10 @@ class GistMaker {
                    , char* text_classes_buffer, const unsigned int& text_classes_buffer_len,
                    unsigned int& text_classes_len, unsigned int& text_classes_count
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+                   , char* locations_buffer, const unsigned int& locations_buffer_len,
+                   unsigned int& locations_len, unsigned int& locations_count
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
                    , char* intent_buffer, const unsigned int& intent_buffer_len
 #endif // INTENT_ENABLED
@@ -141,6 +151,8 @@ class GistMaker {
 
   int ProcessLangClassWord(std::string& lang_class_word,
                            std::map<std::string, double>& lang_class_map);
+  int ProcessLocationWord(std::string& locations_word,
+                          std::map<std::string, double>& locations_map);
 
  private:
   inagist_utils::DictionarySet m_stopwords_dictionary;
@@ -160,6 +172,9 @@ class GistMaker {
 #ifdef TEXT_CLASSIFICATION_ENABLED
   inagist_utils::StringToMapDictionary m_classifier_dictionary;
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+  inagist_utils::StringToMapDictionary m_location_dictionary;
+#endif // LOCATION_ENABLED
 
   DISALLOW_COPY_AND_ASSIGN(GistMaker);
   // using char* for word_has_apostrophe instead of bool&

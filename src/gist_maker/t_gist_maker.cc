@@ -19,6 +19,7 @@ int MakeGist(std::string text) {
   std::set<std::string> keyphrases_set;
   std::string language;
   std::set<std::string> text_classes_set;
+  std::set<std::string> locations_set;
   std::string intent;
   std::string sentiment;
 
@@ -42,6 +43,9 @@ int MakeGist(std::string text) {
 #ifdef TEXT_CLASSIFICATION_ENABLED
                         , text_classes_set
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+                        , locations_set
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
                         , intent
 #endif // INTENT_ENABLED
@@ -94,6 +98,13 @@ int MakeGist(std::string text) {
     text_classes_set.clear();
   }
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+  if (locations_set.size() > 0) {
+    std::cout << "locations:\n";
+    g_gm.PrintKeywords(locations_set);
+    locations_set.clear();
+  }
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
   if (!intent.empty()) {
     std::cout << "intent: " << intent << std::endl;

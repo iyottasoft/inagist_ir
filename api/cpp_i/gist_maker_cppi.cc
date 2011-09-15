@@ -51,6 +51,10 @@ int CallMakeGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
             , char* text_classes_buffer, const unsigned int text_classes_buffer_len,
             unsigned int* text_classes_len_ptr, unsigned int* text_classes_count_ptr
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+            , char* locations_buffer, const unsigned int locations_buffer_len,
+            unsigned int* locations_len_ptr, unsigned int* locations_count_ptr
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
             , char* intent_buffer, const unsigned int intent_buffer_len
 #endif // INTENT_ENABLED
@@ -75,6 +79,10 @@ int CallMakeGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
   unsigned int text_classes_len = 0;
   unsigned int text_classes_count = 0;
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+  unsigned int locations_len = 0;
+  unsigned int locations_count = 0;
+#endif // LOCATION_ENABLED
 #ifdef LANG_ENABLED
   unsigned int lang_class_len = 0;
   unsigned int lang_class_count = 0;
@@ -104,6 +112,10 @@ int CallMakeGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
     , text_classes_buffer, text_classes_buffer_len,
     text_classes_len, text_classes_count
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+    , locations_buffer, locations_buffer_len,
+    locations_len, locations_count
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
     , intent_buffer, intent_buffer_len
 #endif // INTENT_ENABLED
@@ -133,6 +145,10 @@ int CallMakeGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
   *text_classes_len_ptr = text_classes_len;
   *text_classes_count_ptr = text_classes_count;
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+  *locations_len_ptr = locations_len;
+  *locations_count_ptr = locations_count;
+#endif // LOCATION_ENABLED
 
   return ret_value;
 }

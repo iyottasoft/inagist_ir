@@ -35,6 +35,10 @@ int CallMakeGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
             , char* top_text_classes_buffer, const unsigned int top_text_classes_buffer_len,
             unsigned int* top_text_classes_len_ptr, unsigned int* top_text_classes_count_ptr
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+            , char* locations_buffer, const unsigned int locations_buffer_len,
+            unsigned int* locations_len_ptr, unsigned int* locations_count_ptr
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
             , char* intent_buffer, const unsigned int intent_buffer_len
 #endif // INTENT_ENABLED

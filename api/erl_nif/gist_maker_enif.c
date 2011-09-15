@@ -153,6 +153,14 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   unsigned int text_classes_count = 0;
 #endif // TEXT_CLASSIFICATION_ENABLED
 
+#ifdef LOCATION_ENABLED
+  char locations_buffer[MAX_BUFFER_LEN];
+  unsigned int locations_buffer_len = MAX_BUFFER_LEN;
+  locations_buffer[0] = '\0';
+  unsigned int locations_len = 0;
+  unsigned int locations_count = 0;
+#endif // LOCATION_ENABLED
+
 #ifdef INTENT_ENABLED
   char intent_buffer[MAX_CLASS_NAME];
   unsigned int intent_buffer_len = MAX_CLASS_NAME;
@@ -189,6 +197,10 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
                   , (char *) text_classes_buffer, text_classes_buffer_len,
                   &text_classes_len, &text_classes_count
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+                  , (char *) locations_buffer, locations_buffer_len,
+                  &locations_len, &locations_count
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
                   , (char *) intent_buffer, intent_buffer_len
 #endif // INTENT_ENABLED
@@ -235,6 +247,9 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   if (len < 2 || len > 3) {
     script_term = enif_make_atom(env, "error");
   } else {
+    if (strcmp(script_buffer, "en") != 0) {
+      strcpy(lang_buffer, script_buffer);
+    }
     ErlNifBinary script_bin;
 #ifdef ERLANG_R14B02 
     ret_val = enif_alloc_binary(len, &script_bin);
@@ -475,6 +490,43 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   text_classes_buffer[0] = '\0';
 #endif // TEXT_CLASSIFICATION_ENABLED
 
+  // locations
+  ERL_NIF_TERM locations_list = enif_make_list(env, 0);
+#ifdef LOCATION_ENABLED
+  if (locations_count > 0) {
+    ErlNifBinary locations_bin;
+    start = locations_buffer;
+    end = strstr(start, "|");
+    while (start && end && *end != '\0') {
+      end = strstr(start, "|");
+      if (!end)
+        break;
+      *end = '\0';
+      len = end - start;
+#ifdef ERLANG_R14B02 
+      ret_val = enif_alloc_binary(len, &locations_bin);
+#else
+      ret_val = enif_alloc_binary(env, len, &locations_bin);
+#endif // ERLANG_R14B02
+      if (ret_val < 0) {
+#ifndef GIST_DEBUG
+        return enif_make_atom(env, "error");
+#else
+        return enif_make_atom(env, "error_locations_bin_alloc");
+#endif // GIST_DEBUG
+      }
+      for (i=0; i<len; i++) {
+        locations_bin.data[i] = *(start + i);
+      }
+      locations_list = enif_make_list_cell(env, enif_make_binary(env, &locations_bin), locations_list);
+
+      *end = '|';
+      start = end + 1;
+    }
+  }
+  locations_buffer[0] = '\0';
+#endif // LOCATION_ENABLED
+
   // intent
   ERL_NIF_TERM intent_term;
 #ifdef INTENT_ENABLED
@@ -540,12 +592,12 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   return enif_make_tuple9(env,
                           safe_status_term,
-                          script_term,
                           lang_term,
                           named_entities_list,
                           keywords_list,
                           keyphrases_list,
                           text_classes_list,
+                          locations_list,
                           intent_term,
                           sentiment_term);
 
