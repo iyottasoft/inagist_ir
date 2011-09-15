@@ -346,7 +346,7 @@ bool GistMaker::IsPunct(char*& ptr, char* prev, char* next, int* punct_intent, i
       break;
     case '?':
       if (punct_intent)
-        (*punct_intent)++;
+        (*punct_intent) = 1;
       break;
     case '&':
       return true;
