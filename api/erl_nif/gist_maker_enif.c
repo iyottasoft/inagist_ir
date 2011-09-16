@@ -228,8 +228,8 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
                             enif_make_list(env, 0),
                             enif_make_list(env, 0),
                             enif_make_list(env, 0),
-                            enif_make_atom(env, "ok"),
-                            enif_make_atom(env, "ok"));
+                            enif_make_int(env, intent_valence),
+                            enif_make_int(env, sentiment_valence));
   }
 
   tweet_str[0] = '\0';
