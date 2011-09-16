@@ -97,10 +97,12 @@ class GistMaker {
                    , std::set<std::string>& locations_set
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-                   , std::string& intent
+                   //, std::string& intent
+                   , int &intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                   , std::string& sentiment
+                   //, std::string& sentiment
+                   , int &sentiment_valence
 #endif // SENTIMENT_ENABLED
                   );
 
@@ -134,10 +136,12 @@ class GistMaker {
                    unsigned int& locations_len, unsigned int& locations_count
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-                   , char* intent_buffer, const unsigned int& intent_buffer_len
+                   //, char* intent_buffer, const unsigned int& intent_buffer_len
+                   , int& intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                   , char* sentiment_buffer, const unsigned int& sentiment_buffer_len
+                   //, char* sentiment_buffer, const unsigned int& sentiment_buffer_len
+                   , int& sentiment_valence
 #endif // SENTIMENT_ENABLED
                   );
 

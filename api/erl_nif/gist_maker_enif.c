@@ -162,15 +162,17 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #endif // LOCATION_ENABLED
 
 #ifdef INTENT_ENABLED
-  char intent_buffer[MAX_CLASS_NAME];
-  unsigned int intent_buffer_len = MAX_CLASS_NAME;
-  intent_buffer[0] = '\0';
+  //char intent_buffer[MAX_CLASS_NAME];
+  //unsigned int intent_buffer_len = MAX_CLASS_NAME;
+  //intent_buffer[0] = '\0';
+  int intent_valence=0;
 #endif // INTENT_ENABLED
 
 #ifdef SENTIMENT_ENABLED
-  char sentiment_buffer[MAX_CLASS_NAME];
-  unsigned int sentiment_buffer_len = MAX_CLASS_NAME;
-  sentiment_buffer[0] = '\0';
+  //char sentiment_buffer[MAX_CLASS_NAME];
+  //unsigned int sentiment_buffer_len = MAX_CLASS_NAME;
+  //sentiment_buffer[0] = '\0';
+  int sentiment_valence=0;
 #endif // SENTIMENT_ENABLED
 
   int ret_val = 0;
@@ -202,10 +204,12 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
                   &locations_len, &locations_count
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-                  , (char *) intent_buffer, intent_buffer_len
+                  //, (char *) intent_buffer, intent_buffer_len
+                  , &intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                  , (char *) sentiment_buffer, sentiment_buffer_len
+                  //, (char *) sentiment_buffer, sentiment_buffer_len
+                  , &sentiment_valence
 #endif // SENTIMENT_ENABLED
                  )) < 0) {
 #ifndef GIST_DEBUG
@@ -529,6 +533,8 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   // intent
   ERL_NIF_TERM intent_term;
+  intent_term = enif_make_int(env, intent_valence);
+/*
 #ifdef INTENT_ENABLED
   len = strlen(intent_buffer);
   if (len < 1) {
@@ -556,9 +562,12 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #else
   intent_term = enif_make_atom(env, "ok");
 #endif // INTENT_ENABLED
+*/
 
   // sentiment
   ERL_NIF_TERM sentiment_term;
+  sentiment_term = enif_make_int(env, sentiment_valence);
+/*
 #ifdef SENTIMENT_ENABLED
   len = strlen(sentiment_buffer);
   if (len < 1) {
@@ -586,6 +595,7 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #else
   sentiment_term = enif_make_atom(env, "ok");
 #endif // SENTIMENT_ENABLED
+*/
 
   start = NULL;
   end = NULL;

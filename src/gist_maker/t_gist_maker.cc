@@ -20,8 +20,10 @@ int MakeGist(std::string text) {
   std::string language;
   std::set<std::string> text_classes_set;
   std::set<std::string> locations_set;
-  std::string intent;
-  std::string sentiment;
+  //std::string intent;
+  int intent_valence=0;
+  //std::string sentiment;
+  int sentiment_valence=0;
 
   strcpy(buffer, text.c_str()); 
   std::cout << std::endl << buffer << std::endl;
@@ -47,10 +49,12 @@ int MakeGist(std::string text) {
                         , locations_set
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-                        , intent
+                        //, intent
+                        , intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                        , sentiment
+                        //, sentiment
+                        , sentiment_valence
 #endif // SENTIMENT_ENABLED
                        )) < 0) {
     std::cout << "ERROR: could not get gist\n";
@@ -106,13 +110,19 @@ int MakeGist(std::string text) {
   }
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-  if (!intent.empty()) {
-    std::cout << "intent: " << intent << std::endl;
+  //if (!intent.empty()) {
+    //std::cout << "intent: " << intent << std::endl;
+  //}
+  if (intent_valence != 0) {
+    std::cout << "intent: " << intent_valence << std::endl;
   }
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-  if (!sentiment.empty()) {
-    std::cout << "sentiment: " << sentiment << std::endl;
+  //if (!sentiment.empty()) {
+    //std::cout << "sentiment: " << sentiment << std::endl;
+  //}
+  if (sentiment_valence != 0) {
+    std::cout << "sentiment: " << sentiment_valence << std::endl;
   }
 #endif // SENTIMENT_ENABLED
 

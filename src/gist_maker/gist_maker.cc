@@ -539,10 +539,12 @@ int GistMaker::MakeGist(char* str,
                         , std::set<std::string>& locations_set
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-                        , std::string& intent
+                        //, std::string& intent
+                        , int &intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                        , std::string& sentiment
+                        //, std::string& sentiment
+                        , int &sentiment_valence
 #endif // SENTIMENT_ENABLED
                        ) {
 
@@ -620,17 +622,17 @@ int GistMaker::MakeGist(char* str,
 #endif // LOCATION_ENABLED
 
 #ifdef INTENT_ENABLED
-  char intent_buffer[MAX_DEBUG_BUFFER_LEN];
-  unsigned int intent_buffer_len = MAX_DEBUG_BUFFER_LEN;
-  memset(intent_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
-  intent.clear();
+  // char intent_buffer[MAX_DEBUG_BUFFER_LEN];
+  // unsigned int intent_buffer_len = MAX_DEBUG_BUFFER_LEN;
+  // memset(intent_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
+  // intent.clear();
 #endif // INTENT_ENABLED
 
 #ifdef SENTIMENT_ENABLED
-  char sentiment_buffer[MAX_DEBUG_BUFFER_LEN];
-  unsigned int sentiment_buffer_len = MAX_DEBUG_BUFFER_LEN;
-  memset(sentiment_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
-  sentiment.clear();
+  // char sentiment_buffer[MAX_DEBUG_BUFFER_LEN];
+  // unsigned int sentiment_buffer_len = MAX_DEBUG_BUFFER_LEN;
+  // memset(sentiment_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
+  // sentiment.clear();
 #endif // SENTIMENT_ENABLED
 
   int count = 0;
@@ -663,10 +665,12 @@ int GistMaker::MakeGist(char* str,
                   locations_len, locations_count
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-                  , intent_buffer, intent_buffer_len
+                  //, intent_buffer, intent_buffer_len
+                  , intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                  , sentiment_buffer, sentiment_buffer_len
+                  //, sentiment_buffer, sentiment_buffer_len
+                  , sentiment_valence
 #endif // SENTIMENT_ENABLED
                 )) < 0) {
     std::cout << "ERROR: could not get keytuples\n";
@@ -690,10 +694,12 @@ int GistMaker::MakeGist(char* str,
     locations_buffer[0] = '\0';
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-    intent_buffer[0] = '\0';
+    //intent_buffer[0] = '\0';
+    intent_valence = 0;
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-    sentiment_buffer[0] = '\0';
+    //sentiment_buffer[0] = '\0';
+    sentiment_valence = 0;
 #endif // SENTIMENT_ENABLED
     return -1;
   }
@@ -806,15 +812,15 @@ int GistMaker::MakeGist(char* str,
 #endif // LOCATION_ENABLED
 
 #ifdef INTENT_ENABLED
-  if (strlen(intent_buffer) > 0) {
-    intent.assign(intent_buffer);
-  }
+  //if (strlen(intent_buffer) > 0) {
+  //  intent.assign(intent_buffer);
+  //}
 #endif // INTENT_ENABLED
 
 #ifdef SENTIMENT_ENABLED
-  if (strlen(sentiment_buffer) > 0) {
-    sentiment.assign(sentiment_buffer);
-  }
+  //if (strlen(sentiment_buffer) > 0) {
+  //  sentiment.assign(sentiment_buffer);
+  //}
 #endif // SENTIMENT_ENABLED
 
   return count;
@@ -913,10 +919,12 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
                         unsigned int& locations_count
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-                        , char* intent_buffer, const unsigned int& intent_buffer_len
+                        //, char* intent_buffer, const unsigned int& intent_buffer_len
+                        , int &intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                        , char* sentiment_buffer, const unsigned int& sentiment_buffer_len
+                        //, char* sentiment_buffer, const unsigned int& sentiment_buffer_len
+                        , int &sentiment_valence
 #endif // SENTIMENT_ENABLED
                        ) {
 
@@ -1072,23 +1080,23 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // LOCATION_ENABLED
 
 #ifdef INTENT_ENABLED
-  if (!intent_buffer) {
+  //if (!intent_buffer) {
 #ifdef GM_DEBUG
-    std::cerr << "ERROR: invalid intent buffer\n";
+  //  std::cerr << "ERROR: invalid intent buffer\n";
 #endif // GM_DEBUG
-    return -1;
-  }
-  intent_buffer[0] = '\0';
+  //  return -1;
+  //}
+  //intent_buffer[0] = '\0';
 #endif // INTENT_ENABLED
 
 #ifdef SENTIMENT_ENABLED
-  if (!sentiment_buffer) {
+  //if (!sentiment_buffer) {
 #ifdef GM_DEBUG
-    std::cerr << "ERROR: invalid sentiment buffer\n";
+  //  std::cerr << "ERROR: invalid sentiment buffer\n";
 #endif // GM_DEBUG
-    return -1;
-  }
-  sentiment_buffer[0] = '\0';
+  //  return -1;
+  //}
+  //sentiment_buffer[0] = '\0';
 #endif // SENTIMENT_ENABLED
 
   unsigned char *probe = NULL;
@@ -1184,11 +1192,11 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // SENTIMENT_ENABLED || INTENT_ENABLED
 
 #ifdef SENTIMENT_ENABLED
-  int sentiment_valence = 0;
+  //int sentiment_valence = 0;
 #endif // SENTIMENT_ENABLED
 
 #ifdef INTENT_ENABLED
-  int intent_valence = 0;
+  //int intent_valence = 0;
   int first_person_valence = 0;
   std::string intent_str;
   if ((2 * (text_len + 1)) < text_buffer_len) {
@@ -3030,7 +3038,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     strcpy(sentiment_buffer, "positive");
   }
   */
-  sprintf(sentiment_buffer, "%d", sentiment_valence);
+  //sprintf(sentiment_buffer, "%d", sentiment_valence);
   ret_val += 1;
 #endif // SENTIMENT_ENABLED
 
@@ -3065,7 +3073,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     ret_val += 1;
   }
   */
-  sprintf(intent_buffer, "%d", intent_valence);
+  //sprintf(intent_buffer, "%d", intent_valence);
 #endif // INTENT_ENABELD
 
 #ifdef GM_DEBUG
@@ -3090,6 +3098,12 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef LOCATION_ENABLED
     std::cout << "locations (" << locations_count << "): " << locations_buffer << std::endl;
 #endif // LOCATION_ENABLED
+#ifdef INTENT_ENABLED
+    std::cout << "intent: " << intent_valence << std::endl;
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+    std::cout << "sentiment: " << sentiment_valence << std::endl;
+#endif // SENTIMENT_ENABLED
     std::cout << "ret_val: " << ret_val << std::endl;
   }
 #endif // GM_DEBUG

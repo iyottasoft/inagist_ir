@@ -56,10 +56,12 @@ int CallMakeGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
             unsigned int* locations_len_ptr, unsigned int* locations_count_ptr
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-            , char* intent_buffer, const unsigned int intent_buffer_len
+            //, char* intent_buffer, const unsigned int intent_buffer_len
+            , int* intent_valence_ptr
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-            , char* sentiment_buffer, const unsigned int sentiment_buffer_len
+            //, char* sentiment_buffer, const unsigned int sentiment_buffer_len
+            , int* sentiment_valence_ptr
 #endif // SENTIMENT_ENABLED
            ) {
 
@@ -87,6 +89,12 @@ int CallMakeGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
   unsigned int lang_class_len = 0;
   unsigned int lang_class_count = 0;
 #endif // LANG_ENABLED
+#ifdef INTENT_ENABLED
+  int intent_valence = 0;
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+  int sentiment_valence = 0;
+#endif // SENTIMENT_ENABLED
 
   int ret_value = 0;
   if ((ret_value = g_gist_maker.MakeGist(text_buffer, text_buffer_len, text_len,
@@ -117,10 +125,12 @@ int CallMakeGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
     locations_len, locations_count
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-    , intent_buffer, intent_buffer_len
+    //, intent_buffer, intent_buffer_len
+    , intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-    , sentiment_buffer, sentiment_buffer_len
+    //, sentiment_buffer, sentiment_buffer_len
+    , sentiment_valence
 #endif // SENTIMENT_ENABLED
    )) <= 0) {
 #ifdef GIST_DEBUG
@@ -149,6 +159,12 @@ int CallMakeGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
   *locations_len_ptr = locations_len;
   *locations_count_ptr = locations_count;
 #endif // LOCATION_ENABLED
+#ifdef INTENT_ENABLED
+  *intent_valence_ptr = intent_valence;
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+  *sentiment_valence_ptr = sentiment_valence;
+#endif // SENTIMENT_ENABLED
 
   return ret_value;
 }
