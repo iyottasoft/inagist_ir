@@ -67,15 +67,21 @@ int main(int argc, char* argv[]) {
 #endif // TEXT_CLASSIFICATION_ENABLED
 
 #ifdef INTENT_ENABLED
+  /*
   char intent_buffer[MAX_CLASS_NAME];
   intent_buffer[0] = '\0';
   unsigned int intent_buffer_len = MAX_CLASS_NAME;
+  */
+  int intent_valence = 0;
 #endif // INTENT_ENABLED
 
 #ifdef SENTIMENT_ENABLED
+  /*
   char sentiment_buffer[MAX_CLASS_NAME];
   sentiment_buffer[0] = '\0';
   unsigned int sentiment_buffer_len = MAX_CLASS_NAME;
+  */
+  int sentiment_valence = 0;
 #endif // SENTIMENT_ENABLED
 
   int ret_value = 0;
@@ -103,10 +109,12 @@ int main(int argc, char* argv[]) {
                   &text_classes_len, &text_classes_count
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-                  , (char *) intent_buffer, intent_buffer_len
+                  //, (char *) intent_buffer, intent_buffer_len
+                  , (int *) intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                  , (char *) sentiment_buffer, sentiment_buffer_len
+                  //, (char *) sentiment_buffer, sentiment_buffer_len
+                  , (int *) sentiment_valence
 #endif // SENTIMENT_ENABLED
                  )) < 0) {
     printf("ERROR\n");
