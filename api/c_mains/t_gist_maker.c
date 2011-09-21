@@ -20,13 +20,17 @@ int main(int argc, char* argv[]) {
   strcpy((char *) tweet_str, "this is a testing string. Sachin Tendulkar");
   tweet_len = strlen((char *) tweet_str);
 
-  char safe_status_buffer[10];
-  memset(safe_status_buffer, '\0', 10);
-  unsigned int safe_status_buffer_len = 10;
+#ifdef PROFANITY_CHECK_ENABLED
+  char profanity_status_buffer[10];
+  memset(profanity_status_buffer, '\0', 10);
+  unsigned int profanity_status_buffer_len = 10;
+#endif // PROFANITY_CHECK_ENABLED
 
+#ifdef SCRIPT_DETECTION_ENABLED
   char script_buffer[4];
   memset(script_buffer, '\0', 4);
   unsigned int script_buffer_len = 4;
+#endif // SCRIPT_DETECTION_ENABLED
 
 #ifdef LANG_ENABLED
   char lang_buffer[MAX_BUFFER_LEN];
@@ -87,8 +91,12 @@ int main(int argc, char* argv[]) {
   int ret_value = 0;
 
   if ((ret_value = CallMakeGist((unsigned char *) tweet_str, tweet_buffer_len, tweet_len,
-                  (char *) safe_status_buffer, safe_status_buffer_len,
+#ifdef PROFANITY_CHECK_ENABLED
+                  (char *) profanity_status_buffer, profanity_status_buffer_len,
+#endif // PROFANITY_CHECK_ENABLED
+#ifdef SCRIPT_DETECTION_ENABLED
                   (char *) script_buffer, script_buffer_len
+#endif // SCRIPT_DETECTION_ENABLED
 #ifdef LANG_ENABLED
                   , (char *) lang_buffer, lang_buffer_len
 #endif // LANG_ENABLED
@@ -120,7 +128,9 @@ int main(int argc, char* argv[]) {
     printf("ERROR\n");
     return -1;
   } else {
+#ifdef SCRIPT_DETECTION_ENABLED
     printf("script: %s\n", script_buffer);
+#endif // SCRIPT_DETECTION_ENABLED
 #ifdef KEYPHRASE_ENABLED
     printf("keyphrases: %s\n", keyphrases_buffer);
 #endif // KEYPHRASE_ENABLED

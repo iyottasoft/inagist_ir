@@ -3,13 +3,19 @@
 #include <cmath>
 #include "gist_maker_config.h"
 #include "script_detector_utils.h"
+
+//#define I18N_ENABLED 1
+#ifdef I18N_ENABLED
 #include "utf8.h"
+#endif // I18N_ENABLED
 
 #define MAX_DEBUG_BUFFER_LEN 1024
 #define MAX_CORPUS_NUMBER 64
-//#define I18N_ENABLED 0
 
+#ifdef SCRIPT_DETECTION_ENABLED
 extern int DetectScript(int code_point, std::string &script);
+extern int ExtendedAsciiText(int code_point);
+#endif // SCRIPT_DETECTION_ENABLED
 
 namespace inagist {
   // unless otherwise specified functions return 0 or NULL or false as default
@@ -20,11 +26,22 @@ using std::endl;
 using std::string;
 
 GistMaker::GistMaker() {
+  m_debug_level = 0;
+#ifdef GM_DEBUG
+  if (m_debug_level > 0) {
+    m_debug_level = GM_DEBUG;
+  }
+#endif // GM_DEBUG
 }
 
 GistMaker::~GistMaker() {
   if (DeInit() < 0)
     std::cerr << "ERROR: DeInit() failed\n";
+}
+
+int GistMaker::SetDebugLevel(unsigned int& debug_level) {
+  m_debug_level = debug_level;
+  return 0;
 }
 
 int GistMaker::Init(std::string config_file) {
@@ -95,7 +112,7 @@ int GistMaker::Init(const char *stopwords_file,
   // load dictionaries
   if (stopwords_file) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 3) {
+    if (m_debug_level > 3) {
       std::cout << "Info: loading stopwords file - " << stopwords_file << std::endl;
     }
 #endif // GM_DEBUG
@@ -109,7 +126,7 @@ int GistMaker::Init(const char *stopwords_file,
 
   if (dictionary_file) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 3) {
+    if (m_debug_level > 3) {
       std::cout << "Info: loading dictionary file - " << dictionary_file << std::endl;
     }
 #endif // GM_DEBUG
@@ -123,7 +140,7 @@ int GistMaker::Init(const char *stopwords_file,
 
   if (unsafe_dictionary_file) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 3) {
+    if (m_debug_level > 3) {
       std::cout << "Info: loading unsafe dictionary file - " << unsafe_dictionary_file << std::endl;
     }
 #endif // GM_DEBUG
@@ -138,7 +155,7 @@ int GistMaker::Init(const char *stopwords_file,
 #ifdef INTENT_ENABLED
   if (intent_words_file) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 3) {
+    if (m_debug_level > 3) {
       std::cout << "Info: loading intent words file - " << intent_words_file << std::endl;
     }
 #endif // GM_DEBUG
@@ -154,7 +171,7 @@ int GistMaker::Init(const char *stopwords_file,
 #ifdef SENTIMENT_ENABLED
   if (sentiment_words_file) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 3) {
+    if (m_debug_level > 3) {
       std::cout << "Info: loading sentiment words file - " << sentiment_words_file << std::endl;
     }
 #endif // GM_DEBUG
@@ -170,7 +187,7 @@ int GistMaker::Init(const char *stopwords_file,
 #ifdef LANG_ENABLED
   if (language_dictionary_file) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 3) {
+    if (m_debug_level > 3) {
       std::cout << "Info: loading language dictionary file - " << language_dictionary_file << std::endl;
     }
 #endif // GM_DEBUG
@@ -192,7 +209,7 @@ int GistMaker::Init(const char *stopwords_file,
 #ifdef TEXT_CLASSIFICATION_ENABLED
   if (classifier_dictionary_file) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 3) {
+    if (m_debug_level > 3) {
       std::cout << "Info: loading classifier dictionary file - " << classifier_dictionary_file << std::endl;
     }
 #endif // GM_DEBUG
@@ -208,7 +225,7 @@ int GistMaker::Init(const char *stopwords_file,
 #ifdef LOCATION_ENABLED
   if (location_dictionary_file) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 3) {
+    if (m_debug_level > 3) {
       std::cout << "Info: loading location dictionary file - " << location_dictionary_file << std::endl;
     }
 #endif // GM_DEBUG
@@ -289,6 +306,7 @@ bool GistMaker::IsPunct(char*& ptr, char* prev, char* next, int* punct_intent, i
           !strncmp(ptr, "'em", 3))
        return false;
       */
+      return false;
       break;
     case '@':
       if (prev && !IsPunct(prev))
@@ -411,13 +429,13 @@ int GistMaker::ProcessLangClassWord(std::string& lang_class_word,
     ngram.assign(*ngrams_iter);
     if (m_language_dictionary.Find((const unsigned char*) ngram.c_str(), temp_map) == 1) {
 #ifdef GM_DEBUG
-        if (GM_DEBUG > 3) {
-          std::cout << std::endl << lang_class_word << " = ";
-        }
+      if (m_debug_level > 3) {
+        std::cout << std::endl << ngram << " = ";
+      }
 #endif // GM_DEBUG
       for (temp_iter = temp_map.begin(); temp_iter != temp_map.end(); temp_iter++) {
 #ifdef GM_DEBUG
-        if (GM_DEBUG > 3) {
+        if (m_debug_level > 3) {
           std::cout << temp_iter->first << " : " << temp_iter->second << "; ";
         }
 #endif // GM_DEBUG
@@ -428,10 +446,11 @@ int GistMaker::ProcessLangClassWord(std::string& lang_class_word,
         }
       }
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 3) {
+      if (m_debug_level > 3) {
         std::cout << std::endl;
       }
 #endif // GM_DEBUG
+      temp_map.clear();
     }
   }
   ngrams_set.clear();
@@ -449,13 +468,13 @@ int GistMaker::ProcessTextClassWord(std::string& text_class_word, std::map<std::
 
   if (m_classifier_dictionary.Find((const unsigned char*) text_class_word.c_str(), temp_map) == 1) {
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 3) {
+      if (m_debug_level > 3) {
         std::cout << std::endl << text_class_word << " = ";
       }
 #endif // GM_DEBUG
     for (temp_iter = temp_map.begin(); temp_iter != temp_map.end(); temp_iter++) {
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 3) {
+      if (m_debug_level > 3) {
         std::cout << temp_iter->first << " : " << temp_iter->second << "; ";
       }
 #endif // GM_DEBUG
@@ -466,11 +485,12 @@ int GistMaker::ProcessTextClassWord(std::string& text_class_word, std::map<std::
       }
     }
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 3) {
+    if (m_debug_level > 3) {
       std::cout << std::endl;
     }
 #endif // GM_DEBUG
   }
+  temp_map.clear();
 #endif // TEXT_CLASSIFICATION_ENABLED || LOCATION_ENABLED
 
   return 0;
@@ -485,13 +505,13 @@ int GistMaker::ProcessLocationWord(std::string& locations_word, std::map<std::st
 
   if (m_location_dictionary.Find((const unsigned char*) locations_word.c_str(), temp_map) == 1) {
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 3) {
+      if (m_debug_level > 3) {
         std::cout << std::endl << locations_word << " = ";
       }
 #endif // GM_DEBUG
     for (temp_iter = temp_map.begin(); temp_iter != temp_map.end(); temp_iter++) {
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 3) {
+      if (m_debug_level > 3) {
         std::cout << temp_iter->first << " : " << temp_iter->second << "; ";
       }
 #endif // GM_DEBUG
@@ -502,7 +522,7 @@ int GistMaker::ProcessLocationWord(std::string& locations_word, std::map<std::st
       }
     }
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 3) {
+    if (m_debug_level > 3) {
       std::cout << std::endl;
     }
 #endif // GM_DEBUG
@@ -517,9 +537,13 @@ void inline GistMaker::Initialize(double array[], unsigned int size) {
     array[i] = 0;
 }
 
-int GistMaker::MakeGist(char* str, 
-                        std::string& safe_status,
-                        std::string& script
+int GistMaker::MakeGist(char* str
+#ifdef PROFANITY_CHECK_ENABLED
+                        , std::string& profanity_status
+#endif // PROFANITY_CHECK_ENABLED
+#ifdef SCRIPT_DETECTION_ENABLED
+                        , std::string& script
+#endif // SCRIPT_DETECTION_ENABLED
 #ifdef NAMED_ENTITIES_ENABLED
                         , std::set<std::string>& named_entities_set
 #endif // NAMED_ENTITIES_ENABLED
@@ -539,11 +563,9 @@ int GistMaker::MakeGist(char* str,
                         , std::set<std::string>& locations_set
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-                        //, std::string& intent
                         , int &intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                        //, std::string& sentiment
                         , int &sentiment_valence
 #endif // SENTIMENT_ENABLED
                        ) {
@@ -559,13 +581,17 @@ int GistMaker::MakeGist(char* str,
   memset(text_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
   strcpy((char *) text_buffer, str);
 
-  char safe_status_buffer[10];
-  memset(safe_status_buffer, '\0', 10);
-  unsigned int safe_status_buffer_len = 10;
+#ifdef PROFANITY_CHECK_ENABLED
+  char profanity_status_buffer[10];
+  memset(profanity_status_buffer, '\0', 10);
+  unsigned int profanity_status_buffer_len = 10;
+#endif // PROFANITY_CHECK_ENABLED
 
+#ifdef SCRIPT_DETECTION_ENABLED
   char script_buffer[4];
   unsigned int script_buffer_len = 4;
   memset(script_buffer, '\0', 4);
+#endif // SCRIPT_DETECTION_ENABLED
 
 #ifdef NAMED_ENTITIES_ENABLED
   unsigned char named_entities_buffer[MAX_DEBUG_BUFFER_LEN];
@@ -621,25 +647,15 @@ int GistMaker::MakeGist(char* str,
   locations_set.clear();
 #endif // LOCATION_ENABLED
 
-#ifdef INTENT_ENABLED
-  // char intent_buffer[MAX_DEBUG_BUFFER_LEN];
-  // unsigned int intent_buffer_len = MAX_DEBUG_BUFFER_LEN;
-  // memset(intent_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
-  // intent.clear();
-#endif // INTENT_ENABLED
-
-#ifdef SENTIMENT_ENABLED
-  // char sentiment_buffer[MAX_DEBUG_BUFFER_LEN];
-  // unsigned int sentiment_buffer_len = MAX_DEBUG_BUFFER_LEN;
-  // memset(sentiment_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
-  // sentiment.clear();
-#endif // SENTIMENT_ENABLED
-
   int count = 0;
 
-  if ((count = MakeGist(text_buffer, text_buffer_len, text_len,
-                  safe_status_buffer, safe_status_buffer_len,
-                  script_buffer, script_buffer_len
+  if ((count = MakeGist(text_buffer, text_buffer_len, text_len
+#ifdef PROFANITY_CHECK_ENABLED
+                  , profanity_status_buffer, profanity_status_buffer_len
+#endif // PROFANITY_CHECK_ENABLED
+#ifdef SCRIPT_DETECTION_ENABLED
+                  , script_buffer, script_buffer_len
+#endif // SCRIPT_DETECTION_ENABLED
 #ifdef NAMED_ENTITIES_ENABLED
                   , named_entities_buffer, named_entities_buffer_len,
                   named_entities_len, named_entities_count
@@ -665,11 +681,9 @@ int GistMaker::MakeGist(char* str,
                   locations_len, locations_count
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-                  //, intent_buffer, intent_buffer_len
                   , intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                  //, sentiment_buffer, sentiment_buffer_len
                   , sentiment_valence
 #endif // SENTIMENT_ENABLED
                 )) < 0) {
@@ -694,11 +708,9 @@ int GistMaker::MakeGist(char* str,
     locations_buffer[0] = '\0';
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-    //intent_buffer[0] = '\0';
     intent_valence = 0;
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-    //sentiment_buffer[0] = '\0';
     sentiment_valence = 0;
 #endif // SENTIMENT_ENABLED
     return -1;
@@ -706,8 +718,17 @@ int GistMaker::MakeGist(char* str,
 
   text_buffer[0] = '\0';
 
-  script.assign(script_buffer, script_buffer_len);
-  safe_status.assign(safe_status_buffer, safe_status_buffer_len);
+#ifdef SCRIPT_DETECTION_ENABLED
+  if (strlen(script_buffer) > 0) {
+    script.assign(script_buffer);
+  }
+#endif // SCRIPT_DETECTION_ENABLED
+
+#ifdef PROFANITY_CHECK_ENABLED
+  if (strlen(profanity_status_buffer) > 0) {
+    profanity_status.assign(profanity_status_buffer);
+  }
+#endif // PROFANITY_CHECK_ENABLED
 
 #if defined NAMED_ENTITIES_ENABLED || defined KEYWORDS_ENABLED || defined KEYPHRASE_ENABLED || defined TEXT_CLASSIFICATION_ENABLED || defined LANG_ENABLED
   unsigned char* pch1 = NULL;
@@ -811,18 +832,6 @@ int GistMaker::MakeGist(char* str,
   locations_buffer[0] = '\0';
 #endif // LOCATION_ENABLED
 
-#ifdef INTENT_ENABLED
-  //if (strlen(intent_buffer) > 0) {
-  //  intent.assign(intent_buffer);
-  //}
-#endif // INTENT_ENABLED
-
-#ifdef SENTIMENT_ENABLED
-  //if (strlen(sentiment_buffer) > 0) {
-  //  sentiment.assign(sentiment_buffer);
-  //}
-#endif // SENTIMENT_ENABLED
-
   return count;
 }
 
@@ -879,9 +888,13 @@ int GistMaker::Heapify(double& top1, std::string& top1_class,
 }
 
 int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buffer_len,
-                        const unsigned int& text_len,
-                        char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
-                        char* script_buffer, const unsigned int& script_buffer_len
+                        const unsigned int& text_len
+#ifdef PROFANITY_CHECK_ENABLED
+                        , char* profanity_status_buffer, const unsigned int& profanity_status_buffer_len
+#endif // PROFANITY_CHECK_ENABLED
+#ifdef SCRIPT_DETECTION_ENABLED
+                        , char* script_buffer, const unsigned int& script_buffer_len
+#endif // SCRIPT_DETECTION_ENABLED
 #ifdef NAMED_ENTITIES_ENABLED
                         , unsigned char* named_entities_buffer,
                         const unsigned int& named_entities_buffer_len,
@@ -919,40 +932,54 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
                         unsigned int& locations_count
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-                        //, char* intent_buffer, const unsigned int& intent_buffer_len
                         , int &intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                        //, char* sentiment_buffer, const unsigned int& sentiment_buffer_len
                         , int &sentiment_valence
 #endif // SENTIMENT_ENABLED
                        ) {
 
-  if (!text_buffer || text_buffer_len < 1 || text_len < 1 || !script_buffer || !safe_status_buffer) {
+  if (!text_buffer || text_buffer_len < 1 || text_len < 1) {
     std::cout << "ERROR: invalid buffer(s) at input\n";
     return -1;
   }
 
+  // these pointers are used throughout the function to move over the string
+  unsigned char *ptr = NULL;
+  unsigned char *end = NULL;
+
+  int ret_val = 0;
+
+  // do we need to work with non-ascii data at all?
+#ifdef I18N_ENABLED
+  unsigned int code_point = 0;
+  bool current_word_ascii = false;
+  bool next_word_ascii = false;
+#endif // I18N_ENABLED
+
+#ifdef SCRIPT_DETECTION_ENABLED
   // script detection
+  if (!script_buffer) {
+    std::cout << "ERROR: invalid script buffer\n";
+    return -1;
+  }
   // initialize output parameter for script
   *script_buffer = '\0';
-  unsigned char *end = (unsigned char*) strchr((char *) text_buffer, '\0');
   std::string script = "UU";
   strcpy(script_buffer, "UU");
-  unsigned int code_point = 0;
   string script_temp;
   unsigned int script_count = 0;
   unsigned int english_count = 0;
-  bool current_word_ascii = false;
-  bool next_word_ascii = false;
-  unsigned char *ptr = NULL;
 
   // whole thing starts here
   ptr = text_buffer;
+  end = ptr + text_len;
 
   while (ptr && *ptr != '\0') {
+#ifdef I18N_ENABLED
     try {
       code_point = utf8::next(ptr, end);
+#ifdef SCRIPT_DETECTION_ENABLED
       if (code_point > 0x7F) {
         if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
           if (script_temp != "en") {
@@ -969,15 +996,19 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         if (code_point > 0x40 && code_point < 0x7B)
           english_count++;
       }
+#endif // SCRIPT_DETECTION_ENABLED
     } catch (...) {
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 0) {
+      if (m_debug_level > 0) {
         std::cout << "EXCEPTION 1: utf8 returned exception" << std::endl;
         cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
       }
 #endif // GM_DEBUG
       return -1;
     }
+#else // I18N_ENABLED
+    ptr++;
+#endif // I18N_ENABLED
   }
 
   bool script_flag = false;
@@ -989,8 +1020,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   }
   strcpy(script_buffer, script.c_str());
 
-  // prepare for return
-  int ret_val = 0;
   if ((script.compare("UU") != 0) &&
       (script.compare("uu") != 0) &&
       (script.compare("XX") != 0) &&
@@ -1001,9 +1030,18 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   if (!script_flag) {
     return ret_val;
   }
+#endif // SCRIPT_DETECTION_ENABLED
 
   // initialize parameters for other outputs
-  *safe_status_buffer = '\0';
+#ifdef PROFANITY_CHECK_ENABLED
+  if (!profanity_status_buffer) {
+#ifdef GM_DEBUG
+    std::cerr << "ERROR: invalid profanity_status_buffer\n";
+#endif // GM_DEBUG
+    return -1;
+  }
+  *profanity_status_buffer = '\0';
+#endif // PROFANITY_CHECK_ENABLED
 
 #ifdef NAMED_ENTITIES_ENABLED
   if (!named_entities_buffer) {
@@ -1079,26 +1117,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   locations_count = 0;
 #endif // LOCATION_ENABLED
 
-#ifdef INTENT_ENABLED
-  //if (!intent_buffer) {
-#ifdef GM_DEBUG
-  //  std::cerr << "ERROR: invalid intent buffer\n";
-#endif // GM_DEBUG
-  //  return -1;
-  //}
-  //intent_buffer[0] = '\0';
-#endif // INTENT_ENABLED
-
-#ifdef SENTIMENT_ENABLED
-  //if (!sentiment_buffer) {
-#ifdef GM_DEBUG
-  //  std::cerr << "ERROR: invalid sentiment buffer\n";
-#endif // GM_DEBUG
-  //  return -1;
-  //}
-  //sentiment_buffer[0] = '\0';
-#endif // SENTIMENT_ENABLED
-
   unsigned char *probe = NULL;
   unsigned char current_word_delimiter;
   unsigned char prev_word_delimiter;
@@ -1116,10 +1134,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
   unsigned char *current_word_start = NULL;
   unsigned char *current_word_end = NULL;
+  std::string current_word;
   unsigned char *prev_word_start = NULL;
   unsigned char *prev_word_end = NULL;
+  std::string prev_word;
   unsigned char *next_word_start = NULL;
   unsigned char *next_word_end = NULL;
+  std::string next_word;
 
 #if defined NAMED_ENTITIES_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
   unsigned char *caps_entity_start = NULL;
@@ -1140,8 +1161,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   unsigned char *intent_end = NULL;
   std::string intent_phrase;
   std::map<std::string, int> intent_words;
-  unsigned char *orig_start = NULL;
-  unsigned int orig_offset = 0;
+  bool prev_word_negation = false;
+  bool current_word_negation = false;
+  bool next_word_negation = false;
+  int intent_value = 0;
 #endif // INTENT_ENABLED
 
   // TODO (balaji) use bit map and masks to reduce comparisons
@@ -1178,8 +1201,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   bool next_word_dict = false;
   bool is_ignore_word = false;
   bool is_punct = false;
-  int punct_intent = 0;
-  int punct_senti = 0;
 
   // misc
 #if defined NAMED_ENTITIES_ENABLED || defined KEYWORDS_ENABLED || defined KEYPHRASE_ENABLED || defined TEXT_CLASSIFICATION_ENABLED
@@ -1191,24 +1212,16 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   int dict_value = 0;
 #endif // SENTIMENT_ENABLED || INTENT_ENABLED
 
-#ifdef SENTIMENT_ENABLED
-  //int sentiment_valence = 0;
-#endif // SENTIMENT_ENABLED
+  int punct_senti = 0;
 
 #ifdef INTENT_ENABLED
-  //int intent_valence = 0;
   int first_person_valence = 0;
-  std::string intent_str;
-  if ((2 * (text_len + 1)) < text_buffer_len) {
-    text_buffer[(2 * text_len) + 1] = '\0';
-    orig_offset = text_len + 1;
-    orig_start = text_buffer + orig_offset;
-    memcpy(orig_start, text_buffer, text_len);
-  }
 #endif // INTENT_ENABLED
+  int punct_intent = 0;
 
-  // unsafe
+#ifdef PROFANITY_CHECK_ENABLED
   bool text_has_unsafe_words = false;
+#endif // PROFANITY_CHECK_ENABLED
 
   // text classification
 #ifdef TEXT_CLASSIFICATION_ENABLED
@@ -1223,7 +1236,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   ptr = text_buffer;
 
 #ifdef GM_DEBUG
-  if (GM_DEBUG > 3)
+  if (m_debug_level > 3)
     cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
 #endif // GM_DEBUG
 
@@ -1236,7 +1249,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
   if (!ptr || '\0' == *ptr) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 0)
+    if (m_debug_level > 0)
       cout << "either the input is empty or has ignore words only" << endl;
 #endif // GM_DEBUG
     return 0;
@@ -1249,14 +1262,9 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
   current_word_start = ptr;
   sentence_start = ptr;
-#ifdef INTENT_ENABLED
-  if (orig_start) {
-    intent_start = orig_start + (ptr - text_buffer);
-  }
-#endif // INTENT_ENABLED
 
 #ifdef GM_DEBUG
-  if (GM_DEBUG > 3) {
+  if (m_debug_level > 3) {
     cout << "sentence start: " << sentence_start << endl;
   }
 #endif // GM_DEBUG
@@ -1267,16 +1275,17 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     if (isupper(*(ptr+1))) {
       current_word_all_caps = true;
     }
-    //*ptr += 32;
+    *ptr += 32;
   } else if (isdigit(*ptr)) {
     current_word_starts_num = true; 
     num_numeric_words++;
   }
 
   // now lets find the end of the current word - while loop works from the second letter
-  //ptr++;
+#ifdef I18N_ENABLED
   try {
     code_point = utf8::next(ptr, end);
+#ifdef SCRIPT_DETECTION_ENABLED
     if (code_point > 0x7F) {
       if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
         if (script_temp != "en") {
@@ -1293,22 +1302,26 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       if (code_point > 0x40 && code_point < 0x7B)
         english_count++;
     }
+#endif // SCRIPT_DETECTION_ENABLED
   } catch (...) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 0) {
+    if (m_debug_level > 0) {
       std::cout << "EXCEPTION 1: utf8 returned exception" << std::endl;
       cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
     }
 #endif // GM_DEBUG
     return -1;
   }
+#else // I18N_ENABLED
+  ptr++;
+#endif // I18N_ENABLED
 
   while (ptr && ' ' != *ptr && '\0' != *ptr &&
          !(is_punct = IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))) {
 
     if (!ptr || '\0' == *ptr) {
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 1) {
+      if (m_debug_level > 1) {
         cout << "either the input is empty or has ignore words only" << endl;
       }
 #endif // GM_DEBUG
@@ -1319,7 +1332,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       if (!current_word_all_caps) {
         current_word_has_mixed_case = true;
       }
-      //*ptr += 32;
+      *ptr += 32;
     } else if (islower(*ptr)) {
       if (current_word_all_caps) {
         current_word_has_mixed_case = true;
@@ -1327,9 +1340,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       }
     }
 
-    //ptr++;
+#ifdef I18N_ENABLED
     try {
       code_point = utf8::next(ptr, end);
+#ifdef SCRIPT_DETECTION_ENABLED
       if (code_point > 0xFF) {
         if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
           if (script_temp != "en") {
@@ -1346,20 +1360,24 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         if (code_point > 0x40 && code_point < 0x7B)
           english_count++;
       }
+#endif // SCRIPT_DETECTION_ENABLED
     } catch (...) {
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 1) {
+      if (m_debug_level > 1) {
         std::cout << "EXCEPTION 2: utf8 returned exception" << std::endl;
         cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
       }
 #endif // GM_DEBUG
       return -1;
     }
-  }
+#else // I18N_ENABLED
+    ptr++;
+#endif // I18N_ENABLED
+  } // while loop
 
   if (!ptr) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 0) {
+    if (m_debug_level > 0) {
       cout << "either the input is corrupt or the only word is ignore word" << endl;
     }
 #endif // GM_DEBUG
@@ -1369,14 +1387,15 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   current_word_end = ptr;
   current_word_delimiter = *ptr;
   current_word_len = current_word_end - current_word_start;
-  *ptr = '\0';
-  if (current_word_len > 2 && strcmp((char *) current_word_end - 2, "'s") == 0) {
+  current_word.assign((char *) current_word_start, current_word_len);
+  // *ptr = '\0'; balaji
+  if (current_word_len > 2 && memcmp((char *) current_word_end - 2, "'s", 2) == 0) {
     current_word_has_apostropheS = current_word_end-2;
   }
   current_word_precedes_punct = is_punct;
   num_words++;
 
-#ifndef I18N_ENABLED
+#ifdef I18N_ENABLED
   code_point = *current_word_start;
   if (code_point > 0x40 && code_point < 0x7B) {
     current_word_ascii = true;
@@ -1385,18 +1404,18 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     if (code_point > 0x40 && code_point < 0x7B)
       current_word_ascii = true;
   } else if (inagist_classifiers::ExtendedAsciiText(code_point)) {
-    next_word_ascii = true;
+    current_word_ascii = true;
   }
 
   if (current_word_ascii) {
 #endif // I18N_ENABLED
     // stop words
-    if (m_stopwords_dictionary.Find(current_word_start) == 1) {
+    if (m_stopwords_dictionary.Find(current_word) == 1) {
       current_word_stop = true;
       num_stop_words++;
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 5) {
-        cout << "current word: " << current_word_start << " :stopword" << endl;
+      if (m_debug_level > 5) {
+        cout << "current word: " << current_word << " :stopword" << endl;
       }
 #endif // GM_DEBUG
     } else {
@@ -1404,64 +1423,58 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     }
 
     // dictionary words
-    if (m_dictionary.Find(current_word_start) == 1) {
+    if (m_dictionary.Find(current_word) == 1) {
       current_word_dict = true;
       num_dict_words++;
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 5) {
-        cout << "current word: " << current_word_start << " :dictionary word" << endl;
+      if (m_debug_level > 5) {
+        cout << "current word: " << current_word << " :dictionary word" << endl;
       }
 #endif // GM_DEBUG
     } else {
       current_word_dict = false;
     }
   
-    // unsafe words
-    if (m_unsafe_dictionary.Find(current_word_start) == 1) {
+#ifdef PROFANITY_CHECK_ENABLED
+    if (m_unsafe_dictionary.Find(current_word) == 1) {
       text_has_unsafe_words = true;
     }
+#endif // PROFANITY_CHECK_ENABLED
 
 #ifdef SENTIMENT_ENABLED
-    if (m_sentiment_words_dictionary.Find(current_word_start, dict_value) == 1) {
+    if (m_sentiment_words_dictionary.Find(current_word, dict_value) == 1) {
       sentiment_valence += dict_value;
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 3) {
-        std::cout << "word:" << current_word_start << " sentiment_dict_value: " << dict_value << std::endl;
+      if (m_debug_level > 3) {
+        std::cout << "word:" << current_word \
+                  << " sentiment_dict_value: " << dict_value << std::endl;
       }
 #endif // GM_DEBUG
     }
 #endif // SENTIMENT_ENABLED
 
 #ifdef INTENT_ENABLED
-    bool flag = false;
-    if (m_intent_words_dictionary.Find(current_word_start, dict_value) == 1) {
+    if (m_intent_words_dictionary.Find(current_word, dict_value) == 1) {
       if (dict_value == 10) {
         first_person_valence = 1;
+      } else if (dict_value == 20) {
+        current_word_negation = true;
       } else {
-        intent_words[std::string((const char*) current_word_start)] = dict_value;
-        flag = true;
-      }
-      // std::cout << "intent_sentence: " << current_word_start << " value: " << dict_value << std::endl;
-    }
-    if (orig_start) {
-      if (flag) {
-        intent_start = orig_start + (current_word_start - text_buffer);
+        intent_start = current_word_start;
+        intent_value = dict_value;
       }
     }
 #endif
 
-#ifndef I18N_ENABLED
+#ifdef I18N_ENABLED
   }
 #endif // I18N_ENABLED
 
 #ifdef LANG_ENABLED
-  if (current_word_start &&
-      (current_word_stop || current_word_dict) &&
-      !current_word_hashtag) {
-    lang_class_word.assign((char*) current_word_start);
-    if (ProcessLangClassWord(lang_class_word, lang_class_map) < 0) {
+  if (!current_word_hashtag) {
+    if (ProcessLangClassWord(current_word, lang_class_map) < 0) {
       std::cerr << "Error: could not find lang_class_map for word: " \
-                << lang_class_word << std::endl;
+                << current_word << std::endl;
     }
   }
 #endif // LANG_ENABLED
@@ -1476,21 +1489,9 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       !current_word_hashtag &&
       current_word_len > 1) {
     if (current_word_has_apostropheS) {
-      *current_word_has_apostropheS = '\0';
-    }
-    /*
-    if (strncmp((char *) current_word_end-2, "\'s", 2) == 0) {
-      is_apostrophe = true;
-      ch = *(current_word_end-2);
-      *(current_word_end-2) = '\0';
-    }
-    */
-    if (!current_word_caps || current_word_all_caps || current_word_has_mixed_case) {
-      text_class_word.assign((char *) current_word_start);
-    } else { 
-      *current_word_start += 32;
-      text_class_word.assign((char *) current_word_start);
-      *current_word_start -= 32;
+      text_class_word.assign((char *) current_word_start, (current_word_has_apostropheS-current_word_start));
+    } else {
+      text_class_word.assign(current_word);
     }
     if (ProcessTextClassWord(text_class_word, text_class_map) < 0) {
       std::cerr << "Error: could not find text_class_map for word: " \
@@ -1500,14 +1501,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       std::cerr << "Error: could not find entry in locations_map for word: " \
                 << text_class_word << std::endl;
     }
-    if (current_word_has_apostropheS) {
-      *current_word_has_apostropheS = '\'';
-    }
-    /*
-    if (is_apostrophe) {
-      *(current_word_end-2) = ch;
-    }
-    */
   }
 #endif // TEXT_CLASSIFICATION_ENABLED
 
@@ -1516,9 +1509,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
   // go to the next word, ignoring punctuation and ignore words.
   // however passing over ignorewords must be recorded
-  //ptr++;
+#ifdef I18N_ENABLED
   try {
     code_point = utf8::next(ptr, end);
+#ifdef SCRIPT_DETECTION_ENABLED
     if (code_point > 0xFF) {
       if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
         if (script_temp != "en") {
@@ -1535,15 +1529,19 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       if (code_point > 0x40 && code_point < 0x7B)
         english_count++;
     }
+#endif // SCRIPT_DETECTION_ENABLED
   } catch (...) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 0) {
+    if (m_debug_level > 0) {
       std::cout << "EXCEPTION 3: utf8 returned exception" << std::endl;
       cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
     }
 #endif // GM_DEBUG
     return -1;
   }
+#else // I18N_ENABLED
+  ptr++;
+#endif // I18N_ENABLED
 
   is_ignore_word = false;
   is_punct = false;
@@ -1562,7 +1560,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   if (!ptr || '\0' == *ptr) {
     next_word_start = NULL;
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 1) {
+    if (m_debug_level > 1) {
       std::cout << "only one word found\n";
     }
 #endif // GM_DEBUG
@@ -1573,16 +1571,11 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       ptr++;
     }
     next_word_start = ptr;
-#ifdef INTENT_ENABLED
-    if (orig_start && !intent_start) {
-      intent_start = orig_start + (next_word_start - text_buffer);
-    }
-#endif // INTENT_ENABLED
     num_words++;
     if (current_word_precedes_ignore_word || current_word_precedes_punct) {
       sentence_start = next_word_start;
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 5) {
+      if (m_debug_level > 5) {
         cout << "sentence start: " << sentence_start << endl;
       }
 #endif // GM_DEBUG
@@ -1595,7 +1588,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       if (isupper(*(next_word_start + 1))) {
         next_word_all_caps = true;
       }
-      //*next_word_start += 32;
+      *next_word_start += 32;
     } else if (isdigit(*next_word_start)) {
       next_word_starts_num = true;
       num_numeric_words++;
@@ -1605,13 +1598,14 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
   // now we need to achieve the following
   // probe = ptr + 1;
+#ifdef I18N_ENABLED
   probe = ptr;
   try {
     if (probe < end) {
       code_point = utf8::next(probe, end);
     } else {
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 0) {
+      if (m_debug_level > 0) {
         std::cout << "ERROR: invalid pointers?" << std::endl;
       }
 #endif // GM_DEBUG
@@ -1619,13 +1613,16 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     }
   } catch (...) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 0) {
+    if (m_debug_level > 0) {
       std::cout << "EXCEPTION 4: utf8 returned exception" << std::endl;
       cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
     }
 #endif // GM_DEBUG
     return -1;
   }
+#else // I18N_ENABLED
+  probe = ptr + 1;
+#endif // I18N_ENABLED
 
   while (ptr && probe/* && *ptr != '\n' && *ptr != '\0'*/) {
     // this loop works between second letter to end punctuation for each word
@@ -1636,63 +1633,51 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         )
        ) {
 
-/*
-      if (next_word_has_apostropheS) {
-        std::cout << next_word_start << " has apostropheS" << std::endl;
-      }
-*/
-
       // word boundary
       if (next_word_start) {
         if (is_punct)
           next_word_precedes_punct = true;
         next_word_delimiter = *probe;
         next_word_end = probe;
-        *probe = '\0';
+        // *probe = '\0'; // balaji
         next_word_len = next_word_end - next_word_start;
-        if (next_word_len > 2 && strcmp((char *) next_word_end - 2, "'s") == 0) {
+        next_word.assign((char *) next_word_start, next_word_len);
+        if (next_word_len > 2 && memcmp((char *) next_word_end - 2, "'s", 2) == 0) {
           next_word_has_apostropheS = next_word_end-2;
         }
       }
 
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 5) {
+      if (m_debug_level > 5) {
         cout << endl;
-        if (prev_word_start)
-          cout << "prev word: " << prev_word_start << endl;
-        else
-          cout << "prev word: NULL" << endl;
-        cout << "current word: " << current_word_start << endl;
-        if (next_word_start)
-          cout << "next word: " << next_word_start << endl;
-        else
-          cout << "next word: NULL" << endl;
+        cout << "prev word: " << prev_word << endl;
+        cout << "current word: " << current_word << endl;
+        cout << "next word: " << next_word << endl;
         cout << endl;
       }
 #endif // GM_DEBUG
 
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 5) {
-        if (prev_word_caps)
-          cout << "prev word: " << prev_word_start << " :starts with caps" << endl;
+      if (m_debug_level > 5) {
+        cout << "prev word: " << prev_word << " :starts with caps" << endl;
         if (current_word_all_caps) {
           if (current_word_len > 1 && current_word_len < 6) {
-            cout << "current word: " << current_word_start << " :all caps" << endl;
+            cout << "current word: " << current_word << " :all caps" << endl;
           } else {
-            cout << "current word: " << current_word_start << " :all caps but bad length" << endl;
+            cout << "current word: " << current_word << " :all caps but bad length" << endl;
           }
         } else if (current_word_has_mixed_case) {
-          cout << "current word: " << current_word_start << " :mixed case" << endl;
+          cout << "current word: " << current_word << " :mixed case" << endl;
         } else if (current_word_caps) {
-          cout << "current word: " << current_word_start << " :starts with caps" << endl;
+          cout << "current word: " << current_word << " :starts with caps" << endl;
         }
         if (next_word_caps)
-          cout << "next word: " << next_word_start << " :starts with caps" << endl;
+          cout << "next word: " << next_word << " :starts with caps" << endl;
       }
 #endif // GM_DEBUG
 
       if (next_word_start) {
-#ifndef I18N_ENABLED
+#ifdef I18N_ENABLED
         code_point = *next_word_start;
         if (code_point > 0x40 && code_point < 0x7B) {
           next_word_ascii = true;
@@ -1707,12 +1692,12 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         if (next_word_ascii) {
 #endif // I18N_ENABLED
         // stop words
-        if (m_stopwords_dictionary.Find(next_word_start) == 1) {
+        if (m_stopwords_dictionary.Find(next_word) == 1) {
           next_word_stop = true;
           num_stop_words++;
 #ifdef GM_DEBUG
-          if (GM_DEBUG > 5) {
-            cout << "next word: " << next_word_start << " :stopword" << endl;
+          if (m_debug_level > 5) {
+            cout << "next word: " << next_word << " :stopword" << endl;
           }
 #endif // GM_DEBUG
         } else {
@@ -1720,73 +1705,79 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         }
 
         // dictionary words
-        if (m_dictionary.Find(next_word_start) == 1) {
+        if (m_dictionary.Find(next_word) == 1) {
           next_word_dict = true;
           num_dict_words++;
 #ifdef GM_DEBUG
-          if (GM_DEBUG > 5) {
-            cout << "next word: " << next_word_start << " :dictionary word" << endl;
+          if (m_debug_level > 5) {
+            cout << "next word: " << next_word << " :dictionary word" << endl;
           }
 #endif // GM_DEBUG
         } else {
           next_word_dict = false;
         }
 
-        // dictionary words
-        if (m_unsafe_dictionary.Find(next_word_start) == 1) {
+#ifdef PROFANITY_CHECK_ENABLED
+        if (m_unsafe_dictionary.Find(next_word) == 1) {
           text_has_unsafe_words = true;
         }
+#endif // PROFANITY_CHECK_ENABLED
 
 #ifdef SENTIMENT_ENABLED
-        if (m_sentiment_words_dictionary.Find(next_word_start, dict_value) == 1) {
+        if (m_sentiment_words_dictionary.Find(next_word, dict_value) == 1) {
           sentiment_valence += dict_value;
 #ifdef GM_DEBUG
-          std::cout << "word:" << next_word_start << " dict_value: " << dict_value << std::endl;
+          std::cout << "word:" << next_word << " dict_value: " << dict_value << std::endl;
 #endif // GM_DEBUG
         }
 #endif // SENTIMENT_ENABLED
 
 #ifdef INTENT_ENABLED
-       bool flag = false;
-       if (orig_start) {
-         if (intent_start) {
-           intent_end = orig_start + (next_word_end - text_buffer);
-           intent_phrase.assign((const char*) intent_start, 0, intent_end-intent_start);
-           if (m_intent_words_dictionary.Find(intent_phrase, dict_value) == 1) {
-             if (dict_value == 10) {
-               first_person_valence = 1;
-             } else {
-               intent_words[intent_phrase] = dict_value;
-               flag = true;
-             }
-           }
-         }
-         if (!flag) {
-           if (m_intent_words_dictionary.Find(next_word_start, dict_value) == 1) {
-             if (dict_value == 10) {
-               first_person_valence = 1;
-             } else {
-               intent_words[std::string((const char*) next_word_start)] = dict_value;
-               flag = true;
-               intent_start = orig_start + (next_word_start - text_buffer);
-             }
-             // std::cout << "intent_sentence: " << next_word_start << " value: " << dict_value << std::endl;
-           }
-         }
-         if (!flag) {
-           intent_start = NULL;
-         }
-       }
+        bool flag = false;
+        if (intent_start) {
+          intent_end = next_word_end;
+          intent_phrase.assign((const char*) intent_start, 0, intent_end-intent_start);
+          if (m_intent_words_dictionary.Find(intent_phrase, dict_value) == 1) {
+            if (dict_value == 10) {
+              first_person_valence = 1;
+            } else if (dict_value == 20) {
+              next_word_negation = true;
+            } else {
+              flag = true;
+              intent_value = dict_value;
+            }
+          }
+          if (!flag) {
+            intent_end = current_word_end;
+            intent_phrase.assign((const char*) intent_start, 0, intent_end-intent_start);
+            intent_words[intent_phrase] = intent_value;
+          }
+        }
+        if (!flag) {
+          if (m_intent_words_dictionary.Find(next_word, dict_value) == 1) {
+            if (dict_value == 10) {
+              first_person_valence = 1;
+            } else if (dict_value == 20) {
+              next_word_negation = true;
+            } else {
+              if (!current_word_negation) {
+                flag = true;
+                intent_start = next_word_start;
+                intent_value = dict_value;
+              }
+            }
+          }
+        }
+        if (!flag) {
+          intent_start = NULL;
+        }
 #endif // INTENT_ENABLED
 
 #ifdef LANG_ENABLED
-        if ((next_word_stop ||
-             next_word_dict) &&
-             !next_word_hashtag) {
-          lang_class_word.assign((char *) next_word_start);
-          if (ProcessLangClassWord(lang_class_word, lang_class_map) < 0) {
+        if (!next_word_hashtag) {
+          if (ProcessLangClassWord(next_word, lang_class_map) < 0) {
             std::cerr << "Error: could not find lang_class_map for word: " \
-                      << lang_class_word << std::endl;
+                      << next_word << std::endl;
           }
         }
 #endif // LANG_ENABLED
@@ -1795,25 +1786,12 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         if (!next_word_stop &&
             !next_word_dict &&
             !next_word_starts_num &&
-            !next_word_hashtag &&
+            !next_word_hashtag && // balaji
             next_word_len > 1) {
-          //is_apostrophe = false;
-          /*
-          if (strncmp((char *) next_word_end-2, "\'s", 2) == 0) {
-            is_apostrophe = true;
-            ch = *(next_word_end-2);
-            *(next_word_end-2) = '\0';
-          }
-          */
           if (next_word_has_apostropheS) {
-            *next_word_has_apostropheS = '\0';
-          }
-          if (!next_word_caps || next_word_all_caps || next_word_has_mixed_case) {
-            text_class_word.assign((char *) next_word_start);
+            text_class_word.assign((char *) next_word_start, (next_word_has_apostropheS - next_word_start));
           } else {
-            *next_word_start += 32;
-            text_class_word.assign((char *) next_word_start);
-            *next_word_start -= 32;
+            text_class_word.assign(next_word);
           }
           if (ProcessTextClassWord(text_class_word, text_class_map) < 0) {
             std::cerr << "Error: could not find text_class_map for word: " \
@@ -1823,26 +1801,15 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
             std::cerr << "Error: could not find entry in locations_map for word: " \
                       << text_class_word << std::endl;
           }
-          /*
-          if (is_apostrophe) {
-            *(next_word_end-2) = ch;
-          }
-          */
-          if (next_word_has_apostropheS) {
-            *next_word_has_apostropheS = '\'';
-          }
         }
 #endif // TEXT_CLASSIFICATION_ENABLED
 
-#ifndef I18N_ENABLED
+#ifdef I18N_ENABLED
         }
 #endif // I18N_ENABLED
-      }
+      } // next_word_start
 
-      if (prev_word_end)
-        *prev_word_end = prev_word_delimiter;
-
-#ifndef I18N_ENABLED
+#ifdef I18N_ENABLED
       if (current_word_ascii) {
 #endif // I18N_ENABLED
 
@@ -1850,18 +1817,11 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
           !current_word_starts_num && !current_word_has_mixed_case &&
           (current_word_len > 1) && !current_word_hashtag) {
 #ifdef GM_DEBUG
-        if (GM_DEBUG > 5) {
+        if (m_debug_level > 5) {
           cout << current_word_start << ": normal word" << endl;
         }
 #endif // GM_DEBUG
         num_normal_words++;
-#ifdef LANG_ENABLED
-        lang_class_word.assign((char *) current_word_start);
-        if (ProcessLangClassWord(lang_class_word, lang_class_map) < 0) {
-          std::cerr << "Error: could not find lang_class_map for word: " \
-                    << lang_class_word << std::endl;
-        }
-#endif // LANG_ENABLED
       }
       if (current_word_has_mixed_case)
         num_mixed_words++;
@@ -1870,7 +1830,9 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       if (NULL == stopwords_entity_start) {
         if (current_word_stop) {
           // X of Y case
-          if (strcmp((char *) current_word_start, "of") == 0 && NULL != next_word_start && NULL != prev_word_start) {
+          if (strncmp((char *) current_word_start, "of", 2) == 0 &&
+              NULL != next_word_start &&
+              NULL != prev_word_start) {
             if ((prev_word_caps && next_word_caps) &&
                 (!prev_word_stop && !next_word_stop) &&
                 (!prev_word_dict && !next_word_dict) &&
@@ -1883,7 +1845,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
                 stopwords_entity_start = prev_word_start;
             }
           }
-          if (caps_entity_start && (strcmp((char *) current_word_start, "and") == 0) &&
+          if (caps_entity_start && (strncmp((char *) current_word_start, "and", 2) == 0) &&
               next_word_start && next_word_caps && !next_word_dict && !next_word_stop &&
               !prev_word_precedes_ignore_word && !prev_word_precedes_punct &&
               !current_word_precedes_ignore_word && !current_word_precedes_punct) {
@@ -1908,29 +1870,27 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
           }
         } else if (prev_word_stop) {
           if ((NULL == next_word_start || next_word_start == sentence_start) &&
-              prev_word_start && strncmp((char *) prev_word_start, "at", 2) == 0 && current_word_caps &&
+              prev_word_start && prev_word.compare("at") == 0 && current_word_caps &&
               !current_word_stop && !current_word_dict) {
-            // TODO (balaji) dangerous! don't use strncmp. instead preserve prev_word_delimiter
             stopwords_entity_start = current_word_start;
             stopwords_entity_end = current_word_end;
           } else if (!caps_entity_start && prev_word_start && next_word_start) {
             // Experimental location detection - TODO (balaji) use regex if this experiment succeeds
             if (current_word_caps &&
-                strcmp((char *) prev_word_start, "in") == 0 && ',' == current_word_delimiter &&
+                prev_word.compare("in") == 0 && ',' == current_word_delimiter &&
                 next_word_caps && !current_word_dict &&
                 !next_word_stop && !next_word_dict && !current_word_stop
                ) {
               stopwords_entity_start = current_word_start;
               stopwords_entity_end = current_word_end;
             } else if (next_word_caps &&
-                       ((strcmp((char *) prev_word_start, "place") == 0 &&
-                         strcmp((char *) current_word_start, "called") == 0 &&
+                       ((prev_word.compare("place") == 0 &&
+                         current_word.compare("called") == 0 &&
                          !next_word_stop &&
                          (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)
                         ) ||
-                        (strcmp((char *) prev_word_start, "town") == 0 &&
-                         (strcmp((char *) current_word_start, "of") == 0 ||
-                          strcmp((char *) current_word_start, "called") == 0) &&
+                        (prev_word.compare("town") == 0 &&
+                         (current_word.compare("of") == 0 || current_word.compare("called") == 0) &&
                          !next_word_stop &&
                          (',' == next_word_delimiter || '.' == next_word_delimiter || '\0' == next_word_delimiter)
                         )
@@ -1943,19 +1903,19 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         } else if (caps_entity_start &&
                    next_word_start && next_word_caps && !next_word_stop && !next_word_dict) {
           // Experimental sports event detection - TODO (balaji) use regex if this experiment succeeds
-          if ((strcmp((char *) current_word_start, "vs") == 0) ||
-              (strcmp((char *) current_word_start, "v") == 0) ||
-              (strcmp((char *) current_word_start, "beat") == 0) ||
-              (strcmp((char *) current_word_start, "def") == 0) ||
-              (strcmp((char *) current_word_start, "defeat") == 0) ||
-              (strcmp((char *) current_word_start, "beats") == 0) ||
-              (strcmp((char *) current_word_start, "defeats") == 0)) {
+          if ((current_word.compare("vs") == 0) ||
+              (current_word.compare("v") == 0) ||
+              (current_word.compare("beat") == 0) ||
+              (current_word.compare("def") == 0) ||
+              (current_word.compare("defeat") == 0) ||
+              (current_word.compare("beats") == 0) ||
+              (current_word.compare("defeats") == 0)) {
             stopwords_entity_start = caps_entity_start;
           }
         }
       } else {
 #ifdef GM_DEBUG
-        if (GM_DEBUG > 5) {
+        if (m_debug_level > 5) {
           cout << "stopword entity candidate: " << stopwords_entity_start << endl;
         }
 #endif // GM_DEBUG
@@ -1985,7 +1945,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef KEYPHRASE_ENABLED
       if (NULL == stopwords_keyphrase_start) {
         if ('\0' != current_word_delimiter &&
-#ifndef I18N_ENABLED
+#ifdef I18N_ENABLED
             current_word_ascii &&
 #endif // I18N_ENABLED
             !current_word_stop &&
@@ -2063,7 +2023,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
               // this is a single word entity. so not inserting into named_entities
               // caps_entity_start = current_word_start;
               // caps_entity_end = current_word_end;
-              
+
               // instead insert into keywords set
 #ifdef KEYWORDS_ENABLED
               if ((keywords_len + current_word_len + 1) < keywords_buffer_len) {
@@ -2074,7 +2034,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         }
       } else {
 #ifdef GM_DEBUG
-        if (GM_DEBUG > 5) {
+        if (m_debug_level > 5) {
           cout << "caps entity candidate: " << caps_entity_start << endl;
         }
 #endif // GM_DEBUG
@@ -2119,27 +2079,22 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // NAMED_ENTITIES_ENABLED
 
 #ifdef GM_DEBUG
-          if (GM_DEBUG > 1) {
+          if (m_debug_level > 1) {
             temp_len = stopwords_keyphrase_end - stopwords_keyphrase_start;
             cout << endl << string((char *) stopwords_keyphrase_start, temp_len) << " :keyphrase";
           }
 #endif // GM_DEBUG
 
           if (strncmp((char *) stopwords_keyphrase_end-2, "\'s", 2) == 0) {
-            ch = *(stopwords_keyphrase_end-2);
-            *(stopwords_keyphrase_end-2) = '\0';
             temp_len = ((stopwords_keyphrase_end-2) - stopwords_keyphrase_start);
             if ((keyphrases_len + temp_len + 1) < keyphrases_buffer_len) {
               Insert(keyphrases_buffer, keyphrases_len,
                      stopwords_keyphrase_start, temp_len,
                      keyphrases_count);
             }
-            *(stopwords_keyphrase_end-2) = ch;
           }
           else if ((pch = (unsigned char*) strstr((char *) stopwords_keyphrase_start, "\'s")) &&
                    (pch < stopwords_keyphrase_end)) {
-            ch = *pch;
-            *pch = '\0';
             // but don't insert the X in X's if X is a single word!
             if (strstr((char *) stopwords_keyphrase_start, " ")) {
               temp_len = pch - stopwords_keyphrase_start;
@@ -2149,7 +2104,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
                        keyphrases_count);
               }
             }
-            *pch = ch;
             temp_len = stopwords_keyphrase_end - stopwords_keyphrase_start;
             if ((keyphrases_len + temp_len + 1) < keyphrases_buffer_len) {
               Insert(keyphrases_buffer, keyphrases_len,
@@ -2181,13 +2135,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       if (NULL != stopwords_entity_start && NULL != stopwords_entity_end) {
         if (stopwords_entity_start < stopwords_entity_end) {
 #ifdef GM_DEBUG
-          if (GM_DEBUG > 1) {
-            cout << endl << string((char *) stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) << " :entity by stopword";
+          if (m_debug_level > 1) {
+            cout << endl
+                 << string((char *) stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) \
+                 << " :entity by stopword";
           }
 #endif // GM_DEBUG
           if (strncmp((char *) stopwords_entity_end-2, "\'s", 2) == 0) {
-            ch = *(stopwords_entity_end-2);
-            *(stopwords_entity_end-2) = '\0';
             temp_len = (stopwords_entity_end-2) - stopwords_entity_start;
 #ifdef NAMED_ENTITIES_ENABLED
             if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
@@ -2207,14 +2161,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
                         << text_class_word << std::endl;
             }
 #endif // TEXT_CLASSIFICATION_ENABLED
-            *(stopwords_entity_end-2) = ch;
           }
-          else if ((pch = (unsigned char*) strstr((char *) stopwords_entity_start, "\'s")) && (pch < stopwords_entity_end)) {
-            ch = *pch;
-            *pch = '\0';
+          else if ((pch = (unsigned char*) strstr((char *) stopwords_entity_start, "\'s")) &&
+                   (pch < stopwords_entity_end)) {
             // but don't insert the X in X's if X is a single word!
             temp_len = pch - stopwords_entity_start;
-            if (strstr((char *) stopwords_entity_start, " ")) {
+            if ((pch = (unsigned char*) strstr((char *) stopwords_entity_start, " ")) &&
+                (pch < stopwords_entity_end)) {
 #ifdef NAMED_ENTITIES_ENABLED
               if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
                 Insert(named_entities_buffer, named_entities_len,
@@ -2254,7 +2207,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // TEXT_CLASSIFICATION_ENABLED
             }
 
-            *pch = ch;
             temp_len = stopwords_entity_end - stopwords_entity_start;
 #ifdef NAMED_ENTITIES_ENABLED
             if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
@@ -2306,15 +2258,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       if (NULL != caps_entity_start && NULL != caps_entity_end) {
         if (caps_entity_start < caps_entity_end) {
 #ifdef GM_DEBUG
-          if (GM_DEBUG > 2) {
+          if (m_debug_level > 2) {
             cout << endl \
                  << string((char *) caps_entity_start, (caps_entity_end - caps_entity_start)) \
                  << " :entity by caps";
           }
 #endif // GM_DEBUG
           if (strncmp((char *) caps_entity_end-2, "\'s", 2) == 0) {
-            ch = *(caps_entity_end-2);
-            *(caps_entity_end-2) = '\0';
             temp_len = (caps_entity_end-2) - caps_entity_start;
 #ifdef NAMED_ENTITIES_ENABLED
             if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
@@ -2334,16 +2284,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
                         << text_class_word << std::endl;
             }
 #endif // TEXT_CLASSIFICATION_ENABLED
-
-            *(caps_entity_end-2) = ch;
           }
           else if ((pch = (unsigned char*) strstr((char *) caps_entity_start, "\'s"))
                     && (pch < caps_entity_end)) {
-            ch = *pch;
-            *pch = '\0';
             // don't insert the X in X's if X is a single word!
             temp_len = pch - caps_entity_start;
-            if (strstr((char *) caps_entity_start, " ")) {
+            if ((pch = (unsigned char*) strstr((char *) caps_entity_start, " ")) &&
+                (pch < caps_entity_end)) {
 #ifdef NAMED_ENTITIES_ENABLED
               if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
                 Insert(named_entities_buffer, named_entities_len,
@@ -2373,7 +2320,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // KEYWORDS_ENABLED
             }
 
-            *pch = ch;
             temp_len = caps_entity_end - caps_entity_start;
 #ifdef NAMED_ENTITIES_ENABLED
             if ((named_entities_len + temp_len + 1) < named_entities_buffer_len) {
@@ -2443,6 +2389,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         }
 #endif // TEXT_CLASSIFICATION_ENABLED
       }
+      // aposhtropheS
       if (!current_word_stop && !current_word_dict && current_word_has_apostropheS) {
 #ifdef KEYWORDS_ENABLED
         if ((keywords_len + current_word_len + 1) < keywords_buffer_len) {
@@ -2465,20 +2412,18 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       }
 #endif // KEYWORDS_ENABLED || TEXT_CLASSIFICATION_ENABLED
 
-#ifndef I18N_ENABLED
+#ifdef I18N_ENABLED
       }
 #endif // I18N_ENABLED
 
 #ifdef GM_DEBUG
-      if (GM_DEBUG > 5) {
+      if (m_debug_level > 5) {
         cout << endl;
       }
 #endif // GM_DEBUG
 
       // exit conditions
       if ('\0' == current_word_delimiter || !next_word_start || '\0' == *next_word_start) {
-        if (current_word_end)
-          *current_word_end = current_word_delimiter;
         break;
       }
 
@@ -2498,6 +2443,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       prev_word_precedes_punct = current_word_precedes_punct;
       prev_word_has_apostropheS = current_word_has_apostropheS;
       prev_word_hashtag = current_word_hashtag;
+      prev_word = current_word;
+      prev_word_negation = current_word_negation;
 
       current_word_end = next_word_end;
       current_word_start = next_word_start;
@@ -2512,9 +2459,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       current_word_precedes_ignore_word = next_word_precedes_ignore_word;
       current_word_precedes_punct = next_word_precedes_punct;
       current_word_len = next_word_len;
+#ifdef I18N_ENABLED
       current_word_ascii = next_word_ascii;
+#endif // I18N_ENABLED
       current_word_has_apostropheS = next_word_has_apostropheS;
       current_word_hashtag = next_word_hashtag;
+      current_word = next_word;
+      current_word_negation = next_word_negation;
 
       next_word_start = NULL;
       next_word_end = NULL;
@@ -2527,9 +2478,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       next_word_delimiter = '\0';
       next_word_precedes_ignore_word = false;
       next_word_precedes_punct = false;
+#ifdef I18N_ENABLED
       next_word_ascii = false;
+#endif // I18N_ENABLED
       next_word_has_apostropheS = NULL;
       next_word_hashtag = false;
+      next_word.clear();
+      next_word_negation = false;
 
       // BE CAREFUL ABOUT WHAT IS NEXT WORD OR CURRENT WORD NOW
 
@@ -2568,16 +2523,17 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
           if (current_word_precedes_ignore_word) {
             sentence_start = next_word_start;
 #ifdef GM_DEBUG
-            if (GM_DEBUG > 5) {
+            if (m_debug_level > 5) {
               cout << "sentence start: " << sentence_start << endl;
             }
 #endif // GM_DEBUG
           }
 
+          // this code is to ignore publisher name in "CNN Breaking News : blah blah" and take only the blah blah part
           if (current_word_precedes_punct) {
             sentence_start = next_word_start;
 #ifdef GM_DEBUG
-            if (GM_DEBUG > 5) {
+            if (m_debug_level > 5) {
               cout << "sentence start: " << sentence_start << endl;
             }
 #endif // GM_DEBUG
@@ -2637,7 +2593,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
             if (isupper(*(next_word_start+1))) {
               next_word_all_caps = true;
             }
-            //*next_word_start += 32;
+            *next_word_start += 32;
           } else if (isdigit(*next_word_start)) {
             next_word_starts_num = true;
             num_numeric_words++;
@@ -2655,7 +2611,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         if (!next_word_all_caps) {
           next_word_has_mixed_case = true;
         }
-        //*probe += 32;
+        *probe += 32;
       } else if (islower(*probe)) {
         if (next_word_all_caps) {
           next_word_has_mixed_case = true;
@@ -2667,11 +2623,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
     // a mere cog in a loop wheel, but a giant killer if commented
     if (probe && *probe != '\0') {
-      //if (script_count > 9 || english_count > 20) {
-        //probe++;
-      //} else {
+#ifdef I18N_ENABLED
         try {
           code_point = utf8::next(probe, end);
+#ifdef SCRIPT_DETECTION_ENABLED
           if (code_point > 0xFF) {
             if (inagist_classifiers::DetectScript(code_point, script_temp) > 0) {
               if (script_temp != "en") {
@@ -2687,16 +2642,19 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
             if (code_point > 0x40 && code_point < 0x7B)
               english_count++;
           }
+#endif // SCRIPT_DETECTION_ENABLED
         } catch (...) {
 #ifdef GM_DEBUG
-          if (GM_DEBUG > 0) {
+          if (m_debug_level > 0) {
             std::cout << "Exception 5: " << code_point << " " << probe << std::endl;
             cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
           }
 #endif // GM_DEBUG
           return -1;
         }
-      //}
+#else // I18N_ENABLED
+        probe++;
+#endif // I18N_ENABLED
     }
   }
   } // end of gigantic if
@@ -2717,7 +2675,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
        lang_class_map_iter != lang_class_map.end();
        lang_class_map_iter++) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 3) {
+    if (m_debug_level > 3) {
       std::cout << lang_class_map_iter->first << ":" << lang_class_map_iter->second << std::endl;
     }
 #endif // GM_DEBUG
@@ -2746,55 +2704,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   ret_val += lang_class_count;
 #endif // LANG_ENABLED
 
-#ifdef LANG_ENABLED
-/*
-  if (max_lang_class.compare("en") != 0) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 1) {
-      cout << "suspected non-english tweet. ignoring named_entities and keyphrases" << endl;
-    }
-#endif // GM_DEBUG
-#ifdef NAMED_ENTITIES_ENABLED
-    *named_entities_buffer = '\0';
-    named_entities_len = 0;
-    named_entities_count = 0;
-#endif // NAMED_ENTITIES_ENABLED
-#ifdef KEYWORDS_ENABLED
-    *keywords_buffer = '\0';
-    keywords_len = 0;
-    keywords_count = 0;
-#endif // KEYWORDS_ENABLED
-#ifdef KEYPHRASE_ENABLED
-    *keyphrases_buffer = '\0';
-    keyphrases_len = 0;
-    keyphrases_count = 0;
-#endif // KEYPHRASE_ENABLED
-#ifdef TEXT_CLASSIFICATION_ENABLED
-    text_class_map.clear();
-    *text_classes_buffer = '\0';
-    text_classes_len = 0;
-    text_classes_count = 0;
-#endif // TEXT_CLASSIFICATION_ENABLED
-#ifdef LOCATION_ENABLED
-    locations_map.clear();
-    *locations_buffer = '\0';
-    locations_len = 0;
-    locations_count = 0;
-#endif // LOCATION_ENABLED
-#ifdef SENTIMENT_ENABLED
-    *sentiment_buffer = '\0';
-#endif // SENTIMENT_ENABLED
-#ifdef INTENT_ENABLED
-    intent_words.clear();
-    *intent_buffer = '\0';
-#endif // INTENT_ENABLED
-    return ret_val;
-  }
-*/
-#endif // LANG_ENABLED
-
-#ifdef GM_DEBUG
-  if (GM_DEBUG > 4) {
+  if (m_debug_level > 4) {
     cout << endl << "\norginal query: " << std::string((char *) text_buffer) << endl;
     cout << "num words: " << num_words << endl;
     cout << "num caps words: " << num_caps_words << endl;
@@ -2809,7 +2720,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef NAMED_ENTITIES_ENABLED
   if ((num_normal_words == 0) && (num_dict_words != 0 || num_words > 5)) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 1) {
+    if (m_debug_level > 1) {
       cout << "no normal words. ignoring named_entities." << endl;
       cout << "num normal words: " << num_normal_words << endl;
       cout << "num words: " << num_words << endl;
@@ -2822,12 +2733,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   }
 #endif // NAMED_ENTITIES_ENABLED
 
-  // safe status
+#ifdef PROFANITY_CHECK_ENABLED
   if (text_has_unsafe_words)
-    strcpy(safe_status_buffer, "unsafe");
+    strcpy(profanity_status_buffer, "unsafe");
   else
-    strcpy(safe_status_buffer, "safe");
+    strcpy(profanity_status_buffer, "safe");
   ret_val += 1;
+#endif // PROFANITY_CHECK_ENABLED
 
 #ifdef NAMED_ENTITIES_ENABLED
   ret_val += named_entities_count;
@@ -2853,7 +2765,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
        text_class_map_iter != text_class_map.end();
        text_class_map_iter++) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 3) {
+    if (m_debug_level > 3) {
       std::cout << text_class_map_iter->first << ":" << text_class_map_iter->second << std::endl;
     }
 #endif // GM_DEBUG
@@ -2944,7 +2856,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
        locations_map_iter != locations_map.end();
        locations_map_iter++) {
 #ifdef GM_DEBUG
-    if (GM_DEBUG > 3) {
+    if (m_debug_level > 3) {
       std::cout << locations_map_iter->first << ":" << locations_map_iter->second << std::endl;
     }
 #endif // GM_DEBUG
@@ -3046,38 +2958,29 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   std::map<std::string, int>::iterator intent_iter;
   for (intent_iter = intent_words.begin(); intent_iter != intent_words.end(); intent_iter++) {
 #ifdef GM_DEBUG
-  if (GM_DEBUG > 2) {
+  if (m_debug_level > 2) {
     std::cout << "intent= " << intent_iter->first << ":" << intent_iter->second << std::endl;
   }
 #endif // GM_DEBUG
     intent_valence += intent_iter->second;
   }
 #ifdef GM_DEBUG
-  if (GM_DEBUG > 2) {
+  if (m_debug_level > 2) {
     std::cout << "init intent_valence: " << intent_valence << std::endl;
   }
 #endif // GM_DEBUG
   intent_valence += first_person_valence;
   intent_valence += punct_intent;
 #ifdef GM_DEBUG
-  if (GM_DEBUG > 2) {
+  if (m_debug_level > 2) {
     std::cout << "punct_intent:" << punct_intent << std::endl;
     std::cout << "intent_valence: " << intent_valence << std::endl;
   }
 #endif // GM_DEBUG
-  /*
-  if (intent_valence < 4) {
-    strcpy(intent_buffer, "none");
-  } else {
-    strcpy(intent_buffer, "present");
-    ret_val += 1;
-  }
-  */
-  //sprintf(intent_buffer, "%d", intent_valence);
 #endif // INTENT_ENABELD
 
 #ifdef GM_DEBUG
-  if (GM_DEBUG > 1) {
+  if (m_debug_level > 1) {
     std::cout << "gist_maker summary:" << std::endl;
     std::cout << "input: " << text_buffer << std::endl;
 #ifdef NAMED_ENTITIES_ENABLED

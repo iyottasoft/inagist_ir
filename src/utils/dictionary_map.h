@@ -31,7 +31,9 @@ class DictionaryMap {
   DictionaryMap();
   ~DictionaryMap();
   int Load(const char* dictionary_file_name);
-  int Find(const unsigned char *key, std::string& value);
+  int Find(const std::string& key, std::string& value);
+  int Find(const unsigned char *key, const unsigned int &key_len, std::string& value);
+  //int Find(const unsigned char *key, std::string& value);
   int FindPart(const unsigned char* key, std::string& value);
   int Print();
   int Clear();

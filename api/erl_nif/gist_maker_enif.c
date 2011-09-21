@@ -107,13 +107,17 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #endif // GIST_DEBUG
   }
 
-  char safe_status_buffer[10];
-  unsigned int safe_status_buffer_len = 10;
-  memset(safe_status_buffer, '\0', 10);
+#ifdef PROFANITY_CHECK_ENABLED
+  char profanity_status_buffer[10];
+  unsigned int profanity_status_buffer_len = 10;
+  memset(profanity_status_buffer, '\0', 10);
+#endif // PROFANITY_CHECK_ENABLED
 
+#ifdef SCRIPT_DETECTION_ENABLED
   char script_buffer[4];
   unsigned int script_buffer_len = 4;
   memset(script_buffer, '\0', 4);
+#endif // SCRIPT_DETECTION_ENABLED
 
 #ifdef LANG_ENABLED
   char lang_buffer[MAX_CLASS_NAME];
@@ -177,9 +181,13 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   int ret_val = 0;
 
-  if ((ret_val = CallMakeGist((unsigned char *) tweet_str, tweet_buffer_len, tweet_len,
-                  (char *) safe_status_buffer, safe_status_buffer_len,
-                  (char *) script_buffer, script_buffer_len
+  if ((ret_val = CallMakeGist((unsigned char *) tweet_str, tweet_buffer_len, tweet_len
+#ifdef PROFANITY_CHECK_ENABLED
+                  , (char *) profanity_status_buffer, profanity_status_buffer_len
+#endif // PROFANITY_CHECK_ENABLED
+#ifdef SCRIPT_DETECTION_ENABLED
+                  , (char *) script_buffer, script_buffer_len
+#endif // SCRIPT_DETECTION_ENABLED
 #ifdef LANG_ENABLED
                   , (char *) lang_buffer, lang_buffer_len
 #endif // LANG_ENABLED
@@ -239,6 +247,8 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   unsigned int i = 0;
 
   // script
+  ERL_NIF_TERM script_term; 
+#ifdef SCRIPT_DETECTION_ENABLED
   if (!script_buffer) {
 #ifndef GIST_DEBUG
     return enif_make_atom(env, "error");
@@ -246,7 +256,6 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     return enif_make_atom(env, "error_invalid_script_buffer");
 #endif // GIST_DEBUG
   }
-  ERL_NIF_TERM script_term; 
   len = strlen(script_buffer);
   if (len < 2 || len > 3) {
     script_term = enif_make_atom(env, "error");
@@ -273,6 +282,9 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     script_term = enif_make_binary(env, &script_bin);
   }
   script_buffer[0] = '\0';
+#else // SCRIPT_DETECTION_ENABLED
+  script_term = enif_make_atom(env, "ok");
+#endif // SCRIPT_DETECTION_ENABLED
 
   // language
   ERL_NIF_TERM lang_term;
@@ -308,37 +320,41 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #endif // LANG_ENABLED
 
   // safe/unsafe status
-  if (!safe_status_buffer) {
+  ERL_NIF_TERM profanity_status_term;
+#ifdef PROFANITY_CHECK_ENABLED
+  if (!profanity_status_buffer) {
 #ifndef GIST_DEBUG
     return enif_make_atom(env, "error");
 #else
-    return enif_make_atom(env, "error_invalid_safe_status_buffer");
+    return enif_make_atom(env, "error_invalid_profanity_status_buffer");
 #endif // GIST_DEBUG
   }
-  ERL_NIF_TERM safe_status_term;
-  len = strlen(safe_status_buffer);
+  len = strlen(profanity_status_buffer);
   if (len < 4 || len > 6) {
-    safe_status_term = enif_make_atom(env, "ok");
+    profanity_status_term = enif_make_atom(env, "ok");
   } else {
-    ErlNifBinary safe_status_bin;
+    ErlNifBinary profanity_status_bin;
 #ifdef ERLANG_R14B02 
-    ret_val = enif_alloc_binary(len, &safe_status_bin);
+    ret_val = enif_alloc_binary(len, &profanity_status_bin);
 #else
-    ret_val = enif_alloc_binary(env, len, &safe_status_bin);
+    ret_val = enif_alloc_binary(env, len, &profanity_status_bin);
 #endif // ERLANG_R14B02
     if (ret_val < 0) {
 #ifndef GIST_DEBUG
       return enif_make_atom(env, "error");
 #else
-      return enif_make_atom(env, "error_safe_status_bin_alloc");
+      return enif_make_atom(env, "error_profanity_status_bin_alloc");
 #endif // GIST_DEBUG
     }
     for (i=0; i<len; i++) {
-      safe_status_bin.data[i] = *(safe_status_buffer + i);
+      profanity_status_bin.data[i] = *(profanity_status_buffer + i);
     }
-    safe_status_term = enif_make_binary(env, &safe_status_bin);
+    profanity_status_term = enif_make_binary(env, &profanity_status_bin);
   }
-  safe_status_buffer[0] = '\0';
+  profanity_status_buffer[0] = '\0';
+#else
+  profanity_status_term = enif_make_atom(env, "ok");
+#endif // PROFANITY_CHECK_ENABLED
 
   char* start = NULL;
   char* end = NULL;
@@ -601,7 +617,7 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   end = NULL;
 
   return enif_make_tuple9(env,
-                          safe_status_term,
+                          profanity_status_term,
                           lang_term,
                           named_entities_list,
                           keywords_list,

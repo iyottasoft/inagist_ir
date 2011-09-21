@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
       if (dictionary_map.Print() < 0)
         std::cout << "Error: could not print dictionary_map\n";
     } else {
-      if (dictionary_map.Find((unsigned char*) key.c_str(), value) == 1)
+      if (dictionary_map.Find(key, value) == 1)
         std::cout << key << " = " << value << std::endl;
     }
   }

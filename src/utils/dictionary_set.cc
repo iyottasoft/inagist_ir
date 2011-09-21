@@ -69,6 +69,15 @@ int DictionarySet::Find(const unsigned char *word) {
   return 0;
 }
 
+int DictionarySet::Find(std::string &word) {
+
+  if (m_dictionary_set.find(word) != m_dictionary_set.end()) {
+    return 1;
+  }
+
+  return 0;
+}
+
 int DictionarySet::Print() {
   //string_hash_set::const_iterator iter;
   std::set<std::string>::iterator iter;

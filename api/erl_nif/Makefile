@@ -157,7 +157,7 @@ channel_manager:
 
 gist_maker:
 	@echo "creating erlang library file ${EXPORT_LIB_DIR}/libgist_maker_enif.so ..."
-	@gcc -Wextra -fPIC -shared -o ${EXPORT_LIB_DIR}/libgist_maker_enif.so gist_maker_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -I${CPP_INCLUDE_DIR} -L${CPP_LINK_DIR} -lgist_maker_cppi -L${CPP_LIB_DIR} -lngramsgenerator -lutils -lscriptdetector -ltwitter_api_cppi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DLANG_ENABLED -DLOCATION_ENABLED
+	@gcc -Wextra -fPIC -shared -o ${EXPORT_LIB_DIR}/libgist_maker_enif.so gist_maker_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -I${CPP_INCLUDE_DIR} -L${CPP_LINK_DIR} -lgist_maker_cppi -L${CPP_LIB_DIR} -lngramsgenerator -lutils -lscriptdetector -ltwitter_api_cppi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl -DI18N_ENABLED -DSCRIPT_DETECTION_ENABLED -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DLANG_ENABLED -DLOCATION_ENABLED
 	@echo "done!"
 	@echo "compiling gist_maker.erl"
 	@erlc gist_maker.erl

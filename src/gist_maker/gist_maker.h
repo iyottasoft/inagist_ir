@@ -36,6 +36,7 @@ class GistMaker {
   GistMaker();
   ~GistMaker();
 
+  int SetDebugLevel(unsigned int& debug_level);
   int Init(std::string config_file);
   int Init(const char* stopwords_file,
            const char* dictionary_file,
@@ -60,90 +61,79 @@ class GistMaker {
          );
   int DeInit();
 
+  int MakeGist(char* str
+#ifdef PROFANITY_CHECK_ENABLED
+               , std::string& profanity_status
+#endif // PROFANITY_CHECK_ENABLED
+#ifdef SCRIPT_DETECTION_ENABLED
+               , std::string& script
+#endif // SCRIPT_DETECTION_ENABLED
 #ifdef NAMED_ENTITIES_ENABLED
-/*
-  int GetKeywords(char* str,
-                  std::string& safe_status,
-                  std::string& script,
-                  std::set<std::string>& named_entities_set);
-
-  int GetKeywords(char *str,
-                  std::string& user,
-                  std::set<std::string>& named_entities_set,
-                  std::map<std::string, std::string>& script_user_map,
-                  std::map<std::string, std::string>& keyword_user_map);
-*/
-#endif // NAMED_ENTITIES_ENABLED
-
-  int MakeGist(char* str,
-                   std::string& safe_status,
-                   std::string& script
-#ifdef NAMED_ENTITIES_ENABLED
-                   , std::set<std::string>& named_entities_set
+               , std::set<std::string>& named_entities_set
 #endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
-                   , std::set<std::string>& keywords_set
+               , std::set<std::string>& keywords_set
 #endif // KEYWORDS_ENABLED
 #ifdef KEYPHRASE_ENABLED
-                   , std::set<std::string>& keyphrases_set
+               , std::set<std::string>& keyphrases_set
 #endif // KEYPHRASE_ENABLED
 #ifdef LANG_ENABLED
-                   , std::string& language
+               , std::string& language
 #endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
-                   , std::set<std::string>& text_classes_set
+               , std::set<std::string>& text_classes_set
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-                   , std::set<std::string>& locations_set
+               , std::set<std::string>& locations_set
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-                   //, std::string& intent
-                   , int &intent_valence
+               , int &intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                   //, std::string& sentiment
-                   , int &sentiment_valence
+               , int &sentiment_valence
 #endif // SENTIMENT_ENABLED
-                  );
+              );
 
   // directly writing to an output buffer instead of a set
   int MakeGist(unsigned char* text_buffer, const unsigned int& text_buffer_len,
-                   const unsigned int& text_len,
-                   char* safe_status_buffer, const unsigned int& safe_status_buffer_len,
-                   char* script_buffer, const unsigned int& script_buffer_len
+               const unsigned int& text_len
+#ifdef PROFANITY_CHECK_ENABLED
+               , char* profanity_status_buffer, const unsigned int& profanity_status_buffer_len
+#endif // PROFANITY_CHECK_ENABLED
+#ifdef SCRIPT_DETECTION_ENABLED
+               , char* script_buffer, const unsigned int& script_buffer_len
+#endif // SCRIPT_DETECTION_ENABLED
 #ifdef NAMED_ENTITIES_ENABLED
-                   , unsigned char* named_entities_buffer, const unsigned int& named_entities_buffer_len,
-                   unsigned int& named_entities_len, unsigned int& named_entities_count
+               , unsigned char* named_entities_buffer, const unsigned int& named_entities_buffer_len,
+               unsigned int& named_entities_len, unsigned int& named_entities_count
 #endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
-                   , unsigned char* keywords_buffer, const unsigned int& keywords_buffer_len,
-                   unsigned int& keywords_len, unsigned int& keywords_count
+               , unsigned char* keywords_buffer, const unsigned int& keywords_buffer_len,
+               unsigned int& keywords_len, unsigned int& keywords_count
 #endif // KEYWORDS_ENABLED
 #ifdef KEYPHRASE_ENABLED
-                   , unsigned char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
-                   unsigned int& keyphrases_len, unsigned int& keyphrases_count
+               , unsigned char* keyphrases_buffer, const unsigned int& keyphrases_buffer_len,
+               unsigned int& keyphrases_len, unsigned int& keyphrases_count
 #endif // KEYPHRASE_ENABLED
 #ifdef LANG_ENABLED
-                   , unsigned char* language_buffer, const unsigned int& language_buffer_len,
-                   unsigned int& language_len, unsigned int& language_count
+               , unsigned char* language_buffer, const unsigned int& language_buffer_len,
+               unsigned int& language_len, unsigned int& language_count
 #endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
-                   , char* text_classes_buffer, const unsigned int& text_classes_buffer_len,
-                   unsigned int& text_classes_len, unsigned int& text_classes_count
+               , char* text_classes_buffer, const unsigned int& text_classes_buffer_len,
+               unsigned int& text_classes_len, unsigned int& text_classes_count
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-                   , char* locations_buffer, const unsigned int& locations_buffer_len,
-                   unsigned int& locations_len, unsigned int& locations_count
+               , char* locations_buffer, const unsigned int& locations_buffer_len,
+               unsigned int& locations_len, unsigned int& locations_count
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-                   //, char* intent_buffer, const unsigned int& intent_buffer_len
-                   , int& intent_valence
+               , int& intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                   //, char* sentiment_buffer, const unsigned int& sentiment_buffer_len
-                   , int& sentiment_valence
+               , int& sentiment_valence
 #endif // SENTIMENT_ENABLED
-                  );
+              );
 
   void PrintKeywords(std::set<std::string> &named_entities_set);
   int DetectScript(int code_point, std::string &script);
@@ -159,6 +149,7 @@ class GistMaker {
                           std::map<std::string, double>& locations_map);
 
  private:
+  unsigned int m_debug_level;
   inagist_utils::DictionarySet m_stopwords_dictionary;
   inagist_utils::DictionarySet m_dictionary;
   inagist_utils::DictionarySet m_unsafe_dictionary;

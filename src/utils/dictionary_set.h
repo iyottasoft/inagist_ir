@@ -32,6 +32,7 @@ class DictionarySet {
   ~DictionarySet();
   int Load(const char* dictionary_file_name);
   int Find(const unsigned char* key);
+  int Find(std::string &key);
   int Print();
   int Clear();
 

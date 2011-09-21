@@ -12,7 +12,7 @@ inagist::GistMaker g_gm;
 int MakeGist(std::string text) {
 
   char buffer[1024];
-  std::string safe_status;
+  std::string profanity_status;
   std::string script;
   std::set<std::string> named_entities_set;
   std::set<std::string> keywords_set;
@@ -29,7 +29,13 @@ int MakeGist(std::string text) {
   std::cout << std::endl << buffer << std::endl;
 
   int gist_elements_count = 0;
-  if ((gist_elements_count = g_gm.MakeGist(buffer, safe_status, script
+  if ((gist_elements_count = g_gm.MakeGist(buffer
+#ifdef PROFANITY_CHECK_ENABLED
+                        , profanity_status
+#endif // PROFANITY_CHECK_ENABLED
+#ifdef SCRIPT_DETECTION_ENABLED
+                        , script
+#endif // SCRIPT_DETECTION_ENABLED
 #ifdef NAMED_ENTITIES_ENABLED
                         , named_entities_set
 #endif // NAMED_ENTITIES_ENABLED
@@ -63,12 +69,16 @@ int MakeGist(std::string text) {
 
   memset(buffer, 0, 1024);
 
-  if (!safe_status.empty()) {
-    std::cout << "safe_status: " << safe_status << std::endl;
+#ifdef PROFANITY_CHECK_ENABLED
+  if (profanity_status.size() > 0) {
+    std::cout << "profanity_status: " << profanity_status << std::endl;
   }
+#endif // PROFANITY_CHECK_ENABLED
+
   if (!script.empty()) {
     std::cout << "script: " << script << std::endl;
   }
+
 #ifdef NAMED_ENTITIES_ENABLED
   if (named_entities_set.size() > 0) {
     std::cout << "named_entities:\n";
@@ -131,8 +141,8 @@ int MakeGist(std::string text) {
 
 int main(int argc, char *argv[]) {
 
-  if (argc < 3 || argc > 4) {
-    std::cout << "Usage: " << argv[0] << "\n\t<config_file_name>\n\t<0-5, 0-interactive, 1-file, 2-tweet, 3-many tweets, 4-inagist, 5-twitter search>\n\t[file_name/<handle/query>]\n";
+  if (argc < 3 || argc > 5) {
+    std::cout << "Usage: " << argv[0] << "\n\t<config_file_name>\n\t<0-5, 0-interactive, 1-file, 2-tweet, 3-many tweets, 4-inagist, 5-twitter search>\n\t[debug_level]\n\t[file_name/<handle/query>]\n";
     return -1;
   }
 
@@ -155,9 +165,14 @@ int main(int argc, char *argv[]) {
   int input_type = atoi(argv[2]);
   assert(input_type >=0 && input_type <=5);
   const char* input_value = NULL;
+  unsigned int debug_level = 0;
 
   if (4 == argc) {
-    input_value = argv[3];
+    debug_level = atoi(argv[3]);
+  }
+
+  if (5 == argc) {
+    input_value = argv[4];
   }
 
   std::string text;
@@ -166,11 +181,16 @@ int main(int argc, char *argv[]) {
 
   if (0 == input_type) {
     // initialize keytuples extracter
+    std::cout << "initializing gist_maker. please wait ...." << std::endl;
     if (g_gm.Init(gist_maker_config_file) < 0) {
       std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
       return -1; 
     } else {
       std::cout << "INFO: init done\n";
+    }
+
+    if (debug_level > 0) {
+      g_gm.SetDebugLevel(debug_level);
     }
 
     while (getline(std::cin, text)) {
@@ -189,6 +209,10 @@ int main(int argc, char *argv[]) {
       if (g_gm.Init(gist_maker_config_file) < 0) {
         std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
         return -1; 
+      }
+
+      if (debug_level > 0) {
+        g_gm.SetDebugLevel(debug_level);
       }
 
       for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {

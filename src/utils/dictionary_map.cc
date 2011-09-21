@@ -65,6 +65,28 @@ int DictionaryMap::Load(const char* file) {
   return 0;
 }
 
+int DictionaryMap::Find(const std::string& key, std::string& value) {
+  if ((m_dict_map_iter = m_dictionary_map.find(key)) != m_dictionary_map.end()) {
+    value.assign(m_dict_map_iter->second);
+    return 1;
+  }
+  return 0;
+}
+
+int DictionaryMap::Find(const unsigned char *key, const unsigned int &key_len, std::string& value) {
+  if (!key || key_len < 1) {
+    std::cout << "ERROR: invalid input for dictionary map lookup\n";
+    return -1;
+  }
+  std::string key_str((char *) key, 0, key_len);
+  if ((m_dict_map_iter = m_dictionary_map.find(key_str)) != m_dictionary_map.end()) {
+    value.assign(m_dict_map_iter->second);
+    return 1;
+  }
+  return 0;
+}
+
+/*
 int DictionaryMap::Find(const unsigned char *key, std::string& value) {
   if (!key) {
     std::cout << "ERROR: invalid input for dictionary map lookup\n";
@@ -76,9 +98,11 @@ int DictionaryMap::Find(const unsigned char *key, std::string& value) {
   }
   return 0;
 }
+*/
 
 int DictionaryMap::FindPart(const unsigned char* key, std::string& value) {
 
+/*
   int ret_value = 0;
   if ((ret_value = Find(key, value)) != 0)
     return ret_value;
@@ -94,6 +118,7 @@ int DictionaryMap::FindPart(const unsigned char* key, std::string& value) {
     }
     *pch = temp;
   }
+*/
   return 0;
 }
 

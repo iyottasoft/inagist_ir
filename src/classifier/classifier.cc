@@ -9,6 +9,10 @@
 #include "twitter_api.h"
 #include "inagist_api.h"
 #include "test_utils.h"
+#include "script_detector_utils.h"
+#include "utf8.h"
+
+extern int DetectScript(int code_point, std::string &script);
 
 #ifdef DEBUG
 #if DEBUG>0
@@ -599,8 +603,8 @@ int Classifier::CleanCorpusFile(std::string& corpus_file_name,
   double value = 0;
   double temp_value = 0;
   bool flag = false;
-  char str[255];
-  memset(str, '\0', 255);
+  unsigned char str[1024];
+  memset((char *) str, '\0', 1024);
   double temp_double = 0;
 
   if (CorpusManager::LoadCorpus(corpus_file_name, corpus) < 0) {
@@ -630,10 +634,10 @@ int Classifier::CleanCorpusFile(std::string& corpus_file_name,
     switch (clean_type) {
       case 0:
         // case as in upper lower!
-        strcpy(str, key.c_str());
+        strcpy((char *) str, key.c_str());
         i = 0;
         while (str[i]) {
-          char ch = str[i];
+          unsigned char ch = str[i];
           if (isupper(ch)) {
             ch += 32;
             str[i] = ch;
@@ -641,8 +645,8 @@ int Classifier::CleanCorpusFile(std::string& corpus_file_name,
           i++;
         }
         temp_double = 1;
-        std::cout << str << std::endl;
-        temp_corpus.insert(std::pair<std::string, double> (std::string(str), temp_double));
+        // std::cout << str << std::endl;
+        temp_corpus.insert(std::pair<std::string, double> (std::string((char *)str), temp_double));
         break;
       case 1:
         // remove words from another test corpus
@@ -650,11 +654,62 @@ int Classifier::CleanCorpusFile(std::string& corpus_file_name,
       case 2:
         if (key.find(" ") != std::string::npos)
           continue;
-        memset(str, '\0', 255);
-        sprintf(str, "%d", (unsigned int) value);
-        new_key = key + " " + std::string(str);
+        memset((char*) str, '\0', 1024);
+        sprintf((char*) str, "%d", (unsigned int) value);
+        new_key = key + " " + std::string((const char*) str);
         if (GetCorpus(new_key, temp_corpus) < 0) {
           std::cerr << "ERROR: could not get corpus for: " << key << std::endl;
+        }
+        break;
+      case 3:
+        {
+          strcpy((char *) str, key.c_str());
+          unsigned char* ptr = str;
+          unsigned char* end = ptr + key.length();
+          bool flag = true;
+
+          if (*ptr == ' ') {
+            if (*(ptr + 1) == '#' || *(ptr + 1) == ' ') {
+              flag = false;
+            }
+          }
+
+          if (isdigit(*ptr)) {
+            flag = false;
+          }
+
+          if (ispunct(*ptr)) {
+            flag = false;
+          }
+
+          double temp_double = 1;
+          unsigned int code_point=0;
+          std::string script_temp;
+          if (flag) {
+            while (ptr && *ptr != '\0') {
+              try {
+                code_point = utf8::next(ptr, end);
+                if (inagist_classifiers::DetectScript(code_point, script_temp) < 0) {
+                  flag = false;
+                  break;
+                } else {
+/*
+                  if (script_temp.compare("en") != 0) {
+                    flag = false;
+                    break;
+                  }
+*/
+                }
+              } catch (...) {
+                std::cout << "EXCEPTION: utf8 returned exception" << std::endl;
+                std::cout << "problem string: '" << str << "'" << std::endl;
+                break;
+              }
+            }
+          }
+          if (flag) {
+            temp_corpus.insert(std::pair<std::string, double> (std::string((char *)str), temp_double));
+          }
         }
         break;
       default:
@@ -720,6 +775,7 @@ int Classifier::CleanCorpusFile(std::string& corpus_file_name,
   } else {
     new_file_name = corpus_file_name + "." + output_suffix;
   }
+  std::cout << "writing corpus to file: " << new_file_name << std::endl;
   CorpusManager::WriteCorpusToFile(corpus, new_file_name);
   corpus.clear();
 
@@ -764,6 +820,7 @@ int Classifier::CleanCorpus(unsigned int& input_type,
   std::string corpus_file_name;
   for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
     corpus_file_name = config.iter->corpus_file;
+    std::cout << "cleaning: " << corpus_file_name << std::endl;
     if (CleanCorpusFile(corpus_file_name, output_suffix, clean_type) < 0) {
       std::cerr << "ERROR: could not clean corpus in file: " \
                 << config.iter->corpus_file << std::endl; 
