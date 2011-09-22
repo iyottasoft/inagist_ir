@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
   unsigned int tweet_buffer_len = MAX_BUFFER_LEN;
   unsigned int tweet_len = 0;
   memset((char *) tweet_str, '\0', MAX_BUFFER_LEN);
-  strcpy((char *) tweet_str, "this is a testing string. Sachin Tendulkar");
+  strcpy((char *) tweet_str, "this is a testing string. Sachin Tendulkar. i need a new phone. Excited!");
   tweet_len = strlen((char *) tweet_str);
 
 #ifdef PROFANITY_CHECK_ENABLED
@@ -70,6 +70,14 @@ int main(int argc, char* argv[]) {
   unsigned int text_classes_buffer_len = MAX_BUFFER_LEN;
 #endif // TEXT_CLASSIFICATION_ENABLED
 
+#ifdef LOCATION_ENABLED
+  char locations_buffer[MAX_BUFFER_LEN];
+  locations_buffer[0] = '\0';
+  unsigned int locations_len = 0;
+  unsigned int locations_count = 0;
+  unsigned int locations_buffer_len = MAX_BUFFER_LEN;
+#endif // LOCATION_ENABLED
+
 #ifdef INTENT_ENABLED
   /*
   char intent_buffer[MAX_CLASS_NAME];
@@ -116,13 +124,17 @@ int main(int argc, char* argv[]) {
                   , (char *) text_classes_buffer, text_classes_buffer_len,
                   &text_classes_len, &text_classes_count
 #endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+                  , (char *) locations_buffer, locations_buffer_len,
+                  &locations_len, &locations_count
+#endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
                   //, (char *) intent_buffer, intent_buffer_len
-                  , (int *) intent_valence
+                  , &intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
                   //, (char *) sentiment_buffer, sentiment_buffer_len
-                  , (int *) sentiment_valence
+                  , &sentiment_valence
 #endif // SENTIMENT_ENABLED
                  )) < 0) {
     printf("ERROR\n");

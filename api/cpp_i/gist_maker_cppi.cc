@@ -10,6 +10,12 @@
 inagist::GistMaker g_gist_maker;
 
 #define MAX_BUFFER_LEN 1024
+
+#ifdef DEBUG
+#if DEBUG>0
+#define GIST_DEBUG DEBUG
+#endif
+#endif
 //#define GIST_DEBUG 1
 
 #ifdef _CPLUSPLUS
@@ -66,6 +72,34 @@ int CallMakeGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
                  , int* sentiment_valence_ptr
 #endif // SENTIMENT_ENABLED
                 ) {
+
+#ifdef GIST_DEBUG
+  if (!text_buffer || !profanity_status_buffer || !script_buffer || !lang_class_buffer || !named_entities_buffer || !named_entities_len_ptr || !named_entities_count_ptr || !keywords_buffer || !keywords_len_ptr || !keywords_count_ptr || !keyphrases_buffer || !keyphrases_len_ptr || !keyphrases_count_ptr || !text_classes_buffer || !text_classes_len_ptr || !text_classes_count_ptr || !locations_buffer || !locations_len_ptr || !locations_count_ptr || !intent_valence_ptr || !sentiment_valence_ptr) {
+    std::cerr << "ERROR: invalid input\n";
+    return -1;
+  }
+/*
+  std::cout << "INFO: initializing output parameters ...\n";
+  profanity_status_buffer[0] = '\0';
+  script_buffer[0] = '\0';
+  named_entities_buffer[0] = '\0';
+  *named_entities_len_ptr = 0;
+  *named_entities_count_ptr = 0;
+  keywords_buffer[0] = '\0';
+  *keywords_len_ptr = 0;
+  *keywords_count_ptr = 0;
+  keyphrases_buffer[0] = '\0';
+  *keyphrases_len_ptr = 0;
+  *keyphrases_count_ptr = 0;
+  text_classes_buffer[0] = '\0';
+  *text_classes_len_ptr = 0;
+  *text_classes_count_ptr = 0;
+  locations_buffer[0] = '\0';
+  *locations_len_ptr = 0;
+  *locations_count_ptr = 0;
+  std::cout << "INFO: output parameters initialized\n";
+*/
+#endif // GIST_DEBUG
 
 #ifdef NAMED_ENTITIES_ENABLED
   unsigned int named_entities_len = 0;

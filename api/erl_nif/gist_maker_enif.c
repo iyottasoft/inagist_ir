@@ -1,11 +1,20 @@
+#ifdef DEBUG
+#if DEBUG>0
+#define GIST_DEBUG DEBUG
+#endif
+#endif
+//#define GIST_DEBUG 1
+
 #include "erl_nif.h"
 #include "erl_driver.h"
-
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include "twitter_api_cppi.h"
 #include "gist_maker_cppi.h"
+
+#ifdef GIST_DEBUG
+#include "twitter_api_cppi.h"
+#endif // GIST_DEBUG
 
 #define ULTIMATE_BUFFER_LEN 10240
 #define MAX_BUFFER_LEN 1024
@@ -13,7 +22,6 @@
 #define MAX_CLASS_NAME 32
 #define MAX_LIST_BUFFER_LEN 20480
 
-//#define GIST_DEBUG 1
 #define ERLANG_R14B02 1
 
 ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
@@ -166,16 +174,10 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #endif // LOCATION_ENABLED
 
 #ifdef INTENT_ENABLED
-  //char intent_buffer[MAX_CLASS_NAME];
-  //unsigned int intent_buffer_len = MAX_CLASS_NAME;
-  //intent_buffer[0] = '\0';
   int intent_valence=0;
 #endif // INTENT_ENABLED
 
 #ifdef SENTIMENT_ENABLED
-  //char sentiment_buffer[MAX_CLASS_NAME];
-  //unsigned int sentiment_buffer_len = MAX_CLASS_NAME;
-  //sentiment_buffer[0] = '\0';
   int sentiment_valence=0;
 #endif // SENTIMENT_ENABLED
 
@@ -212,11 +214,9 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
                   &locations_len, &locations_count
 #endif // LOCATION_ENABLED
 #ifdef INTENT_ENABLED
-                  //, (char *) intent_buffer, intent_buffer_len
                   , &intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                  //, (char *) sentiment_buffer, sentiment_buffer_len
                   , &sentiment_valence
 #endif // SENTIMENT_ENABLED
                  )) < 0) {
@@ -630,6 +630,8 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 }
 
 ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+
+#ifdef GIST_DEBUG
   char tweets_buffer[MAX_LIST_BUFFER_LEN];
   memset(tweets_buffer, 0, MAX_LIST_BUFFER_LEN);
 
@@ -653,36 +655,20 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 #else
       enif_release_binary(env, &user_name);
 #endif // ERLANG_R14B02
-#ifndef GIST_DEBUG
-      return enif_make_atom(env, "error");
-#else
       return enif_make_atom(env, "error_user_name");
-#endif // GIST_DEBUG
     }
 
     if (GetTestTweets(user_name_str, MAX_LIST_BUFFER_LEN, tweets_buffer, &out_length) < 0) {
-#ifndef GIST_DEBUG
-      return enif_make_atom(env, "error");
-#else
       return enif_make_atom(env, "error_get_test_tweets_for_user");
-#endif // GIST_DEBUG
     }
   } else {
     if (GetTestTweets(NULL, MAX_LIST_BUFFER_LEN, tweets_buffer, &out_length) < 0) {
-#ifndef GIST_DEBUG
-      return enif_make_atom(env, "error");
-#else
       return enif_make_atom(env, "error_get_test_tweets_for_null_user");
-#endif // GIST_DEBUG
     }
   }
 
   if (0 == out_length || out_length > MAX_LIST_BUFFER_LEN) {
-#ifndef GIST_DEBUG
-    return enif_make_atom(env, "error");
-#else
     return enif_make_atom(env, "error_out_length");
-#endif // GIST_DEBUG
   }
 
   ErlNifBinary tweet;
@@ -708,11 +694,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
     tweet_len = tweet_end - tweet_start;
 
     if (tweet_len <= 0 || tweet_len >= MAX_BUFFER_LEN) {
-#ifndef GIST_DEBUG
-      return enif_make_atom(env, "error");
-#else
       return enif_make_atom(env, "error_out_length");
-#endif // GIST_DEBUG
     }
 
 #ifdef ERLANG_R14B02
@@ -722,11 +704,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
 #endif // ERLANG_R14B02
 
     if (ret_val < 0) {
-#ifndef GIST_DEBUG
-      return enif_make_atom(env, "error");
-#else
       return enif_make_atom(env, "error_tweet_len");
-#endif // GIST_DEBUG
     }
     for (i=0; i<tweet_len; i++) {
       tweet.data[i] = *(tweet_start + i);
@@ -743,11 +721,7 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
        ret_val = enif_alloc_binary(env, tweet_len, &out_tweet);
 #endif // ERLANG_R14B02
       if (ret_val < 0) {
-#ifndef GIST_DEBUG
-        return enif_make_atom(env, "error");
-#else
         return enif_make_atom(env, "error_tweet_len");
-#endif // GIST_DEBUG
       }
       for (i=0; i<tweet_len; i++) {
         out_tweet.data[i] = *(tweet_start + i);
@@ -760,22 +734,22 @@ ERL_NIF_TERM nif_test_twitter_timeline(ErlNifEnv* env, int argc, const ERL_NIF_T
   }
   tweet_start = NULL;
   tweet_end = NULL;
+#else // GIST_DEBUG
+  ERL_NIF_TERM tuple2_list = enif_make_list(env, 0);
+#endif // GIST_DEBUG
 
   return tuple2_list;
 }
 
 ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
+#ifdef GIST_DEBUG
   char tweets_buffer[MAX_LIST_BUFFER_LEN];
   memset(tweets_buffer, 0, MAX_LIST_BUFFER_LEN);
 
   unsigned int out_length = 0;
   if (argc != 1) {
-#ifndef GIST_DEBUG
-     return enif_make_atom(env, "error"); 
-#else
      return enif_make_atom(env, "error_invalid_argc"); 
-#endif // GIST_DEBUG
   } else {
     char file_name_str[MAX_NAME_LEN];
     memset(file_name_str, 0, MAX_NAME_LEN);
@@ -795,28 +769,16 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
 #else
       enif_release_binary(env, &file_name);
 #endif // ERLANG_R14B02
-#ifndef GIST_DEBUG
-      return enif_make_atom(env, "error");
-#else
       return enif_make_atom(env, "error_file_name");
-#endif // GIST_DEBUG
     }
 
     if (GetTestTweetsFromFile(file_name_str, MAX_LIST_BUFFER_LEN, tweets_buffer, &out_length) < 0) {
-#ifndef GIST_DEBUG
-      return enif_make_atom(env, "error");
-#else
       return enif_make_atom(env, "error_get_test_tweets_for_user");
-#endif // GIST_DEBUG
     }
   }
 
   if (0 == out_length || out_length > MAX_LIST_BUFFER_LEN) {
-#ifndef GIST_DEBUG
-    return enif_make_atom(env, "error");
-#else
     return enif_make_atom(env, "error_out_length");
-#endif // GIST_DEBUG
   }
 
   ErlNifBinary tweet;
@@ -839,11 +801,7 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
     tweet_len = tweet_end - tweet_start;
 
     if (tweet_len <= 0 || tweet_len >= MAX_BUFFER_LEN) {
-#ifndef GIST_DEBUG
-      return enif_make_atom(env, "error");
-#else
       return enif_make_atom(env, "error_out_length");
-#endif // GIST_DEBUG
     }
 
 #ifdef ERLANG_R14B02
@@ -853,11 +811,7 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
 #endif // ERLANG_R14B02
 
     if (ret_val < 0) {
-#ifndef GIST_DEBUG
-      return enif_make_atom(env, "error");
-#else
       return enif_make_atom(env, "error_tweet_len");
-#endif // GIST_DEBUG
     }
     for (i=0; i<tweet_len; i++) {
       tweet.data[i] = *(tweet_start + i);
@@ -875,7 +829,9 @@ ERL_NIF_TERM nif_test_from_file(ErlNifEnv* env, int argc, const ERL_NIF_TERM arg
   }
   tweet_start = NULL;
   tweet_end = NULL;
-
+#else // GIST_DEBUG
+  ERL_NIF_TERM tuple9_list = enif_make_list(env, 0);
+#endif // GIST_DEBUG
   return tuple9_list;
 }
 
