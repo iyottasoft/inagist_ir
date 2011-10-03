@@ -19,8 +19,8 @@ int GetKeyTuples(std::string text) {
   std::set<std::string> keyphrases_set;
   std::set<std::string> lang_words_set;
   std::set<std::string> text_class_words_set;
-  std::string intent;
-  std::string sentiment;
+  int intent;
+  int sentiment;
 
   strcpy(buffer, text.c_str()); 
   std::cout << std::endl << buffer << std::endl;
@@ -98,14 +98,10 @@ int GetKeyTuples(std::string text) {
   }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-  if (!intent.empty()) {
-    std::cout << "intent: " << intent << std::endl;
-  }
+  std::cout << "intent: " << intent << std::endl;
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-  if (!sentiment.empty()) {
-    std::cout << "sentiment: " << sentiment << std::endl;
-  }
+  std::cout << "sentiment: " << sentiment << std::endl;
 #endif // SENTIMENT_ENABLED
 #endif // KE_DEBUG
 

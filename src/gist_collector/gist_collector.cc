@@ -77,7 +77,7 @@ int GistCollector::Init(const char* keytuples_extracter_config_file
 #endif // GC_DEBUG
 
   bool load_classifier_dictionary = false;
-  if (m_keytuples_extracter.Init(keytuples_extracter_config_file, load_classifier_dictionary=false) < 0) {
+  if (m_keytuples_extracter.Init(keytuples_extracter_config_file) < 0) {
     std::cerr << "ERROR: could not initialize KeyTuplesExtracter\n";
     return -1;
   }
@@ -135,10 +135,10 @@ int GistCollector::GetGist(const std::string& text) {
 #endif // CLASS_CONTRIBUTORS_ENABLED
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-  std::string intent;
+  int intent_valence=0;
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-  std::string sentiment;
+  int sentiment_valence=0;
 #endif // SENTIMENT_ENABLED
 
   if (GetGist(text, safe_status, script
@@ -162,10 +162,10 @@ int GistCollector::GetGist(const std::string& text) {
 #endif // CLASS_CONTRIBUTORS_ENABLED
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-              , intent
+              , intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-              , sentiment
+              , sentiment_valence
 #endif // SENTIMENT_ENABLED
              ) < 0) {
     std::cout << "ERROR: could not get the gist for:" << text << std::endl;
@@ -224,10 +224,10 @@ int GistCollector::GetGist(const std::string& text) {
 #endif // CLASS_CONTRIBUTORS_ENABLED
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-    std::cout << "intent: " << intent << std::endl;
+    std::cout << "intent: " << intent_valence << std::endl;
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-    std::cout << "sentiment: " << sentiment << std::endl;
+    std::cout << "sentiment: " << sentiment_valence << std::endl;
 #endif // SENTIMENT_ENABLED
     std::cout << std::endl;
   }
@@ -257,10 +257,10 @@ int GistCollector::GetGist(const std::string& text,
 #endif // CLASS_CONTRIBUTORS_ENABLED
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-                       , std::string& intent
+                       , int& intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                       , std::string& sentiment
+                       , int& sentiment_valence
 #endif // SENTIMENT_ENABLED
                       ) {
 
@@ -363,18 +363,6 @@ int GistCollector::GetGist(const std::string& text,
 #endif // CLASS_CONTRIBUTORS_ENABLED
 #endif // TEXT_CLASSIFICATION_ENABLED
 
-#ifdef INTENT_ENABLED
-  char intent_buffer[MAX_CLASS_NAME];
-  memset(intent_buffer, 0, MAX_CLASS_NAME);
-  unsigned int intent_buffer_len = MAX_CLASS_NAME;
-#endif // INTENT_ENABLED
-
-#ifdef SENTIMENT_ENABLED
-  char sentiment_buffer[MAX_CLASS_NAME];
-  memset(sentiment_buffer, 0, MAX_CLASS_NAME);
-  unsigned int sentiment_buffer_len = MAX_CLASS_NAME;
-#endif // SENTIMENT_ENABLED
-
   int ret_value = 0;
   if ((ret_value = GetGist((unsigned char*) text_buffer, text_buffer_len, text_len,
                 (char*) safe_status_buffer, safe_status_buffer_len,
@@ -416,10 +404,10 @@ int GistCollector::GetGist(const std::string& text,
 #endif // CLASS_CONTRIBUTORS_ENABLED
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-                , (char *) intent_buffer, intent_buffer_len
+                , &intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                , (char *) sentiment_buffer, sentiment_buffer_len
+                , &sentiment_valence
 #endif // SENTIMENT_ENABLED
                )) < 0) {
     std::cerr << "ERROR: could not get gist\n";
@@ -444,20 +432,6 @@ int GistCollector::GetGist(const std::string& text,
       text_classes.insert(std::string(top_text_classes_buffer));
     }
 #endif // TEXT_CLASSIFICATION_ENABLED
-#ifdef INTENT_ENABLED
-    if (strlen(intent_buffer) > 0) {
-      intent = std::string(intent_buffer);
-    } else {
-      intent.clear();
-    }
-#endif // INTENT_ENABLED
-#ifdef SENTIMENT_ENABLED
-    if (strlen(sentiment_buffer) > 0) {
-      sentiment = std::string(sentiment_buffer);
-    } else {
-      sentiment.clear();
-    }
-#endif // SENTIMENT_ENABLED
   }
 
   return ret_value;
@@ -505,10 +479,10 @@ int GistCollector::GetGist(unsigned char* text_buffer,  const unsigned int text_
 #endif // CLASS_CONTRIBUTORS_ENABLED
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-      , char* intent_buffer, const unsigned int intent_buffer_len
+      , int* intent_valence_ptr
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-      , char* sentiment_buffer, const unsigned int sentiment_buffer_len
+      , int* sentiment_valence_ptr
 #endif // SENTIMENT_ENABLED
      ) {
 
@@ -564,10 +538,10 @@ int GistCollector::GetGist(unsigned char* text_buffer,  const unsigned int text_
 #endif // CLASS_CONTRIBUTORS_ENABLED
 #endif // LANG_ENABLED
 #ifdef INTENT_ENABLED
-  *intent_buffer = '\0';
+  int intent_valence = 0;
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-  *sentiment_buffer = '\0';
+  int sentiment_valence = 0;
 #endif // SENTIMENT_ENABLED
 
   int ret_value = 0;
@@ -593,8 +567,11 @@ int GistCollector::GetGist(unsigned char* text_buffer,  const unsigned int text_
 #endif // LANG_ENABLED
 
 #ifdef GC_DEBUG
-  std::cout << "calling GetKeytuples" << std::endl;
+  if (GC_DEBUG > 4) {
+    std::cout << "calling GetKeytuples" << std::endl;
+  }
 #endif // GC_DEBUG
+
   ret_value = m_keytuples_extracter.GetKeyTuples(text_buffer, text_buffer_len, text_len,
                    safe_status_buffer, safe_status_buffer_len,
                    script_buffer, script_buffer_len
@@ -616,10 +593,10 @@ int GistCollector::GetGist(unsigned char* text_buffer,  const unsigned int text_
                    text_class_words_len, text_class_words_count
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-                   , intent_buffer, intent_buffer_len
+                   , intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                  , sentiment_buffer, sentiment_buffer_len
+                  , sentiment_valence
 #endif // SENTIMENT_ENABLED
                  );
 
@@ -715,10 +692,10 @@ int GistCollector::GetGist(unsigned char* text_buffer,  const unsigned int text_
     *text_class_words_count_ptr = 0;
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-    *intent_buffer = '\0';
+    *intent_valence_ptr = intent_valence;
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-    *sentiment_buffer = '\0';
+    *sentiment_valence_ptr = sentiment_valence;
 #endif // SENTIMENT_ENABLED
   } else {
 #endif // LANG_ENABLED
@@ -761,6 +738,7 @@ int GistCollector::GetGist(unsigned char* text_buffer,  const unsigned int text_
 #endif // LANG_ENABLED
 
 #ifdef GC_DEBUG
+  if (GC_DEBUG > 1) {
   std::cout << "text: " << text_buffer << std::endl;
   std::cout << "safe_status: " << safe_status_buffer << std::endl;
   std::cout << "script: " << script_buffer << std::endl;
@@ -774,20 +752,13 @@ int GistCollector::GetGist(unsigned char* text_buffer,  const unsigned int text_
 #endif // CLASS_CONTRIBUTORS_ENABLED
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-  std::cout << "intent: ";
-  if (intent_buffer) {
-    std::cout << intent_buffer;
-  }
-  std::cout << std::endl;
+  std::cout << "intent: " << intent_valence << std::endl;
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-  std::cout << "sentiment: ";
-  if (sentiment_buffer) {
-    std::cout << sentiment_buffer;
-  }
-  std::cout << std::endl;
+  std::cout << "sentiment: " << sentiment_valence << std::endl;
 #endif // SENTIMENT_ENABLED
   std::cout << std::endl;
+  }
 #endif // GC_DEBUG
 
   return ret_value;

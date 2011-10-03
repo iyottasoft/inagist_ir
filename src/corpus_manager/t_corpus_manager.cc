@@ -24,10 +24,10 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  inagist_classifiers::CorpusManager cm;
   if (0 == test_type) {
-    if (cm.InitRead(input_file_name) < 0) {
-      std::cout << "ERROR: could not initialize corpus manager to read " << input_file_name << std::endl;
+    inagist_classifiers::Corpus corpus;
+    if (inagist_classifiers::CorpusManager::LoadCorpus(input_file_name, corpus) < 0) {
+      std::cout << "ERROR: could not load corpus with file: " << input_file_name << std::endl;
       return -1;
     }
     std::string line;
@@ -35,14 +35,14 @@ int main(int argc, char* argv[]) {
     while (getline(std::cin, line)) {
       if (line.compare("exit") == 0)
         break;
-      if ((freq = cm.LookUp(line)) < 0)
+      if ((freq = inagist_classifiers::CorpusManager::LookUp(corpus, line)) < 0)
         std::cout << "ERROR: could not get frequency for " << line << std::endl;
       if (freq == 0)
         std::cout << line << " not found\n";
       else
         std::cout << line << " = " << freq << std::endl;
     }
-    cm.Clear();
+    inagist_classifiers::CorpusManager::ClearCorpus(corpus);
     return 0;
   }
 

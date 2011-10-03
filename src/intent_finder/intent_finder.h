@@ -22,7 +22,7 @@ class IntentFinder {
   int Init(const char* keytuples_config_file);
   int FindIntent(unsigned char* text_buffer, const unsigned int& text_buffer_len,
                  const unsigned int& text_len,
-                 char* intent_buffer, const unsigned int& intent_buffer_len);
+                 int& intent_valence);
   int Clear();
 
  private:

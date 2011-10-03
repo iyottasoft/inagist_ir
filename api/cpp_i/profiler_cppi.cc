@@ -56,8 +56,8 @@ int GetProfile(const char* twitter_handle, unsigned int twitter_handle_len,
       unsigned int* others_sub_classes_len_ptr, unsigned int* others_sub_classes_count_ptr,
       unsigned char* others_text_class_contributors_buffer, unsigned int others_text_class_contributors_buffer_len,
       unsigned int* others_text_class_contributors_len_ptr, unsigned int* others_text_class_contributors_count_ptr,
-      char* intent_buffer, unsigned int intent_buffer_len,
-      char* sentiment_buffer, unsigned int sentiment_buffer_len,
+      int* intent_valence_ptr,
+      int* sentiment_valence_ptr,
       unsigned char* recommendations_buffer, unsigned int recommendations_buffer_len,
       unsigned int* recommendations_len_ptr, unsigned int* recommendations_count_ptr,
       const char* profile_name)  {
@@ -72,9 +72,7 @@ int GetProfile(const char* twitter_handle, unsigned int twitter_handle_len,
       !others_text_classes_buffer ||
       !others_sub_classes_buffer ||
       !others_text_class_contributors_buffer ||
-      !recommendations_buffer||
-      !intent_buffer ||
-      !sentiment_buffer) {
+      !recommendations_buffer) {
     std::cerr << "ERROR: invalid inputs\n";
     return -1;
   }
@@ -133,8 +131,10 @@ int GetProfile(const char* twitter_handle, unsigned int twitter_handle_len,
   unsigned int others_text_class_contributors_len = 0;
   unsigned int others_text_class_contributors_count = 0;
 
-  intent_buffer[0] = '\0';
-  sentiment_buffer[0] = '\0';
+  *intent_valence_ptr = 0;
+  int intent_valence = 0;
+  *sentiment_valence_ptr = 0;
+  int sentiment_valence = 0;
 
   *recommendations_len_ptr = 0;
   *recommendations_count_ptr = 0;
@@ -162,8 +162,8 @@ int GetProfile(const char* twitter_handle, unsigned int twitter_handle_len,
                      others_sub_classes_len, others_sub_classes_count,
                      others_text_class_contributors_buffer, others_text_class_contributors_buffer_len,
                      others_text_class_contributors_len, others_text_class_contributors_count,
-                     intent_buffer, intent_buffer_len,
-                     sentiment_buffer, sentiment_buffer_len,
+                     intent_valence,
+                     sentiment_valence,
                      recommendations_buffer, recommendations_buffer_len,
                      recommendations_len, recommendations_count,
                      profile_name)) < 0) {
@@ -190,6 +190,8 @@ int GetProfile(const char* twitter_handle, unsigned int twitter_handle_len,
   *others_sub_classes_count_ptr = others_sub_classes_count;
   *others_text_class_contributors_len_ptr = others_text_class_contributors_len;
   *others_text_class_contributors_count_ptr = others_text_class_contributors_count;
+  *intent_valence_ptr = intent_valence;
+  *sentiment_valence_ptr = sentiment_valence;
   *recommendations_len_ptr = recommendations_len;
   *recommendations_count_ptr = recommendations_count;
 
@@ -213,8 +215,8 @@ int GetProfileFromFile(const char* docs_file_name, unsigned int docs_file_name_l
             unsigned int* self_sub_classes_len_ptr, unsigned int* self_sub_classes_count_ptr,
             unsigned char* self_text_class_contributors_buffer, unsigned int self_text_class_contributors_buffer_len,
             unsigned int* self_text_class_contributors_len_ptr, unsigned int* self_text_class_contributors_count_ptr,
-            char* intent_buffer, unsigned int intent_buffer_len,
-            char* sentiment_buffer, unsigned int sentiment_buffer_len,
+            int* intent_valence_ptr,
+            int* sentiment_valence_ptr,
             unsigned char* recommendations_buffer, unsigned int recommendations_buffer_len,
             unsigned int* recommendations_len_ptr, unsigned int* recommendations_count_ptr,
             const char* profile_name)  {
@@ -224,9 +226,7 @@ int GetProfileFromFile(const char* docs_file_name, unsigned int docs_file_name_l
       !self_languages_buffer ||
       !self_text_classes_buffer ||
       !self_sub_classes_buffer ||
-      !self_text_class_contributors_buffer ||
-      !intent_buffer ||
-      !sentiment_buffer) {
+      !self_text_class_contributors_buffer) {
     std::cerr << "ERROR: invalid inputs\n";
     return -1;
   }
@@ -261,8 +261,10 @@ int GetProfileFromFile(const char* docs_file_name, unsigned int docs_file_name_l
   unsigned int self_text_class_contributors_len = 0;
   unsigned int self_text_class_contributors_count = 0;
 
-  intent_buffer[0] = '\0';
-  sentiment_buffer[0] = '\0';
+  *intent_valence_ptr = 0;
+  int intent_valence = 0;
+  *sentiment_valence_ptr = 0;
+  int sentiment_valence = 0;
 
   *recommendations_len_ptr = 0;
   *recommendations_count_ptr = 0;
@@ -283,8 +285,8 @@ int GetProfileFromFile(const char* docs_file_name, unsigned int docs_file_name_l
                                       self_sub_classes_len, self_sub_classes_count,
                                       self_text_class_contributors_buffer, self_text_class_contributors_buffer_len,
                                       self_text_class_contributors_len, self_text_class_contributors_count,
-                                      intent_buffer, intent_buffer_len,
-                                      sentiment_buffer, sentiment_buffer_len,
+                                      intent_valence,
+                                      sentiment_valence,
                                       recommendations_buffer, recommendations_buffer_len,
                                       recommendations_len, recommendations_count,
                                       profile_name)) < 0) {
@@ -303,6 +305,8 @@ int GetProfileFromFile(const char* docs_file_name, unsigned int docs_file_name_l
   *self_sub_classes_count_ptr = self_sub_classes_count;
   *self_text_class_contributors_len_ptr = self_text_class_contributors_len;
   *self_text_class_contributors_count_ptr = self_text_class_contributors_count;
+  *intent_valence_ptr = intent_valence;
+  *sentiment_valence_ptr = sentiment_valence;
   *recommendations_len_ptr = recommendations_len;
   *recommendations_count_ptr = recommendations_count;
 

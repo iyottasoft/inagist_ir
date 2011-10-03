@@ -19,24 +19,21 @@ class CorpusManager {
  public:
   CorpusManager();
   ~CorpusManager();
-  int InitRead(const std::string& corpus_file_name);
   static int LoadCorpus(const std::string corpus_file_name, Corpus& corpus);
-  int LoadCorpusMap(const std::string config_file_name);
-  int LoadCorpusMap(CorpusMapMeta& corpus_map_meta_data);
-  static int LoadCorpusMap(CorpusMapMeta& corpus_map_meta_data, CorpusMap& corpus_map);
-  static int UpdateCorpusMap(CorpusMap& corpus_map, std::string& input_class_name, Corpus& input_corpus);
-  int LookUp(const std::string& entry);
-  static int PrintCorpus(Corpus& corpus);
-  static int PrintCorpusMap(CorpusMap& corpus_map);
+  static int LookUp(Corpus& corpus, const std::string& entry);
   static int WriteCorpusToFile(Corpus& corpus, const std::string& file_name);
   static int UpdateCorpusFile(Corpus& corpus, const std::string& file_name);
-  static int WriteCorpusMap(CorpusMap& corpus_map, CorpusMapMeta& corpus_map_meta_data);
-  int Clear();
+  static int PrintCorpus(Corpus& corpus);
+  static int ClearCorpus(Corpus& corpus);
 
-  CorpusMap m_corpus_map;
-  Corpus m_classes_freq_map;
+  static int LoadCorpusMap(const std::string config_file_name, CorpusMap& corpus_map);
+  static int LoadCorpusMap(CorpusMapMeta& corpus_map_meta_data, CorpusMap& corpus_map);
+  static int WriteCorpusMap(CorpusMap& corpus_map, CorpusMapMeta& corpus_map_meta_data);
+  static int UpdateCorpusMap(CorpusMap& corpus_map, std::string& input_class_name, Corpus& input_corpus);
+  static int PrintCorpusMap(CorpusMap& corpus_map);
+  static int ClearCorpusMap(CorpusMap& corpus_map);
+
  private:
-  Corpus m_corpus;
 
 };
 

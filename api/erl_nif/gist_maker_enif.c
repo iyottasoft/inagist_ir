@@ -550,68 +550,10 @@ ERL_NIF_TERM nif_get_gist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   // intent
   ERL_NIF_TERM intent_term;
   intent_term = enif_make_int(env, intent_valence);
-/*
-#ifdef INTENT_ENABLED
-  len = strlen(intent_buffer);
-  if (len < 1) {
-    intent_term = enif_make_atom(env, "ok");
-  } else {
-    ErlNifBinary intent_bin;
-#ifdef ERLANG_R14B02
-    ret_val = enif_alloc_binary(len, &intent_bin);
-#else
-    ret_val = enif_alloc_binary(env, len, &intent_bin);
-#endif // ERLANG_R14B02
-    if (ret_val < 0) {
-#ifndef GIST_DEBUG
-      return enif_make_atom(env, "error");
-#else
-      return enif_make_atom(env, "error_intent_bin_alloc");
-#endif // GIST_DEBUG
-    }
-    for (i=0; i<len; i++) {
-      intent_bin.data[i] = *(intent_buffer + i);
-    }
-    intent_term = enif_make_binary(env, &intent_bin);
-    intent_buffer[0] = '\0';
-  }
-#else
-  intent_term = enif_make_atom(env, "ok");
-#endif // INTENT_ENABLED
-*/
 
   // sentiment
   ERL_NIF_TERM sentiment_term;
   sentiment_term = enif_make_int(env, sentiment_valence);
-/*
-#ifdef SENTIMENT_ENABLED
-  len = strlen(sentiment_buffer);
-  if (len < 1) {
-    sentiment_term = enif_make_atom(env, "ok");
-  } else {
-    ErlNifBinary sentiment_bin;
-#ifdef ERLANG_R14B02
-    ret_val = enif_alloc_binary(len, &sentiment_bin);
-#else
-    ret_val = enif_alloc_binary(env, len, &sentiment_bin);
-#endif // ERLANG_R14B02
-    if (ret_val < 0) {
-#ifndef GIST_DEBUG
-      return enif_make_atom(env, "error");
-#else
-      return enif_make_atom(env, "error_sentiment_bin_alloc");
-#endif // GIST_DEBUG
-    }
-    for (i=0; i<len; i++) {
-      sentiment_bin.data[i] = *(sentiment_buffer + i);
-    }
-    sentiment_term = enif_make_binary(env, &sentiment_bin);
-    sentiment_buffer[0] = '\0';
-  }
-#else
-  sentiment_term = enif_make_atom(env, "ok");
-#endif // SENTIMENT_ENABLED
-*/
 
   start = NULL;
   end = NULL;

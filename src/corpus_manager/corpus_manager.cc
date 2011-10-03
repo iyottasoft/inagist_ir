@@ -17,7 +17,6 @@ CorpusManager::CorpusManager() {
 }
 
 CorpusManager::~CorpusManager() {
-  Clear();
 }
 
 int CorpusManager::PrintCorpus(Corpus& corpus) {
@@ -138,43 +137,39 @@ int CorpusManager::WriteCorpusMap(CorpusMap& corpus_map, CorpusMapMeta& corpus_m
   return 0;
 }
 
-int CorpusManager::InitRead(const std::string& corpus_file_name) {
-
-  if (LoadCorpus(corpus_file_name, m_corpus) < 0) {
-    std::cout << "ERROR - corpus_manager.cc: could not load corpus file for read" << corpus_file_name << std::endl;
-    return -1;
-  } else {
-    return m_corpus.size();
-  }
-}
-
-int CorpusManager::LookUp(const std::string& entry) {
+int CorpusManager::LookUp(Corpus& corpus, const std::string& entry) {
 
   CorpusIter corpus_iter;
-  if ((corpus_iter = m_corpus.find(entry)) != m_corpus.end())
+  if ((corpus_iter = corpus.find(entry)) != corpus.end())
     return (*corpus_iter).second;
   else
     return 0;
 }
 
-int CorpusManager::Clear() {
+int CorpusManager::ClearCorpusMap(CorpusMap& corpus_map) {
 
-  m_corpus.clear();
   CorpusMapIter corpus_map_iter;
-  if (!m_corpus_map.empty()) {
-    for (corpus_map_iter = m_corpus_map.begin(); corpus_map_iter != m_corpus_map.end(); corpus_map_iter++) {
+  if (!corpus_map.empty()) {
+    for (corpus_map_iter = corpus_map.begin(); corpus_map_iter != corpus_map.end(); corpus_map_iter++) {
       if (!corpus_map_iter->second.empty()) {
         (corpus_map_iter->second).clear();
       }
     }
-    m_corpus_map.clear();
+    corpus_map.clear();
   }
 
+/*
+  m_corpus.clear();
   if (!m_classes_freq_map.empty()) {
     m_classes_freq_map.clear();
   }
+*/
 
   return 0;
+}
+
+int CorpusManager::ClearCorpus(Corpus& corpus) {
+  corpus.clear();
 }
 
 int CorpusManager::LoadCorpus(const std::string corpus_file_name, Corpus& corpus) {
@@ -226,10 +221,6 @@ int CorpusManager::LoadCorpus(const std::string corpus_file_name, Corpus& corpus
 // for example for language detection an entry will look like
 // <en, /path/to/file/name/file.txt>
 
-int CorpusManager::LoadCorpusMap(CorpusMapMeta& corpus_map_meta_data) {
-  return LoadCorpusMap(corpus_map_meta_data, m_corpus_map);
-}
-
 int CorpusManager::LoadCorpusMap(CorpusMapMeta& corpus_map_meta_data, CorpusMap& corpus_map) {
 
   std::map<std::string, std::string>::iterator map_iter;
@@ -267,7 +258,7 @@ int CorpusManager::LoadCorpusMap(CorpusMapMeta& corpus_map_meta_data, CorpusMap&
   return 0;
 }
 
-int CorpusManager::LoadCorpusMap(const std::string config_file_name) {
+int CorpusManager::LoadCorpusMap(const std::string config_file_name, CorpusMap& corpus_map) {
   // this is freaking wrong
   exit(1);
 
@@ -302,7 +293,7 @@ int CorpusManager::LoadCorpusMap(const std::string config_file_name) {
         std::cout << "ERROR - corpus_manager.cc: could not load corpus from file " << corpus_file_name << std::endl;
         return -1;
       } else {
-        m_corpus_map.insert(std::pair<std::string, Corpus> (class_name, corpus));
+        corpus_map.insert(std::pair<std::string, Corpus> (class_name, corpus));
       }
       corpus.clear();
     } else {

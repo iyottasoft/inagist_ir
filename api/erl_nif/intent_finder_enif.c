@@ -101,17 +101,13 @@ ERL_NIF_TERM nif_get_intent(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
   memset(safe_status, 0, 10);
   char script[4];
   memset(script, 0, 4);
-  char intent[MAX_BUFFER_LEN];
-  intent[0] = '\0';
-  int intent_len = 0;
-  int intent_count = 0;
+  int intent_valence = 0;
 
   int ret_value = 0;
   if ((ret_value = GetIntent((unsigned char *) text_str, text_buffer_len, text_len,
-                  (char *) safe_status, 10,
-                  (char *) script, 4,
-                  (char *) intent, MAX_BUFFER_LEN,
-                  &intent_len, &intent_count)) < 0) {
+                             (char *) safe_status, 10,
+                             (char *) script, 4,
+                             &intent_valence)) < 0) {
 #ifndef INTENT_DEBUG
     return enif_make_atom(env, "error");
 #else
@@ -124,7 +120,6 @@ ERL_NIF_TERM nif_get_intent(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
   int ret_val = 0;
   ErlNifBinary safe_status_bin;
   ErlNifBinary script_bin;
-  ErlNifBinary intent_bin;
   ERL_NIF_TERM safe_status_term; 
   ERL_NIF_TERM script_term; 
 
@@ -172,40 +167,10 @@ ERL_NIF_TERM nif_get_intent(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
   }
   script_term = enif_make_binary(env, &script_bin);
 
-  char *start = intent;
-  char *end = strstr(start, "|");
+  ERL_NIF_TERM intent_term;
+  intent_term = enif_make_int(env, intent_valence);
 
-  ERL_NIF_TERM intent_list = enif_make_list(env, 0);
-  if (intent_count > 0) {
-    while (start && end && *end != '\0') {
-      end = strstr(start, "|");
-      if (!end)
-        break;
-      *end = '\0';
-      len = end - start;
-#ifdef ERLANG_R14B02 
-      ret_val = enif_alloc_binary(len, &intent_bin);
-#else
-      ret_val = enif_alloc_binary(env, len, &intent_bin);
-#endif
-      if (ret_val < 0) {
-#ifndef INTENT_DEBUG
-        return enif_make_atom(env, "error");
-#else
-        return enif_make_atom(env, "error_intent_bin_alloc");
-#endif
-      }
-      for (i=0; i<len; i++) {
-        intent_bin.data[i] = *(start + i);
-      }
-      intent_list = enif_make_list_cell(env, enif_make_binary(env, &intent_bin), intent_list);
-
-      *end = '|';
-      start = end + 1;
-    }
-  }
-
-  return enif_make_tuple3(env, safe_status_term, script_term, intent_list);
+  return enif_make_tuple3(env, safe_status_term, script_term, intent_term);
 
 }
 

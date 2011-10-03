@@ -12,11 +12,7 @@ LIB = ${LIB_DIR}/lib${PROJECT}.so
 BINS = ${BIN_DIR}/t_text_classifier \
        ${BIN_DIR}/x_text_classifier_training_data \
        ${BIN_DIR}/t_text_classifier_training_data \
-       ${BIN_DIR}/x_text_classifier_test_data \
-       ${BIN_DIR}/t_text_classifier_test_data \
-       ${BIN_DIR}/t_clean_text_corpus \
-       ${BIN_DIR}/t_text_classifier_training_data_normalizer \
-       ${BIN_DIR}/t_make_classifier_dictionary
+       ${BIN_DIR}/x_text_classifier_testing_data
 
 keytuples = keytuples_config.o keytuples_extracter.o
 classifier = classifier_config.o naive_bayes_classifier.o classifier.o
@@ -73,29 +69,24 @@ ${BIN_DIR}/t_text_classifier_training_data: t_text_classifier_training_data.o ${
 	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_text_classifier_training_data
 	@echo "done!"
 
-${BIN_DIR}/x_text_classifier_test_data: x_text_classifier_test_data.o ${LIB}
+${BIN_DIR}/x_text_classifier_testing_data: x_text_classifier_testing_data.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_text_classifier_test_data
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_text_classifier_testing_data
 	@echo "done!"
 
-${BIN_DIR}/t_text_classifier_test_data: t_text_classifier_test_data.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_text_classifier_test_data
-	@echo "done!"
+#${BIN_DIR}/t_clean_text_corpus: t_clean_text_corpus.o ${LIB}
+#	@echo "creating binary:" $@
+#	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_clean_text_corpus
+#	@echo "done!"
 
-${BIN_DIR}/t_clean_text_corpus: t_clean_text_corpus.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_clean_text_corpus
-	@echo "done!"
+#${BIN_DIR}/t_text_classifier_training_data_normalizer: t_text_classifier_training_data_normalizer.o ${LIB}
+#	@echo "creating binary:" $@
+#	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_text_classifier_training_data_normalizer
+#	@echo "done!"
 
-${BIN_DIR}/t_text_classifier_training_data_normalizer: t_text_classifier_training_data_normalizer.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_text_classifier_training_data_normalizer
-	@echo "done!"
-
-${BIN_DIR}/t_make_classifier_dictionary: t_make_classifier_dictionary.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_make_classifier_dictionary
-	@echo "done!"
+#${BIN_DIR}/t_make_classifier_dictionary: t_make_classifier_dictionary.o ${LIB}
+#	@echo "creating binary:" $@
+#	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_make_classifier_dictionary
+#	@echo "done!"
 
 # DO NOT DELETE THIS LINE

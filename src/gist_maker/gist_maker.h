@@ -149,6 +149,8 @@ class GistMaker {
                           std::map<std::string, double>& locations_map);
 
  private:
+
+  // variables
   unsigned int m_debug_level;
   inagist_utils::DictionarySet m_stopwords_dictionary;
   inagist_utils::DictionarySet m_dictionary;
@@ -171,15 +173,14 @@ class GistMaker {
   inagist_utils::StringToMapDictionary m_location_dictionary;
 #endif // LOCATION_ENABLED
 
-  DISALLOW_COPY_AND_ASSIGN(GistMaker);
-  // using char* for word_has_apostrophe instead of bool&
-  bool IsPunct(char*& ptr, char* prev=NULL, char* next=NULL, int* punct_intent=NULL, int* punct_senti=NULL);
+  // functions
   bool IsIgnore(char*& ptr);
   inline void Insert(unsigned char* buffer, unsigned int& current_len,
                      unsigned char* str_to_add, const unsigned int& str_len,
                      unsigned int& buffer_content_count);
   inline void Insert(unsigned char* buffer, unsigned int& current_len,
                      std::string& str, unsigned int& buffer_content_count);
+  DISALLOW_COPY_AND_ASSIGN(GistMaker);
 };
 
 } // namespace inagist

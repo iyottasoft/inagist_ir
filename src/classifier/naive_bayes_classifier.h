@@ -1,15 +1,13 @@
 #ifndef _INAGIST_CLASSIFIERS_NAIVE_BAYES_H_
 #define _INAGIST_CLASSIFIERS_NAIVE_BAYES_H_
 
-#ifndef DISALLOW_COPY_AND_ASSIGN
-#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-  TypeName(const TypeName&);               \
-  void operator=(const TypeName&)
-#endif
-
 #include <map>
 #include <set>
 #include "corpus_manager.h"
+
+#if defined CLASSIFIER_DATA_TRAINING_ENABLED || CLASSIFIER_DATA_TESTING_ENABLED
+#include "classifier_config.h"
+#endif // CLASSIFIER_DATA_TRAINING_ENABLED || CLASSIFIER_DATA_TESTING_ENABLED
 
 namespace inagist_classifiers {
 
@@ -17,6 +15,7 @@ class NaiveBayesClassifier {
  public:
   NaiveBayesClassifier();
   ~NaiveBayesClassifier();
+  int SetDebugLevel(unsigned int debug_level);
   static int GuessClass(CorpusMap& corpus_map,
                  Corpus& classes_freq_map,
                  Corpus& test_corpus,
@@ -41,18 +40,34 @@ class NaiveBayesClassifier {
                  , std::map<std::string, std::string>& class_contributors
 #endif // CLASS_CONTRIBUTORS_ENABLED
                  , unsigned int debug_level=0);
-  int GuessClass(std::map<std::string, int> testfile_features_map,
-                 std::map<std::string, int> class1_features_map,
-                 std::map<std::string, int> class2_features_map);
-  int SetDebugLevel(unsigned int debug_level);
   static int Heapify(double& top1, unsigned int& top1_index,
                      double& top2, unsigned int& top2_index,
                      double& top3, unsigned int& top3_index);
 
+  int GuessClass(std::map<std::string, int> testfile_features_map,
+                 std::map<std::string, int> class1_features_map,
+                 std::map<std::string, int> class2_features_map); // this is perhaps no longer used
+
+#if defined CLASSIFIER_DATA_TRAINING_ENABLED || CLASSIFIER_DATA_TESTING_ENABLED
+  int PrepareNaiveBayes(std::string config_file_name,
+                        const bool& train_not_test,
+                        bool ignore_history=true);
+  int GenerateProbabilities(const bool& train_not_test);
+  int GenerateProbabilities(Corpus* corpus,
+                            const char* relative_freq_file,
+                            const unsigned int& vocabulary_size);
+  int MakePriorProbabilitiesFile(const char* classifier_prior_freqs_file);
+  int Clear();
+#endif // CLASSIFIER_DATA_TRAINING_ENABLED || CLASSIFIER_DATA_TESTING_ENABLED
+
  private:
   unsigned int m_debug_level;
+#if defined CLASSIFIER_DATA_TRAINING_ENABLED || CLASSIFIER_DATA_TESTING_ENABLED
+  CorpusMap m_corpus_map;
+  Config m_config;
+  Corpus m_classes_freq_map;
+#endif // CLASSIFIER_DATA_TRAINING_ENABLED || CLASSIFIER_DATA_TESTING_ENABLED
 
-  DISALLOW_COPY_AND_ASSIGN(NaiveBayesClassifier); 
 };
 
 } // inagist_classifiers

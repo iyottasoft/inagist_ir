@@ -38,10 +38,10 @@ int CallGetGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
             unsigned int* top_text_classes_len_ptr, unsigned int* top_text_classes_count_ptr
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-            , char* intent_buffer, const unsigned int intent_buffer_len
+            , int* intent_valence_ptr
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-            , char* sentiment_buffer, const unsigned int sentiment_buffer_len
+            , int* sentiment_valence_ptr
 #endif // SENTIMENT_ENABLED
            );
 #ifdef _CPLUSPLUS

@@ -58,10 +58,8 @@ int TextClassifier::InitDependencies(int argc, char* argv[]) {
 
 int TextClassifier::LoadKeyTuplesDictionary(const char* dictionary_file) {
 
-  m_keytuples_extracter.m_dictionary.Clear();
-
-  if (m_keytuples_extracter.m_dictionary.Load(dictionary_file) < 0) {
-    std::cout << "ERROR: couldn't load dictionary file: " << dictionary_file << std::endl;
+  if (m_keytuples_extracter.LoadClassifierDictionary(dictionary_file) < 0) {
+    std::cout << "ERROR: couldn't load additional classifier words from file: " << dictionary_file << std::endl;
   }
 
   return 0;
@@ -203,8 +201,8 @@ int TextClassifier::Classify(const unsigned char* text_word_list,
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   std::map<std::string, std::string> class_contributors_map;
 #endif // CLASS_CONTRIBUTORS_ENABLED
-  if (NaiveBayesClassifier::GuessClass2(m_corpus_manager.m_corpus_map,
-                                        m_corpus_manager.m_classes_freq_map,
+  if (NaiveBayesClassifier::GuessClass2(m_corpus_map,
+                                        m_classes_freq_map,
                                         test_corpus,
                                         text_class,
                                         top_classes_set
@@ -345,16 +343,16 @@ int TextClassifier::Classify(Corpus& corpus,
 
   int ret_value = 0;
   std::set<std::string> top_classes_set;
-  if ((ret_value = NaiveBayesClassifier::GuessClass2(m_corpus_manager.m_corpus_map,
-                                       m_corpus_manager.m_classes_freq_map,
-                                       corpus,
-                                       text_class,
-                                       top_classes_set
+  if ((ret_value = NaiveBayesClassifier::GuessClass2(m_corpus_map,
+                                                     m_classes_freq_map,
+                                                     corpus,
+                                                     text_class,
+                                                     top_classes_set
 #ifdef CLASS_CONTRIBUTORS_ENABLED
-                                       , class_contributors_map
+                                                     , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
-                                       , m_debug_level
-                                      )) < 0) {
+                                                     , m_debug_level
+                                                    )) < 0) {
     std::cout << "ERROR: naive bayes classifiers could not guess the text class\n";
     return -1;
   }
@@ -442,10 +440,10 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   std::set<std::string> lang_words_set;
 #endif // LANG_ENABLED
 #ifdef INTENT_ENABLED
-  std::string intent_words;
+  int intent_valence = 0;
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-  std::string sentiment;
+  int sentiment_valence = 0;
 #endif // SENTIMENT_ENABLED
 
   std::set<std::string> text_class_words_set;
@@ -469,10 +467,10 @@ int TextClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
                                          , text_class_words_set
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-                                         , intent_words
+                                         , intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                                         , sentiment
+                                         , sentiment_valence
 #endif // SENTIMENT_ENABLED
                                         ) < 0) {
     std::cerr << "ERROR: could not get words for: " << text << std::endl;

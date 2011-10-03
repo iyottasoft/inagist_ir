@@ -14,35 +14,44 @@ typedef struct _class_struct {
   std::string class_data_file;
   // testing
   std::string testing_data_file;
+  std::string testing_handles_file;
+  std::string testing_corpus_file;
+  std::string testing_tweets_file; 
   // training
   std::string training_data_file;
-  std::string handles_file;
-  std::string corpus_file;
-  std::string tweets_file; 
+  std::string training_handles_file;
+  std::string training_corpus_file;
+  std::string training_tweets_file; 
   std::string seed_file;
   friend bool operator<(_class_struct const& a, _class_struct const& b) {
     return a.name.compare(b.name) < 0;
   }
-  void clear() {
+  void Clear() {
     name.clear();
     label.clear();
     class_data_file.clear();
     testing_data_file.clear();
+    testing_handles_file.clear();
+    testing_corpus_file.clear();
+    testing_tweets_file.clear();
     training_data_file.clear();
-    handles_file.clear();
-    corpus_file.clear();
-    tweets_file.clear();
+    training_handles_file.clear();
+    training_corpus_file.clear();
+    training_tweets_file.clear();
     seed_file.clear();
   }
-  void print() const {
+  void Print() const {
     std::cout << "name: " << name << std::endl;
     std::cout << "label: " << std::endl;
     std::cout << "class_data: " << class_data_file << std::endl;
     std::cout << "testing_data: " << testing_data_file << std::endl;
+    std::cout << "testing_handles: " << testing_handles_file << std::endl;
+    std::cout << "testing_corpus: " << testing_corpus_file << std::endl;
+    std::cout << "testing_tweets: " << testing_tweets_file << std::endl; 
     std::cout << "training_data: " << training_data_file << std::endl;
-    std::cout << "handles: " << handles_file << std::endl;
-    std::cout << "corpus: " << corpus_file << std::endl;
-    std::cout << "tweets: " << tweets_file << std::endl; 
+    std::cout << "training_handles: " << training_handles_file << std::endl;
+    std::cout << "training_corpus: " << training_corpus_file << std::endl;
+    std::cout << "training_tweets: " << training_tweets_file << std::endl; 
     std::cout << "seed: " << seed_file << std::endl;
   }
 } ClassStruct;

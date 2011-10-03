@@ -17,6 +17,7 @@ int GetNgrams(unsigned int test_type,
 
   int ngrams_count = 0;
   inagist_classifiers::CorpusIter map_iter;
+
   if (0 == test_type) {
     ngrams_count = g_ng.GetNgrams((unsigned char*) text.c_str(), text.length(), corpus);
   } else if (1 == test_type) {
@@ -27,9 +28,8 @@ int GetNgrams(unsigned int test_type,
     }
   } else if (2 == test_type) {
     ngrams_count = g_ng.GetAllNgrams(text, corpus);
-  } else if (3 == test_type) {
-    ngrams_count = g_ng.GetNgramsFromTweet(text, corpus);
   }
+
   if (ngrams_count > 0) {
     for (map_iter = corpus.begin(); map_iter != corpus.end(); map_iter++)
       std::cout << (*map_iter).first << " " << (*map_iter).second << std::endl;
@@ -46,7 +46,7 @@ int GetNgrams(unsigned int test_type,
 int main(int argc, char* argv[]) {
 
   if (argc > 4 || argc < 3) {
-    std::cout << "Usage: " << argv[0] << " \n\t<0/1/2/3, 0-interactive/1-file/2-tweet/3-many_tweets> \n\t<0/1/2, 0-normal/1-words/2-allgrams/3-tweet> \n\t[<input_file_name>/<handle>]\n";
+    std::cout << "Usage: " << argv[0] << " \n\t<0/1/2/3, 0-interactive/1-file> \n\t<0/1/2, 0-normal/1-words/2-allgrams/3-tweet> \n\t[<input_file_name>/<handle>]\n";
     return -1;
   }
 
@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
   assert((input_type >= 0 && input_type <= 3));
  
   int test_type = atoi(argv[2]);
-  assert(test_type >= 0 && test_type <= 3);
+  assert(test_type >= 0 && test_type <= 1);
 
   std::set<std::string> words_set;
   if (0 == input_type) {

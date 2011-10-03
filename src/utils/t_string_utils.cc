@@ -34,10 +34,8 @@ int main(int argc, char* argv[]) {
          break;
       }
       if (0 == test_type) {
-        if (inagist_utils::TestUtils(text, text.length()) < 0) {
-          std::cout << "Error: TestUtils failed\n";
-          return -1;
-        }
+        std::cout << "ERROR: this test is no longer supported\n";
+        break;
       } else if (1 == test_type) {
         if (inagist_utils::Tokenize(text, tokens) < 0) {
           std::cout << "ERROR: tokenize failed\n";
@@ -79,10 +77,8 @@ int main(int argc, char* argv[]) {
     text = *tweet_iter;
     std::cout << text << std::endl;
     if (0 == test_type) {
-      if (inagist_utils::TestUtils(text, text.length()) < 0) {
-        std::cout << "Error: TestUtils failed\n";
-        break;
-      }
+      std::cout << "ERROR: this test is no longer supported\n";
+      break;
     } else if (1 == test_type) {
       if (inagist_utils::Tokenize(text, tokens) < 0) {
         std::cout << "ERROR: tokenize failed\n";

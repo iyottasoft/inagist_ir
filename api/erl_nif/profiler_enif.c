@@ -227,11 +227,9 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   unsigned int others_text_class_contributors_len = 0;
   unsigned int others_text_class_contributors_count = 0;
 
-  char intent_buffer[MAX_CLASS_NAME];
-  intent_buffer[0] = '\0';
+  int intent_valence=0;
 
-  char sentiment_buffer[MAX_CLASS_NAME];
-  sentiment_buffer[0] = '\0';
+  int sentiment_valence=0;
 
   char recommendations_buffer[MAX_BUFFER_LEN];
   recommendations_buffer[0] = '\0';
@@ -262,8 +260,8 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
                        &others_sub_classes_len, &others_sub_classes_count,
                        others_text_class_contributors_buffer, ULTIMATE_BUFFER_LEN,
                        &others_text_class_contributors_len, &others_text_class_contributors_count,
-                       intent_buffer, MAX_CLASS_NAME,
-                       sentiment_buffer, MAX_CLASS_NAME,
+                       &intent_valence,
+                       &sentiment_valence,
                        recommendations_buffer, ULTIMATE_BUFFER_LEN,
                        &recommendations_len, &recommendations_count,
                        profile_name)) < 0) {
@@ -281,8 +279,8 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
                              &self_text_classes_len, &self_text_classes_count,
                              self_sub_classes_buffer, MAX_LIST_LEN,
                              &self_sub_classes_len, &self_sub_classes_count,
-                             intent_buffer, MAX_CLASS_NAME,
-                             sentiment_buffer, MAX_CLASS_NAME,
+                             &intent_valence,
+                             &sentiment_valence,
                              profile_name)) < 0) {
 #ifndef PROFILE_DEBUG
       return enif_make_atom(env, "error");

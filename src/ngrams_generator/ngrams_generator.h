@@ -24,9 +24,6 @@ class NgramsGenerator {
   int GetNgrams(const unsigned char* text,
                 const unsigned int& text_len,
                 Corpus& corpus);
-  int GetNgramsFromTweet(const std::string& tweet,
-                         Corpus& corpus,
-                         bool ignore_case=false);
   int GetAllNgrams(const std::string& tweet,
                    Corpus& corpus);
   int GetAllNgrams(unsigned char* start,

@@ -36,8 +36,8 @@ class Profiler {
               std::set<std::string>& others_text_classes,
               std::set<std::string>& others_sub_classes,
               std::map<std::string, std::string>& others_text_class_contributors_map,
-              std::string& intent,
-              std::string& sentiment,
+              int& intent_valence,
+              int& sentiment_valence,
               std::set<std::string>& recommendations,
               const std::string& profile_name);
 
@@ -64,8 +64,8 @@ class Profiler {
               const unsigned int others_text_class_contributors_buffer_len,
               unsigned int& others_text_class_contributors_len,
               unsigned int& others_text_class_contributors_count,
-              char* intent_buffer, const unsigned int intent_buffer_len,
-              char* sentiment_buffer, const unsigned int sentiment_buffer_len,
+              int& intent_valence, 
+              int& sentiment_valence, 
               unsigned char* recommendations_buffer, const unsigned int recommendations_buffer_len,
               unsigned int& recommendations_len, unsigned int& recommendations_count,
               const char* profile_name);
@@ -83,8 +83,8 @@ class Profiler {
         const unsigned int self_text_class_contributors_buffer_len,
         unsigned int& self_text_class_contributors_len,
         unsigned int& self_text_class_contributors_count,
-        char* intent_buffer, const unsigned int intent_buffer_len,
-        char* sentiment_buffer, const unsigned int sentiment_buffer_len,
+        int& intent_valence, 
+        int& sentiment_valence, 
         unsigned char* recommendations_buffer, const unsigned int recommendations_buffer_len,
         unsigned int& recommendations_len, unsigned int& recommendations_count,
         const char* profile_name);
@@ -100,8 +100,8 @@ int GetGist(std::set<std::string>& tweets,
             const unsigned int text_class_contributors_buffer_len,
             unsigned int& text_class_contributors_len,
             unsigned int& text_class_contributors_count,
-            char* intent_buffer, const unsigned int intent_buffer_len,
-            char* sentiment_buffer, const unsigned int sentiment_buffer_len,
+            int& intent_valence, 
+            int& sentiment_valence, 
             inagist_classifiers::Corpus& corpus, unsigned int& corpus_size);
 
  private:

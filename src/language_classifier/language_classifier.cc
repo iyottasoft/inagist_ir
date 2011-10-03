@@ -32,7 +32,6 @@ LanguageClassifier::~LanguageClassifier() {
 int LanguageClassifier::SetDebugLevel(unsigned int debug_level) {
   m_debug_level = debug_level;
   m_ngrams_generator.SetDebugLevel(debug_level);
-  m_naive_bayes_classifier.SetDebugLevel(debug_level);
   return 0;
 }
  
@@ -67,14 +66,6 @@ int LanguageClassifier::Classify(const std::string& text, const unsigned int& te
     top_classes_count = 1;
 #endif
     return -1;
-  } else {
-#ifdef LD_DEBUG
-    if (LD_DEBUG > 3) {
-      if (m_corpus_manager.PrintCorpus(test_corpus) < 0) {
-        std::cerr << "ERROR: could not print corpus in Classify" << std::endl;
-      }
-    }
-#endif
   }
 
   if (num_ngrams == 0) {
@@ -86,7 +77,7 @@ int LanguageClassifier::Classify(const std::string& text, const unsigned int& te
     }
     top_classes_count = 0;
 #ifdef LD_DEBUG
-    if (m_debug_level > 0)
+    if (m_debug_level > 2)
       std::cout << "no ngrams found for ... \n" << text << std::endl;
     guess_lang_output.assign("XX");
     top_classes.assign("XX");
@@ -95,37 +86,15 @@ int LanguageClassifier::Classify(const std::string& text, const unsigned int& te
     return 0;
   }
 
-#ifdef LD_DEBUG
-  if (m_debug_level > 1)
-    std::cout << "now guessing class for ... \n" << text << std::endl;
-#endif
-
-  if (m_naive_bayes_classifier.GuessClass2(m_corpus_manager.m_corpus_map,
-                                           m_corpus_manager.m_classes_freq_map,
-                                           test_corpus,
-                                           guess_lang_output,
-                                           top_classes, top_classes_count
+  if (Classifier::Classify(test_corpus,
+               guess_lang_output,
+               top_classes, top_classes_count
 #ifdef CLASS_CONTRIBUTORS_ENABLED
-                                           , class_contributors_map
+               , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
-                                           , m_debug_level) < 0) {
-    top_classes_count = 0;
-#ifdef LD_DEBUG
-    std::cerr << "ERROR: naive bayes classifiers could not guess the language\n";
-    test_corpus.clear();
-    guess_lang_output.assign("UU");
-    top_classes.assign("UU");
-    top_classes_count = 1;
-#endif
-    return -1;
+              ) < 0) {
+    std::cout << "ERROR: could not classify the given corpus\n";
   }
-
-#ifdef LD_DEBUG
-  if (m_debug_level > 1) {
-    std::cout << "guess_lang: " << guess_lang_output << std::endl;
-    std::cout << "top_classes: " << top_classes << std::endl;
-  }
-#endif
 
 #ifndef CLASSIFIER_DATA_TESTING_ENABLED
   test_corpus.clear();
@@ -182,7 +151,7 @@ int LanguageClassifier::Classify(const unsigned char* text_word_list,
   if (num_ngrams == 0) {
     top_classes_count = 0;
 #ifdef LD_DEBUG
-    if (m_debug_level > 0)
+    if (m_debug_level > 2)
       std::cout << "no ngrams found for the given word set" << std::endl;
     strcpy(top_classes_buffer, "XX|");
     top_classes_len = 3;
@@ -196,25 +165,19 @@ int LanguageClassifier::Classify(const unsigned char* text_word_list,
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   std::map<std::string, std::string> class_contributors_map;
 #endif // CLASS_CONTRIBUTORS_ENABLED
-  if (m_naive_bayes_classifier.GuessClass2(m_corpus_manager.m_corpus_map,
-                                          m_corpus_manager.m_classes_freq_map,
-                                          test_corpus,
-                                          guess_lang_output,
-                                          top_classes, top_classes_count
+
+  if (Classifier::Classify(test_corpus,
+               guess_lang_output,
+               top_classes, top_classes_count
 #ifdef CLASS_CONTRIBUTORS_ENABLED
-                                          , class_contributors_map
+               , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
-                                          , m_debug_level) < 0) {
-    std::cout << "ERROR: naive bayes classifiers could not guess the language\n";
-    test_corpus.clear();
-    top_classes_count = 0;
+              ) < 0) {
 #ifdef LD_DEBUG
-    strcpy(top_classes_buffer, "UU|");
-    top_classes_len = 3;
-    top_classes_count = 1;
+    std::cout << "ERROR: could not classify the given corpus\n";
 #endif
-    return -1;
   }
+
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   class_contributors_map.clear();
 #endif // CLASS_CONTRIBUTORS_ENABLED
@@ -255,8 +218,7 @@ int LanguageClassifier::ClassifyLanguage(std::set<std::string>& words_set,
   if (num_ngrams == 0) {
     top_classes_count = 0;
 #ifdef LD_DEBUG
-    if (m_debug_level > 0)
-      std::cout << "no ngrams found for the given word set" << std::endl;
+    std::cout << "no ngrams found for the given word set" << std::endl;
     guess_lang_output.assign("RR");
     top_classes.assign("RR|");
     top_classes_count = 1;
@@ -264,24 +226,16 @@ int LanguageClassifier::ClassifyLanguage(std::set<std::string>& words_set,
     return 0;
   }
 
-  if (m_naive_bayes_classifier.GuessClass2(m_corpus_manager.m_corpus_map,
-                                           m_corpus_manager.m_classes_freq_map,
-                                           test_corpus,
-                                           guess_lang_output,
-                                           top_classes, top_classes_count
+  if (Classifier::Classify(test_corpus,
+               guess_lang_output,
+               top_classes, top_classes_count
 #ifdef CLASS_CONTRIBUTORS_ENABLED
-                                           , class_contributors_map
+               , class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
-                                           , m_debug_level) < 0) {
-    std::cout << "ERROR: naive bayes classifiers could not guess the language\n";
-    test_corpus.clear();
-    top_classes_count = 0;
+     ) < 0) {
 #ifdef LD_DEBUG
-    guess_lang_output.assign("UU");
-    top_classes.assign("UU|");
-    top_classes_count = 1;
+    std::cout << "ERROR: could not classify the given corpus\n";
 #endif
-    return -1;
   }
 
 #ifdef LD_DEBUG
@@ -302,7 +256,9 @@ int LanguageClassifier::GetNgramFrequencies(const std::string& input_file_name,
 
   std::ifstream ifs(input_file_name.c_str());
   if (!ifs) {
+#ifdef LD_DEBUG
     std::cout << "ERROR: could not open file " << input_file_name << std::endl;
+#endif
     return -1;
   }
 
@@ -318,6 +274,7 @@ int LanguageClassifier::GetNgramFrequencies(const std::string& input_file_name,
   return corpus.size();
 }
 
+/*
 int LanguageClassifier::GenerateLangModel(const std::string& input_file_name,
                                      const std::string& output_file_name) {
 
@@ -335,6 +292,7 @@ int LanguageClassifier::GenerateLangModel(const std::string& input_file_name,
 
   return count;
 }
+*/
 
 int LanguageClassifier::GetCorpus(const std::string& text, Corpus& corpus) {
   std::string script;
@@ -370,11 +328,11 @@ int LanguageClassifier::GetCorpus(const std::string& text, std::string& script, 
 #endif // TEXT_CLASSIFICATION_ENABLED
 
 #ifdef INTENT_ENABLED
-  std::string intent;
+  int intent_valence = 0;
 #endif // INTENT_ENABLED
 
 #ifdef SENTIMENT_ENABLED
-  std::string sentiment;
+  int sentiment_valence = 0;
 #endif // SENTIMENT_ENABLED
 
   std::string safe_status;
@@ -399,15 +357,17 @@ int LanguageClassifier::GetCorpus(const std::string& text, std::string& script, 
                                                , text_class_words_set
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-                                               , intent
+                                               , intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                                               , sentiment
+                                               , sentiment_valence
 #endif // SENTIMENT_ENABLED
                                               );
 
   if (ret_val < 0) {
+#ifdef LD_DEBUG
     std::cerr << "ERROR: could not get keytuples for: " << text << std::endl;
+#endif // LD_DEBUG
     lang_words_set.clear();
     return -1;
   }
@@ -419,13 +379,19 @@ int LanguageClassifier::GetCorpus(const std::string& text, std::string& script, 
 
   int ngrams_count = 0;
   if (lang_words_set.empty()) {
+#ifdef LD_DEBUG
     std::cerr << "ERROR: lang words set empty. cannot classify\n";
+#endif // LD_DEBUG
   } else {
     if ((ngrams_count = m_ngrams_generator.GetNgramsFromWords(lang_words_set, corpus)) < 0) {
+#ifdef LD_DEBUG
       std::cerr << "ERROR: could not find ngrams from tweet: " << text << std::endl;
+#endif // LD_DEBUG
     }
     if (ngrams_count == 0) {
+#ifdef LD_DEBUG
       std::cerr << "ERROR: no ngrams found\n";
+#endif // LD_DEBUG
     }
   }
 

@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
   } else {
     std::cout << config.classes.size() << " classes" << std::endl;
     for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
-      std::cout << config.iter->name << std::endl;
+      config.iter->Print();
     }
   }
 

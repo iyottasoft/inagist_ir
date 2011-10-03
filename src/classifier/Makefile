@@ -11,7 +11,9 @@ LIB = ${LIB_DIR}/lib${PROJECT}.so
 
 BINS = ${BIN_DIR}/t_classifier_config \
        ${BIN_DIR}/t_setup_classifier \
-       ${BIN_DIR}/t_renumber_classifier_config
+       ${BIN_DIR}/t_renumber_classifier_config \
+       ${BIN_DIR}/x_make_nbc_prior_probabilities_file \
+       ${BIN_DIR}/x_make_nbc_probabilities_file
 
 OBJS = classifier_config.o naive_bayes_classifier.o classifier.o
 
@@ -46,6 +48,21 @@ ${BIN_DIR}/t_setup_classifier: t_setup_classifier.o ${LIB}
 ${BIN_DIR}/t_renumber_classifier_config: t_renumber_classifier_config.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_renumber_classifier_config
+	@echo "done!"
+
+${BIN_DIR}/t_make_classifier_dictionary: t_make_classifier_dictionary.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_make_classifier_dictionary
+	@echo "done!"
+
+${BIN_DIR}/x_make_nbc_probabilities_file: x_make_nbc_probabilities_file.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_make_nbc_probabilities_file
+	@echo "done!"
+
+${BIN_DIR}/x_make_nbc_prior_probabilities_file: x_make_nbc_prior_probabilities_file.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_make_nbc_prior_probabilities_file
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

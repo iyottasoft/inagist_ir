@@ -99,12 +99,23 @@ int main(int argc, char* argv[]) {
       } else {
         unsigned int num_docs = 0;
         unsigned int corpus_size = 0;
-        if ((count = tc.GetTrainingData(handle, num_docs, corpus, corpus_size, std::cout)) < 0) {
+        bool train_not_test;
+        std::string expected_class_name;
+        inagist_classifiers::Corpus class_freq_map;
+        if ((count = tc.GetData(train_not_test=true,
+                                handle,
+                                expected_class_name,
+                                corpus,
+                                corpus_size,
+                                num_docs,
+                                class_freq_map,
+                                std::cout)) < 0) {
           std::cerr << "ERROR: could not get training data for handle: " << handle << std::endl;
         } else {
           std::cout << "Corpus of size " << count << " generated for " << handle << std::endl;
         }
         inagist_classifiers::CorpusManager::PrintCorpus(corpus);
+        class_freq_map.clear();
       }
       break;
     case 4:
@@ -128,6 +139,7 @@ int main(int argc, char* argv[]) {
       break;
   }
 
+  corpus.clear();
   tweets.clear();
 
   tc.Clear();

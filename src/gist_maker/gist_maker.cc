@@ -3,6 +3,7 @@
 #include <cmath>
 #include "gist_maker_config.h"
 #include "script_detector_utils.h"
+#include "string_utils.h"
 
 //#define I18N_ENABLED 1
 #ifdef I18N_ENABLED
@@ -254,133 +255,6 @@ void GistMaker::PrintKeywords(std::set<std::string> &named_entities_set) {
       std::cout << *iter << "|"; 
     std::cout << std::endl;
   }
-}
-
-// this function isn't unicode safe
-// TODO (balaji) for ascii, we can ofcourse use an array lookup to speed up
-bool GistMaker::IsPunct(char*& ptr, char* prev, char* next, int* punct_intent, int* punct_senti) {
-
-  if (!ptr || *ptr == ' ' || *ptr == '\0')
-    return true;
-
-  if (!ispunct(*ptr))
-    return false;
-
-  switch (*ptr) {
-    case ',':
-      if (prev && next)
-        if (isdigit(*prev) && isdigit(*next))
-          return false;
-      break;
-    case '.':
-      if (prev && next)
-        if (isdigit(*prev) && isdigit(*next))
-          return false;
-      if (next && *next != '\0') {
-        if (*next == ' ')
-          return true;
-        if (!strcmp(ptr, ".com") || !strcmp(ptr, ".org") || !strcmp(ptr, ".ly"))
-          return false; // not handling .come on or .organization etc
-      }
-      break;
-    case '\'':
-      if (!prev || IsPunct(prev)) {
-        return true;
-      }
-      if (!next || IsPunct(next)) {
-        return true;
-      }
-      /*
-      if (strncmp(ptr, "'s ", 3) == 0) {
-        // its callers responsibility to initialize this to false
-        //word_has_apostrophe = true;
-        ptr += 2;
-        return true;
-      } else {
-        return false;
-      }
-      */
-      /*
-      if (!strncmp(ptr, "'t", 2) || !strncmp(ptr, "'ve", 2) ||
-          !strncmp(ptr, "'ll", 2) || !strncmp(ptr, "'re", 2) || !strncmp(ptr, "'m", 2) ||
-          !strncmp(ptr, "'em", 3))
-       return false;
-      */
-      return false;
-      break;
-    case '@':
-      if (prev && !IsPunct(prev))
-        return true;
-      return IsPunct(next);
-      break;
-    case '#':
-      if (!next || (*next == '\0'))
-        return true;
-      else
-        if (*next == ' ' || IsPunct(next))
-          return true;
-      //if (prev)
-      //  if (*prev != ' ' && *prev != '\0' && IsPunct(prev))
-      //   return true;
-      return false;
-      break;
-    case '-':
-      if (prev && next)
-        if (isalnum(*prev) && (isalnum(*next)))
-          return false;
-      break;
-    case ';':
-      // fall thru
-    case ':':
-      if (next && *next != '\0' && punct_senti) {
-        switch (*next) {
-          case ')':
-          case 'P':
-          case 'D':
-            (*punct_senti)++;
-            break;
-          case '(':
-            (*punct_senti)--;
-            break;
-          case '-':
-            if ((next+1) && (*(next+1) != '\0')) {
-              if (*(next+1) == '(') {
-                (*punct_senti)--;
-              } else if (*(next+1) == ')') {
-                (*punct_senti)++;
-              }
-            }
-          default:
-            break;
-        }
-      }
-      if (prev && next)
-        if (isdigit(*prev) && isdigit(*next))
-          return false;
-      break;
-    case '!':
-      if (punct_senti)
-        (*punct_senti)++;
-      break;
-    case '?':
-      if (punct_intent)
-        (*punct_intent) = 1;
-      break;
-    case '&':
-      return true;
-      if (next) {
-        //if (*next == '#' && isdigit(*(next+1)))
-        if (*next != ' ')
-          return false;
-      }
-      break;
-    case '_':
-      return false;
-    default:
-      break;
-  }
-
-  return true;
 }
 
 bool GistMaker::IsIgnore(char *&ptr) {
@@ -957,7 +831,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   bool next_word_ascii = false;
 #endif // I18N_ENABLED
 
-#ifdef SCRIPT_DETECTION_ENABLED
+#if defined SCRIPT_DETECTION_ENABLED && I18N_ENABLED
   // script detection
   if (!script_buffer) {
     std::cout << "ERROR: invalid script buffer\n";
@@ -1030,7 +904,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   if (!script_flag) {
     return ret_val;
   }
-#endif // SCRIPT_DETECTION_ENABLED
+#endif // SCRIPT_DETECTION_ENABLED && I18N_ENABLED
 
   // initialize parameters for other outputs
 #ifdef PROFANITY_CHECK_ENABLED
@@ -1242,15 +1116,15 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
   // go to the first word, ignoring handles and punctuations
   unsigned char *prev = NULL;
-  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && IsPunct((char *&) ptr, (char *) prev, (char *) ptr+1, &punct_intent, &punct_senti)) || IsIgnore((char *&) ptr))) {
+  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && inagist_utils::IsPunct((char *&) ptr, (char *) prev, (char *) ptr+1, &punct_intent, &punct_senti)) || IsIgnore((char *&) ptr))) {
     prev = ptr;
     ptr++;
   }
 
   if (!ptr || '\0' == *ptr) {
 #ifdef GM_DEBUG
-    if (m_debug_level > 0)
-      cout << "either the input is empty or has ignore words only" << endl;
+    if (m_debug_level > 2)
+      cout << "INFO: either the input is empty or has ignore words only" << endl;
 #endif // GM_DEBUG
     return 0;
   }
@@ -1305,7 +1179,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // SCRIPT_DETECTION_ENABLED
   } catch (...) {
 #ifdef GM_DEBUG
-    if (m_debug_level > 0) {
+    if (m_debug_level > 1) {
       std::cout << "EXCEPTION 1: utf8 returned exception" << std::endl;
       cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
     }
@@ -1317,16 +1191,17 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // I18N_ENABLED
 
   while (ptr && ' ' != *ptr && '\0' != *ptr &&
-         !(is_punct = IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))) {
+         !(is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))) {
 
     if (!ptr || '\0' == *ptr) {
 #ifdef GM_DEBUG
-      if (m_debug_level > 1) {
-        cout << "either the input is empty or has ignore words only" << endl;
+      if (m_debug_level > 2) {
+        cout << "INFO: either the input is empty or has ignore words only" << endl;
       }
 #endif // GM_DEBUG
       return 0;
     }
+
 
     if (isupper(*ptr)) {
       if (!current_word_all_caps) {
@@ -1377,8 +1252,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
   if (!ptr) {
 #ifdef GM_DEBUG
-    if (m_debug_level > 0) {
-      cout << "either the input is corrupt or the only word is ignore word" << endl;
+    if (m_debug_level > 2) {
+      cout << "INFO: either the input is corrupt or the only word is ignore word" << endl;
     }
 #endif // GM_DEBUG
     return 0;
@@ -1532,7 +1407,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // SCRIPT_DETECTION_ENABLED
   } catch (...) {
 #ifdef GM_DEBUG
-    if (m_debug_level > 0) {
+    if (m_debug_level > 1) {
       std::cout << "EXCEPTION 3: utf8 returned exception" << std::endl;
       cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
     }
@@ -1548,7 +1423,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   while ('\0' != *ptr &&
          (' ' == *ptr ||
           (ispunct(*ptr) &&
-           (is_punct = IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))) ||
+           (is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))) ||
           (is_ignore_word = IsIgnore((char *&) ptr))
          )
         ) {
@@ -1560,8 +1435,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   if (!ptr || '\0' == *ptr) {
     next_word_start = NULL;
 #ifdef GM_DEBUG
-    if (m_debug_level > 1) {
-      std::cout << "only one word found\n";
+    if (m_debug_level > 2) {
+      std::cout << "INFO: only one word found\n";
     }
 #endif // GM_DEBUG
     return 0;
@@ -1613,7 +1488,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     }
   } catch (...) {
 #ifdef GM_DEBUG
-    if (m_debug_level > 0) {
+    if (m_debug_level > 1) {
       std::cout << "EXCEPTION 4: utf8 returned exception" << std::endl;
       cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
     }
@@ -1629,7 +1504,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     is_punct = false;
     if (' ' == *probe || '\0' == *probe ||
         (ispunct(*probe) &&
-         (is_punct = IsPunct((char *&) probe, (char *) probe-1, (char *) probe+1, &punct_intent, &punct_senti))
+         (is_punct = inagist_utils::IsPunct((char *&) probe, (char *) probe-1, (char *) probe+1, &punct_intent, &punct_senti))
         )
        ) {
 
@@ -1823,6 +1698,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // GM_DEBUG
         num_normal_words++;
       }
+
       if (current_word_has_mixed_case)
         num_mixed_words++;
 
@@ -2258,7 +2134,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       if (NULL != caps_entity_start && NULL != caps_entity_end) {
         if (caps_entity_start < caps_entity_end) {
 #ifdef GM_DEBUG
-          if (m_debug_level > 2) {
+          if (m_debug_level > 4) {
             cout << endl \
                  << string((char *) caps_entity_start, (caps_entity_end - caps_entity_start)) \
                  << " :entity by caps";
@@ -2503,7 +2379,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         while (('\0' != *ptr)
                && (' ' == *ptr
                    || (ispunct(*ptr) &&
-                      (is_punct = IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))
+                      (is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))
                       )
                    || (is_ignore_word = IsIgnore((char *&) ptr))
                   )
@@ -2705,7 +2581,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // LANG_ENABLED
 
 #ifdef GM_DEBUG
-  if (m_debug_level > 4) {
+  if (m_debug_level > 5) {
     cout << endl << "\norginal query: " << std::string((char *) text_buffer) << endl;
     cout << "num words: " << num_words << endl;
     cout << "num caps words: " << num_caps_words << endl;
@@ -2721,7 +2597,9 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   if ((num_normal_words == 0) && (num_dict_words != 0 || num_words > 5)) {
 #ifdef GM_DEBUG
     if (m_debug_level > 1) {
-      cout << "no normal words. ignoring named_entities." << endl;
+      cout << "INFO: no normal words. ignoring named_entities." << endl;
+    }
+    if (m_debug_level > 3) {
       cout << "num normal words: " << num_normal_words << endl;
       cout << "num words: " << num_words << endl;
       cout << "num dict words: " << num_dict_words << endl;
@@ -2980,9 +2858,15 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // INTENT_ENABELD
 
 #ifdef GM_DEBUG
-  if (m_debug_level > 1) {
+  if (m_debug_level > 2) {
     std::cout << "gist_maker summary:" << std::endl;
     std::cout << "input: " << text_buffer << std::endl;
+#ifdef SCRIPT_DETECTION_ENABLED
+    std::cout << "script: " << script_buffer << std::endl;
+#endif // SCRIPT_DETECTION_ENABLED
+#ifdef PROFANITY_CHECK_ENABLED
+    std::cout << "profanity_status: " << profanity_status_buffer << std::endl;
+#endif // PROFANITY_CHECK_ENABLED
 #ifdef NAMED_ENTITIES_ENABLED
     std::cout << "named_entities (" << named_entities_count << "): " << named_entities_buffer << std::endl;
 #endif // NAMED_ENTITIES_ENABLED

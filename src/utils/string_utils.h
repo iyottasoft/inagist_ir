@@ -17,9 +17,8 @@ namespace inagist_utils {
  //public:
   //StringUtils();
   //~StringUtils();
-  bool IsPunct(char *ptr, char *prev=NULL, char *next=NULL);
+  bool IsPunct(char*& ptr, char* prev=NULL, char* next=NULL, int* punct_intent=NULL, int* punct_senti=NULL);
   bool IsIgnore(char *&ptr);
-  int TestUtils(const std::string& text, unsigned int text_len);
   int Tokenize(const std::string& text, std::set<std::string>& tokens);
   int ToLower(const char* input, char* output);
   int PipeListToMap(unsigned char* buffer, std::map<std::string, double>& map);

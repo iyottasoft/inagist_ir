@@ -13,13 +13,12 @@ int GetSentiment(std::string text) {
 
   unsigned char text_buffer[1024];
   unsigned int text_buffer_len = 1024;
-  char sentiment_buffer[255];
-  unsigned int sentiment_buffer_len = 255;
+  int sentiment_valence = 0;
 
   strcpy((char *) text_buffer, text.c_str()); 
   unsigned int text_len = text.length();
   if (g_sa.AnalyseSentiment(text_buffer, text_buffer_len, text_len,
-                            sentiment_buffer, sentiment_buffer_len) < 0) {
+                            sentiment_valence) < 0) {
     std::cout << "ERROR: could not get sentiment\n";
     return -1;
   }
@@ -27,10 +26,7 @@ int GetSentiment(std::string text) {
   std::cout << std::endl << text_buffer << std::endl;
   text_buffer[0] = '\0';
 
-  std::cout << "sentiment: " ;
-  if (strlen(sentiment_buffer) > 0)
-    std::cout << sentiment_buffer;
-  std::cout << std::endl;
+  std::cout << "sentiment: " << sentiment_valence << std::endl;
 
   return 0;
 }

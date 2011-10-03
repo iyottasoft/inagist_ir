@@ -22,7 +22,7 @@ class SentimentAnalyser {
   int Init(const char* keytuples_config_file);
   int AnalyseSentiment(unsigned char* text_buffer, const unsigned int& text_buffer_len,
                        const unsigned int& text_len,
-                       char* sentiment_buffer, const unsigned int& sentiment_buffer_len);
+                       int& sentiment_valence);
   int Clear();
 
  private:

@@ -57,10 +57,10 @@ int Init(const char* keytuples_extracter_config_file
 #endif // CLASS_CONTRIBUTORS_ENABLED
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-                       , std::string& intent
+                       , int& intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                       , std::string& sentiment
+                       , int& sentiment_valence
 #endif // SENTIMENT_ENABLED
                       );
 
@@ -105,10 +105,10 @@ int GetGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
 #endif // CLASS_CONTRIBUTORS_ENABLED
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef INTENT_ENABLED
-      , char* intent_buffer, const unsigned int intent_buffer_len
+      , int* intent_valence_ptr
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-      , char* sentiment_buffer, const unsigned int sentiment_buffer_len
+      , int* sentiment_valence_ptr
 #endif // SENTIMENT_ENABLED
      );
 

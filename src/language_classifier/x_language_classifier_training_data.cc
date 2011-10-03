@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
   std::string classifier_config = argv[1];
   std::string keytuples_config = argv[2];
 
-  inagist_classifiers::LanguageClassifier ld;
+  inagist_classifiers::LanguageClassifier lc;
 
   int my_argc = 1;
   char* my_argv[1];
@@ -23,19 +23,20 @@ int main(int argc, char* argv[]) {
   my_argv[0] = temp_location;
   memset(temp_location, '\0', 255);
   strcpy(temp_location, keytuples_config.c_str());
-  if (ld.InitDependencies(my_argc, (char**) my_argv) < 0) {
+  if (lc.InitDependencies(my_argc, (char**) my_argv) < 0) {
     std::cerr << "ERROR: could not init keytuples extracter" \
               << " for training. config_file: " << keytuples_config << std::endl;
-    ld.Clear();
+    lc.Clear();
     return -1;
   }
   free(temp_location);
 
-  if (ld.GetTrainingData((const char*) classifier_config.c_str()) < 0) {
+  bool train_not_test;
+  if (lc.GetData(train_not_test=true, (const char*) classifier_config.c_str()) < 0) {
     std::cout << "ERROR: could not get training data for lang classification\n";
   }
 
-  ld.Clear();
+  lc.Clear();
 
   return 0;
 }

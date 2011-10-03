@@ -14,8 +14,7 @@ int IntentFinder::Init(const char* keytuples_extracter_config_file) {
 
   // initialize keytuples extracter
   bool load_classifier_dictionary=false;
-  if (m_keytuples_extracter.Init(keytuples_extracter_config_file,
-                                 load_classifier_dictionary=false) < 0) {
+  if (m_keytuples_extracter.Init(keytuples_extracter_config_file) < 0) {
     std::cerr << "ERROR: could not initialize KeyTuplesExtracter\n";
     return -1;
   }
@@ -25,14 +24,13 @@ int IntentFinder::Init(const char* keytuples_extracter_config_file) {
 
 int IntentFinder::FindIntent(unsigned char* text_buffer, const unsigned int& text_buffer_len,
                              const unsigned int& text_len,
-                             char* intent_buffer, const unsigned int& intent_buffer_len) {
+                             int& intent_valence) {
 
-  if (!text_buffer || !intent_buffer) {
-    std::cerr << "ERROR: invalid buffers\n";
+  if (!text_buffer) {
+    std::cerr << "ERROR: invalid text buffer\n";
     return -1;
   }
 
-  intent_buffer[0] = '\0';
   char safe_status_buffer[10];
   unsigned int safe_status_buffer_len = 10;
   char script_buffer[4];
@@ -41,12 +39,12 @@ int IntentFinder::FindIntent(unsigned char* text_buffer, const unsigned int& tex
   if (m_keytuples_extracter.GetKeyTuples(text_buffer, text_buffer_len, text_len,
                                          safe_status_buffer, safe_status_buffer_len,
                                          script_buffer, script_buffer_len,
-                                         intent_buffer, intent_buffer_len) < 0) {
+                                         intent_valence) < 0) {
     std::cerr << "ERROR: could not get intent\n";
     return -1;
   }
 
-  if ((strcmp(script_buffer, "en") != 0) || (strcmp(intent_buffer, "none") == 0)) {
+  if (strcmp(script_buffer, "en") != 0) {
     return 0;
   }
 

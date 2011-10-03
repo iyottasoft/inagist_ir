@@ -49,3 +49,8 @@ Guidelines:
                   makefiles to pick them up too.
 2. Coding Style - for consistency, use the following style guide for cpp code.
                   http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml
+3. Additional file naming conventions
+   a. x_ means execute_binary. all production binaries should begin with x_
+   b. t_ means test_binary. provide a t_ for all x_.
+
+binaries are either

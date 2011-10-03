@@ -49,8 +49,8 @@ int main(int argc, char* argv[]) {
   std::set<std::string> others_text_classes;
   std::set<std::string> others_sub_classes;
   std::map<std::string, std::string> others_text_class_contributors_map;
-  std::string intent_words;
-  std::string sentiment;
+  int intent_valence=0;
+  int sentiment_valence=0;
   std::set<std::string> recommendations;
   if (p.Profile(twitter_handle,
                 locations,
@@ -62,8 +62,8 @@ int main(int argc, char* argv[]) {
                 others_text_classes,
                 others_sub_classes,
                 others_text_class_contributors_map,
-                intent_words,
-                sentiment,
+                intent_valence,
+                sentiment_valence,
                 recommendations,
                 profile_name) < 0) {
     std::cerr << "ERROR: could not generate profile for " \

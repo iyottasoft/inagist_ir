@@ -15,12 +15,13 @@ int FindIntent(std::string text) {
   unsigned int text_buffer_len = 1024;
   char intent_buffer[255];
   int intent_buffer_len = 255;
+  int intent_valence=0;
 
   strcpy((char *) text_buffer, text.c_str()); 
   unsigned int text_len = text.length();
   int ret_val = 0;
   if ((ret_val = g_if.FindIntent(text_buffer, text_buffer_len, text_len,
-                                 intent_buffer, intent_buffer_len)) < 0) {
+                                 intent_valence)) < 0) {
     std::cout << "ERROR: could not get sentiment\n";
     return -1;
   }
@@ -31,10 +32,7 @@ int FindIntent(std::string text) {
   std::cout << std::endl << text_buffer << std::endl;
   text_buffer[0] = '\0';
 
-  std::cout << "intent: " ;
-  if (strlen(intent_buffer) > 0)
-    std::cout << intent_buffer;
-  std::cout << std::endl;
+  std::cout << "intent: " << intent_valence << std::endl;
 
   return 0;
 }

@@ -16,8 +16,7 @@ int GetIntent(unsigned char* text_buffer, const unsigned int text_buffer_len,
               const unsigned int text_len, 
               char* safe_status_buffer, const unsigned int safe_status_buffer_len,
               char* script_buffer, const unsigned int script_buffer_len,
-              unsigned char* intent_buffer, const unsigned int intent_buffer_len,
-              unsigned int* intent_len_ptr, unsigned int* intent_count_ptr);
+              int* intent_valence_ptr);
 #ifdef _CPLUSPLUS
 }
 #endif

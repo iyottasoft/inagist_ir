@@ -38,10 +38,10 @@ int GetKeyTuples(unsigned char* text_buffer, const unsigned int text_buffer_len,
                  unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
                  unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr
 #ifdef INTENT_ENABLED
-                 , char* intent_buffer, const unsigned int intent_buffer_len
+                 , int* intent_valence_ptr
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                 , char* sentiment_buffer, const unsigned int sentiment_buffer_len
+                 , int* sentiment_valence_ptr
 #endif // SENTIMENT_ENABLED
                 ) {
 
@@ -53,6 +53,8 @@ int GetKeyTuples(unsigned char* text_buffer, const unsigned int text_buffer_len,
   unsigned int keywords_count = 0;
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
+  int intent_valence=0;
+  int sentiment_valence=0;
 
   if ((ret_value = g_kt.GetKeyTuples(text_buffer, text_buffer_len, text_len,
                 safe_status_buffer, safe_status_buffer_len,
@@ -64,10 +66,10 @@ int GetKeyTuples(unsigned char* text_buffer, const unsigned int text_buffer_len,
                 keyphrases_buffer, keyphrases_buffer_len,
                 keyphrases_len, keyphrases_count
 #ifdef INTENT_ENABLED
-                , intent_buffer, intent_buffer_len
+                , intent_valence
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                , sentiment_buffer, sentiment_buffer_len
+                , sentiment_valence
 #endif // SENTIMENT_ENABLED
                 )) < 0) {
     std::cerr << "ERROR: could not get keytuples\n";
@@ -80,6 +82,8 @@ int GetKeyTuples(unsigned char* text_buffer, const unsigned int text_buffer_len,
   *keywords_count_ptr = keywords_count;
   *keyphrases_len_ptr = keyphrases_len;
   *keyphrases_count_ptr = keyphrases_count;
+  *intent_valence_ptr = intent_valence;
+  *sentiment_valence_ptr = sentiment_valence;
 
   return ret_value;
 }

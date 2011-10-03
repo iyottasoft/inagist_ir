@@ -77,18 +77,10 @@ int Profiler::Profile(const std::string& twitter_handle,
                       std::set<std::string>& others_text_classes,
                       std::set<std::string>& others_sub_classes,
                       std::map<std::string, std::string>& others_text_class_contributors_map,
-                      std::string& intent,
-                      std::string& sentiment,
+                      int& intent_valence,
+                      int& sentiment_valence,
                       std::set<std::string>& recommendations,
                       const std::string& profile_name) {
-
-  char intent_buffer[10];
-  intent_buffer[0] = '\0';
-  unsigned int intent_buffer_len = 10;
-
-  char sentiment_buffer[10];
-  sentiment_buffer[0] = '\0';
-  unsigned int sentiment_buffer_len = 10;
 
   unsigned char locations_buffer[MAX_BUFFER_LEN];
   locations_buffer[0] = '\0';
@@ -177,8 +169,8 @@ int Profiler::Profile(const std::string& twitter_handle,
                              others_text_class_contributors_buffer_len,
                              others_text_class_contributors_len,
                              others_text_class_contributors_count,
-                             intent_buffer, intent_buffer_len,
-                             sentiment_buffer, sentiment_buffer_len,
+                             intent_valence,
+                             sentiment_valence,
                              recommendations_buffer, recommendations_buffer_len,
                              recommendations_len, recommendations_count,
                              profile_name.c_str())) < 0) {
@@ -238,9 +230,6 @@ int Profiler::Profile(const std::string& twitter_handle,
   }
   others_sub_classes_buffer[0] = '\0';
 
-  intent = std::string(intent_buffer);
-  sentiment = std::string(sentiment_buffer);
-
   // unused in this call
   self_text_class_contributors_buffer[0] = '\0';
   others_text_class_contributors_buffer[0] = '\0';
@@ -272,8 +261,8 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
       const unsigned int others_text_class_contributors_buffer_len,
       unsigned int& others_text_class_contributors_len,
       unsigned int& others_text_class_contributors_count,
-      char* intent_buffer, const unsigned int intent_buffer_len,
-      char* sentiment_buffer, const unsigned int sentiment_buffer_len,
+      int& intent_valence,
+      int& sentiment_valence,
       unsigned char* recommendations_buffer, const unsigned int recommendations_buffer_len,
       unsigned int& recommendations_len, unsigned int& recommendations_count,
       const char* profile_name) {
@@ -293,8 +282,6 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
       !others_text_classes_buffer ||
       !others_sub_classes_buffer ||
       !others_text_class_contributors_buffer ||
-      !intent_buffer ||
-      !sentiment_buffer ||
       !recommendations_buffer) {
 #ifdef PROFILE_DEBUG
     std::cerr << "ERROR: invalid output buffer(s) for profiling\n";
@@ -329,8 +316,8 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
   others_text_class_contributors_buffer[0] = '\0';
   others_text_class_contributors_len = 0;
   others_text_class_contributors_count = 0;
-  intent_buffer[0] = '\0';
-  sentiment_buffer[0] = '\0';
+  intent_valence=0;
+  sentiment_valence=0;
   recommendations_buffer[0] = '\0';
   recommendations_len = 0;
   recommendations_count = 0;
@@ -410,8 +397,8 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
                     self_sub_classes_len, self_sub_classes_count,
                     self_text_class_contributors_buffer, self_text_class_contributors_buffer_len,
                     self_text_class_contributors_len, self_text_class_contributors_count,
-                    intent_buffer, intent_buffer_len,
-                    sentiment_buffer, sentiment_buffer_len,
+                    intent_valence,
+                    sentiment_valence,
                     corpus, corpus_size)) < 0) {
 #ifdef PROFILE_DEBUG
       std::cerr << "WARNING: could not generate corpus for user: " << twitter_handle << std::endl;
@@ -480,8 +467,8 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
                       others_sub_classes_len, others_sub_classes_count,
                       others_text_class_contributors_buffer, others_text_class_contributors_buffer_len,
                       others_text_class_contributors_len, others_text_class_contributors_count,
-                      intent_buffer, intent_buffer_len,
-                      sentiment_buffer, sentiment_buffer_len,
+                      intent_valence,
+                      sentiment_valence,
                       corpus, corpus_size)) < 0) {
 #ifdef PROFILE_DEBUG
         std::cerr << "WARNING: could not get corpus from user's friends\n";
@@ -530,8 +517,8 @@ int Profiler::ProfileFromFile(const char* docs_file_name, unsigned int docs_file
       const unsigned int self_text_class_contributors_buffer_len,
       unsigned int& self_text_class_contributors_len,
       unsigned int& self_text_class_contributors_count,
-      char* intent_buffer, const unsigned int intent_buffer_len,
-      char* sentiment_buffer, const unsigned int sentiment_buffer_len,
+      int& intent_valence,
+      int& sentiment_valence,
       unsigned char* recommendations_buffer, const unsigned int recommendations_buffer_len,
       unsigned int& recommendations_len, unsigned int& recommendations_count,
       const char* profile_name) {
@@ -557,8 +544,8 @@ int Profiler::ProfileFromFile(const char* docs_file_name, unsigned int docs_file
   self_text_class_contributors_buffer[0] = '\0';
   self_text_class_contributors_len = 0;
   self_text_class_contributors_count = 0;
-  intent_buffer[0] = '\0';
-  sentiment_buffer[0] = '\0';
+  intent_valence = 0;
+  sentiment_valence = 0;
 
   strcpy((char *) recommendations_buffer, "bleh, not implemented yet!");
   recommendations_len = strlen((char *) recommendations_buffer);
@@ -602,8 +589,8 @@ int Profiler::ProfileFromFile(const char* docs_file_name, unsigned int docs_file
                         self_sub_classes_len, self_sub_classes_count,
                         self_text_class_contributors_buffer, self_text_class_contributors_buffer_len,
                         self_text_class_contributors_len, self_text_class_contributors_count,
-                        intent_buffer, intent_buffer_len,
-                        sentiment_buffer, sentiment_buffer_len,
+                        intent_valence,
+                        sentiment_valence,
                         corpus, corpus_size)) < 0) {
     std::cerr << "ERROR: could not generate profile\n";
     return -1;
@@ -643,8 +630,8 @@ int Profiler::GetGist(std::set<std::string>& tweets,
                       const unsigned int text_class_contributors_buffer_len,
                       unsigned int& text_class_contributors_len,
                       unsigned int& text_class_contributors_count,
-                      char* intent_buffer, const unsigned int intent_buffer_len,
-                      char* sentiment_buffer, const unsigned int sentiment_buffer_len,
+                      int& intent_valence,
+                      int& sentiment_valence,
                       inagist_classifiers::Corpus& corpus, unsigned int& corpus_size) {
 
   // TODO (balaji) - make these member variables
@@ -661,8 +648,8 @@ int Profiler::GetGist(std::set<std::string>& tweets,
   text_class_contributors_buffer[0] = '\0';
   text_class_contributors_len = 0;
   text_class_contributors_count = 0;
-  intent_buffer[0] = '\0';
-  sentiment_buffer[0] = '\0';
+  intent_valence = 0;
+  sentiment_valence = 0;
 
   unsigned char text_buffer[MAX_BUFFER_LEN];
   text_buffer[0] = '\0';
@@ -760,8 +747,8 @@ int Profiler::GetGist(std::set<std::string>& tweets,
                   &sub_classes_len, &sub_classes_count,
                   (unsigned char*) text_class_contributors_buffer, text_class_contributors_buffer_len,
                   &text_class_contributors_len, &text_class_contributors_count,
-                  (char*) intent_buffer, intent_buffer_len,
-                  (char*) sentiment_buffer, sentiment_buffer_len)) < 0) {
+                  &intent_valence,
+                  &sentiment_valence)) < 0) {
 #ifdef PROFILE_DEBUG
       std::cerr << "ERROR: could not get named_entities\n";
 #endif

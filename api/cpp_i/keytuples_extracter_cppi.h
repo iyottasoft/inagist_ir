@@ -23,10 +23,10 @@ int GetKeyTuples(unsigned char* text_buffer, const unsigned int text_buffer_len,
                  unsigned char* keyphrases_buffer, const unsigned int keyphrases_buffer_len,
                  unsigned int* keyphrases_len_ptr, unsigned int* keyphrases_count_ptr
 #ifdef INTENT_ENABLED
-                 , char* intent_buffer, const unsigned int intent_buffer_len
+                 , int* intent_valence_ptr
 #endif // INTENT_ENABLED
 #ifdef SENTIMENT_ENABLED
-                 , char* sentiment_buffer, const unsigned int sentiment_buffer_len
+                 , int* sentiment_valence_ptr
 #endif // SENTIMENT_ENABLED
                 );
 #ifdef _CPLUSPLUS

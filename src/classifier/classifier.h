@@ -10,24 +10,11 @@
 #include <string>
 #include "classifier_config.h"
 #include "corpus_manager.h"
+#include "naive_bayes_classifier.h"
 
 #define MIN_TWEETS_REQUIRED 15
 
 namespace inagist_classifiers {
-
-typedef struct _test_result_struct {
-  unsigned int total;
-  unsigned int undefined;
-  unsigned int correct;
-  unsigned int wrong;
-  int clear() {
-    total = 0;
-    undefined = 0;
-    correct = 0;
-    wrong = 0;
-    return 0;
-  }
-} TestResult;
 
 // its assumed that a more specialised classifier will inherit this class
 class Classifier {
@@ -39,6 +26,13 @@ class Classifier {
 
   int Init(std::string config_file_name, bool ignore_history=false);
   virtual int GetCorpus(const std::string& text, Corpus& corpus)=0;
+  virtual int Classify(Corpus& test_corpus,
+               std::string& output_class,
+               std::string& top_classes, unsigned int& top_classes_count
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+               , std::map<std::string, std::string>& class_contributors_map
+#endif // CLASS_CONTRIBUTORS_ENABLED
+              );
   virtual int Classify(const std::string& text,
                        const unsigned int& text_len,
                        std::string& output_class,
@@ -59,77 +53,45 @@ class Classifier {
 
   // training
 
-  int GetTrainingData(const char* config_file_name);
-  int GetTrainingData(const std::string& class_name,
-                      const std::string& twitter_handles_file_name,
-                      const std::string& output_tweets_file_name,
-                      unsigned int& output_num_docs,
-                      const std::string& output_corpus_file_name,
-                      unsigned int& output_corpus_size);
-  int GetTrainingData(const std::string& handle,
-                      unsigned int& output_num_docs,
-                      Corpus& corpus,
-                      unsigned int& output_corpus_size,
-                      std::ostream& output_stream,
-                      bool get_user_info=false);
+  // train_not_test is a bool
+  // true = training
+  // false = testing
+  int GetData(const bool& train_not_test, const char* config_file_name);
+  int GetData(const bool& train_not_test,
+              const std::string& class_name,
+              const std::string& twitter_handles_file_name,
+              const std::string& output_tweets_file_name,
+              unsigned int& output_num_docs,
+              const std::string& output_corpus_file_name,
+              unsigned int& output_corpus_size);
+  int GetData(const bool& train_not_test,
+              const std::string& handle,
+              const std::string& expected_class_name,
+              Corpus& output_corpus,
+              unsigned int& output_corpus_size,
+              unsigned int& output_num_docs,
+              Corpus& output_freqs_map,
+              std::ostream& output_stream,
+              bool get_user_info=false);
+
   int CleanCorpusFile(std::string& corpus_file_name,
                       std::string& output_prefix,
                       unsigned int& clean_type);
-  int CleanCorpus(unsigned int& input_type,
-                 std::string& file_name,
-                 std::string& output_prefix,
-                 unsigned int& clean_type);
-
-
-  // testing
-
-  int GetTestData(const unsigned int& input_type,
-                  const char* input_value,
-                  const unsigned int& output_type,
-                  const char* output_file);
-
-  // leave handle blank for public timeline
-  int TestTimeline(const unsigned int& input_type,
-                   const char* input_value,
-                   const std::string& expected_class_name,
-                   Corpus& test_freq_map,
-                   CorpusMap& test_corpus_map,
-                   TestResult& test_result,
-                   std::ostream& output_stream);
-
-  int TestTimeline(const std::set<std::string>& texts,
-                   const std::string& expected_class_name,
-                   Corpus& test_freq_map,
-                   CorpusMap& test_corpus_map,
-                   TestResult& test_result,
-                   std::ostream &output_stream);
-
-  int TestTrainingSources(const char* training_class,
-                          Corpus& test_freq_map,
-                          CorpusMap& test_corpus_map,
-                          TestResult& test_result,
-                          std::ostream& output_stream,
-                          bool random_selection=false);
-
-  int TestTrainingTexts(const char* training_texts_file,
-                        const std::string& expected_class_name,
-                        Corpus& test_freq_map,
-                        CorpusMap& test_corpus_map,
-                        TestResult& test_result,
-                        std::ostream &output_stream);
-
-  int WriteTestData(Corpus& corpus, const char* classes_freq_file);
-
-  int NormalizeFrequencies();
-  int NormalizeFrequencies(const char* raw_data_file, const char* relative_freq_file);
+  int CleanCorpus(const bool& train_not_test,
+                  unsigned int& input_type,
+                  std::string& file_name,
+                  std::string& output_prefix,
+                  unsigned int& clean_type);
 
   int MakeDictionary(const char* classifier_dictionary_file);
-  int MakePriorFreqsFile(const char* classifier_prior_freqs_file);
 
  protected:
-  CorpusManager m_corpus_manager;
   std::map<std::string, std::string> m_class_labels_map;
+  CorpusMap m_corpus_map;
+  Corpus m_classes_freq_map;
+  Corpus m_corpus;
  private:
+  NaiveBayesClassifier m_naive_bayes_classifier;
   Config m_config;
   unsigned int m_debug_level;
 

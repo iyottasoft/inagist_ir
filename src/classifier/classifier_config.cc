@@ -68,21 +68,27 @@ int ClassifierConfig::Read(const char* config_file, Config& config) {
           class_struct.class_data_file = value;
         } else if (key.compare(0, 12, "testing_data") == 0) {
           class_struct.testing_data_file = value;
+        } else if (key.compare(0, 15, "testing_handles") == 0) {
+          class_struct.testing_handles_file = value;
+        } else if (key.compare(0, 14, "testing_corpus") == 0) {
+          class_struct.testing_corpus_file = value;
+        } else if (key.compare(0, 14, "testing_tweets") == 0) {
+          class_struct.testing_tweets_file = value;
         } else if (key.compare(0, 13, "training_data") == 0) {
           class_struct.training_data_file = value;
-        } else if (key.compare(0, 7, "handles") == 0) {
-          class_struct.handles_file = value;
-        } else if (key.compare(0, 6, "corpus") == 0) {
-          class_struct.corpus_file = value;
-        } else if (key.compare(0, 6, "tweets") == 0) {
-          class_struct.tweets_file = value;
+        } else if (key.compare(0, 16, "training_handles") == 0) {
+          class_struct.training_handles_file = value;
+        } else if (key.compare(0, 15, "training_corpus") == 0) {
+          class_struct.training_corpus_file = value;
+        } else if (key.compare(0, 15, "training_tweets") == 0) {
+          class_struct.training_tweets_file = value;
         } else if (key.compare(0, 4, "seed") == 0) {
           class_struct.seed_file = value;
         }
-        if (line_count == 9) {
+        if (line_count == 12) {
           config.classes.insert(class_struct);
           line_count = 0;
-          class_struct.clear();
+          class_struct.Clear();
           class_count++;
           if (class_count >= config.num_classes) {
             break;
@@ -129,10 +135,13 @@ int ClassifierConfig::Write(Config& config, const char* config_file_name) {
     ofs << "class_label." << count << "=" << config.iter->label << std::endl;
     ofs << "class_data." << count << "=" << config.iter->class_data_file << std::endl;
     ofs << "testing_data." << count << "=" << config.iter->testing_data_file << std::endl;
+    ofs << "testing_handles." << count << "=" << config.iter->testing_handles_file << std::endl;
+    ofs << "testing_corpus." << count << "=" << config.iter->testing_corpus_file << std::endl;
+    ofs << "testing_tweets." << count << "=" << config.iter->testing_tweets_file << std::endl; 
     ofs << "training_data." << count << "=" << config.iter->training_data_file << std::endl;
-    ofs << "handles." << count << "=" << config.iter->handles_file << std::endl;
-    ofs << "corpus." << count << "=" << config.iter->corpus_file << std::endl;
-    ofs << "tweets." << count << "=" << config.iter->tweets_file << std::endl; 
+    ofs << "training_handles." << count << "=" << config.iter->training_handles_file << std::endl;
+    ofs << "training_corpus." << count << "=" << config.iter->training_corpus_file << std::endl;
+    ofs << "training_tweets." << count << "=" << config.iter->training_tweets_file << std::endl; 
     ofs << "seed." << count << "=" << config.iter->seed_file << std::endl;
     count++;
   }

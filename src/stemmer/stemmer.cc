@@ -161,12 +161,14 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
   ptr = m_buffer;
 
 #ifdef STEM_DEBUG
-  std::cout << std::endl << "original query: " << m_buffer << std::endl;
+  if (STEM_DEBUG > 3) {
+    std::cout << std::endl << "original query: " << m_buffer << std::endl;
+  }
 #endif
 
   // go to the first word, ignoring handles and punctuations
   unsigned char *prev = NULL;
-  while (ptr && '\0' != *ptr && (' ' == *ptr || '#' == *ptr || (ispunct(*ptr) && inagist_utils::IsPunct((char *) ptr, (char *) prev, (char *) ptr+1)) || inagist_utils::IsIgnore((char *&) ptr))) {
+  while (ptr && '\0' != *ptr && (' ' == *ptr || '#' == *ptr || (ispunct(*ptr) && inagist_utils::IsPunct((char *&) ptr, (char *) prev, (char *) ptr+1)) || inagist_utils::IsIgnore((char *&) ptr))) {
     prev = ptr;
     ptr++;
   }
@@ -202,7 +204,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
   while (ptr && probe && *ptr != '\n' && *ptr != '\0') {
     // this loop works between second letter to end punctuation for each word
     is_punct = false;
-    if (' ' == *probe || '\0' == *probe || '\'' == *probe || (ispunct(*probe) && (is_punct = inagist_utils::IsPunct((char *) probe, (char *) probe-1, (char *) probe+1)))) {
+    if (' ' == *probe || '\0' == *probe || '\'' == *probe || (ispunct(*probe) && (is_punct = inagist_utils::IsPunct((char *&) probe, (char *) probe-1, (char *) probe+1)))) {
 
       current_word_delimiter = *probe;
       current_word_end = probe;
@@ -263,7 +265,7 @@ int Stemmer::Stem(const std::string& text, std::set<std::string>& stems) {
         // IsIgnore will literally ignore the word by changing the cursor to next word end
         is_ignore_word = false;
         is_punct = false;
-        while ('\0' != *ptr && (' ' == *ptr || '#' == *ptr || (ispunct(*ptr) && (is_punct = inagist_utils::IsPunct((char *) ptr, (char *) ptr-1, (char *) ptr+1))) || (is_ignore_word = inagist_utils::IsIgnore((char *&) ptr)))) {
+        while ('\0' != *ptr && (' ' == *ptr || '#' == *ptr || (ispunct(*ptr) && (is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1))) || (is_ignore_word = inagist_utils::IsIgnore((char *&) ptr)))) {
           ptr++;
         }
 

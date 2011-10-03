@@ -77,37 +77,65 @@ int main(int argc, char* argv[]) {
           inagist_classifiers::ClassifierConfig::Clear(config);
           return -1;
         }
-        // handles file folder
-        if (CreateDir(config.iter->handles_file) < 0) {
+        // training handles file folder
+        if (CreateDir(config.iter->training_handles_file) < 0) {
           inagist_classifiers::ClassifierConfig::Clear(config);
           return -1;
         }
-        // corpus file folder
-        if (CreateDir(config.iter->corpus_file) < 0) {
+        // training corpus file folder
+        if (CreateDir(config.iter->training_corpus_file) < 0) {
           inagist_classifiers::ClassifierConfig::Clear(config);
           return -1;
         }
-        // corpus file folder
-        if (CreateDir(config.iter->tweets_file) < 0) {
+        // training tweets file folder
+        if (CreateDir(config.iter->training_tweets_file) < 0) {
+          inagist_classifiers::ClassifierConfig::Clear(config);
+          return -1;
+        }
+        // testing data folder
+        if (CreateDir(config.iter->testing_data_file) < 0) {
+          inagist_classifiers::ClassifierConfig::Clear(config);
+          return -1;
+        }
+        // testing handles file folder
+        if (CreateDir(config.iter->testing_handles_file) < 0) {
+          inagist_classifiers::ClassifierConfig::Clear(config);
+          return -1;
+        }
+        // testing corpus file folder
+        if (CreateDir(config.iter->testing_corpus_file) < 0) {
+          inagist_classifiers::ClassifierConfig::Clear(config);
+          return -1;
+        }
+        // testing tweets file folder
+        if (CreateDir(config.iter->testing_tweets_file) < 0) {
           inagist_classifiers::ClassifierConfig::Clear(config);
           return -1;
         }
       }
-      cmd = "touch " + config.iter->handles_file;
+      cmd = "touch " + config.iter->training_handles_file;
       sys_out = system(cmd.c_str());
       if (class_name_is_handle) {
-        std::ofstream ofs(config.iter->handles_file.c_str(), std::ios::app);
+        std::ofstream ofs(config.iter->training_handles_file.c_str(), std::ios::app);
         if (!ofs.is_open()) {
-          std::cout << "ERROR: could not open handles file: " << config.iter->handles_file << std::endl;
+          std::cout << "ERROR: could not open handles file: " << config.iter->training_handles_file << std::endl;
           break;
         } else {
           ofs << config.iter->name << std::endl;
         }
         ofs.close();
       }
-      cmd = "touch " + config.iter->corpus_file;
+      cmd = "touch " + config.iter->training_corpus_file;
       sys_out = system(cmd.c_str());
-      cmd = "touch " + config.iter->tweets_file;
+      cmd = "touch " + config.iter->training_tweets_file;
+      sys_out = system(cmd.c_str());
+
+      // testing
+      cmd = "touch " + config.iter->testing_handles_file;
+      sys_out = system(cmd.c_str());
+      cmd = "touch " + config.iter->testing_corpus_file;
+      sys_out = system(cmd.c_str());
+      cmd = "touch " + config.iter->testing_tweets_file;
       sys_out = system(cmd.c_str());
     }
   }

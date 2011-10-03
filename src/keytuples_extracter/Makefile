@@ -9,9 +9,9 @@ LIBS = -l${PROJECT} -lscriptdetector -lutils -ltwitterapi -linagistapi -lcurlreq
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
-BINS = ${BIN_DIR}/t_keytuples_extracter \
-       ${BIN_DIR}/t_named_entities_manager \
-       ${BIN_DIR}/x_named_entities_extracter
+BINS = ${BIN_DIR}/t_keytuples_extracter #\
+       ${BIN_DIR}/x_named_entities_extracter \
+       ${BIN_DIR}/t_named_entities_manager
 
 OBJS = keytuples_extracter.o named_entities_manager.o keytuples_config.o
 
@@ -45,17 +45,7 @@ ${BIN_DIR}/x_named_entities_extracter: x_named_entities_extracter.o ${LIB}
 
 ${BIN_DIR}/t_named_entities_manager: t_named_entities_manager.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_named_entities_manager
-	@echo "done!"
-
-${BIN_DIR}/t_keytuples_from_twitter: t_keytuples_from_twitter.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keytuples_from_twitter
-	@echo "done!"
-
-${BIN_DIR}/t_keytuples_from_inagist: t_keytuples_from_inagist.o ${LIB}
-	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_keytuples_from_inagist
+	@${CXX} ${CXXFLAGS} -DDEBUG=${DEBUG_LEVEL} -DNAMED_ENTITIES_ENABLED $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_named_entities_manager
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

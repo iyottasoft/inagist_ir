@@ -28,30 +28,22 @@ int InitKeyTuplesExtracter(const char* keytuples_config) {
 extern "C"
 #endif
 int GetIntent(unsigned char* text_buffer, const unsigned int text_buffer_len, const unsigned int text_len,
-                char* safe_status_buffer, const unsigned int safe_status_buffer_len,
-                char* script_buffer, const unsigned int script_buffer_len,
-                unsigned char* intent_buffer, const unsigned int intent_buffer_len,
-                unsigned int* intent_len_ptr, unsigned int* intent_count_ptr) {
+              char* safe_status_buffer, const unsigned int safe_status_buffer_len,
+              char* script_buffer, const unsigned int script_buffer_len,
+              int* intent_valence_ptr) {
 
   int ret_value = 0;
-
-  unsigned int intent_len = 0;
-  unsigned int intent_count = 0;
+  int intent_valence = 0;
 
   if ((ret_value = g_kt.GetKeyTuples(text_buffer, text_buffer_len, text_len,
                 safe_status_buffer, safe_status_buffer_len,
                 script_buffer, script_buffer_len,
-                (char *) intent_buffer, intent_buffer_len)) < 0) {
+                intent_valence)) < 0) {
     std::cerr << "ERROR: could not get keytuples\n";
     return -1;
   } else {
-    intent_len = strlen((char *) intent_buffer);
-    if (intent_len > 0)
-      intent_count = 1;
+    *intent_valence_ptr = intent_valence;
   }
-
-  *intent_len_ptr = intent_len;
-  *intent_count_ptr = intent_count;
 
   return ret_value;
 }

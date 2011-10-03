@@ -101,17 +101,13 @@ ERL_NIF_TERM nif_get_sentiment(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
   memset(safe_status, 0, 10);
   char script[4];
   memset(script, 0, 4);
-  char sentiment[MAX_BUFFER_LEN];
-  sentiment[0] = '\0';
-  int sentiment_len = 0;
-  int sentiment_count = 0;
+  int sentiment_valence = 0;
 
   int ret_value = 0;
   if ((ret_value = GetSentiment((unsigned char *) text_str, text_buffer_len, text_len,
-                  (char *) safe_status, 10,
-                  (char *) script, 4,
-                  (char *) sentiment, MAX_BUFFER_LEN,
-                  &sentiment_len, &sentiment_count)) < 0) {
+                                (char *) safe_status, 10,
+                                (char *) script, 4,
+                                &sentiment_valence)) < 0) {
 #ifndef SENTIMENT_DEBUG
     return enif_make_atom(env, "error");
 #else
@@ -124,7 +120,6 @@ ERL_NIF_TERM nif_get_sentiment(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
   int ret_val = 0;
   ErlNifBinary safe_status_bin;
   ErlNifBinary script_bin;
-  ErlNifBinary sentiment_bin;
   ERL_NIF_TERM safe_status_term; 
   ERL_NIF_TERM script_term; 
 
@@ -172,40 +167,10 @@ ERL_NIF_TERM nif_get_sentiment(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv
   }
   script_term = enif_make_binary(env, &script_bin);
 
-  char *start = sentiment;
-  char *end = strstr(start, "|");
+  ERL_NIF_TERM sentiment_term;
+  sentiment_term = enif_make_int(env, sentiment_valence);
 
-  ERL_NIF_TERM sentiment_list = enif_make_list(env, 0);
-  if (sentiment_count > 0) {
-    while (start && end && *end != '\0') {
-      end = strstr(start, "|");
-      if (!end)
-        break;
-      *end = '\0';
-      len = end - start;
-#ifdef ERLANG_R14B02 
-      ret_val = enif_alloc_binary(len, &sentiment_bin);
-#else
-      ret_val = enif_alloc_binary(env, len, &sentiment_bin);
-#endif
-      if (ret_val < 0) {
-#ifndef SENTIMENT_DEBUG
-        return enif_make_atom(env, "error");
-#else
-        return enif_make_atom(env, "error_sentiment_bin_alloc");
-#endif
-      }
-      for (i=0; i<len; i++) {
-        sentiment_bin.data[i] = *(start + i);
-      }
-      sentiment_list = enif_make_list_cell(env, enif_make_binary(env, &sentiment_bin), sentiment_list);
-
-      *end = '|';
-      start = end + 1;
-    }
-  }
-
-  return enif_make_tuple3(env, safe_status_term, script_term, sentiment_list);
+  return enif_make_tuple3(env, safe_status_term, script_term, sentiment_term);
 
 }
 

@@ -13,7 +13,6 @@
 #include "classifier.h"
 #include "ngrams_generator.h"
 #include "corpus_manager.h"
-#include "naive_bayes_classifier.h"
 #include "keytuples_extracter.h"
 
 namespace inagist_classifiers {
@@ -81,7 +80,6 @@ class LanguageClassifier : public Classifier {
   
  private:
   NgramsGenerator m_ngrams_generator;
-  NaiveBayesClassifier m_naive_bayes_classifier;
   inagist_trends::KeyTuplesExtracter m_keytuples_extracter;
 
   unsigned int m_debug_level;

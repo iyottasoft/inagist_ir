@@ -47,11 +47,10 @@ int main(int argc, char *argv[]) {
   inagist_trends::KeywordsManager km;
 
   std::string line;
-  std::string script;
-  std::string safe_status;
   std::set<std::string> named_entities_set;
+  std::set<std::string>::iterator set_iter;
   char input[255];
-  
+
   unsigned int num_docs = 0;
   unsigned int count = 1;
   if (argc > 1)
@@ -61,9 +60,11 @@ int main(int argc, char *argv[]) {
     memset(input, 0, 255);
     strcpy(input, (char *) line.c_str());
 #ifdef NAMED_ENTITIES_ENABLED
-    ke.GetKeywords(input, safe_status, script, named_entities_set);
+    ke.GetKeyTuples(input, named_entities_set);
 #endif // NAMED_ENTITIES_ENABLED
-    ke.PrintKeywords(named_entities_set);
+    for (set_iter = named_entities_set.begin(); set_iter != named_entities_set.end(); set_iter++) {
+      std::cout << *set_iter << std::endl;
+    }
     km.PopulateFreqMap(named_entities_set);
     ++num_docs;
     km.PrintFreqMap();

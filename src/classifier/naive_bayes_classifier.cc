@@ -1,5 +1,6 @@
 #include "naive_bayes_classifier.h"
 #include <iostream>
+#include <fstream>
 #include <cmath>
 
 #ifdef DEBUG
@@ -15,9 +16,6 @@ namespace inagist_classifiers {
 NaiveBayesClassifier::NaiveBayesClassifier() {
 #ifdef NBC_DEBUG
   m_debug_level = NBC_DEBUG;
-  if (m_debug_level > 1) {
-    std::cout << "NBC debug level (default): " << m_debug_level << std::endl;
-  }
 #else
   m_debug_level = 0;
 #endif // NBC_DEBUG
@@ -39,9 +37,12 @@ void inline Initialize(double array[], unsigned int size) {
     array[i] = 0;
 }
 
-// this is pretty naive!
-// TODO (balaji) need to build a hash map with (say) ngram as key and
+// 
+// TODO (balaji) this is pretty naive! need to build a hash map with (say) ngram as key and
 // a list of structs with frequency and corpus as keys
+//
+// DONE (balaji) - gist_maker reads from a dictionary with the below structure
+// <std::string, std::map<std::string, double> (word, class_name, freq)
 //
 // note: while testing to create the prior frequencies, don't send the classes_freq_map.
 //
@@ -586,5 +587,293 @@ int NaiveBayesClassifier::Heapify(double& top1, unsigned int& top1_index,
   }
   return 0;
 }
+
+#if defined CLASSIFIER_DATA_TRAINING_ENABLED || CLASSIFIER_DATA_TESTING_ENABLED
+int NaiveBayesClassifier::PrepareNaiveBayes(std::string config_file_name,
+                                            const bool& train_not_test,
+                                            bool ignore_history) {
+
+  // this config file name should have corpus files
+  // and the strings with which the corpus contents can be uniquely identified
+
+  if (ClassifierConfig::Read(config_file_name.c_str(), m_config) < 0) {
+#ifdef CLASSIFIER_DEBUG
+    std::cerr << "ERROR: could not read config file: " << config_file_name << std::endl;
+#endif // CLASSIFIER_DEBUG
+    return -1;
+  }
+
+  if (m_config.classes.empty()) {
+#ifdef CLASSIFIER_DEBUG
+    std::cerr << "ERROR: class structs could not be read from config file: " \
+              << config_file_name << std::endl;
+#endif // CLASSIFIER_DEBUG
+    return -1;
+  }
+
+  CorpusMapMeta corpus_map_meta_data;
+
+#ifdef CLASSIFIER_DEBUG
+  if (m_debug_level > 4) {
+    std::cout << "classifier training meta data\n";
+  }
+#endif // CLASSIFIER_DEBUG
+
+  for (m_config.iter = m_config.classes.begin();
+       m_config.iter != m_config.classes.end();
+       m_config.iter++) {
+    if (train_not_test) {
+      corpus_map_meta_data[m_config.iter->name] = m_config.iter->training_corpus_file;
+    } else {
+      corpus_map_meta_data[m_config.iter->name] = m_config.iter->testing_corpus_file;
+    }
+#ifdef CLASSIFIER_DEBUG
+    if (m_debug_level > 4) {
+      std::cout << m_config.iter->name << " = " << corpus_map_meta_data[m_config.iter->name] << std::endl;
+    }
+#endif // CLASSIFIER_DEBUG
+  }
+
+  if (corpus_map_meta_data.empty()) {
+#ifdef CLASSIFIER_DEBUG
+    std::cerr << "ERROR: corpus_map_meta_data cannot be empty\n";
+#endif // CLASSIFIER_DEBUG
+    return -1;
+  }
+
+  if (!ignore_history) {
+    if (CorpusManager::LoadCorpus(m_config.class_freqs_file,
+                                  m_classes_freq_map) < 0) {
+#ifdef CLASSIFIER_DEBUG
+      std::cerr << "ERROR: could not load the text classes freq file (test data)\n";
+      std::cout << "WARNING: continuing without the text classes freq data\n";
+#endif // CLASSIFIER_DEBUG
+    }
+  } else {
+#ifdef CLASSIFIER_DEBUG
+    if (m_debug_level > 1) {
+      std::cout << "INFO: ignoring historical data. plain vanilla classification\n";
+    }
+#endif // CLASSIFIER_DEBUG
+  }
+
+#ifdef CLASSIFIER_DEBUG
+  if (m_debug_level > 1) {
+    std::cout << "loading corpus_map from corpus_map_meta_data (while initializing classifier)\n";
+  }
+#endif // CLASSIFIER_DEBUG
+  if (CorpusManager::LoadCorpusMap(corpus_map_meta_data, m_corpus_map) < 0) {
+#ifdef CLASSIFIER_DEBUG
+    std::cerr << "ERROR: could not load Corpus Map\n";
+#endif // CLASSIFIER_DEBUG
+    return -1;
+  }
+
+  return 0;
+}
+
+int NaiveBayesClassifier::Clear() {
+
+  int ret_val=0;
+
+  try {
+    if (CorpusManager::ClearCorpus(m_classes_freq_map) < 0) {
+      std::cerr << "ERROR: could not clear classes freq map\n";
+      ret_val = -1;
+    }
+    if (CorpusManager::ClearCorpusMap(m_corpus_map) < 0) {
+      std::cerr << "ERROR: could not clear corpus map\n";
+      ret_val = -1;
+    }
+    if (ClassifierConfig::Clear(m_config) < 0) {
+      std::cerr << "ERROR: could not clear classifier config\n";
+      ret_val = -1;
+    }
+  } catch (...) {
+    std::cerr << "EXCEPTION: thrown while clearing NaiveBayesClassifier\n";
+  }
+
+  return ret_val;
+}
+
+int NaiveBayesClassifier::GenerateProbabilities(const bool& train_not_test) {
+
+  CorpusMap* corpus_map = &(m_corpus_map);
+
+  std::set<std::string> vocabulary_set;
+  Corpus* corpus_ptr;
+  CorpusMapIter corpus_map_iter;
+  CorpusIter corpus_iter;
+  std::string class_name;
+  std::string word;
+
+  for (corpus_map_iter = corpus_map->begin(); corpus_map_iter != corpus_map->end(); corpus_map_iter++) {
+
+    // for this iteration, what is the class name and corpus?
+    class_name = corpus_map_iter->first;
+    corpus_ptr = &(corpus_map_iter->second);
+    if (corpus_ptr->empty()) {
+#ifdef NBC_DEBUG
+      std::cout << "WARNING: no entries found in corpus for class: " << class_name << std::endl;
+#endif // NBC_DEBUG
+      continue;
+    }
+
+    for (corpus_iter = corpus_ptr->begin();
+         corpus_iter != corpus_ptr->end();
+         corpus_iter++) {
+#ifdef CLASSIFIER_DEBUG
+      if (CLASSIFIER_DEBUG > 3) {
+          std::cout << (*corpus_iter).first << " : " << (*corpus_iter).second \
+                    << " in " << class_name << std::endl;
+      }
+#endif // CLASSIFIER_DEBUG
+      word = (*corpus_iter).first;
+      // freq = (*corpus_iter).second;
+      vocabulary_set.insert(word);
+    }
+  }
+
+  // this is the vocabulary size. the B in the denominator. see Raghavan et al.
+  unsigned int vocabulary_size = vocabulary_set.size();
+
+  // TODO (balaji)
+  // the above loop over corpus map is unavoidable becos we need vocabulary size. if needed find this in GetData
+
+  std::string data_file;
+  for (m_config.iter = m_config.classes.begin();
+       m_config.iter != m_config.classes.end();
+       m_config.iter++) {
+
+    if (train_not_test) {
+      data_file = m_config.iter->training_data_file;
+    } else {
+      data_file = m_config.iter->testing_data_file;
+    }
+
+    if ((corpus_map_iter = corpus_map->find(m_config.iter->name)) == corpus_map->end()) {
+      std::cerr << "ERROR: corpus map not found for class: " << m_config.iter->name << std::endl;
+      break;
+    }
+
+    if (GenerateProbabilities(&(corpus_map_iter->second),
+                              data_file.c_str(),
+                              vocabulary_size) < 0) {
+#ifdef CLASSIFIER_DEBUG
+      std::cerr << "ERROR - could not normalize frequencies for: " << corpus_file << std::endl;
+#endif // CLASSIFIER_DEBUG
+      break;
+    }
+  }
+
+  return 0;
+}
+
+int NaiveBayesClassifier::GenerateProbabilities(Corpus* raw_data_corpus,
+                                                const char* probabilities_file,
+                                                const unsigned int& vocabulary_size) {
+
+  if (!probabilities_file) {
+#ifdef CLASSIFIER_DEBUG
+    std::cerr << "ERROR: invalid probabilities file\n";
+#endif // CLASSIFIER_DEBUG
+    return -1;
+  }
+
+  if (raw_data_corpus->size() < 2) {
+#ifdef CLASSIFIER_DEBUG
+    std::cerr << "WARNING: empty raw data corpus\n";
+#endif // CLASSIFIER_DEBUG
+    return 0;
+  }
+
+  // refer to naive bayes as mentioned by Raghavan et al.
+  // (Tct + 1) / (sum over Tct-dash + B)
+  // Tct - term count for a word
+  // +1 - add-one or Laplace smoothing
+  // B - vocabulary size. count of words in all classes ignoring duplicates.
+  // tct-dash - seems to be the count of all words present the in this class including duplicates.
+  CorpusIter corpus_iter;
+  double corpus_sum = 0;
+  for (corpus_iter = raw_data_corpus->begin(); corpus_iter != raw_data_corpus->end(); corpus_iter++) {
+    corpus_sum += corpus_iter->second;
+  }
+
+  double normalizing_denominator = corpus_sum + (double) vocabulary_size;
+  if (normalizing_denominator <= 1) {
+#ifdef CLASSIFIER_DEBUG
+    std::cerr << "WARNING: invalid normalizing denominator\n";
+#endif // CLASSIFIER_DEBUG
+    return 0;
+  }
+
+  Corpus probabilities_corpus;
+  for (corpus_iter = raw_data_corpus->begin(); corpus_iter != raw_data_corpus->end(); corpus_iter++) {
+    probabilities_corpus[corpus_iter->first] = log((corpus_iter->second + 1)/ normalizing_denominator);
+  }
+
+  if (CorpusManager::WriteCorpusToFile(probabilities_corpus, probabilities_file) < 0) {
+    probabilities_corpus.clear();
+#ifdef CLASSIFIER_DEBUG
+    std::cerr << "ERROR - could not write probabilites to " \
+              << relative_freq_file << std::endl;
+#endif // CLASSIFIER_DEBUG
+    return -1;
+  }
+
+  probabilities_corpus.clear();
+
+  return 0;
+}
+
+int NaiveBayesClassifier::MakePriorProbabilitiesFile(const char* classifier_prior_freqs_file) {
+
+  if (!classifier_prior_freqs_file) {
+    std::cerr << "ERROR: invalid input\n";
+    return -1;
+  }
+
+  if (m_classes_freq_map.empty()) {
+    std::cerr << "ERROR: classes freq map empty\n";
+    return -1;
+  }
+
+  Corpus* classes_freq_map = &(m_classes_freq_map);
+
+  CorpusIter corpus_iter;
+  double prior_total_entries = 0;
+  if ((corpus_iter = classes_freq_map->find("all_classes")) != classes_freq_map->end()) {
+    prior_total_entries = (*corpus_iter).second;
+  } else {
+    return -1;
+  }
+
+  if (prior_total_entries <= 0) {
+    std::cerr << "ERROR: invalid prior total entries\n";
+    return -1;
+  }
+
+  std::ofstream ofs(classifier_prior_freqs_file);
+  if (!ofs.is_open()) {
+    std::cerr << "ERROR: could not open classifier prior freqs file: " \
+              << classifier_prior_freqs_file << std::endl;
+    return -1;
+  }
+  std::string class_name;
+  double class_freq = 0;
+  for (corpus_iter = classes_freq_map->begin();
+       corpus_iter != classes_freq_map->end();
+       corpus_iter++) {
+    class_name = corpus_iter->first;
+    class_freq = corpus_iter->second;
+    if (class_name.compare("all_classes") == 0)
+      continue;
+    ofs << class_name << "=" << log(class_freq/prior_total_entries) << std::endl;
+  }
+  ofs.close();
+
+  return 0;
+}
+#endif // CLASSIFIER_DATA_TRAINING_ENABLED || CLASSIFIER_DATA_TESTING_ENABLED
 
 }
