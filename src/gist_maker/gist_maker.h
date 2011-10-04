@@ -174,7 +174,7 @@ class GistMaker {
 #endif // LOCATION_ENABLED
 
   // functions
-  bool IsIgnore(char*& ptr);
+  bool IsIgnore(char*& ptr, int& ignore_intent);
   inline void Insert(unsigned char* buffer, unsigned int& current_len,
                      unsigned char* str_to_add, const unsigned int& str_len,
                      unsigned int& buffer_content_count);

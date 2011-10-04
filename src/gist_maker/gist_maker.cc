@@ -257,7 +257,7 @@ void GistMaker::PrintKeywords(std::set<std::string> &named_entities_set) {
   }
 }
 
-bool GistMaker::IsIgnore(char *&ptr) {
+bool GistMaker::IsIgnore(char *&ptr, int& ignore_intent) {
   if (!ptr || '\0' == *ptr)
     return false;
   // anyword with starts with punct (except #) is ignore word
@@ -265,13 +265,22 @@ bool GistMaker::IsIgnore(char *&ptr) {
       !strncmp(ptr, "#fb", 3) ||
       !strncmp(ptr, "#FB", 3) ||
       !strncmp(ptr, "FB ", 3) ||
-      !strncmp(ptr, "fb ", 3) ||
-      !strncmp(ptr, "http://", 7) ||
-      !strncmp(ptr, "www.", 4) ||
-      !strncmp(ptr, "RT ", 3)) {
+      !strncmp(ptr, "fb ", 3)
+     ) {
     while (' ' != *(ptr+1) && '\0' != *(ptr+1)) {
       ptr++;
     }
+    return true;
+  } else if (!strncmp(ptr, "http://", 7) ||
+             !strncmp(ptr, "www.", 4) ||
+             !strncmp(ptr, "t.co/", 5) ||
+             !strncmp(ptr, "lx.im/", 6) ||
+             !strncmp(ptr, "RT ", 3)
+            ) {
+    while (' ' != *(ptr+1) && '\0' != *(ptr+1)) {
+      ptr++;
+    }
+    ignore_intent = -1;
     return true;
   }
   return false;
@@ -1090,8 +1099,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
 #ifdef INTENT_ENABLED
   int first_person_valence = 0;
+  int class_word_valence = 0;
 #endif // INTENT_ENABLED
   int punct_intent = 0;
+  int ignore_intent = 0;
 
 #ifdef PROFANITY_CHECK_ENABLED
   bool text_has_unsafe_words = false;
@@ -1116,7 +1127,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
   // go to the first word, ignoring handles and punctuations
   unsigned char *prev = NULL;
-  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && inagist_utils::IsPunct((char *&) ptr, (char *) prev, (char *) ptr+1, &punct_intent, &punct_senti)) || IsIgnore((char *&) ptr))) {
+  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && inagist_utils::IsPunct((char *&) ptr, (char *) prev, (char *) ptr+1, &punct_intent, &punct_senti)) || IsIgnore((char *&) ptr, ignore_intent))) {
     prev = ptr;
     ptr++;
   }
@@ -1334,6 +1345,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         first_person_valence = 1;
       } else if (dict_value == 20) {
         current_word_negation = true;
+      } else if (dict_value == 30) {
+        class_word_valence = 1;
       } else {
         intent_start = current_word_start;
         intent_value = dict_value;
@@ -1424,7 +1437,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
          (' ' == *ptr ||
           (ispunct(*ptr) &&
            (is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))) ||
-          (is_ignore_word = IsIgnore((char *&) ptr))
+          (is_ignore_word = IsIgnore((char *&) ptr, ignore_intent))
          )
         ) {
     current_word_precedes_ignore_word |= is_ignore_word;
@@ -1617,6 +1630,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
               first_person_valence = 1;
             } else if (dict_value == 20) {
               next_word_negation = true;
+            } else if (dict_value == 30) {
+              class_word_valence = 1;
             } else {
               flag = true;
               intent_value = dict_value;
@@ -1634,6 +1649,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
               first_person_valence = 1;
             } else if (dict_value == 20) {
               next_word_negation = true;
+            } else if (dict_value == 30) {
+              class_word_valence = 1;
             } else {
               if (!current_word_negation) {
                 flag = true;
@@ -2381,7 +2398,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
                    || (ispunct(*ptr) &&
                       (is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))
                       )
-                   || (is_ignore_word = IsIgnore((char *&) ptr))
+                   || (is_ignore_word = IsIgnore((char *&) ptr, ignore_intent))
                   )
               ) {
           current_word_precedes_ignore_word |= is_ignore_word;
@@ -2847,8 +2864,12 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     std::cout << "init intent_valence: " << intent_valence << std::endl;
   }
 #endif // GM_DEBUG
-  intent_valence += first_person_valence;
-  intent_valence += punct_intent;
+  if (intent_valence > 0) {
+    intent_valence += first_person_valence;
+    intent_valence += punct_intent;
+    intent_valence += ignore_intent;
+    intent_valence += class_word_valence;
+  }
 #ifdef GM_DEBUG
   if (m_debug_level > 2) {
     std::cout << "punct_intent:" << punct_intent << std::endl;
