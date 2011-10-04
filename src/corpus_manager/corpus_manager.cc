@@ -170,6 +170,7 @@ int CorpusManager::ClearCorpusMap(CorpusMap& corpus_map) {
 
 int CorpusManager::ClearCorpus(Corpus& corpus) {
   corpus.clear();
+  return 0;
 }
 
 int CorpusManager::LoadCorpus(const std::string corpus_file_name, Corpus& corpus) {
