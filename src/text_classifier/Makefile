@@ -12,7 +12,8 @@ LIB = ${LIB_DIR}/lib${PROJECT}.so
 BINS = ${BIN_DIR}/t_text_classifier \
        ${BIN_DIR}/x_text_classifier_training_data \
        ${BIN_DIR}/t_text_classifier_training_data \
-       ${BIN_DIR}/x_text_classifier_testing_data
+       ${BIN_DIR}/x_text_classifier_testing_data \
+       ${BIN_DIR}/t_clean_text_corpus
 
 keytuples = keytuples_config.o keytuples_extracter.o
 classifier = classifier_config.o naive_bayes_classifier.o classifier.o
@@ -74,10 +75,10 @@ ${BIN_DIR}/x_text_classifier_testing_data: x_text_classifier_testing_data.o ${LI
 	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_text_classifier_testing_data
 	@echo "done!"
 
-#${BIN_DIR}/t_clean_text_corpus: t_clean_text_corpus.o ${LIB}
-#	@echo "creating binary:" $@
-#	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_clean_text_corpus
-#	@echo "done!"
+${BIN_DIR}/t_clean_text_corpus: t_clean_text_corpus.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_clean_text_corpus
+	@echo "done!"
 
 #${BIN_DIR}/t_text_classifier_training_data_normalizer: t_text_classifier_training_data_normalizer.o ${LIB}
 #	@echo "creating binary:" $@

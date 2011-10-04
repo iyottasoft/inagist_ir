@@ -9,6 +9,13 @@
 
 inagist_trends::KeyTuplesExtracter g_ke;
 
+int PrintSet(std::set<std::string>& print_set) {
+  std::set<std::string>::iterator set_iter;
+  for (set_iter = print_set.begin(); set_iter != print_set.end(); set_iter++) {
+    std::cout << *set_iter << std::endl;
+  }
+}
+
 int GetKeyTuples(std::string text) {
 
   char buffer[1024];
@@ -65,35 +72,35 @@ int GetKeyTuples(std::string text) {
 #ifdef NAMED_ENTITIES_ENABLED
   if (named_entities_set.size() > 0) {
     std::cout << "named_entities:\n";
-    g_ke.PrintKeywords(named_entities_set);
+    PrintSet(named_entities_set);
     named_entities_set.clear();
   }
 #endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
   if (keywords_set.size() > 0) {
     std::cout << "keywords:\n";
-    g_ke.PrintKeywords(keywords_set);
+    PrintSet(keywords_set);
     keywords_set.clear();
   }
 #endif // KEYWORDS_ENABLED
 #ifdef KEYPHRASE_ENABLED
   if (keyphrases_set.size() > 0) {
     std::cout << "keyphrases:\n";
-    g_ke.PrintKeywords(keyphrases_set);
+    PrintSet(keyphrases_set);
     keyphrases_set.clear();
   }
 #endif // KEYPHRASE_ENABLED
 #ifdef LANG_ENABLED
   if (lang_words_set.size() > 0) {
     std::cout << "lang_words:\n";
-    g_ke.PrintKeywords(lang_words_set);
+    PrintSet(lang_words_set);
     lang_words_set.clear();
   }
 #endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
   if (text_class_words_set.size() > 0) {
     std::cout << "text_class_words:\n";
-    g_ke.PrintKeywords(text_class_words_set);
+    PrintSet(text_class_words_set);
     text_class_words_set.clear();
   }
 #endif // TEXT_CLASSIFICATION_ENABLED

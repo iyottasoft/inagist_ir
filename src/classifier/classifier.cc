@@ -580,7 +580,7 @@ int Classifier::GetData(const bool& train_not_test,
                         const std::string& expected_class_name,
                         Corpus& output_corpus, // this corpus is from tweets of the given handle
                         unsigned int& output_corpus_size, // this shd be output_corpus.size(). but its complicated!
-                        unsigned int& output_num_docs, // how many docs obtained fort this handle
+                        unsigned int& output_num_docs, // how many docs obtained for this handle
                         Corpus& output_class_freq_map, // how are those docs distributed across classes
                         std::ostream &output_stream,
                         bool get_user_info) {
@@ -921,9 +921,10 @@ int Classifier::CleanCorpusFile(std::string& corpus_file_name,
       corpus.erase(corpus_iter);
     }
 #ifdef CLASSIFIER_DEBUG
-    if (m_debug_level > 1) {
+    if (m_debug_level > 3) {
       if (wait) {
         if (temp_wait) {
+        std::cout << "press any key to continue\n";
         std::cin >> input;
         if (input.compare("enuf") == 0) {
           wait = false;
