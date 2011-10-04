@@ -56,13 +56,8 @@ int main() {
   unsigned int text_classes_len = 0;
   unsigned int text_classes_count = 0;
 
-  char intent_buffer[MAX_CLASS_NAME];
-  intent_buffer[0] = '\0';
-  unsigned int intent_buffer_len = MAX_CLASS_NAME;
-
-  char sentiment_buffer[MAX_CLASS_NAME];
-  sentiment_buffer[0] = '\0';
-  unsigned int sentiment_buffer_len = MAX_CLASS_NAME;
+  int intent_valence = 0;
+  int sentiment_valence = 0;
 
   int ret_value = 0;
   if ((ret_value = CallGetGist((unsigned char *) tweet_str, tweet_buffer_len, tweet_len,
@@ -77,16 +72,13 @@ int main() {
                   &keyphrases_len, &keyphrases_count,
                   (char *) text_classes_buffer, text_classes_buffer_len,
                   &text_classes_len, &text_classes_count
-                  , (char *) intent_buffer, intent_buffer_len 
-                  , (char *) sentiment_buffer, sentiment_buffer_len
+                  , &intent_valence
+                  , &sentiment_valence
                  )) < 0) {
     printf("error\n");
   }
   tweet_str[0] = '\0';
   tweet_len = 0;
-
-  printf("intent (.c): %s\n", intent_buffer);
-  printf("sentiment (.c): %s\n", sentiment_buffer);
 
   return 0;
 }
