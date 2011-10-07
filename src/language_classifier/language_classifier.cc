@@ -31,7 +31,14 @@ LanguageClassifier::~LanguageClassifier() {
 
 int LanguageClassifier::SetDebugLevel(unsigned int debug_level) {
   m_debug_level = debug_level;
-  m_ngrams_generator.SetDebugLevel(debug_level);
+  if (m_ngrams_generator.SetDebugLevel(debug_level) < 0) {
+    std::cerr << "ERROR: could not set debug level in ngrams generator\n";
+    return -1;
+  }
+  if (m_keytuples_extracter.SetDebugLevel(debug_level) < 0) {
+    std::cerr << "ERROR: could not set debug level in keytuples_extracter\n";
+    return -1;
+  }
   return 0;
 }
  

@@ -32,6 +32,10 @@ TextClassifier::~TextClassifier() {
 
 int TextClassifier::SetDebugLevel(unsigned int debug_level) {
   m_debug_level = debug_level;
+  if (m_keytuples_extracter.SetDebugLevel(debug_level) < 0) {
+    std::cerr << "ERROR: could not set debug level in keytuples_extracter\n";
+    return -1;
+  }
   return 0;
 }
 
