@@ -41,7 +41,7 @@ GIST_OBJS = gist_collector.o gist_collector_cppi.o \
             ${LANG_OBJS}
 GIST_FLAGS = ${KEYTUPLES_FLAGS} ${LANG_FLAGS} ${TEXT_CLASSIFICATION_FLAGS}
 
-all: tweets stem keytuples intent trends lang text_class gist channels gist_maker profiler
+all: tweets stem keytuples intent trends lang text_class gist gist_maker profiler
 	@echo "build done!"
 
 clean:
@@ -141,16 +141,6 @@ text_classifier:
 	@g++ ${CXXFLAGS} ${PROJECTFLAGS} -fPIC -shared -c -DTEXT_CLASS_WORDS_ENABLED ${CPP_SRC_DIR}/keytuples_extracter/keytuples_config.cc ${CPP_SRC_DIR}/keytuples_extracter/keytuples_extracter.cc ${CPP_SRC_DIR}/text_classifier/text_classifier.cc text_classifier_cppi.cc -I${CPP_INCLUDE_DIR}/utfcpp -I${CPP_SRC_DIR}/script_detector -I${CPP_SRC_DIR}/utils -I${CPP_SRC_DIR}/keytuples_extracter -I${CPP_SRC_DIR}/corpus_manager -I${CPP_SRC_DIR}/ngrams_generator -I${CPP_SRC_DIR}/classifier -I${CPP_SRC_DIR}/text_classifier
 	@ar -r ${LOCAL_LIB_DIR}/libtext_classifier_cppi.a keytuples_config.o keytuples_extracter.o text_classifier.o text_classifier_cppi.o
 	@ranlib ${LOCAL_LIB_DIR}/libtext_classifier_cppi.a
-	@echo "done!"
-
-channels: channel_manager
-	@echo "done!"
-
-channel_manager:
-	@echo "creating library ${LOCAL_LIB_DIR}/libchannel_manager_cppi.a ..."
-	@g++ ${CXXFLAGS} ${PROJECTFLAGS} -fPIC -shared -c channel_manager_cppi.cc -I${CPP_SRC_DIR}/channel_manager
-	@ar -r ${LOCAL_LIB_DIR}/libchannel_manager_cppi.a channel_manager_cppi.o
-	@ranlib ${LOCAL_LIB_DIR}/libchannel_manager_cppi.a
 	@echo "done!"
 
 gist_maker:

@@ -205,7 +205,7 @@ int TextClassifier::Classify(const unsigned char* text_word_list,
 #ifdef CLASS_CONTRIBUTORS_ENABLED
   std::map<std::string, std::string> class_contributors_map;
 #endif // CLASS_CONTRIBUTORS_ENABLED
-  if (NaiveBayesClassifier::GuessClass2(m_corpus_map,
+  if (NaiveBayesClassifier::GuessClass3(m_corpus_map,
                                         m_classes_freq_map,
                                         test_corpus,
                                         text_class,
@@ -306,6 +306,9 @@ int TextClassifier::Classify(std::set<std::string>& words_set,
     text_class.assign("RR");
     top_classes.assign("RR");
     top_classes_count = 1;
+    if (m_debug_level > 2) {
+      std::cerr << "INFO: empty words set. can't classify\n";
+    }
 #endif
     return 0;
   }
@@ -347,7 +350,7 @@ int TextClassifier::Classify(Corpus& corpus,
 
   int ret_value = 0;
   std::set<std::string> top_classes_set;
-  if ((ret_value = NaiveBayesClassifier::GuessClass2(m_corpus_map,
+  if ((ret_value = NaiveBayesClassifier::GuessClass3(m_corpus_map,
                                                      m_classes_freq_map,
                                                      corpus,
                                                      text_class,
@@ -359,6 +362,15 @@ int TextClassifier::Classify(Corpus& corpus,
                                                     )) < 0) {
     std::cout << "ERROR: naive bayes classifiers could not guess the text class\n";
     return -1;
+  }
+
+  if (text_class.empty() || top_classes_set.empty()) {
+#ifdef TC_DEBUG
+    if (m_debug_level > 2) {
+      std::cout << "INFO: naive bayes didn't classify.\n"; 
+    }
+#endif // TC_DEBUG
+    return 0;
   }
 
   if (m_class_labels_map.empty()) {

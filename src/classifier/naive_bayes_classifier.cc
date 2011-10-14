@@ -132,11 +132,7 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
           std::cout << (*corpus_iter).first << " : " << (*corpus_iter).second << " in " << class_name << std::endl;
         }
 #endif // NBC_DEBUG
-        temp_freq = (double) (*corpus_iter).second;
-        if (temp_freq > 8) {
-          temp_freq = 8;
-        }
-        temp_total_freq += temp_freq;
+        temp_total_freq += (double) (*corpus_iter).second;
         entry_found = true;
       }
     }
@@ -206,7 +202,7 @@ int NaiveBayesClassifier::GuessClass(CorpusMap& corpus_map,
   return 0;
 }
 
-int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
+int NaiveBayesClassifier::GuessClass3(CorpusMap& corpus_map,
                                       Corpus& classes_freq_map,
                                       Corpus& test_corpus,
                                       std::string& guess_class_output,
@@ -219,9 +215,12 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
                                      ) {
 
   if (test_corpus.size() < 1) {
+#ifdef NBC_DEBUG
     guess_class_output = "RR";
     top_classes_output = "RR";
     top_classes_count = 1;
+    std::cerr << "WARNING: empty input text corpus. can't classify\n";
+#endif // NBC_DEBUG
     return -1;
   }
 
@@ -229,7 +228,7 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
 
   std::set<std::string> top_classes_set;
   int ret_val = 0;
-  if (GuessClass2(corpus_map,
+  if (GuessClass3(corpus_map,
                   classes_freq_map,
                   test_corpus,
                   guess_class_output,
@@ -239,7 +238,9 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
 #endif // CLASS_CONTRIBUTORS_ENABLED
                   , debug_level
                  ) < 0) {
+#ifdef NBC_DEBUG
     std::cerr << "ERROR: could not get top classes set\n";
+#endif // NBC_DEBUG
     return -1;
   }
 
@@ -352,10 +353,7 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
         }
 #endif
         temp_freq = (double) (*corpus_iter).second;
-        if (temp_freq > 8) {
-          temp_freq = 8;
-        }
-        temp_total_freq += temp_freq;
+        temp_total_freq += log(temp_freq); // note this is addition of logs - multiplication of probabilities
         entry_found = true;
 #ifdef CLASS_CONTRIBUTORS_ENABLED
         key_str.assign(test_element);
@@ -496,6 +494,249 @@ int NaiveBayesClassifier::GuessClass2(CorpusMap& corpus_map,
 #ifdef NBC_DEBUG
   if (debug_level > 1 || NBC_DEBUG > 1) {
     std::cout << "max freq: " << max_freq << std::endl;
+    std::cout << "max index: " << max_index << std::endl;
+    std::cout << "guess_class_output: " << classes[max_index] << std::endl;
+    std::cout << "max duplicate count: " << max_duplicate_count << std::endl;
+  }
+#endif
+
+  if (0 == max_duplicate_count) {
+    guess_class_output = classes[max_index];
+    return 1;
+  } else {
+    guess_class_output = "UU";
+  }
+
+  return 0;
+}
+
+/* sorry for the poor naming of function! */
+/*
+  c = arg max [ log p(c) + sigma 1<=k<=n log p(tk|c) ]
+  the probability of document d being in class c is equal to the sum over 1 to n of the probablity of each term being in class c plus the prior probability of the class among all classes.
+
+  this implementation assumes that the values are already log of the probabilities.
+*/
+
+int NaiveBayesClassifier::GuessClass3(CorpusMap& corpus_map,
+                                      Corpus& classes_prior_prob_map,
+                                      Corpus& test_corpus,
+                                      std::string& guess_class_output,
+                                      std::set<std::string>& top_classes_set
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+                                      , std::map<std::string, std::string>& class_contributors
+#endif // CLASS_CONTRIBUTORS_ENABLED
+                                      , unsigned int debug_level
+                                     ) {
+
+  if (test_corpus.size() < 1) {
+#ifdef NBC_DEBUG
+    guess_class_output = "RR";
+    std::cerr << "WARNING: empty input text corpus. can't classify\n";
+#endif // NBC_DEBUG
+    return -1;
+  }
+
+  if (corpus_map.size() > MAX_CORPUS_NUMBER) {
+    std::cerr << "ERROR: exceeds max classes that this classifier can handle\n";
+    return -1;
+  }
+
+  double prior_total_entries = 0;
+  CorpusIter corpus_iter;
+  if ((corpus_iter = classes_prior_prob_map.find("all_classes")) != classes_prior_prob_map.end()) {
+    prior_total_entries = (*corpus_iter).second;
+  }
+
+  CorpusMapIter corpus_map_iter;
+  CorpusIter test_corpus_iter;
+  CorpusIter class_freq_iter;
+  CorpusIter loc;
+  Corpus* corpus_ptr;
+
+  double prior_prob_values[MAX_CORPUS_NUMBER];
+  Initialize(prior_prob_values, MAX_CORPUS_NUMBER);
+  double prob_values[MAX_CORPUS_NUMBER];
+  Initialize(prob_values, MAX_CORPUS_NUMBER);
+  double prior_entry_for_class = 0;
+  unsigned int count = 0;
+  std::string classes[MAX_CORPUS_NUMBER];
+  std::string class_name;
+  std::string test_element;
+  std::string key_str;
+  std::string value_str;
+
+  bool entry_found = false;
+  double prob_value = 0;
+  double prior_prob_value = 0;
+  double total_prob_value = 0;
+  prob_values[count] = 0;
+  prior_prob_values[count] = 0;
+
+  for (corpus_map_iter = corpus_map.begin(); corpus_map_iter != corpus_map.end(); corpus_map_iter++) {
+    prob_value = 0;
+    prior_prob_value = 0;
+    total_prob_value = 0;
+    // for this iteration, what is the class name and corpus?
+    class_name = corpus_map_iter->first;
+    if (class_name.empty()) {
+      std::cerr << "ERROR: invalid class name. fatal error\n";
+      break;
+    }
+    corpus_ptr = &(corpus_map_iter->second);
+    if (corpus_ptr->empty()) {
+#ifdef NBC_DEBUG
+      std::cout << "WARNING: no entries found in corpus for class: " << class_name << std::endl;
+#endif // NBC_DEBUG
+      continue;
+    }
+
+    // now lets pit this corpus with the test corpus
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+    std::map<std::string, std::string>::iterator cc_iter;
+#endif // CLASS_CONTRIBUTORS_ENABLED
+    for (test_corpus_iter = test_corpus.begin();
+         test_corpus_iter != test_corpus.end();
+         test_corpus_iter++) {
+      test_element = test_corpus_iter->first; 
+      // see if this element in the test corpus is present in the current corpus
+      corpus_iter = corpus_ptr->find(test_element); 
+      if (corpus_iter != corpus_ptr->end()) {
+#ifdef NBC_DEBUG
+        if (debug_level > 4 || NBC_DEBUG > 4) {
+          std::cout << (*corpus_iter).first << " : " << (*corpus_iter).second \
+                    << " in " << class_name << std::endl;
+        }
+#endif
+        prob_value = (double) (*corpus_iter).second;
+        total_prob_value += prob_value;
+        entry_found = true;
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+        key_str.assign(test_element);
+        value_str = class_name + ";";
+        if ((cc_iter = class_contributors.find(key_str)) != class_contributors.end()) {
+          cc_iter->second += value_str; 
+        } else {
+          class_contributors[key_str].assign(value_str);
+        }
+#endif // CLASS_CONTRIBUTORS_ENABLED
+      }
+    }
+    if (!entry_found)
+      continue;
+
+    // now that we know the classes, do we have its previous frequency?
+    // lets get it from classes_prior_prob_map
+    if (!classes_prior_prob_map.empty()) {
+      if ((class_freq_iter = classes_prior_prob_map.find(class_name)) != classes_prior_prob_map.end()) {
+        prior_prob_value = class_freq_iter->second;
+      }
+    }
+
+    if (total_prob_value != 0) {
+      classes[count] = class_name;
+      prior_prob_values[count] = prior_prob_value;
+      prob_values[count] = total_prob_value; // + prior_prob_value; MASSIVE DECISION!
+      count++;
+      prob_values[count] = 0;
+      prior_prob_values[count] = 0;
+    }
+  }
+
+  if (!entry_found || count == 0) {
+    guess_class_output = "XX";
+    return 0;
+  }
+
+#ifdef NBC_DEBUG
+  if (debug_level > 3 || NBC_DEBUG > 3) {
+    if (!classes_prior_prob_map.empty()) {
+      for (unsigned int i=0; i<count; i++) {
+          std::cout << classes[i] << ": " << prob_values[i] << " prior: " << prior_prob_values[i] << std::endl;
+      }
+    } else {
+      for (unsigned int i=0; i<count; i++) {
+          std::cout << classes[i] << ": " << prob_values[i] << std::endl;
+      }
+    }
+  }
+#endif // NBC_DEBUG
+
+  double max_prob_value = 0;
+  unsigned int max_index = 0;
+  unsigned int max_duplicate_count = 0;
+  double sum = 0;
+  prob_values[0] = exp(prob_values[0]);
+  sum += prob_values[0];
+  max_prob_value = prob_values[0];
+  max_index = 0;
+  for (unsigned int j=1; j<count; j++) {
+    prob_values[j] = exp(prob_values[j]);
+    //sum += prob_values[count];
+    sum += prob_values[j];
+#ifdef NBC_DEBUG
+    if (debug_level > 2 || NBC_DEBUG > 2) {
+      std::cout << classes[j] << " prob_value: " << prob_values[j] << std::endl;
+    }
+#endif
+    if (max_prob_value == prob_values[j]) {
+      max_duplicate_count++;
+    } else if (max_prob_value < prob_values[j]) {
+      max_prob_value = prob_values[j];
+      max_index = j;
+      max_duplicate_count = 0;
+    }
+  }
+
+  double mean = sum/count;
+  double top1 = 0;
+  unsigned int top1_index = 0;
+  double top2 = 0;
+  unsigned int top2_index = 0;
+  double top3 = 0;
+  unsigned int top3_index = 0;
+  if (count > 1) {
+    if (prob_values[0] > prob_values[1]) {
+      top1 = prob_values[0];
+      top1_index = 0;
+      top2 = prob_values[1];
+      top2_index = 1;
+    } else {
+      top1 = prob_values[1];
+      top1_index = 1;
+      top2 = prob_values[0];
+      top2_index = 0;
+    }
+  }
+  if (count > 2) {
+    top3 = prob_values[2];
+    top3_index = 2;
+    Heapify(top1, top1_index, top2, top2_index, top3, top3_index);
+  }
+  for (unsigned int j=3; j<count; j++) {
+    prob_value = prob_values[j];
+    if (prob_value > top3) {
+      top3 = prob_value;
+      top3_index = j;
+      Heapify(top1, top1_index, top2, top2_index, top3, top3_index);
+    }
+  }
+
+  top_classes_set.insert(classes[top1_index]);
+  if (count > 1) {
+    if (top2 > mean) {
+      top_classes_set.insert(classes[top2_index]);
+    }
+  }
+  if (count > 2) {
+    if (top3 > mean) {
+      top_classes_set.insert(classes[top3_index]);
+    }
+  }
+
+#ifdef NBC_DEBUG
+  if (debug_level > 1 || NBC_DEBUG > 1) {
+    std::cout << "max prob_value: " << max_prob_value << std::endl;
     std::cout << "max index: " << max_index << std::endl;
     std::cout << "guess_class_output: " << classes[max_index] << std::endl;
     std::cout << "max duplicate count: " << max_duplicate_count << std::endl;

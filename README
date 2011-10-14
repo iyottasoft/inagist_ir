@@ -53,4 +53,10 @@ Guidelines:
    a. x_ means execute_binary. all production binaries should begin with x_
    b. t_ means test_binary. provide a t_ for all x_.
 
-binaries are either
+4. DEBUG conventions
+   a. provide a class_acronym_DEBUG macro in all your classes, which itself will be predicated upon DEBUG being > 0
+   b. provide m_debug_level member function in classes. set it with macro value or command line value. unless m_debug_level is > 0, don't print any error message.
+   c. if DEBUG is set to 1, provide basic and fatal error message. this typically accompany return -1
+   d. other error messages and warnings can be sent at debug levels 2 and 3.
+   e. use debug levels above 3 for info messages.
+   Note: use of macros is to reduce lib/binary sizes.

@@ -260,7 +260,7 @@ void GistMaker::PrintKeywords(std::set<std::string> &named_entities_set) {
 bool GistMaker::IsIgnore(char *&ptr, int& ignore_intent) {
   if (!ptr || '\0' == *ptr)
     return false;
-  // anyword with starts with punct (except #) is ignore word
+  // anyword which starts with punct (except #) is ignore word
   if ((ispunct(*ptr) && '#' != *ptr && ' ' != *(ptr+1)) ||
       !strncmp(ptr, "#fb", 3) ||
       !strncmp(ptr, "#FB", 3) ||
@@ -745,6 +745,17 @@ inline void GistMaker::Insert(unsigned char* buffer, unsigned int& current_len,
   }
 }
 
+inline void GistMaker::CopyMapInto(std::map<std::string, int>& sentence_intent_words,
+                                   std::map<std::string, int>& intent_words) {
+   if (sentence_intent_words.empty())
+     return;
+
+   std::map<std::string, int>::iterator map_iter;
+   for (map_iter = sentence_intent_words.begin(); map_iter != sentence_intent_words.end(); map_iter++) {
+     intent_words.insert(std::pair<std::string, int> (map_iter->first, map_iter->second));
+   }
+}
+
 int GistMaker::Heapify(double& top1, std::string& top1_class,
                        double& top2, std::string& top2_class,
                        double& top3, std::string& top3_class) {
@@ -1038,16 +1049,19 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // KEYPHRASE_ENABLED
 
   unsigned char *sentence_start = NULL;
+  bool sentence_is_question = false;
 
 #ifdef INTENT_ENABLED
   unsigned char *intent_start = NULL;
   unsigned char *intent_end = NULL;
   std::string intent_phrase;
-  std::map<std::string, int> intent_words;
+  std::map<std::string, int> sentence_intent_words;
+  std::map<std::string, int> all_intent_words;
   bool prev_word_negation = false;
   bool current_word_negation = false;
   bool next_word_negation = false;
   int intent_value = 0;
+  int sentence_intent_value = 0;
 #endif // INTENT_ENABLED
 
   // TODO (balaji) use bit map and masks to reduce comparisons
@@ -1103,6 +1117,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // INTENT_ENABLED
   int punct_intent = 0;
   int ignore_intent = 0;
+  int sentence_punct_intent = 0;
 
 #ifdef PROFANITY_CHECK_ENABLED
   bool text_has_unsafe_words = false;
@@ -1119,15 +1134,16 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
   // the whole thing starts here again!
   ptr = text_buffer;
+  end = ptr + text_len;
 
 #ifdef GM_DEBUG
-  if (m_debug_level > 3)
+  if (m_debug_level > 5)
     cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
 #endif // GM_DEBUG
 
   // go to the first word, ignoring handles and punctuations
   unsigned char *prev = NULL;
-  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && inagist_utils::IsPunct((char *&) ptr, (char *) prev, (char *) ptr+1, &punct_intent, &punct_senti)) || IsIgnore((char *&) ptr, ignore_intent))) {
+  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && inagist_utils::IsPunct((char *&) ptr, (char *) prev, (char *) ptr+1, &sentence_punct_intent, &punct_senti)) || IsIgnore((char *&) ptr, ignore_intent))) {
     prev = ptr;
     ptr++;
   }
@@ -1147,12 +1163,10 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
   current_word_start = ptr;
   sentence_start = ptr;
-
-#ifdef GM_DEBUG
-  if (m_debug_level > 3) {
-    cout << "sentence start: " << sentence_start << endl;
-  }
-#endif // GM_DEBUG
+  sentence_punct_intent = 0;
+#ifdef INTENT_ENABLED
+  sentence_is_question = false;
+#endif // INTENT_ENABLED
 
   if (isupper(*ptr)) {
     current_word_caps = true;
@@ -1202,7 +1216,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // I18N_ENABLED
 
   while (ptr && ' ' != *ptr && '\0' != *ptr &&
-         !(is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))) {
+         !(is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &sentence_punct_intent, &punct_senti))) {
 
     if (!ptr || '\0' == *ptr) {
 #ifdef GM_DEBUG
@@ -1348,8 +1362,12 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       } else if (dict_value == 30) {
         class_word_valence = 1;
       } else {
+        if (dict_value == 40) {
+          dict_value = 0;
+          sentence_is_question = true;
+        }
         intent_start = current_word_start;
-        intent_value = dict_value;
+        sentence_intent_value = dict_value;
       }
     }
 #endif
@@ -1436,7 +1454,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   while ('\0' != *ptr &&
          (' ' == *ptr ||
           (ispunct(*ptr) &&
-           (is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))) ||
+           (is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &sentence_punct_intent, &punct_senti))) ||
           (is_ignore_word = IsIgnore((char *&) ptr, ignore_intent))
          )
         ) {
@@ -1461,12 +1479,34 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     next_word_start = ptr;
     num_words++;
     if (current_word_precedes_ignore_word || current_word_precedes_punct) {
-      sentence_start = next_word_start;
 #ifdef GM_DEBUG
-      if (m_debug_level > 5) {
-        cout << "sentence start: " << sentence_start << endl;
+      if (m_debug_level > 3) {
+        std::cout << "sentence: " \
+                  << std::string((char *) sentence_start, current_word_end-sentence_start) \
+                  << std::endl; 
+#ifdef INTENT_ENABLED
+        if (sentence_is_question) {
+           std::cout << "sentence is question" << std::endl;
+        }
+#endif // INTENT_ENABLED
       }
 #endif // GM_DEBUG
+
+#ifdef INTENT_ENABLED
+      if (sentence_punct_intent > 0) {
+        if (sentence_is_question) {
+          punct_intent = 1;
+        } else {
+          sentence_intent_words.clear();
+        }
+      }
+      CopyMapInto(sentence_intent_words, all_intent_words);
+      sentence_intent_words.clear();
+#endif // INTENT_ENABLED
+
+      sentence_start = next_word_start;
+      sentence_is_question = false;
+      sentence_punct_intent = 0;
     }
 
     // remember - this is start of word
@@ -1517,7 +1557,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     is_punct = false;
     if (' ' == *probe || '\0' == *probe ||
         (ispunct(*probe) &&
-         (is_punct = inagist_utils::IsPunct((char *&) probe, (char *) probe-1, (char *) probe+1, &punct_intent, &punct_senti))
+         (is_punct = inagist_utils::IsPunct((char *&) probe, (char *) probe-1, (char *) probe+1, &sentence_punct_intent, &punct_senti))
         )
        ) {
 
@@ -1633,14 +1673,18 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
             } else if (dict_value == 30) {
               class_word_valence = 1;
             } else {
+              if (dict_value == 40) {
+                dict_value = 0;
+                sentence_is_question = true;
+              }
               flag = true;
-              intent_value = dict_value;
+              sentence_intent_value = dict_value;
             }
           }
           if (!flag) {
             intent_end = current_word_end;
             intent_phrase.assign((const char*) intent_start, 0, intent_end-intent_start);
-            intent_words[intent_phrase] = intent_value;
+            sentence_intent_words[intent_phrase] = sentence_intent_value;
           }
         }
         if (!flag) {
@@ -1652,10 +1696,14 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
             } else if (dict_value == 30) {
               class_word_valence = 1;
             } else {
+              if (dict_value == 40) {
+                dict_value = 0;
+                sentence_is_question = true;
+              }
               if (!current_word_negation) {
                 flag = true;
                 intent_start = next_word_start;
-                intent_value = dict_value;
+                sentence_intent_value = dict_value;
               }
             }
           }
@@ -2305,6 +2353,33 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       }
 #endif // KEYWORDS_ENABLED || TEXT_CLASSIFICATION_ENABLED
 
+      // intent
+      if ('\0' == current_word_delimiter || !next_word_start || '\0' == *next_word_start) {
+#ifdef GM_DEBUG
+        if (m_debug_level > 3) {
+          std::cout << "sentence: " \
+                    << std::string((char *) sentence_start, end-sentence_start) \
+                    << std::endl; 
+#ifdef INTENT_ENABLED
+          if (sentence_is_question) {
+             std::cout << "sentence is question" << std::endl;
+          }
+#endif // INTENT_ENABLED
+        }
+#endif // GM_DEBUG
+#ifdef INTENT_ENABLED
+        if (sentence_punct_intent > 0) {
+          if (sentence_is_question) {
+            punct_intent = 1;
+          } else {
+            sentence_intent_words.clear();
+          }
+        }
+        CopyMapInto(sentence_intent_words, all_intent_words);
+        sentence_intent_words.clear();
+#endif // INTENT_ENABLED
+      }
+
 #ifdef I18N_ENABLED
       }
 #endif // I18N_ENABLED
@@ -2337,7 +2412,9 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       prev_word_has_apostropheS = current_word_has_apostropheS;
       prev_word_hashtag = current_word_hashtag;
       prev_word = current_word;
+#ifdef INTENT_ENABLED
       prev_word_negation = current_word_negation;
+#endif // INTENT_ENABLED
 
       current_word_end = next_word_end;
       current_word_start = next_word_start;
@@ -2358,7 +2435,9 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       current_word_has_apostropheS = next_word_has_apostropheS;
       current_word_hashtag = next_word_hashtag;
       current_word = next_word;
+#ifdef INTENT_ENABLED
       current_word_negation = next_word_negation;
+#endif // INTENT_ENABLED
 
       next_word_start = NULL;
       next_word_end = NULL;
@@ -2377,7 +2456,9 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       next_word_has_apostropheS = NULL;
       next_word_hashtag = false;
       next_word.clear();
+#ifdef INTENT_ENABLED
       next_word_negation = false;
+#endif // INTENT_ENABLED
 
       // BE CAREFUL ABOUT WHAT IS NEXT WORD OR CURRENT WORD NOW
 
@@ -2396,7 +2477,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         while (('\0' != *ptr)
                && (' ' == *ptr
                    || (ispunct(*ptr) &&
-                      (is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))
+                      (is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &sentence_punct_intent, &punct_senti))
                       )
                    || (is_ignore_word = IsIgnore((char *&) ptr, ignore_intent))
                   )
@@ -2414,22 +2495,69 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
           next_word_start = ptr;
           num_words++;
           if (current_word_precedes_ignore_word) {
-            sentence_start = next_word_start;
 #ifdef GM_DEBUG
-            if (m_debug_level > 5) {
-              cout << "sentence start: " << sentence_start << endl;
+            if (m_debug_level > 3) {
+              std::cout << "sentence: " \
+                        << std::string((char *) sentence_start, next_word_start-sentence_start) \
+                        << std::endl; 
+              if (sentence_is_question) {
+                 std::cout << "sentence is question" << std::endl;
+              }
             }
 #endif // GM_DEBUG
+#ifdef INTENT_ENABLED
+            if (sentence_punct_intent > 0) {
+              if (sentence_is_question) {
+                punct_intent = 1;
+              } else {
+                sentence_intent_words.clear();
+              }
+            }
+            CopyMapInto(sentence_intent_words, all_intent_words);
+            sentence_intent_words.clear();
+            sentence_punct_intent = 0;
+#endif // INTENT_ENABLED
+
+            sentence_start = next_word_start;
+            sentence_is_question = false;
           }
 
           // this code is to ignore publisher name in "CNN Breaking News : blah blah" and take only the blah blah part
+          // this also sets the sentence_start - pay close attention. bad piece of coding here!
           if (current_word_precedes_punct) {
-            sentence_start = next_word_start;
+            if (',' != current_word_delimiter &&
+                '*' != current_word_delimiter &&
+                '/' != current_word_delimiter &&
+                '\'' != current_word_delimiter &&
+                '\"' != current_word_delimiter &&
+                '$' != current_word_delimiter
+               ) {
 #ifdef GM_DEBUG
-            if (m_debug_level > 5) {
-              cout << "sentence start: " << sentence_start << endl;
-            }
+                if (m_debug_level > 3) {
+                  std::cout << "sentence: " \
+                            << std::string((char *) sentence_start, next_word_start-sentence_start) \
+                            << std::endl; 
+                  if (sentence_is_question) {
+                     std::cout << "sentence is question" << std::endl;
+                  }
+                }
 #endif // GM_DEBUG
+#ifdef INTENT_ENABLED
+              if (sentence_punct_intent > 0) {
+                if (sentence_is_question) {
+                  punct_intent = 1;
+                } else {
+                  sentence_intent_words.clear();
+                }
+              }
+              CopyMapInto(sentence_intent_words, all_intent_words);
+              sentence_intent_words.clear();
+              sentence_punct_intent = 0;
+#endif // INTENT_ENABLED
+
+              sentence_start = next_word_start;
+              sentence_is_question = false;
+            }
             if (':' == current_word_delimiter ||
                 '>' == current_word_delimiter ||
                 '-' == current_word_delimiter ||
@@ -2553,6 +2681,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   } // end of gigantic if
   probe = NULL;
   ptr = NULL;
+  end = NULL;
 
 #ifdef LANG_ENABLED
   double lang_freq = 0;
@@ -2851,36 +2980,40 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
 #ifdef INTENT_ENABLED
   std::map<std::string, int>::iterator intent_iter;
-  for (intent_iter = intent_words.begin(); intent_iter != intent_words.end(); intent_iter++) {
+  for (intent_iter = all_intent_words.begin(); intent_iter != all_intent_words.end(); intent_iter++) {
 #ifdef GM_DEBUG
-  if (m_debug_level > 2) {
-    std::cout << "intent= " << intent_iter->first << ":" << intent_iter->second << std::endl;
-  }
+    if (m_debug_level > 2) {
+      std::cout << "intent= " << intent_iter->first << ":" << intent_iter->second << std::endl;
+    }
 #endif // GM_DEBUG
     intent_valence += intent_iter->second;
   }
-#ifdef GM_DEBUG
-  if (m_debug_level > 2) {
-    std::cout << "init intent_valence: " << intent_valence << std::endl;
-  }
-#endif // GM_DEBUG
+  all_intent_words.clear();
+
+  // if no intent word is present, don't consider additional indicators
   if (intent_valence > 0) {
     intent_valence += first_person_valence;
     intent_valence += punct_intent;
     intent_valence += ignore_intent;
     intent_valence += class_word_valence;
   }
+
 #ifdef GM_DEBUG
   if (m_debug_level > 2) {
+    std::cout << "first_person_valence:" << first_person_valence << std::endl;
     std::cout << "punct_intent:" << punct_intent << std::endl;
+    std::cout << "ignore_intent:" << ignore_intent << std::endl;
+    std::cout << "class_word_valence:" << class_word_valence << std::endl;
     std::cout << "intent_valence: " << intent_valence << std::endl;
   }
 #endif // GM_DEBUG
+
+  ret_val += 1;
 #endif // INTENT_ENABELD
 
 #ifdef GM_DEBUG
   if (m_debug_level > 2) {
-    std::cout << "gist_maker summary:" << std::endl;
+    std::cout << std::endl << "gist_maker summary:" << std::endl;
     std::cout << "input: " << text_buffer << std::endl;
 #ifdef SCRIPT_DETECTION_ENABLED
     std::cout << "script: " << script_buffer << std::endl;

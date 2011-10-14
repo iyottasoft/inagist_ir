@@ -12,34 +12,45 @@
 namespace inagist_classifiers {
 
 class NaiveBayesClassifier {
+
  public:
   NaiveBayesClassifier();
   ~NaiveBayesClassifier();
   int SetDebugLevel(unsigned int debug_level);
   static int GuessClass(CorpusMap& corpus_map,
-                 Corpus& classes_freq_map,
-                 Corpus& test_corpus,
-                 std::string& guess_class_output,
-                 unsigned int debug_level=0);
-  static int GuessClass2(CorpusMap& corpus_map,
-                 Corpus& classes_freq_map,
-                 Corpus& test_corpus,
-                 std::string& guess_class_output,
-                 std::string& top_classes_output,
-                 unsigned int& top_classes_count
+                        Corpus& classes_freq_map,
+                        Corpus& test_corpus,
+                        std::string& guess_class_output,
+                        unsigned int debug_level=0);
+  static int GuessClass3(CorpusMap& corpus_map,
+                         Corpus& classes_freq_map,
+                         Corpus& test_corpus,
+                         std::string& guess_class_output,
+                         std::string& top_classes_output,
+                         unsigned int& top_classes_count
 #ifdef CLASS_CONTRIBUTORS_ENABLED
-                 , std::map<std::string, std::string>& class_contributors
+                         , std::map<std::string, std::string>& class_contributors
 #endif // CLASS_CONTRIBUTORS_ENABLED
-                 , unsigned int debug_level=0);
+                         , unsigned int debug_level=0);
   static int GuessClass2(CorpusMap& corpus_map,
-                 Corpus& classes_freq_map,
-                 Corpus& test_corpus,
-                 std::string& guess_class_output,
-                 std::set<std::string>& top_classes_set
+                         Corpus& classes_freq_map,
+                         Corpus& test_corpus,
+                         std::string& guess_class_output,
+                         std::set<std::string>& top_classes_set
 #ifdef CLASS_CONTRIBUTORS_ENABLED
-                 , std::map<std::string, std::string>& class_contributors
+                         , std::map<std::string, std::string>& class_contributors
 #endif // CLASS_CONTRIBUTORS_ENABLED
-                 , unsigned int debug_level=0);
+                         , unsigned int debug_level=0);
+  static int GuessClass3(CorpusMap& corpus_map,
+                         Corpus& classes_prior_prob_map,
+                         Corpus& test_corpus,
+                         std::string& guess_class_output,
+                         std::set<std::string>& top_classes_set
+#ifdef CLASS_CONTRIBUTORS_ENABLED
+                         , std::map<std::string, std::string>& class_contributors
+#endif // CLASS_CONTRIBUTORS_ENABLED
+                         , unsigned int debug_level=0);
+
   static int Heapify(double& top1, unsigned int& top1_index,
                      double& top2, unsigned int& top2_index,
                      double& top3, unsigned int& top3_index);

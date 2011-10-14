@@ -139,7 +139,7 @@ int Classifier::Classify(Corpus& test_corpus,
 #endif // CLASS_CONTRIBUTORS_ENABLED
                         ) {
 
-  if (m_naive_bayes_classifier.GuessClass2(m_corpus_map,
+  if (m_naive_bayes_classifier.GuessClass3(m_corpus_map,
                                            m_classes_freq_map,
                                            test_corpus,
                                            output_class,
@@ -1017,6 +1017,7 @@ int Classifier::MakeDictionary(const char* classifier_dictionary_file) {
 
   CorpusMap* corpus_map = &(m_corpus_map);
 
+  // just checking if the file can be opened. if not what is the point of calculating anything?
   std::ofstream ofs(classifier_dictionary_file);
   if (!ofs.is_open()) {
     std::cerr << "ERROR: could not open classifier dictionary file: " \
@@ -1032,6 +1033,8 @@ int Classifier::MakeDictionary(const char* classifier_dictionary_file) {
   std::string word;
   double freq;
 
+  // a dictionary entry will look like this
+  // word - class_name1:prob_value1, class_name2:prob_value2 etc
   std::map<std::string, std::map<std::string, double> > classifier_dictionary_map;
   std::map<std::string, std::map<std::string, double> >::iterator dict_iter;
   for (corpus_map_iter = corpus_map->begin(); corpus_map_iter != corpus_map->end(); corpus_map_iter++) {
@@ -1070,35 +1073,53 @@ int Classifier::MakeDictionary(const char* classifier_dictionary_file) {
     }
   }
 
+  // the next three steps can be merged into a single loop. not doing it for clarity.
+
+  // now lets calculate the idf component
+
+  // each class is a document, so how does tf-idf work?
+  // tf - number of times a word occurs in a class - already present in the dictionary (albeit as log of tf!)
+  // idf - is number of classes / number of classes in which this word occurs
+  std::map<std::string, double>::iterator class_map_iter;
+
+  double idf = 0;
+  double total_documents = corpus_map->size();
+
+  for (dict_iter = classifier_dictionary_map.begin();
+       dict_iter != classifier_dictionary_map.end();
+       dict_iter++) {
+
+    idf = log(total_documents/(double)dict_iter->second.size());
+    idf *= 0.001; // this was found by trial and error - to make the value compatible with tf values
+
+    for (class_map_iter = dict_iter->second.begin();
+         class_map_iter != dict_iter->second.end();
+         class_map_iter++) {
+      class_map_iter->second += idf; // tf + idf for this word
+    }
+  }
+
+  // write the dictionary map to file
   ofs.open(classifier_dictionary_file);
   if (!ofs.is_open()) {
     std::cerr << "ERROR: could not open classifier dictionary file: " \
               << classifier_dictionary_file << std::endl;
   } else {
-    double idf = 0;
-    std::map<std::string, double>::iterator class_map_iter;
     for (dict_iter = classifier_dictionary_map.begin();
          dict_iter != classifier_dictionary_map.end();
          dict_iter++) {
       ofs << dict_iter->first << "=";
-      /*
-      if (dict_iter->second.size() > 10) {
-        std::cout << "WARNING: " << dict_iter->first \
-                  << " occurs " << dict_iter->second.size() << " times" << std::endl;
-      }
-      */
       for (class_map_iter = dict_iter->second.begin();
            class_map_iter != dict_iter->second.end();
            class_map_iter++) {
-        idf = log((double)corpus_map->size()/(double)dict_iter->second.size());
-        idf *= 0.001;
-        ofs << class_map_iter->first << ":" << (class_map_iter->second + idf) << "|";
+        ofs << class_map_iter->first << ":" << class_map_iter->second << "|";
       }
       ofs << std::endl;
     }
     ofs.close();
   }
 
+  // clear the dictionary map
   for (dict_iter = classifier_dictionary_map.begin();
        dict_iter != classifier_dictionary_map.end();
        dict_iter++) {

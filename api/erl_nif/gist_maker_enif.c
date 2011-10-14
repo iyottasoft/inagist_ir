@@ -45,7 +45,9 @@ ERL_NIF_TERM nif_init_c(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     memcpy(gist_maker_config_file_path, file_path.data, file_path.size);
     gist_maker_config_file_path[file_path.size] = '\0';
 #ifdef GIST_DEBUG
-    printf("gist_maker_config: %s\n", gist_maker_config_file_path);
+    if (GIST_DEBUG > 2) {
+      printf("gist_maker_config: %s\n", gist_maker_config_file_path);
+    }
 #endif // GIST_DEBUG
 #ifdef ERLANG_R14B02 
     enif_release_binary(&file_path);

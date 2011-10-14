@@ -196,6 +196,8 @@ int main(int argc, char *argv[]) {
     while (getline(std::cin, text)) {
       if (text.compare("exit") == 0 || text.compare("quit") == 0)
         break;
+      if (text.length() <= 1)
+        continue;
       MakeGist(text);
     }
   } else {

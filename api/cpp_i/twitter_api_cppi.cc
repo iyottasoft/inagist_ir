@@ -75,8 +75,10 @@ int GetTestTweets(const char* user_name,
                   char* tweets_buffer,
                   unsigned int *out_length) {
 
-  if (!tweets_buffer)
+  if (!tweets_buffer) {
+    std::cerr << "ERROR: invalid tweets buffer\n";
     return -1;
+  }
 
   int num_docs = 0;
 
@@ -89,6 +91,11 @@ int GetTestTweets(const char* user_name,
   } else {
     inagist_api::TwitterSearcher twitter_searcher;
     twitter_searcher.GetTweetsFromUser(std::string(user_name), tweets);
+  }
+
+  if (tweets.empty()) {
+    std::cout << "No tweets found\n";
+    return 0;
   }
 
   // write them to the output buffer

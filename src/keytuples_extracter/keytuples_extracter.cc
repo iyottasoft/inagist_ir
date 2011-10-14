@@ -21,14 +21,10 @@ namespace inagist_trends {
   // unless otherwise specified functions return 0 or NULL or false as default
   // return values less than 0 are likely error codes
 
-using std::cout;
-using std::endl;
-using std::string;
-
 KeyTuplesExtracter::KeyTuplesExtracter() {
   m_debug_level = 0;
 #ifdef KE_DEBUG
-  if (m_debug_level > 0) {
+  if (KE_DEBUG > 0) {
     m_debug_level = KE_DEBUG;
   }
 #endif // KE_DEBUG
@@ -557,7 +553,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
   *script_buffer = '\0';
   std::string script = "UU";
   strcpy(script_buffer, "UU");
-  string script_temp;
+  std::string script_temp;
   unsigned int script_count = 0;
   unsigned int english_count = 0;
 
@@ -591,7 +587,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #ifdef KE_DEBUG
       if (m_debug_level > 0) {
         std::cout << "EXCEPTION 1: utf8 returned exception" << std::endl;
-        cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+        std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
       }
 #endif // KE_DEBUG
       return -1;
@@ -807,7 +803,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
 #ifdef KE_DEBUG
   if (m_debug_level > 3)
-    cout << endl << "INFO: original query: " << std::string((char *) text_buffer) << endl << endl;
+    std::cout << std::endl << "INFO: original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
 #endif // KE_DEBUG
 
   // go to the first word, ignoring handles and punctuations
@@ -820,7 +816,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
   if (!ptr || '\0' == *ptr) {
 #ifdef KE_DEBUG
     if (m_debug_level > 2)
-      cout << "INFO: either the input is empty or has ignore words only" << endl;
+      std::cout << "INFO: either the input is empty or has ignore words only" << std::endl;
 #endif // KE_DEBUG
     return 0;
   }
@@ -835,7 +831,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
 #ifdef KE_DEBUG
   if (m_debug_level > 3) {
-    cout << "sentence start: " << sentence_start << endl;
+    std::cout << "sentence start: " << sentence_start << std::endl;
   }
 #endif // KE_DEBUG
 
@@ -877,7 +873,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #ifdef KE_DEBUG
     if (m_debug_level > 1) {
       std::cout << "EXCEPTION 1: utf8 returned exception" << std::endl;
-      cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+      std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
     }
 #endif // KE_DEBUG
     return -1;
@@ -892,7 +888,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
     if (!ptr || '\0' == *ptr) {
 #ifdef KE_DEBUG
       if (m_debug_level > 2) {
-        cout << "INFO: either the input is empty or has ignore words only" << endl;
+        std::cout << "INFO: either the input is empty or has ignore words only" << std::endl;
       }
 #endif // KE_DEBUG
       return 0;
@@ -936,7 +932,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #ifdef KE_DEBUG
       if (m_debug_level > 1) {
         std::cout << "EXCEPTION 2: utf8 returned exception" << std::endl;
-        cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+        std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
       }
 #endif // KE_DEBUG
       return -1;
@@ -949,7 +945,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
   if (!ptr) {
 #ifdef KE_DEBUG
     if (m_debug_level > 2) {
-      cout << "INFO: either the input is corrupt or the only word is ignore word" << endl;
+      std::cout << "INFO: either the input is corrupt or the only word is ignore word" << std::endl;
     }
 #endif // KE_DEBUG
     return 0;
@@ -986,7 +982,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
       num_stop_words++;
 #ifdef KE_DEBUG
       if (m_debug_level > 5) {
-        cout << "current word: " << current_word << " :stopword" << endl;
+        std::cout << "current word: " << current_word << " :stopword" << std::endl;
       }
 #endif // KE_DEBUG
     } else {
@@ -999,7 +995,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
       num_dict_words++;
 #ifdef KE_DEBUG
       if (m_debug_level > 5) {
-        cout << "current word: " << current_word << " :dictionary word" << endl;
+        std::cout << "current word: " << current_word << " :dictionary word" << std::endl;
       }
 #endif // KE_DEBUG
     } else {
@@ -1062,7 +1058,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
     } else {
       text_class_word.assign(current_word);
     }
-    text_class_words_set.insert(std::string((char *) current_word_start));
+    text_class_words_set.insert(text_class_word);
   }
 #endif // TEXT_CLASSIFICATION_ENABLED
 
@@ -1096,7 +1092,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #ifdef KE_DEBUG
     if (m_debug_level > 1) {
       std::cout << "EXCEPTION 3: utf8 returned exception" << std::endl;
-      cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+      std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
     }
 #endif // KE_DEBUG
     return -1;
@@ -1138,7 +1134,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
       sentence_start = next_word_start;
 #ifdef KE_DEBUG
       if (m_debug_level > 5) {
-        cout << "sentence start: " << sentence_start << endl;
+        std::cout << "sentence start: " << sentence_start << std::endl;
       }
 #endif // KE_DEBUG
     }
@@ -1177,7 +1173,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #ifdef KE_DEBUG
     if (m_debug_level > 1) {
       std::cout << "EXCEPTION 4: utf8 returned exception" << std::endl;
-      cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+      std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
     }
 #endif // KE_DEBUG
     return -1;
@@ -1211,30 +1207,30 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
 #ifdef KE_DEBUG
       if (m_debug_level > 5) {
-        cout << endl;
-        cout << "prev word: " << prev_word << endl;
-        cout << "current word: " << current_word << endl;
-        cout << "next word: " << next_word << endl;
-        cout << endl;
+        std::cout << std::endl;
+        std::cout << "prev word: " << prev_word << std::endl;
+        std::cout << "current word: " << current_word << std::endl;
+        std::cout << "next word: " << next_word << std::endl;
+        std::cout << std::endl;
       }
 #endif // KE_DEBUG
 
 #ifdef KE_DEBUG
       if (m_debug_level > 5) {
-        cout << "prev word: " << prev_word << " :starts with caps" << endl;
+        std::cout << "prev word: " << prev_word << " :starts with caps" << std::endl;
         if (current_word_all_caps) {
           if (current_word_len > 1 && current_word_len < 6) {
-            cout << "current word: " << current_word << " :all caps" << endl;
+            std::cout << "current word: " << current_word << " :all caps" << std::endl;
           } else {
-            cout << "current word: " << current_word << " :all caps but bad length" << endl;
+            std::cout << "current word: " << current_word << " :all caps but bad length" << std::endl;
           }
         } else if (current_word_has_mixed_case) {
-          cout << "current word: " << current_word << " :mixed case" << endl;
+          std::cout << "current word: " << current_word << " :mixed case" << std::endl;
         } else if (current_word_caps) {
-          cout << "current word: " << current_word << " :starts with caps" << endl;
+          std::cout << "current word: " << current_word << " :starts with caps" << std::endl;
         }
         if (next_word_caps)
-          cout << "next word: " << next_word << " :starts with caps" << endl;
+          std::cout << "next word: " << next_word << " :starts with caps" << std::endl;
       }
 #endif // KE_DEBUG
 
@@ -1259,7 +1255,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
           num_stop_words++;
 #ifdef KE_DEBUG
           if (m_debug_level > 5) {
-            cout << "next word: " << next_word << " :stopword" << endl;
+            std::cout << "next word: " << next_word << " :stopword" << std::endl;
           }
 #endif // KE_DEBUG
         } else {
@@ -1272,7 +1268,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
           num_dict_words++;
 #ifdef KE_DEBUG
           if (m_debug_level > 5) {
-            cout << "next word: " << next_word << " :dictionary word" << endl;
+            std::cout << "next word: " << next_word << " :dictionary word" << std::endl;
           }
 #endif // KE_DEBUG
         } else {
@@ -1289,7 +1285,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
         if (m_sentiment_words_dictionary.Find(next_word, dict_value) == 1) {
           sentiment_valence += dict_value;
 #ifdef KE_DEBUG
-          std::cout << "word:" << next_word << " dict_value: " << dict_value << std::endl;
+          if (m_debug_level > 3) {
+            std::cout << "word:" << next_word << " dict_value: " << dict_value << std::endl;
+          }
 #endif // KE_DEBUG
         }
 #endif // SENTIMENT_ENABLED
@@ -1370,7 +1368,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
           (current_word_len > 1) && !current_word_hashtag) {
 #ifdef KE_DEBUG
         if (m_debug_level > 5) {
-          cout << current_word_start << ": normal word" << endl;
+          std::cout << current_word_start << ": normal word" << std::endl;
         }
 #endif // KE_DEBUG
         num_normal_words++;
@@ -1476,7 +1474,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
       } else {
 #ifdef KE_DEBUG
         if (m_debug_level > 5) {
-          cout << "stopword entity candidate: " << stopwords_entity_start << endl;
+          std::cout << "stopword entity candidate: " << stopwords_entity_start << std::endl;
         }
 #endif // KE_DEBUG
 
@@ -1595,7 +1593,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
       } else {
 #ifdef KE_DEBUG
         if (m_debug_level > 5) {
-          cout << "caps entity candidate: " << caps_entity_start << endl;
+          std::cout << "caps entity candidate: " << caps_entity_start << std::endl;
         }
 #endif // KE_DEBUG
 
@@ -1641,7 +1639,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #ifdef KE_DEBUG
           if (m_debug_level > 1) {
             temp_len = stopwords_keyphrase_end - stopwords_keyphrase_start;
-            cout << endl << string((char *) stopwords_keyphrase_start, temp_len) << " :keyphrase";
+            std::cout << std::endl << std::string((char *) stopwords_keyphrase_start, temp_len) << " :keyphrase";
           }
 #endif // KE_DEBUG
 
@@ -1682,7 +1680,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #ifdef NAMED_ENTITIES_ENABLED
         } else {
           if (stopwords_keyphrase_start > stopwords_keyphrase_end)
-            cout << "ERROR: keyphrase markers are wrong\n";
+            std::cout << "ERROR: keyphrase markers are wrong\n";
         }
 #endif // NAMED_ENTITIES_ENABLED
         stopwords_keyphrase_start = NULL;
@@ -1696,8 +1694,8 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
         if (stopwords_entity_start < stopwords_entity_end) {
 #ifdef KE_DEBUG
           if (m_debug_level > 1) {
-            cout << endl
-                 << string((char *) stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) \
+            std::cout << std::endl
+                 << std::string((char *) stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) \
                  << " :entity by stopword";
           }
 #endif // KE_DEBUG
@@ -1782,7 +1780,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #endif // NAMED_ENTITIES_ENABLED elif TEXT_CLASSIFICATION_ENABLED
           }
         } else {
-          cout << "ERROR: stopwords entity markers are wrong\n";
+          std::cout << "ERROR: stopwords entity markers are wrong\n";
         }
         stopwords_entity_start = NULL;
         stopwords_entity_end = NULL;
@@ -1793,9 +1791,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
         if (caps_entity_start < caps_entity_end) {
 #ifdef KE_DEBUG
           if (m_debug_level > 4) {
-            cout << endl \
-                 << string((char *) caps_entity_start, (caps_entity_end - caps_entity_start)) \
-                 << " :entity by caps";
+            std::cout << std::endl \
+                 << std::string((char *) caps_entity_start, (caps_entity_end - caps_entity_start)) \
+                 << " :entity by caps\n";
           }
 #endif // KE_DEBUG
           if (strncmp((char *) caps_entity_end-2, "\'s", 2) == 0) {
@@ -1875,7 +1873,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #endif // NAMED_ENTITIES_ENABLED elif TEXT_CLASSIFICATION_ENABLED
           }
         } else {
-          cout << "ERROR: caps entity markers are wrong\n";
+          std::cout << "ERROR: caps entity markers are wrong\n";
         }
         caps_entity_start = NULL;
         caps_entity_end = NULL;
@@ -1921,7 +1919,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
 #ifdef KE_DEBUG
       if (m_debug_level > 5) {
-        cout << endl;
+        std::cout << std::endl;
       }
 #endif // KE_DEBUG
 
@@ -2033,7 +2031,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
             sentence_start = next_word_start;
 #ifdef KE_DEBUG
             if (m_debug_level > 5) {
-              cout << "sentence start: " << sentence_start << endl;
+              std::cout << "sentence start: " << sentence_start << std::endl;
             }
 #endif // KE_DEBUG
           }
@@ -2043,7 +2041,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
             sentence_start = next_word_start;
 #ifdef KE_DEBUG
             if (m_debug_level > 5) {
-              cout << "sentence start: " << sentence_start << endl;
+              std::cout << "sentence start: " << sentence_start << std::endl;
             }
 #endif // KE_DEBUG
             if (':' == current_word_delimiter ||
@@ -2156,7 +2154,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #ifdef KE_DEBUG
           if (m_debug_level > 0) {
             std::cout << "Exception 5: " << code_point << " " << probe << std::endl;
-            cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+            std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
           }
 #endif // KE_DEBUG
           return -1;
@@ -2173,14 +2171,14 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
 #ifdef KE_DEBUG
   if (m_debug_level > 5) {
-    cout << endl << "\norginal query: " << std::string((char *) text_buffer) << endl;
-    cout << "num words: " << num_words << endl;
-    cout << "num caps words: " << num_caps_words << endl;
-    cout << "num stop words: " << num_stop_words << endl;
-    cout << "num dict words: " << num_dict_words << endl;
-    cout << "num numeric words: " << num_numeric_words << endl;
-    cout << "num mixed words: " << num_mixed_words << endl;
-    cout << "num normal words: " << num_normal_words << endl;
+    std::cout << std::endl << "\norginal query: " << std::string((char *) text_buffer) << std::endl;
+    std::cout << "num words: " << num_words << std::endl;
+    std::cout << "num caps words: " << num_caps_words << std::endl;
+    std::cout << "num stop words: " << num_stop_words << std::endl;
+    std::cout << "num dict words: " << num_dict_words << std::endl;
+    std::cout << "num numeric words: " << num_numeric_words << std::endl;
+    std::cout << "num mixed words: " << num_mixed_words << std::endl;
+    std::cout << "num normal words: " << num_normal_words << std::endl;
   }
 #endif // KE_DEBUG
 
@@ -2188,12 +2186,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
   if ((num_normal_words == 0) && (num_dict_words != 0 || num_words > 5)) {
 #ifdef KE_DEBUG
     if (m_debug_level > 1) {
-      cout << "INFO: no normal words. ignoring named_entities." << endl;
+      std::cout << "INFO: no normal words. ignoring named_entities." << std::endl;
     }
     if (m_debug_level > 3) {
-      cout << "num normal words: " << num_normal_words << endl;
-      cout << "num words: " << num_words << endl;
-      cout << "num dict words: " << num_dict_words << endl;
+      std::cout << "num normal words: " << num_normal_words << std::endl;
+      std::cout << "num words: " << num_words << std::endl;
+      std::cout << "num dict words: " << num_dict_words << std::endl;
     }
 #endif // KE_DEBUG
     *named_entities_buffer = '\0';

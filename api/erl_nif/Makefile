@@ -2,7 +2,7 @@
 include ../../Makefile.incl
 
 PROJECT = erl_nif
-PROJECTFLAGS = -D_CPLUSPLUS -DDEBUG=${DEBUG_LEVEL}
+PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL} #-D_CPLUSPLUS
 ARCHIVE = ar -r
 
 # erlang related
@@ -48,7 +48,7 @@ GIST_OBJS = gist_collector.o gist_collector_cppi.o \
             ${LANG_OBJS}
 GIST_FLAGS = ${KEYTUPLES_FLAGS} ${LANG_FLAGS} ${TEXT_CLASSIFICATION_FLAGS}
 
-all: stem keytuples intent trends lang text_class gist channels gist_maker profiler
+all: stem keytuples intent trends lang text_class gist gist_maker profiler
 	@echo "build done!"
 
 clean:
@@ -144,20 +144,9 @@ text_classifier:
 	@erlc text_classifier.erl
 	@echo "done!"
 
-channels: channel_manager
-	@echo "done!"
-
-channel_manager:
-	@echo "creating erlang library file ${EXPORT_LIB_DIR}/libchannel_manager_enif.so ..."
-	@gcc -Wextra -fPIC -shared -o ${EXPORT_LIB_DIR}/libchannel_manager_enif.so channel_manager_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -I${CPP_INCLUDE_DIR} -L${CPP_LINK_DIR} -lchannel_manager_cppi -L${CPP_LIB_DIR} -lchannelmanager -lutils -lscriptdetector -ltwitter_api_cppi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
-	@echo "done!"
-	@echo "compiling channel_manager.erl"
-	@erlc channel_manager.erl
-	@echo "done!"
-
 gist_maker:
 	@echo "creating erlang library file ${EXPORT_LIB_DIR}/libgist_maker_enif.so ..."
-	@gcc -Wextra -fPIC -shared -o ${EXPORT_LIB_DIR}/libgist_maker_enif.so gist_maker_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -I${CPP_INCLUDE_DIR} -L${CPP_LINK_DIR} -lgist_maker_cppi -L${CPP_LIB_DIR} -lngramsgenerator -lutils -lscriptdetector -ltwitter_api_cppi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl -DI18N_ENABLED -DPROFANITY_CHECK_ENABLED -DSCRIPT_DETECTION_ENABLED -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DLANG_ENABLED -DLOCATION_ENABLED
+	@gcc ${PROJECTFLAGS} -Wextra -fPIC -shared -o ${EXPORT_LIB_DIR}/libgist_maker_enif.so gist_maker_enif.c ${ERL_INCLUDE_DIR} ${ERL_LIB_DIR} ${ERL_LIBS} -I. -I${CPP_INCLUDE_DIR} -L${CPP_LINK_DIR} -lgist_maker_cppi -L${CPP_LIB_DIR} -lngramsgenerator -lutils -lscriptdetector -ltwitter_api_cppi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl -DI18N_ENABLED -DPROFANITY_CHECK_ENABLED -DSCRIPT_DETECTION_ENABLED -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DLANG_ENABLED -DLOCATION_ENABLED
 	@echo "done!"
 	@echo "compiling gist_maker.erl"
 	@erlc gist_maker.erl

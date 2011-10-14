@@ -180,6 +180,8 @@ class GistMaker {
                      unsigned int& buffer_content_count);
   inline void Insert(unsigned char* buffer, unsigned int& current_len,
                      std::string& str, unsigned int& buffer_content_count);
+  inline void CopyMapInto(std::map<std::string, int>& sentence_intent_words,
+                          std::map<std::string, int>& intent_words);
   DISALLOW_COPY_AND_ASSIGN(GistMaker);
 };
 

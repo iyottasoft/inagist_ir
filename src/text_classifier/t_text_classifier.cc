@@ -17,6 +17,7 @@ int Classify(std::string text) {
   std::string top_classes;
   unsigned int top_classes_count;
   inagist_classifiers::Corpus test_corpus;
+  std::cout << "\ntext: " << text << std::endl;
   if (g_tc.Classify(text, text.length(),
                   text_class,
                   top_classes, top_classes_count
@@ -29,7 +30,6 @@ int Classify(std::string text) {
                  ) < 0) {
     std::cerr << "ERROR: could not find text class: " << text << std::endl;
   } else {
-    std::cout << "text: " << text << std::endl;
     std::cout << "text_class: " << text_class << std::endl;
     std::cout << "top_classes: " << top_classes << std::endl;
   }
