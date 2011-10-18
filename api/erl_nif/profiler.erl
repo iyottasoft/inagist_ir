@@ -1,6 +1,6 @@
 -module(profiler).
 
--export([init/0, init_c/3, test_init/0,
+-export([init/0, init_c/1, test_init/0,
          profile/1,
          profile/2, profile_from_file/1, profile_handles_list/1, profile_docs_list/1,
          profile_handle_only/1, profile_handle_show_details/1, profile_handle/2,
@@ -9,7 +9,7 @@
 init() ->
   erlang:load_nif("../../lib/libprofiler_enif", 0).
 
-init_c(_keytuples_extracter_config_file_path, _lang_detect_config_file_path, _channels_classifier_config_file_path) ->
+init_c(_gist_maker_config_file_path) ->
   "NIF library not loaded".
 
 profile(_input_type, input_value) ->
@@ -45,9 +45,7 @@ profile_docs_list(_docs_list) ->
   "NIF library not loaded to profile from a list".
 
 test_init() ->
-  init_c(<<"../../configs/keytuples_extracter.config">>,
-         <<"../../configs/language_detection.config">>,
-         <<"../../configs/channels_classifier.config">>).
+  init_c(<<"../../configs/gist_maker.config">>).
 
 test() ->
   Tuple = profile(<<"balajiworld">>),

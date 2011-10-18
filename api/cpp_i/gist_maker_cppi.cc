@@ -153,7 +153,7 @@ int CallMakeGist(unsigned char* text_buffer, const unsigned int text_buffer_len,
     keyphrases_len, keyphrases_count
 #endif // KEYPHRASE_ENABLED
 #ifdef LANG_ENABLED
-    , (unsigned char *) lang_class_buffer, lang_class_buffer_len,
+    , lang_class_buffer, lang_class_buffer_len,
     lang_class_len, lang_class_count
 #endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED

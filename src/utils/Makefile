@@ -16,7 +16,7 @@ BINS = ${BIN_DIR}/t_string_utils \
        ${BIN_DIR}/t_double_dictionary_map \
        ${BIN_DIR}/t_test_utils
 
-OBJS = string_utils.o dictionary_set.o dictionary_map.o int_dictionary_map.o double_dictionary_map.o string_to_map_dictionary.o test_utils.o
+OBJS = string_utils.o func_utils.o dictionary_set.o dictionary_map.o int_dictionary_map.o double_dictionary_map.o string_to_map_dictionary.o test_utils.o
 
 all: ${LIB} ${BINS}
 	@echo "build done!"

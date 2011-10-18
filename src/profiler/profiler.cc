@@ -6,6 +6,7 @@
 #include "twitter_api.h"
 #include "twitter_searcher.h"
 #include "string_utils.h"
+#include "func_utils.h"
 
 #ifdef DEBUG
 #if DEBUG>0
@@ -34,22 +35,16 @@ Profiler::Profiler() {
 Profiler::~Profiler() {
 }
 
-int Profiler::Init(const char* keytuples_extracter_config,
-                   const char* language_detection_config,
-                   const char* self_text_classification_config) {
+int Profiler::Init(const char* gist_maker_config) {
 
-  if (!keytuples_extracter_config ||
-      !language_detection_config ||
-      !self_text_classification_config) {
+  if (!gist_maker_config) {
 #ifdef PROFILE_DEBUG
     std::cerr << "ERROR: invalid input file name(s)\n";
 #endif
     return -1;
   }
 
-  if (m_gist_collector.Init(keytuples_extracter_config,
-                        language_detection_config,
-                        self_text_classification_config) < 0) {
+  if (m_gist_maker.Init(gist_maker_config) < 0) {
 #ifdef PROFILE_DEBUG
     std::cerr << "ERROR: could not initialize gist maker\n";
 #endif
@@ -71,14 +66,18 @@ int Profiler::Profile(const std::string& twitter_handle,
                       std::set<std::string>& locations,
                       std::set<std::string>& self_languages,
                       std::set<std::string>& self_text_classes,
-                      std::set<std::string>& self_sub_classes,
-                      std::map<std::string, std::string>& self_text_class_contributors_map,
+#ifdef LOCATION_ENABLED
+                      std::set<std::string>& self_location_classes,
+#endif // LOCATION_ENABLED
+                      //std::map<std::string, std::string>& self_text_class_contributors_map,
+                      std::set<std::string>& self_text_class_contributors,
                       std::set<std::string>& others_languages,
                       std::set<std::string>& others_text_classes,
-                      std::set<std::string>& others_sub_classes,
-                      std::map<std::string, std::string>& others_text_class_contributors_map,
-                      int& intent_valence,
-                      int& sentiment_valence,
+#ifdef LOCATION_ENABLED
+                      std::set<std::string>& others_location_classes,
+#endif // LOCATION_ENABLED
+                      //std::map<std::string, std::string>& others_text_class_contributors_map,
+                      std::set<std::string>& others_text_class_contributors,
                       std::set<std::string>& recommendations,
                       const std::string& profile_name) {
 
@@ -100,11 +99,13 @@ int Profiler::Profile(const std::string& twitter_handle,
   unsigned int self_text_classes_len = 0;
   unsigned int self_text_classes_count = 0;
 
-  char self_sub_classes_buffer[MAX_BUFFER_LEN];
-  self_sub_classes_buffer[0] = '\0';
-  unsigned int self_sub_classes_buffer_len = MAX_BUFFER_LEN;
-  unsigned int self_sub_classes_len = 0;
-  unsigned int self_sub_classes_count = 0;
+#ifdef LOCATION_ENABLED
+  char self_location_classes_buffer[MAX_BUFFER_LEN];
+  self_location_classes_buffer[0] = '\0';
+  unsigned int self_location_classes_buffer_len = MAX_BUFFER_LEN;
+  unsigned int self_location_classes_len = 0;
+  unsigned int self_location_classes_count = 0;
+#endif // LOCATION_ENABLED
 
   unsigned char self_text_class_contributors_buffer[ULTIMATE_BUFFER_LEN];
   self_text_class_contributors_buffer[0] = '\0';
@@ -124,11 +125,13 @@ int Profiler::Profile(const std::string& twitter_handle,
   unsigned int others_text_classes_len = 0;
   unsigned int others_text_classes_count = 0;
 
-  char others_sub_classes_buffer[MAX_BUFFER_LEN];
-  others_sub_classes_buffer[0] = '\0';
-  unsigned int others_sub_classes_buffer_len = MAX_BUFFER_LEN;
-  unsigned int others_sub_classes_len = 0;
-  unsigned int others_sub_classes_count = 0;
+#ifdef LOCATION_ENABLED
+  char others_location_classes_buffer[MAX_BUFFER_LEN];
+  others_location_classes_buffer[0] = '\0';
+  unsigned int others_location_classes_buffer_len = MAX_BUFFER_LEN;
+  unsigned int others_location_classes_len = 0;
+  unsigned int others_location_classes_count = 0;
+#endif // LOCATION_ENABLED
 
   unsigned char others_text_class_contributors_buffer[ULTIMATE_BUFFER_LEN];
   others_text_class_contributors_buffer[0] = '\0';
@@ -153,8 +156,10 @@ int Profiler::Profile(const std::string& twitter_handle,
                              self_languages_len, self_languages_count,
                              self_text_classes_buffer, self_text_classes_buffer_len,
                              self_text_classes_len, self_text_classes_count,
-                             self_sub_classes_buffer, self_sub_classes_buffer_len,
-                             self_sub_classes_len, self_sub_classes_count,
+#ifdef LOCATION_ENABLED
+                             self_location_classes_buffer, self_location_classes_buffer_len,
+                             self_location_classes_len, self_location_classes_count,
+#endif // LOCATION_ENABLED
                              self_text_class_contributors_buffer,
                              self_text_class_contributors_buffer_len,
                              self_text_class_contributors_len,
@@ -163,14 +168,14 @@ int Profiler::Profile(const std::string& twitter_handle,
                              others_languages_len, others_languages_count,
                              others_text_classes_buffer, others_text_classes_buffer_len,
                              others_text_classes_len, others_text_classes_count,
-                             others_sub_classes_buffer, others_sub_classes_buffer_len,
-                             others_sub_classes_len, others_sub_classes_count,
+#ifdef LOCATION_ENABLED
+                             others_location_classes_buffer, others_location_classes_buffer_len,
+                             others_location_classes_len, others_location_classes_count,
+#endif // LOCATION_ENABLED
                              others_text_class_contributors_buffer,
                              others_text_class_contributors_buffer_len,
                              others_text_class_contributors_len,
                              others_text_class_contributors_count,
-                             intent_valence,
-                             sentiment_valence,
                              recommendations_buffer, recommendations_buffer_len,
                              recommendations_len, recommendations_count,
                              profile_name.c_str())) < 0) {
@@ -180,13 +185,14 @@ int Profiler::Profile(const std::string& twitter_handle,
     return -1;
   }
 
-  //safe_status = std::string(safe_status_buffer);
+  //profanity_status = std::string(profanity_status_buffer);
   if ((inagist_utils::PipeListToSet(locations_buffer, locations)) < 0) {
 #ifdef PROFILE_DEBUG
     std::cerr << "ERROR: could not populate locations\n";
 #endif
   }
   locations_buffer[0] = '\0';
+
   if ((inagist_utils::PipeListToSet((unsigned char*) self_languages_buffer,
                                             self_languages)) < 0) {
 #ifdef PROFILE_DEBUG
@@ -194,6 +200,7 @@ int Profiler::Profile(const std::string& twitter_handle,
 #endif
   }
   self_languages_buffer[0] = '\0';
+
   if ((inagist_utils::PipeListToSet((unsigned char*) self_text_classes_buffer,
                                             self_text_classes)) < 0) {
 #ifdef PROFILE_DEBUG
@@ -201,13 +208,25 @@ int Profiler::Profile(const std::string& twitter_handle,
 #endif
   }
   self_text_classes_buffer[0] = '\0';
-  if ((inagist_utils::PipeListToSet((unsigned char*) self_sub_classes_buffer,
-                                            self_sub_classes)) < 0) {
+
+  if ((inagist_utils::PipeListToSet((unsigned char*) self_text_class_contributors_buffer,
+                                            self_text_class_contributors)) < 0) {
+#ifdef PROFILE_DEBUG
+    std::cerr << "ERROR: could not populate self_text_class_contributors\n";
+#endif
+  }
+  self_text_class_contributors_buffer[0] = '\0';
+
+#ifdef LOCATION_ENABLED
+  if ((inagist_utils::PipeListToSet((unsigned char*) self_location_classes_buffer,
+                                            self_location_classes)) < 0) {
 #ifdef PROFILE_DEBUG
     std::cerr << "ERROR: could not populate self_text_classes\n";
 #endif
   }
-  self_sub_classes_buffer[0] = '\0';
+  self_location_classes_buffer[0] = '\0';
+#endif // LOCATION_ENABLED
+
   if ((inagist_utils::PipeListToSet((unsigned char*) others_languages_buffer,
                                             others_languages)) < 0) {
 #ifdef PROFILE_DEBUG
@@ -215,6 +234,7 @@ int Profiler::Profile(const std::string& twitter_handle,
 #endif
   }
   others_languages_buffer[0] = '\0';
+
   if ((inagist_utils::PipeListToSet((unsigned char*) others_text_classes_buffer,
                                             others_text_classes)) < 0) {
 #ifdef PROFILE_DEBUG
@@ -222,13 +242,24 @@ int Profiler::Profile(const std::string& twitter_handle,
 #endif
   }
   others_text_classes_buffer[0] = '\0';
-  if ((inagist_utils::PipeListToSet((unsigned char*) others_sub_classes_buffer,
-                                            others_sub_classes)) < 0) {
+
+  if ((inagist_utils::PipeListToSet((unsigned char*) others_text_class_contributors_buffer,
+                                            others_text_class_contributors)) < 0) {
+#ifdef PROFILE_DEBUG
+    std::cerr << "ERROR: could not populate others_text_class_contributors\n";
+#endif
+  }
+  others_text_class_contributors_buffer[0] = '\0';
+
+#ifdef LOCATION_ENABLED
+  if ((inagist_utils::PipeListToSet((unsigned char*) others_location_classes_buffer,
+                                            others_location_classes)) < 0) {
 #ifdef PROFILE_DEBUG
     std::cerr << "ERROR: could not populate others_text_classes\n";
 #endif
   }
-  others_sub_classes_buffer[0] = '\0';
+  others_location_classes_buffer[0] = '\0';
+#endif // LOCATION_ENABLED
 
   // unused in this call
   self_text_class_contributors_buffer[0] = '\0';
@@ -245,8 +276,10 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
       unsigned int& self_languages_len, unsigned int& self_languages_count,
       char* self_text_classes_buffer, const unsigned int self_text_classes_buffer_len,
       unsigned int& self_text_classes_len, unsigned int& self_text_classes_count,
-      char* self_sub_classes_buffer, const unsigned int self_sub_classes_buffer_len,
-      unsigned int& self_sub_classes_len, unsigned int& self_sub_classes_count,
+#ifdef LOCATION_ENABLED
+      char* self_location_classes_buffer, const unsigned int self_location_classes_buffer_len,
+      unsigned int& self_location_classes_len, unsigned int& self_location_classes_count,
+#endif // LOCATION_ENABLED
       unsigned char* self_text_class_contributors_buffer,
       const unsigned int self_text_class_contributors_buffer_len,
       unsigned int& self_text_class_contributors_len,
@@ -255,14 +288,14 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
       unsigned int& others_languages_len, unsigned int& others_languages_count,
       char* others_text_classes_buffer, const unsigned int others_text_classes_buffer_len,
       unsigned int& others_text_classes_len, unsigned int& others_text_classes_count,
-      char* others_sub_classes_buffer, const unsigned int others_sub_classes_buffer_len,
-      unsigned int& others_sub_classes_len, unsigned int& others_sub_classes_count,
+#ifdef LOCATION_ENABLED
+      char* others_location_classes_buffer, const unsigned int others_location_classes_buffer_len,
+      unsigned int& others_location_classes_len, unsigned int& others_location_classes_count,
+#endif // LOCATION_ENABLED
       unsigned char* others_text_class_contributors_buffer,
       const unsigned int others_text_class_contributors_buffer_len,
       unsigned int& others_text_class_contributors_len,
       unsigned int& others_text_class_contributors_count,
-      int& intent_valence,
-      int& sentiment_valence,
       unsigned char* recommendations_buffer, const unsigned int recommendations_buffer_len,
       unsigned int& recommendations_len, unsigned int& recommendations_count,
       const char* profile_name) {
@@ -276,11 +309,15 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
 
   if (!self_languages_buffer ||
       !self_text_classes_buffer ||
-      !self_sub_classes_buffer ||
+#ifdef LOCATION_ENABLED
+      !self_location_classes_buffer ||
+#endif // LOCATION_ENABLED
       !self_text_class_contributors_buffer ||
       !others_languages_buffer ||
       !others_text_classes_buffer ||
-      !others_sub_classes_buffer ||
+#ifdef LOCATION_ENABLED
+      !others_location_classes_buffer ||
+#endif // LOCATION_ENABLED
       !others_text_class_contributors_buffer ||
       !recommendations_buffer) {
 #ifdef PROFILE_DEBUG
@@ -298,9 +335,11 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
   self_text_classes_buffer[0] = '\0';
   self_text_classes_len = 0;
   self_text_classes_count = 0;
-  self_sub_classes_buffer[0] = '\0';
-  self_sub_classes_len = 0;
-  self_sub_classes_count = 0;
+#ifdef LOCATION_ENABLED
+  self_location_classes_buffer[0] = '\0';
+  self_location_classes_len = 0;
+  self_location_classes_count = 0;
+#endif // LOCATION_ENABLED
   self_text_class_contributors_buffer[0] = '\0';
   self_text_class_contributors_len = 0;
   self_text_class_contributors_count = 0;
@@ -310,14 +349,14 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
   others_text_classes_buffer[0] = '\0';
   others_text_classes_len = 0;
   others_text_classes_count = 0;
-  others_sub_classes_buffer[0] = '\0';
-  others_sub_classes_len = 0;
-  others_sub_classes_count = 0;
+#ifdef LOCATION_ENABLED
+  others_location_classes_buffer[0] = '\0';
+  others_location_classes_len = 0;
+  others_location_classes_count = 0;
+#endif // LOCATION_ENABLED
   others_text_class_contributors_buffer[0] = '\0';
   others_text_class_contributors_len = 0;
   others_text_class_contributors_count = 0;
-  intent_valence=0;
-  sentiment_valence=0;
   recommendations_buffer[0] = '\0';
   recommendations_len = 0;
   recommendations_count = 0;
@@ -388,17 +427,17 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
 
   if (!tweets.empty()) {
     // generate profile
-    if ((count = GetGist(tweets,
+    if ((count = CallMakeGist(tweets,
                     self_languages_buffer, self_languages_buffer_len,
                     self_languages_len, self_languages_count,
                     self_text_classes_buffer, self_text_classes_buffer_len,
                     self_text_classes_len, self_text_classes_count,
-                    self_sub_classes_buffer, self_sub_classes_buffer_len,
-                    self_sub_classes_len, self_sub_classes_count,
+#ifdef LOCATION_ENABLED
+                    self_location_classes_buffer, self_location_classes_buffer_len,
+                    self_location_classes_len, self_location_classes_count,
+#endif // LOCATION_ENABLED
                     self_text_class_contributors_buffer, self_text_class_contributors_buffer_len,
                     self_text_class_contributors_len, self_text_class_contributors_count,
-                    intent_valence,
-                    sentiment_valence,
                     corpus, corpus_size)) < 0) {
 #ifdef PROFILE_DEBUG
       std::cerr << "WARNING: could not generate corpus for user: " << twitter_handle << std::endl;
@@ -458,17 +497,17 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
 
     if (!tweets.empty()) {
       // generate profile
-      if ((count = GetGist(tweets,
+      if ((count = CallMakeGist(tweets,
                       others_languages_buffer, others_languages_buffer_len,
                       others_languages_len, others_languages_count,
                       others_text_classes_buffer, others_text_classes_buffer_len,
                       others_text_classes_len, others_text_classes_count,
-                      others_sub_classes_buffer, others_sub_classes_buffer_len,
-                      others_sub_classes_len, others_sub_classes_count,
+#ifdef LOCATION_ENABLED
+                      others_location_classes_buffer, others_location_classes_buffer_len,
+                      others_location_classes_len, others_location_classes_count,
+#endif // LOCATION_ENABLED
                       others_text_class_contributors_buffer, others_text_class_contributors_buffer_len,
                       others_text_class_contributors_len, others_text_class_contributors_count,
-                      intent_valence,
-                      sentiment_valence,
                       corpus, corpus_size)) < 0) {
 #ifdef PROFILE_DEBUG
         std::cerr << "WARNING: could not get corpus from user's friends\n";
@@ -497,7 +536,7 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
     std::cout << "corpus of size " << corpus_size \
               << " generated from " << self_docs_count \
               << " docs of user: " << twitter_handle \
-              << " and " << others_docs_count << " of his/her friends" << std::endl;
+              << " and " << others_docs_count << " docs of his/her friends" << std::endl;
   }
 #endif
 
@@ -511,14 +550,14 @@ int Profiler::ProfileFromFile(const char* docs_file_name, unsigned int docs_file
       unsigned int& self_languages_len, unsigned int& self_languages_count,
       char* self_text_classes_buffer, const unsigned int self_text_classes_buffer_len,
       unsigned int& self_text_classes_len, unsigned int& self_text_classes_count,
-      char* self_sub_classes_buffer, const unsigned int self_sub_classes_buffer_len,
-      unsigned int& self_sub_classes_len, unsigned int& self_sub_classes_count,
+#ifdef LOCATION_ENABLED
+      char* self_location_classes_buffer, const unsigned int self_location_classes_buffer_len,
+      unsigned int& self_location_classes_len, unsigned int& self_location_classes_count,
+#endif // LOCATION_ENABLED
       unsigned char* self_text_class_contributors_buffer,
       const unsigned int self_text_class_contributors_buffer_len,
       unsigned int& self_text_class_contributors_len,
       unsigned int& self_text_class_contributors_count,
-      int& intent_valence,
-      int& sentiment_valence,
       unsigned char* recommendations_buffer, const unsigned int recommendations_buffer_len,
       unsigned int& recommendations_len, unsigned int& recommendations_count,
       const char* profile_name) {
@@ -538,14 +577,14 @@ int Profiler::ProfileFromFile(const char* docs_file_name, unsigned int docs_file
   self_text_classes_buffer[0] = '\0';
   self_text_classes_len = 0;
   self_text_classes_count = 0;
-  self_sub_classes_buffer[0] = '\0';
-  self_sub_classes_len = 0;
-  self_sub_classes_count = 0;
+#ifdef LOCATION_ENABLED
+  self_location_classes_buffer[0] = '\0';
+  self_location_classes_len = 0;
+  self_location_classes_count = 0;
+#endif // LOCATION_ENABLED
   self_text_class_contributors_buffer[0] = '\0';
   self_text_class_contributors_len = 0;
   self_text_class_contributors_count = 0;
-  intent_valence = 0;
-  sentiment_valence = 0;
 
   strcpy((char *) recommendations_buffer, "bleh, not implemented yet!");
   recommendations_len = strlen((char *) recommendations_buffer);
@@ -580,17 +619,17 @@ int Profiler::ProfileFromFile(const char* docs_file_name, unsigned int docs_file
   // genrate profile
   int count = 0;
   unsigned int corpus_size = 0;
-  if ((count += GetGist(tweets,
+  if ((count += CallMakeGist(tweets,
                         self_languages_buffer, self_languages_buffer_len,
                         self_languages_len, self_languages_count,
                         self_text_classes_buffer, self_text_classes_buffer_len,
                         self_text_classes_len, self_text_classes_count,
-                        self_sub_classes_buffer, self_sub_classes_buffer_len,
-                        self_sub_classes_len, self_sub_classes_count,
+#ifdef LOCATION_ENABLED
+                        self_location_classes_buffer, self_location_classes_buffer_len,
+                        self_location_classes_len, self_location_classes_count,
+#endif // LOCATION_ENABLED
                         self_text_class_contributors_buffer, self_text_class_contributors_buffer_len,
                         self_text_class_contributors_len, self_text_class_contributors_count,
-                        intent_valence,
-                        sentiment_valence,
                         corpus, corpus_size)) < 0) {
     std::cerr << "ERROR: could not generate profile\n";
     return -1;
@@ -619,19 +658,19 @@ int Profiler::ProfileFromFile(const char* docs_file_name, unsigned int docs_file
   return corpus_size; 
 }
 
-int Profiler::GetGist(std::set<std::string>& tweets,
+int Profiler::CallMakeGist(std::set<std::string>& tweets,
                       char* lang_class_buffer, const unsigned int lang_class_buffer_len,
                       unsigned int& lang_class_len, unsigned int& lang_class_count,
                       char* text_classes_buffer, const unsigned int text_classes_buffer_len,
                       unsigned int& text_classes_len, unsigned int& text_classes_count,
-                      char* sub_classes_buffer, const unsigned int sub_classes_buffer_len,
-                      unsigned int& sub_classes_len, unsigned int& sub_classes_count,
+#ifdef LOCATION_ENABLED
+                      char* location_classes_buffer, const unsigned int location_classes_buffer_len,
+                      unsigned int& location_classes_len, unsigned int& location_classes_count,
+#endif // LOCATION_ENABLED
                       unsigned char* text_class_contributors_buffer,
                       const unsigned int text_class_contributors_buffer_len,
                       unsigned int& text_class_contributors_len,
                       unsigned int& text_class_contributors_count,
-                      int& intent_valence,
-                      int& sentiment_valence,
                       inagist_classifiers::Corpus& corpus, unsigned int& corpus_size) {
 
   // TODO (balaji) - make these member variables
@@ -642,23 +681,23 @@ int Profiler::GetGist(std::set<std::string>& tweets,
   text_classes_buffer[0] = '\0';
   text_classes_len = 0;
   text_classes_count = 0;
-  sub_classes_buffer[0] = '\0';
-  sub_classes_len = 0;
-  sub_classes_count = 0;
+#ifdef LOCATION_ENABLED
+  location_classes_buffer[0] = '\0';
+  location_classes_len = 0;
+  location_classes_count = 0;
+#endif // LOCATION_ENABLED
   text_class_contributors_buffer[0] = '\0';
   text_class_contributors_len = 0;
   text_class_contributors_count = 0;
-  intent_valence = 0;
-  sentiment_valence = 0;
 
   unsigned char text_buffer[MAX_BUFFER_LEN];
   text_buffer[0] = '\0';
   unsigned int text_buffer_len = MAX_BUFFER_LEN;
   unsigned int text_len = 0;
 
-  char safe_status_buffer[10];
-  safe_status_buffer[0] = '\0';
-  unsigned int safe_status_buffer_len = 10;
+  char profanity_status_buffer[10];
+  profanity_status_buffer[0] = '\0';
+  unsigned int profanity_status_buffer_len = 10;
 
   char scripts_buffer[MAX_LIST_LEN];
   memset(scripts_buffer, 0, MAX_LIST_LEN);
@@ -682,17 +721,22 @@ int Profiler::GetGist(std::set<std::string>& tweets,
   unsigned int keyphrases_len = 0;
   unsigned int keyphrases_count = 0;
 
+/*
   unsigned char lang_class_words_buffer[MAX_BUFFER_LEN];
   lang_class_words_buffer[0] = '\0';
   unsigned int lang_class_words_buffer_len = MAX_BUFFER_LEN;
   unsigned int lang_class_words_len = 0;
   unsigned int lang_class_words_count = 0;
+*/
 
+/*
   char top_lang_classes_buffer[MAX_BUFFER_LEN];
   unsigned int top_lang_classes_buffer_len = MAX_BUFFER_LEN;
   unsigned int top_lang_classes_len = 0;
   unsigned int top_lang_classes_count = 0;
+*/
 
+/*
   unsigned char lang_class_contributors_buffer[ULTIMATE_BUFFER_LEN];
   lang_class_contributors_buffer[0] = '\0';
   unsigned int lang_class_contributors_buffer_len = ULTIMATE_BUFFER_LEN;
@@ -704,9 +748,15 @@ int Profiler::GetGist(std::set<std::string>& tweets,
   unsigned int text_class_words_buffer_len = MAX_BUFFER_LEN;
   unsigned int text_class_words_len = 0;
   unsigned int text_class_words_count = 0;
+*/
 
   std::set<std::string> lang_classes_set;
-  std::map<std::string, double> sub_classes_map;
+  std::map<std::string, double> text_classes_map;
+  // std::map<std::string, double> text_class_contributors_map;
+  std::set<std::string> text_class_contributors;
+#ifdef LOCATION_ENABLED
+  std::map<std::string, double> location_classes_map;
+#endif // LOCATION_ENABLED
   std::set<std::string>::iterator set_iter;
   std::string tweet;
   std::string language;
@@ -720,57 +770,56 @@ int Profiler::GetGist(std::set<std::string>& tweets,
       continue;
     strcpy((char*) text_buffer, tweet.c_str());
     text_len = tweet.length();
-    if ((ret_value = m_gist_collector.GetGist((unsigned char*) text_buffer, text_buffer_len, text_len,
-                  (char*) safe_status_buffer, safe_status_buffer_len,
+    if ((ret_value = m_gist_maker.MakeGist((unsigned char*) text_buffer, text_buffer_len, text_len,
+                  (char*) profanity_status_buffer, profanity_status_buffer_len,
                   (char*) scripts_buffer, scripts_buffer_len,
                   (unsigned char*) named_entities_buffer, named_entities_buffer_len,
-                  &named_entities_len, &named_entities_count,
+                  named_entities_len, named_entities_count,
                   (unsigned char*) keywords_buffer, keywords_buffer_len,
-                  &keywords_len, &keywords_count,
+                  keywords_len, keywords_count,
                   (unsigned char*) keyphrases_buffer, keyphrases_buffer_len,
-                  &keyphrases_len, &keyphrases_count,
-                  (unsigned char*) lang_class_words_buffer, lang_class_words_buffer_len,
-                  &lang_class_words_len, &lang_class_words_count,
+                  keyphrases_len, keyphrases_count,
                   (char*) lang_class_buffer, lang_class_buffer_len,
-                  &lang_class_len, &lang_class_count,
-                  (char*) top_lang_classes_buffer, top_lang_classes_buffer_len,
-                  &top_lang_classes_len, &top_lang_classes_count,
-                  (unsigned char*) lang_class_contributors_buffer, lang_class_contributors_buffer_len,
-                  &lang_class_contributors_len, &lang_class_contributors_count,
-                  // using the text_classes_buffer and sub_classes_buffer here to avoid another allocation.
-                  // they'll be cleaned up shortly
-                  (unsigned char*) text_class_words_buffer, text_class_words_buffer_len,
-                  &text_class_words_len, &text_class_words_count,
+                  lang_class_len, lang_class_count,
                   (char*) text_classes_buffer, text_classes_buffer_len,
-                  &text_classes_len, &text_classes_count,
-                  (char*) sub_classes_buffer, sub_classes_buffer_len,
-                  &sub_classes_len, &sub_classes_count,
-                  (unsigned char*) text_class_contributors_buffer, text_class_contributors_buffer_len,
-                  &text_class_contributors_len, &text_class_contributors_count,
-                  &intent_valence,
-                  &sentiment_valence)) < 0) {
+                  text_classes_len, text_classes_count
+#ifdef LOCATION_ENABLED
+                  , (char*) location_classes_buffer, location_classes_buffer_len,
+                  location_classes_len, location_classes_count
+#endif // LOCATION_ENABLED
+                 )) < 0) {
 #ifdef PROFILE_DEBUG
       std::cerr << "ERROR: could not get named_entities\n";
 #endif
     } else {
 
-      if ((count = inagist_utils::PipeListToMap((unsigned char*) text_classes_buffer, sub_classes_map)) < 0) {
+      if ((count = inagist_utils::PipeListToMap((unsigned char*) text_classes_buffer, text_classes_map)) < 0) {
 #ifdef PROFILE_DEBUG
         std::cerr << "ERROR: PipeListToMap failed\n";
 #endif
       }
 
-      if ((count = inagist_utils::PipeListToMap(text_class_words_buffer, corpus)) < 0) {
+      if ((count = inagist_utils::PipeListToSet((unsigned char*) named_entities_buffer,
+                                                text_class_contributors)) < 0) {
 #ifdef PROFILE_DEBUG
-        std::cerr << "ERROR: could not populate corpus with text_class_contributors\n";
+        std::cerr << "ERROR: PipeListToMap failed\n";
 #endif
-      } else {
-        if (m_debug_level > 3) {
-          std::cout << "text_class_words_buffer:" \
-                    << text_class_words_buffer << std::endl;
-        }
-        corpus_size += count;
       }
+
+      if ((count = inagist_utils::PipeListToSet((unsigned char*) keywords_buffer,
+                                                text_class_contributors)) < 0) {
+#ifdef PROFILE_DEBUG
+        std::cerr << "ERROR: PipeListToMap failed\n";
+#endif
+      }
+
+#ifdef LOCATION_ENABLED 
+      if ((count = inagist_utils::PipeListToMap((unsigned char*) location_classes_buffer, location_classes_map)) < 0) {
+#ifdef PROFILE_DEBUG
+        std::cerr << "ERROR: PipeListToMap failed\n";
+#endif
+      }
+#endif // LOCATION_ENABLED
 
       // this is to purge duplicates
       if (lang_class_buffer && strlen(lang_class_buffer) > 0) {
@@ -791,61 +840,70 @@ int Profiler::GetGist(std::set<std::string>& tweets,
       }
     }
 
-    safe_status_buffer[0] = '\0';
+    profanity_status_buffer[0] = '\0';
     scripts_buffer[0] = '\0';
     lang_class_buffer[0] = '\0';
     lang_class_len = 0;
     lang_class_count = 0;
-    lang_class_words_buffer[0] = '\0';
-    top_lang_classes_buffer[0] = '\0';
-    lang_class_contributors_buffer[0] = '\0';
     named_entities_buffer[0] = '\0';
     keywords_buffer[0] = '\0';
     keyphrases_buffer[0] = '\0';
-    text_class_words_buffer[0] = '\0';
     text_classes_buffer[0] = '\0';
-    sub_classes_buffer[0] = '\0';
-    text_class_contributors_buffer[0] = '\0';
+#ifdef LOCATION_ENABLED
+    location_classes_buffer[0] = '\0';
+#endif // LOCATION_ENABLED
   }
 
-  // TODO (balaji) - another call to find text_classes for the whole corpus, relook
-#ifdef PROFILE_DEBUG
-  std::cout << "corpus_size: " << corpus.size() << std::endl;
-#endif
-
-  if (corpus.size() <= 0) {
-#ifdef PROFILE_DEBUG
-    std::cerr << "ERROR: empty corpus from individual docs. can't find overall class\n";
-#endif
-  } else {
-    // TODO (balaji) forgot what should be sent here. sending some variable. fix this later
-    if (m_gist_collector.FindTextClasses(corpus,
-                                     text_classes_buffer, text_classes_buffer_len,
-                                     text_classes_len, text_classes_count,
-                                     text_class_contributors_buffer, text_class_contributors_buffer_len,
-                                     text_class_contributors_len, text_class_contributors_count
-                                    ) < 0) {
-#ifdef PROFILE_DEBUG
-      std::cerr << "ERROR: couldn't find text classes\n";
-#endif
-    }
-  }
-
-  // not clearing corpus, becos its a return parameter
-#ifdef PROFILE_DEBUG
-  std::cout << "text_classes_count: " << text_classes_count << std::endl;
-  std::cout << "text_classe_contributors_count: " << text_class_contributors_count << std::endl;
-#endif
-
-  if (inagist_utils::MapToPipeList(sub_classes_map,
-                                   (unsigned char*) sub_classes_buffer, sub_classes_buffer_len,
-                                   sub_classes_len, sub_classes_count) < 0) {
+/*
+  if (inagist_utils::MapToPipeList(text_classes_map,
+                                   (unsigned char*) text_classes_buffer, text_classes_buffer_len,
+                                   text_classes_len, text_classes_count) < 0) {
     std::cerr << "ERROR: could not populate set elements to pipe separated list\n";
   }
-  sub_classes_map.clear();
+*/
+
+  unsigned int n = 3;
+  text_classes_buffer[0] = '\0';
+  text_classes_len = 0;
+  text_classes_count = 0;
+  if (inagist_utils::FindTopN(text_classes_map, n,
+                              text_classes_buffer, text_classes_buffer_len,
+                              text_classes_len, text_classes_count) < 0) {
+    std::cerr << "ERROR: could not get top 3 elements\n";
+  }
+  text_classes_map.clear();
+
 #ifdef PROFILE_DEBUG
-  std::cout << "sub_classes_count: " << sub_classes_count << std::endl;
+  if (m_debug_level > 2) {
+    std::cout << "text_classes_count: " << text_classes_count << std::endl;
+  }
 #endif
+
+  if (inagist_utils::SetToPipeList(text_class_contributors,
+                                   (unsigned char*) text_class_contributors_buffer, text_class_contributors_buffer_len,
+                                   text_class_contributors_len, text_class_contributors_count) < 0) {
+    std::cerr << "ERROR: could not populate set elements to pipe separated list\n";
+  }
+  text_class_contributors.clear();
+#ifdef PROFILE_DEBUG
+  if (m_debug_level > 2) {
+    std::cout << "text_class_contributors_count: " << text_class_contributors_count << std::endl;
+  }
+#endif
+
+#ifdef LOCATION_ENABLED
+  if (inagist_utils::MapToPipeList(location_classes_map,
+                                   (unsigned char*) location_classes_buffer, location_classes_buffer_len,
+                                   location_classes_len, location_classes_count) < 0) {
+    std::cerr << "ERROR: could not populate set elements to pipe separated list\n";
+  }
+  location_classes_map.clear();
+#ifdef PROFILE_DEBUG
+  if (m_debug_level > 2) {
+    std::cout << "location_classes_count: " << location_classes_count << std::endl;
+  }
+#endif
+#endif // LOCATION_ENABLED
 
   if (inagist_utils::SetToPipeList(lang_classes_set,
                                    (unsigned char*) lang_class_buffer, lang_class_buffer_len,
@@ -856,7 +914,9 @@ int Profiler::GetGist(std::set<std::string>& tweets,
   }
   lang_classes_set.clear();
 #ifdef PROFILE_DEBUG
-  std::cout << "lang_class_count: " << lang_class_count << std::endl;
+  if (m_debug_level > 2) {
+    std::cout << "lang_class_count: " << lang_class_count << std::endl;
+  }
 #endif
 
   corpus_size = corpus.size();

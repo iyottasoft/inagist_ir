@@ -116,7 +116,7 @@ class GistMaker {
                unsigned int& keyphrases_len, unsigned int& keyphrases_count
 #endif // KEYPHRASE_ENABLED
 #ifdef LANG_ENABLED
-               , unsigned char* language_buffer, const unsigned int& language_buffer_len,
+               , char* language_buffer, const unsigned int& language_buffer_len,
                unsigned int& language_len, unsigned int& language_count
 #endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
@@ -139,9 +139,6 @@ class GistMaker {
   int DetectScript(int code_point, std::string &script);
   int ProcessTextClassWord(std::string& text_class_word, std::map<std::string, double>& text_class_map);
   void inline Initialize(double array[], unsigned int size);
-  int Heapify(double& top1, std::string& top1_class,
-              double& top2, std::string& top2_class,
-              double& top3, std::string& top3_class);
 
   int ProcessLangClassWord(std::string& lang_class_word,
                            std::map<std::string, double>& lang_class_map);

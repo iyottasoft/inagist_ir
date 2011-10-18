@@ -284,19 +284,26 @@ int MapToPipeList(std::map<std::string, double>& map,
   std::map<std::string, double>::iterator map_iter;
   unsigned char* ptr = buffer;
   std::string element;
+  int temp_len = 0;
   for (map_iter = map.begin(); map_iter != map.end(); map_iter++) {
     element.assign((*map_iter).first);
     element += ",";
+    if ((list_len + element.length() + 21) >= buffer_len) { // WTH?
+      break;
+    }
     strcpy((char *) ptr, element.c_str()); 
     ptr += element.length();
-    ptr += sprintf((char *) ptr, "%f", (*map_iter).second);
+    temp_len = sprintf((char *) ptr, "%f", (*map_iter).second);
+    ptr += temp_len;
     strcpy((char *) ptr, "|");
     ptr += 1;
     list_count++;
+    list_len += element.length();
+    list_len += temp_len;
+    list_len += 1;
   }
-  list_len = ptr - buffer;
 
-  return 0;
+  return list_count;
 }
 
 int PipeListToStringMap(unsigned char* buffer, const unsigned int buffer_len,
@@ -363,15 +370,19 @@ int StringMapToPipeList(std::map<std::string, std::string> map,
     element.assign((*map_iter).first);
     element += ":";
     element += (*map_iter).second;
+    if ((list_len + element.length() + 1) >= buffer_len) {
+      break;
+    }
     strcpy((char *) ptr, element.c_str()); 
     ptr += element.length();
     strcpy((char *) ptr, "|");
     ptr += 1;
     list_count++;
+    list_len += element.length();
+    list_len += 1;
   }
-  list_len = ptr - buffer;
 
-  return 0;
+  return list_count;
 }
 
 int PipeListToSet(unsigned char* buffer, std::set<std::string>& set) {
@@ -426,15 +437,19 @@ int SetToPipeList(std::set<std::string>& set,
   std::string element;
   for (set_iter = set.begin(); set_iter != set.end(); set_iter++) {
     element.assign(*set_iter);
+    if ((list_len + element.length() + 1) >= buffer_len) {
+      break;
+    }
     strcpy((char *) ptr, element.c_str()); 
     ptr += element.length();
     strcpy((char *) ptr, "|");
     ptr += 1;
     list_count++;
+    list_len += element.length();
+    list_len += 1;
   }
-  list_len = ptr - buffer;
 
-  return 0;
+  return list_count;
 }
 
 } // namespace inagist_utils

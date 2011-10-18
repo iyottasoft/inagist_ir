@@ -9,7 +9,7 @@
 
 #include <string>
 #include <set>
-#include "gist_collector.h"
+#include "gist_maker.h"
 
 namespace inagist_dashboard {
 
@@ -20,9 +20,7 @@ class Profiler {
   Profiler();
   ~Profiler();
 
-  int Init(const char* keytuples_extracter_config,
-           const char* language_detection_config,
-           const char* self_text_classification_config);
+  int Init(const char* gist_maker_config);
 
   int SetDebugLevel(unsigned int debug_level);
 
@@ -30,14 +28,18 @@ class Profiler {
               std::set<std::string>& locations,
               std::set<std::string>& self_languages,
               std::set<std::string>& self_text_classes,
-              std::set<std::string>& self_sub_classes,
-              std::map<std::string, std::string>& self_text_class_contributors_map,
+#ifdef LOCATION_ENABLED
+              std::set<std::string>& self_location_classes,
+#endif // LOCATION_ENABLED
+              // std::map<std::string, std::string>& self_text_class_contributors_map,
+              std::set<std::string>& self_text_class_contributors,
               std::set<std::string>& others_languages,
               std::set<std::string>& others_text_classes,
-              std::set<std::string>& others_sub_classes,
-              std::map<std::string, std::string>& others_text_class_contributors_map,
-              int& intent_valence,
-              int& sentiment_valence,
+#ifdef LOCATION_ENABLED
+              std::set<std::string>& others_location_classes,
+#endif // LOCATION_ENABLED
+              // std::map<std::string, std::string>& others_text_class_contributors_map,
+              std::set<std::string>& others_text_class_contributors,
               std::set<std::string>& recommendations,
               const std::string& profile_name);
 
@@ -48,8 +50,10 @@ class Profiler {
               unsigned int& self_languages_len, unsigned int& self_languages_count,
               char* self_text_classes_buffer, const unsigned int self_text_classes_buffer_len,
               unsigned int& self_text_classes_len, unsigned int& self_text_classes_count,
-              char* self_sub_classes_buffer, const unsigned int self_sub_classes_buffer_len,
-              unsigned int& self_sub_classes_len, unsigned int& self_sub_classes_count,
+#ifdef LOCATION_ENABLED
+              char* self_location_classes_buffer, const unsigned int self_location_classes_buffer_len,
+              unsigned int& self_location_classes_len, unsigned int& self_location_classes_count,
+#endif // LOCATION_ENABLED
               unsigned char* self_text_class_contributors_buffer,
               const unsigned int self_text_class_contributors_buffer_len,
               unsigned int& self_text_class_contributors_len,
@@ -58,14 +62,14 @@ class Profiler {
               unsigned int& others_languages_len, unsigned int& others_languages_count,
               char* others_text_classes_buffer, const unsigned int others_text_classes_buffer_len,
               unsigned int& others_text_classes_len, unsigned int& others_text_classes_count,
-              char* others_sub_classes_buffer, const unsigned int others_sub_classes_buffer_len,
-              unsigned int& others_sub_classes_len, unsigned int& others_sub_classes_count,
+#ifdef LOCATION_ENABLED
+              char* others_location_classes_buffer, const unsigned int others_location_classes_buffer_len,
+              unsigned int& others_location_classes_len, unsigned int& others_location_classes_count,
+#endif // LOCATION_ENABLED
               unsigned char* others_text_class_contributors_buffer,
               const unsigned int others_text_class_contributors_buffer_len,
               unsigned int& others_text_class_contributors_len,
               unsigned int& others_text_class_contributors_count,
-              int& intent_valence, 
-              int& sentiment_valence, 
               unsigned char* recommendations_buffer, const unsigned int recommendations_buffer_len,
               unsigned int& recommendations_len, unsigned int& recommendations_count,
               const char* profile_name);
@@ -77,35 +81,35 @@ class Profiler {
         unsigned int& self_languages_len, unsigned int& self_languages_count,
         char* self_text_classes_buffer, const unsigned int self_text_classes_buffer_len,
         unsigned int& self_text_classes_len, unsigned int& self_text_classes_count,
-        char* self_sub_classes_buffer, const unsigned int self_sub_classes_buffer_len,
-        unsigned int& self_sub_classes_len, unsigned int& self_sub_classes_count,
+#ifdef LOCATION_ENABLED
+        char* self_location_classes_buffer, const unsigned int self_location_classes_buffer_len,
+        unsigned int& self_location_classes_len, unsigned int& self_location_classes_count,
+#endif // LOCATION_ENABLED
         unsigned char* self_text_class_contributors_buffer,
         const unsigned int self_text_class_contributors_buffer_len,
         unsigned int& self_text_class_contributors_len,
         unsigned int& self_text_class_contributors_count,
-        int& intent_valence, 
-        int& sentiment_valence, 
         unsigned char* recommendations_buffer, const unsigned int recommendations_buffer_len,
         unsigned int& recommendations_len, unsigned int& recommendations_count,
         const char* profile_name);
 
-int GetGist(std::set<std::string>& tweets,
+int CallMakeGist(std::set<std::string>& tweets,
             char* lang_class_buffer, const unsigned int lang_class_buffer_len,
             unsigned int& lang_class_len, unsigned int& lang_class_count,
             char* text_class_buffer, const unsigned int text_class_buffer_len,
             unsigned int& text_class_len, unsigned int& text_class_count,
-            char* top_text_classes_buffer, const unsigned int sub_classes_buffer_len,
-            unsigned int& top_text_classes_len, unsigned int& top_text_classes_count,
+#ifdef LOCATION_ENABLED
+            char* location_classes_buffer, const unsigned int location_classes_buffer_len,
+            unsigned int& location_classes_len, unsigned int& location_classes_count,
+#endif // LOCATION_ENABLED
             unsigned char* text_class_contributors_buffer,
             const unsigned int text_class_contributors_buffer_len,
             unsigned int& text_class_contributors_len,
             unsigned int& text_class_contributors_count,
-            int& intent_valence, 
-            int& sentiment_valence, 
             inagist_classifiers::Corpus& corpus, unsigned int& corpus_size);
 
  private:
-  inagist::GistCollector m_gist_collector;
+  inagist::GistMaker m_gist_maker;
   unsigned int m_debug_level;
 
   DISALLOW_COPY_AND_ASSIGN(Profiler); 

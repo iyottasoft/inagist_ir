@@ -153,7 +153,7 @@ gist_maker:
 
 profiler:
 	@echo "creating library ${LOCAL_LIB_DIR}/libprofiler_cppi.a ..."
-	@g++ ${CXXFLAGS} ${PROJECTFLAGS} -fPIC -shared -DNAMED_ENTITIES_ENABLED -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DCLASS_CONTRIBUTORS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -I${CPP_SRC_DIR}/utils -I${CPP_SRC_DIR}/keytuples_extracter -I${CPP_SRC_DIR}/corpus_manager -I${CPP_SRC_DIR}/ngrams_generator -I${CPP_SRC_DIR}/classifier -I${CPP_SRC_DIR}/language_classifier -I${CPP_SRC_DIR}/text_classifier -I${CPP_SRC_DIR}/gist_collector -I${CPP_SRC_DIR}/profiler -c profiler_cppi.cc
+	@g++ ${CXXFLAGS} ${PROJECTFLAGS} -fPIC -shared -DI18N_ENABLED -DSCRIPT_DETECTION_ENABLED -DPROFANITY_CHECK_ENABLED -DNAMED_ENTITIES_ENABLED -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED -I${CPP_SRC_DIR}/utils -I${CPP_SRC_DIR}/keytuples_extracter -I${CPP_SRC_DIR}/corpus_manager -I${CPP_SRC_DIR}/ngrams_generator -I${CPP_SRC_DIR}/classifier -I${CPP_SRC_DIR}/language_classifier -I${CPP_SRC_DIR}/text_classifier -I${CPP_SRC_DIR}/gist_maker -I${CPP_SRC_DIR}/profiler -c profiler_cppi.cc
 	@ar -r ${LOCAL_LIB_DIR}/libprofiler_cppi.a profiler_cppi.o
 	@ranlib ${LOCAL_LIB_DIR}/libprofiler_cppi.a
 	@echo "done!"
