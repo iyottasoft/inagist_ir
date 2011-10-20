@@ -25,7 +25,7 @@ class Classifier {
   virtual ~Classifier();
 
   int Init(std::string config_file_name, bool ignore_history=false);
-  int GetCorpus(const std::string& text, Corpus& corpus);
+  virtual int GetCorpus(const std::string& text, Corpus& corpus);
   int Classify(Corpus& test_corpus,
                std::string& output_class,
                std::string& top_classes, unsigned int& top_classes_count

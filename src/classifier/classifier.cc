@@ -662,7 +662,7 @@ int Classifier::GetData(const bool& train_not_test,
   std::set<std::string>::iterator set_iter;
   if (train_not_test) {
     for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
-      // this GetCorpus is a pure virtual function
+      // this GetCorpus is a virtual function
       // ensure your derivation of this classifier provides this function
       if ((count_temp = GetCorpus(*set_iter, output_corpus)) < 0) {
         std::cerr << "ERROR: could not get corpus for tweet: " << *set_iter << std::endl;
