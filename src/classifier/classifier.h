@@ -25,15 +25,15 @@ class Classifier {
   virtual ~Classifier();
 
   int Init(std::string config_file_name, bool ignore_history=false);
-  virtual int GetCorpus(const std::string& text, Corpus& corpus)=0;
-  virtual int Classify(Corpus& test_corpus,
+  int GetCorpus(const std::string& text, Corpus& corpus);
+  int Classify(Corpus& test_corpus,
                std::string& output_class,
                std::string& top_classes, unsigned int& top_classes_count
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                , std::map<std::string, std::string>& class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
               );
-  virtual int Classify(const std::string& text,
+  int Classify(const std::string& text,
                        const unsigned int& text_len,
                        std::string& output_class,
                        std::string& top_classes,
@@ -44,10 +44,10 @@ class Classifier {
 #ifdef CLASS_CONTRIBUTORS_ENABLED
                        , std::map<std::string, std::string>& class_contributors_map
 #endif // CLASS_CONTRIBUTORS_ENABLED
-                       , bool ignore_case=false)=0;
+                       , bool ignore_case=false);
 
-  virtual int InitDependencies(int argc=0, char* argv[]=NULL)=0;
-  virtual int ClearDependencies()=0;
+  int InitDependencies(int argc=0, char* argv[]=NULL);
+  int ClearDependencies();
 
   int SetDebugLevel(unsigned int debug_level);
 

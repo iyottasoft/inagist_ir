@@ -5,7 +5,7 @@ ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/json_parser -I../../include/utfcpp -I../utils -I../../extern/curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../corpus_manager -I../ngrams_generator -I../script_detector
 
-LIBS = -l${PROJECT} -lngramsgenerator -lcorpusmanager -lutils -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
+LIBS = -l${PROJECT} -lngramsgenerator -lcorpusmanager -lutils -lscriptdetector -linagistapi -ltwitterapi -ljsonparser -lcurlrequestmaker -lcurl
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
@@ -13,7 +13,8 @@ BINS = ${BIN_DIR}/t_classifier_config \
        ${BIN_DIR}/t_setup_classifier \
        ${BIN_DIR}/t_renumber_classifier_config \
        ${BIN_DIR}/x_make_nbc_prior_probabilities_file \
-       ${BIN_DIR}/x_make_nbc_probabilities_file
+       ${BIN_DIR}/x_make_nbc_probabilities_file \
+       ${BIN_DIR}/x_make_classifier_dictionary
 
 OBJS = classifier_config.o naive_bayes_classifier.o classifier.o
 
@@ -63,6 +64,11 @@ ${BIN_DIR}/x_make_nbc_probabilities_file: x_make_nbc_probabilities_file.o ${LIB}
 ${BIN_DIR}/x_make_nbc_prior_probabilities_file: x_make_nbc_prior_probabilities_file.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_make_nbc_prior_probabilities_file
+	@echo "done!"
+
+${BIN_DIR}/x_make_classifier_dictionary: x_make_classifier_dictionary.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_make_classifier_dictionary
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

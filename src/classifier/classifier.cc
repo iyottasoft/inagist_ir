@@ -168,6 +168,12 @@ int Classifier::Classify(Corpus& test_corpus,
   return 1;
 }
 
+// this is a dummy function. this has to be overridden by the derived class
+int Classifier::GetCorpus(const std::string& text, Corpus& corpus) {
+  std::cout << "Fatal Error: this dummy GetCorpus class should not have been called\n";
+  return -1;
+}
+
 #ifdef CLASSIFIER_DATA_TRAINING_ENABLED
 
 // this functioin uses round robin to get data.
