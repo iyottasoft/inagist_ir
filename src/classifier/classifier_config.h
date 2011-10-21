@@ -10,6 +10,7 @@ namespace inagist_classifiers {
 
 typedef struct _class_struct { 
   std::string name;
+  std::string number;
   std::string label;
   std::string class_data_file;
   // testing
@@ -28,6 +29,7 @@ typedef struct _class_struct {
   }
   void Clear() {
     name.clear();
+    number.clear();
     label.clear();
     class_data_file.clear();
     testing_data_file.clear();
@@ -42,7 +44,8 @@ typedef struct _class_struct {
   }
   void Print() const {
     std::cout << "name: " << name << std::endl;
-    std::cout << "label: " << std::endl;
+    std::cout << "number: " << number << std::endl;
+    std::cout << "label: " << label << std::endl;
     std::cout << "class_data: " << class_data_file << std::endl;
     std::cout << "testing_data: " << testing_data_file << std::endl;
     std::cout << "testing_handles: " << testing_handles_file << std::endl;
@@ -71,6 +74,7 @@ class ClassifierConfig {
   ~ClassifierConfig();
   static int Read(const char* config_file_name, Config& config);
   static int LoadClassLabelsMap(Config& config, std::map<std::string, std::string>& class_labels_map);
+  static int LoadClassNumbersMap(Config& config, std::map<std::string, std::string>& class_numbers_map);
   static int Clear(Config& config);
   static int Write(Config& config, const char* config_file_name);
 };

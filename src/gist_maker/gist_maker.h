@@ -137,13 +137,17 @@ class GistMaker {
 
   void PrintKeywords(std::set<std::string> &named_entities_set);
   int DetectScript(int code_point, std::string &script);
-  int ProcessTextClassWord(std::string& text_class_word, std::map<std::string, double>& text_class_map);
   void inline Initialize(double array[], unsigned int size);
 
   int ProcessLangClassWord(std::string& lang_class_word,
                            std::map<std::string, double>& lang_class_map);
-  int ProcessLocationWord(std::string& locations_word,
-                          std::map<std::string, double>& locations_map);
+  int ClassifyWord(const std::string& word,
+                   inagist_utils::StringToMapDictionary& dictionary,
+                   std::map<std::string, double>& class_map);
+
+  int FindClassLabels(std::map<std::string, double>& class_name_freq_map, // class_name to freq map
+                      inagist_utils::StringToMapDictionary& dictionary,
+                      std::map<std::string, double>& class_label_freq_map);
 
  private:
 
@@ -164,7 +168,7 @@ class GistMaker {
   inagist_utils::DoubleDictionaryMap m_language_prior_freqs;
 #endif // LANG_ENABLED 
 #ifdef TEXT_CLASSIFICATION_ENABLED
-  inagist_utils::StringToMapDictionary m_classifier_dictionary;
+  inagist_utils::StringToMapDictionary m_text_classifier_dictionary;
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
   inagist_utils::StringToMapDictionary m_location_dictionary;

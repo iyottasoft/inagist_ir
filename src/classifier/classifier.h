@@ -87,6 +87,7 @@ class Classifier {
 
  protected:
   std::map<std::string, std::string> m_class_labels_map;
+  std::map<std::string, std::string> m_class_numbers_map;
   CorpusMap m_corpus_map;
   Corpus m_classes_freq_map;
   Corpus m_corpus;

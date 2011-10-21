@@ -39,6 +39,8 @@ Classifier::~Classifier() {
 #endif // CLASSIFIER_DEBUG
   }
 
+  m_class_labels_map.clear();
+  m_class_numbers_map.clear();
   CorpusManager::ClearCorpus(m_corpus);
   CorpusManager::ClearCorpus(m_classes_freq_map);
   CorpusManager::ClearCorpusMap(m_corpus_map);
@@ -124,6 +126,13 @@ int Classifier::Init(std::string config_file_name, bool ignore_history) {
   if (ClassifierConfig::LoadClassLabelsMap(m_config, m_class_labels_map) < 0) {
 #ifdef CLASSIFIER_DEBUG
     std::cerr << "ERROR: could not load class labels map\n";
+#endif // CLASSIFIER_DEBUG
+    return -1;
+  }
+
+  if (ClassifierConfig::LoadClassNumbersMap(m_config, m_class_numbers_map) < 0) {
+#ifdef CLASSIFIER_DEBUG
+    std::cerr << "ERROR: could not load class numbers map\n";
 #endif // CLASSIFIER_DEBUG
     return -1;
   }
@@ -1036,6 +1045,8 @@ int Classifier::MakeDictionary(const char* classifier_dictionary_file) {
   CorpusIter corpus_iter;
   Corpus* corpus_ptr;
   std::string class_name;
+  std::string class_label;
+  std::string class_number;
   std::string word;
   double freq;
 
@@ -1043,12 +1054,26 @@ int Classifier::MakeDictionary(const char* classifier_dictionary_file) {
   // word - class_name1:prob_value1, class_name2:prob_value2 etc
   std::map<std::string, std::map<std::string, double> > classifier_dictionary_map;
   std::map<std::string, std::map<std::string, double> >::iterator dict_iter;
+  std::map<std::string, std::string>::iterator string_iter;
   for (corpus_map_iter = corpus_map->begin(); corpus_map_iter != corpus_map->end(); corpus_map_iter++) {
     // for this iteration, what is the class name and corpus?
     class_name = corpus_map_iter->first;
     if (class_name.empty()) {
       std::cerr << "ERROR: invalid class name. fatal error\n";
       break;
+    }
+    if ((string_iter = m_class_labels_map.find(class_name)) != m_class_labels_map.end()) {
+      class_label = string_iter->second;
+    }
+    if ((string_iter = m_class_numbers_map.find(class_name)) != m_class_numbers_map.end()) {
+      class_number = string_iter->second;
+    }
+    { // creating a scope
+      std::map<std::string, double> class_map;
+      freq = 0;
+      class_map.insert(std::pair<std::string, double> (class_label, freq)); 
+      classifier_dictionary_map.insert(std::pair<std::string, std::map<std::string, double> > \
+                                       ("_" + class_number, class_map));
     }
     corpus_ptr = &(corpus_map_iter->second);
     if (corpus_ptr->empty()) {
@@ -1070,10 +1095,10 @@ int Classifier::MakeDictionary(const char* classifier_dictionary_file) {
       word = (*corpus_iter).first;
       freq = (*corpus_iter).second;
       if ((dict_iter = classifier_dictionary_map.find(word)) != classifier_dictionary_map.end()) {
-        dict_iter->second.insert(std::pair<std::string, double>(class_name, freq)); 
+        dict_iter->second.insert(std::pair<std::string, double>("_" + class_number, freq)); 
       } else {
         std::map<std::string, double> class_map;
-        class_map.insert(std::pair<std::string, double> (class_name, (*corpus_iter).second)); 
+        class_map.insert(std::pair<std::string, double> ("_" + class_number, freq)); 
         classifier_dictionary_map.insert(std::pair<std::string, std::map<std::string, double> >(word, class_map));
       }
     }

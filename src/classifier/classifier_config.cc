@@ -49,7 +49,7 @@ int ClassifierConfig::Read(const char* config_file, Config& config) {
         break;
       }
       key.assign(line.c_str(), loc);
-      value.assign(line.c_str(), loc+1, (line.length()-loc-1));
+      value.assign(line.c_str(), loc+1, (line.length()-loc-1)); // loc is 0 indexed, hence sub another 1
       //std::cout << key << std::endl;
       //std::cout << value << std::endl;
       if (key.compare(0, 17, "class_frequencies") == 0) {
@@ -62,6 +62,12 @@ int ClassifierConfig::Read(const char* config_file, Config& config) {
         line_count++;
         if (key.compare(0, 10, "class_name") == 0) {
           class_struct.name = value;
+          loc = key.find(".", 0);
+          if (loc == std::string::npos) {
+            std::cout << "ERROR: invalid config file entry in line: " << line << std::endl;
+          }
+          value.assign(key.c_str(), loc+1, (key.length()-loc-1));
+          class_struct.number = value;
         } else if (key.compare(0, 11, "class_label") == 0) {
           class_struct.label = value;
         } else if (key.compare(0, 10, "class_data") == 0) {
@@ -109,6 +115,14 @@ int ClassifierConfig::LoadClassLabelsMap(Config& config,
                                          std::map<std::string, std::string>& class_labels_map) {
   for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
     class_labels_map[config.iter->name] = config.iter->label;
+  }
+  return 0;
+}
+
+int ClassifierConfig::LoadClassNumbersMap(Config& config,
+                                          std::map<std::string, std::string>& class_numbers_map) {
+  for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
+    class_numbers_map[config.iter->name] = config.iter->number;
   }
   return 0;
 }
