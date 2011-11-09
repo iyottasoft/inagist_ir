@@ -10,7 +10,7 @@ CPP_LINK_DIR = ../cpp_i/lib
 LOCAL_LIB_DIR = ./lib
 LOCAL_BIN_DIR = ./bin
 
-all: gist_collector_multi gist_collector gist_maker
+all: gist_collector_multi gist_collector gist_maker profiler
 	@echo "build done!"
 
 clean:
@@ -31,4 +31,9 @@ gist_collector:
 gist_maker:
 	@echo "creating binary ${LOCAL_BIN_DIR}/t_gist_maker ..."
 	@gcc -g -Wall t_gist_maker.c -o ${LOCAL_BIN_DIR}/t_gist_maker -I. -I${CPP_INCLUDE_DIR} -L${CPP_LINK_DIR} -lstdc++ -ltwitter_api_cppi -lgist_maker_cppi -L${CPP_LIB_DIR} -lngramsgenerator -lscriptdetector -lutils -DI18N_ENABLED -DSCRIPT_DETECTION_ENABLED -DPROFANITY_CHECK_ENABLED -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DLANG_ENABLED -DLOCATION_ENABLED
+	@echo "done!"
+
+profiler:
+	@echo "creating binary ${LOCAL_BIN_DIR}/t_profiler ..."
+	@gcc -g -Wall t_profiler.c -o ${LOCAL_BIN_DIR}/t_profiler -I. -I${CPP_INCLUDE_DIR} -L${CPP_LINK_DIR} -ltwitter_api_cppi -lprofiler_cppi -L${CPP_LIB_DIR} -lprofiler -lngramsgenerator -lscriptdetector -lutils -L${EXTERN_DIR} -ltwitterapi -linagistapi -ljsonparser -lcurlrequestmaker -lcurl -lstdc++ -DI18N_ENABLED -DSCRIPT_DETECTION_ENABLED -DPROFANITY_CHECK_ENABLED -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DLANG_ENABLED -DRECSYS_ENABLED #-DLOCATION_ENABLED
 	@echo "done!"

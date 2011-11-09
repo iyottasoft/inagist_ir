@@ -1035,12 +1035,12 @@ int NaiveBayesClassifier::GenerateProbabilities(Corpus* raw_data_corpus,
   // B - vocabulary size. count of words in all classes ignoring duplicates.
   // tct-dash - seems to be the count of all words present the in this class including duplicates.
   CorpusIter corpus_iter;
-  double corpus_sum = 0;
+  double corpus_count = 0;
   for (corpus_iter = raw_data_corpus->begin(); corpus_iter != raw_data_corpus->end(); corpus_iter++) {
-    corpus_sum += corpus_iter->second;
+    corpus_count += corpus_iter->second;
   }
 
-  double normalizing_denominator = corpus_sum + (double) vocabulary_size;
+  double normalizing_denominator = corpus_count + (double) vocabulary_size;
   if (normalizing_denominator <= 1) {
 #ifdef CLASSIFIER_DEBUG
     std::cerr << "WARNING: invalid normalizing denominator\n";

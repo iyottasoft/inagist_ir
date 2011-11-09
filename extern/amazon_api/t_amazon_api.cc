@@ -9,11 +9,12 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
+  const char* program_name = argv[0];
   const char* module_name = argv[1];
   const char* class_name = argv[2];
   const char* function_name = argv[3];
 
-  inagist_api::AmazonAPI aapi;
+  inagist_api::AmazonAPI aapi(program_name);
 
   if (aapi.Init(module_name, class_name) < 0) {
     std::cerr << "ERROR: could not initialize amazon api\n";

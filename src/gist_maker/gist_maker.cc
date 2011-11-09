@@ -30,15 +30,20 @@ using std::string;
 GistMaker::GistMaker() {
   m_debug_level = 0;
 #ifdef GM_DEBUG
-  if (m_debug_level > 0) {
+  if (GM_DEBUG > 0) {
     m_debug_level = GM_DEBUG;
   }
 #endif // GM_DEBUG
 }
 
 GistMaker::~GistMaker() {
-  if (DeInit() < 0)
-    std::cerr << "ERROR: DeInit() failed\n";
+#ifdef GM_DEBUG
+  if (m_debug_level > 3) {
+    std::cout << "GistMaker destructor\n";
+  }
+#endif // GM_DEBUG
+  if (Clear() < 0)
+    std::cerr << "ERROR: Clear() failed\n";
 }
 
 int GistMaker::SetDebugLevel(unsigned int& debug_level) {
@@ -243,8 +248,28 @@ int GistMaker::Init(const char *stopwords_file,
   return 0;
 }
 
-int GistMaker::DeInit() {
-  //std::cout << "deinit done\n";
+int GistMaker::Clear() {
+
+  m_stopwords_dictionary.Clear();
+  m_dictionary.Clear();
+  m_unsafe_dictionary.Clear();
+#ifdef INTENT_ENABLED
+  m_intent_words_dictionary.Clear();
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+  m_sentiment_words_dictionary.Clear();
+#endif // SENTIMENT_ENABLED
+#ifdef LANG_ENABLED
+  m_language_dictionary.Clear();
+  m_language_prior_freqs.Clear();
+#endif // LANG_ENABLED 
+#ifdef TEXT_CLASSIFICATION_ENABLED
+  m_text_classifier_dictionary.Clear();
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+  m_location_dictionary.Clear();
+#endif // LOCATION_ENABLED
+
   return 0;
 }
 
@@ -393,7 +418,9 @@ int GistMaker::FindClassLabels(std::map<std::string, double>& class_name_freq_ma
       }
 #endif // GM_DEBUG
       if ((temp_iter = class_label_freq_map.find(class_label)) != class_label_freq_map.end()) {
-        temp_iter->second += freq;
+        if (temp_iter->second < freq) {
+          temp_iter->second = freq;
+        }
       } else {
         class_label_freq_map[class_label] = freq;
       }
@@ -404,7 +431,7 @@ int GistMaker::FindClassLabels(std::map<std::string, double>& class_name_freq_ma
   return 0;
 }
 
-void inline GistMaker::Initialize(double array[], unsigned int size) {
+inline void GistMaker::Initialize(double array[], unsigned int size) {
   for (unsigned int i=0; i<size; i++)
     array[i] = 0;
 }
@@ -1627,7 +1654,9 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         if (m_sentiment_words_dictionary.Find(next_word, dict_value) == 1) {
           sentiment_valence += dict_value;
 #ifdef GM_DEBUG
-          std::cout << "word:" << next_word << " dict_value: " << dict_value << std::endl;
+          if (m_debug_level > 3) {
+            std::cout << "word:" << next_word << " dict_value: " << dict_value << std::endl;
+          }
 #endif // GM_DEBUG
         }
 #endif // SENTIMENT_ENABLED
@@ -2705,49 +2734,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   ptr = NULL;
   end = NULL;
 
-#ifdef LANG_ENABLED
-  double lang_freq = 0;
-  double lang_prior_freq = 0;
-  double max_lang_freq = 0;
-  std::string max_lang_class;
-  unsigned int max_lang_duplicate_count = 0;
-  double lang_freq_sum = 0;
-  max_lang_freq = 0;
-  std::map<std::string, double>::iterator lang_class_map_iter;
-  std::map<std::string, double>::iterator lang_prior_freqs_iter;
-  for (lang_class_map_iter = lang_class_map.begin();
-       lang_class_map_iter != lang_class_map.end();
-       lang_class_map_iter++) {
-#ifdef GM_DEBUG
-    if (m_debug_level > 3) {
-      std::cout << lang_class_map_iter->first << ":" << lang_class_map_iter->second << std::endl;
-    }
-#endif // GM_DEBUG
-    lang_freq = lang_class_map_iter->second;
-    /*
-    if (m_language_prior_freqs.Find((const unsigned char*) lang_class_map_iter->first.c_str(),
-                                    lang_prior_freq) != 0) {
-      lang_freq += lang_prior_freq;
-    }
-    */
-    lang_freq = exp(lang_freq);
-    lang_freq_sum += lang_freq;
-    if (max_lang_freq == lang_freq) {
-      max_lang_duplicate_count++;
-    } else if (max_lang_freq < lang_freq) {
-      max_lang_freq = lang_freq;
-      max_lang_class = lang_class_map_iter->first;
-      max_lang_duplicate_count = 0;
-    }
-  }
-  if (!max_lang_class.empty()) {
-    strcpy((char *) lang_class_buffer, max_lang_class.c_str());
-    lang_class_len = max_lang_class.length();
-    lang_class_count = 1;
-  }
-  ret_val += lang_class_count;
-#endif // LANG_ENABLED
-
 #ifdef GM_DEBUG
   if (m_debug_level > 5) {
     cout << endl << "\norginal query: " << std::string((char *) text_buffer) << endl;
@@ -2760,6 +2746,14 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     cout << "num normal words: " << num_normal_words << endl;
   }
 #endif // GM_DEBUG
+
+#ifdef PROFANITY_CHECK_ENABLED
+  if (text_has_unsafe_words)
+    strcpy(profanity_status_buffer, "unsafe");
+  else
+    strcpy(profanity_status_buffer, "safe");
+  ret_val += 1;
+#endif // PROFANITY_CHECK_ENABLED
 
 #ifdef NAMED_ENTITIES_ENABLED
   if ((num_normal_words == 0) && (num_dict_words != 0 || num_words > 5)) {
@@ -2777,17 +2771,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
     named_entities_len = 0;
     named_entities_count = 0;
   }
-#endif // NAMED_ENTITIES_ENABLED
 
-#ifdef PROFANITY_CHECK_ENABLED
-  if (text_has_unsafe_words)
-    strcpy(profanity_status_buffer, "unsafe");
-  else
-    strcpy(profanity_status_buffer, "safe");
-  ret_val += 1;
-#endif // PROFANITY_CHECK_ENABLED
-
-#ifdef NAMED_ENTITIES_ENABLED
   ret_val += named_entities_count;
 #endif // NAMED_ENTITIES_ENABLED
 
@@ -2799,45 +2783,70 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   ret_val += keyphrases_count;
 #endif // KEYPHRASE_ENABLED
 
-#ifdef TEXT_CLASSIFICATION_ENABLED
-/*
-  double freq = 0;
-  double max_freq = 0;
-  std::string max_class;
-  unsigned int max_duplicate_count = 0;
-  max_freq = 0;
-  std::map<std::string, double>::iterator text_class_map_iter;
-  for (text_class_map_iter = text_class_map.begin();
-       text_class_map_iter != text_class_map.end();
-       text_class_map_iter++) {
+#ifdef LANG_ENABLED
+  // currently this is inefficient. if we only need the max class, why find labels for everything?
+  if (FindClassLabels(lang_class_map,
+                      m_language_dictionary,
+                      class_label_freq_map) < 0) {
 #ifdef GM_DEBUG
-    if (m_debug_level > 3) {
-      std::cout << text_class_map_iter->first << ":" << text_class_map_iter->second << std::endl;
-    }
+    std::cerr << "ERROR: could not find class labels in text classifier dictionary\n";
 #endif // GM_DEBUG
-    freq = exp(text_class_map_iter->second);
-    if (max_freq == freq) {
-      max_duplicate_count++;
-    } else if (max_freq < freq) {
-      max_freq = freq;
-      max_class = text_class_map_iter->first;
-      max_duplicate_count = 0;
+  }
+
+#ifdef GM_DEBUG
+  if (m_debug_level > 3) {
+    std::map<std::string, double>::iterator lang_class_map_iter;
+    for (lang_class_map_iter = lang_class_map.begin();
+         lang_class_map_iter != lang_class_map.end();
+         lang_class_map_iter++) {
+        std::cout << lang_class_map_iter->first << ":" << lang_class_map_iter->second << std::endl;
+    }
+    for (lang_class_map_iter = class_label_freq_map.begin();
+         lang_class_map_iter != class_label_freq_map.end();
+         lang_class_map_iter++) {
+        std::cout << lang_class_map_iter->first << ":" << lang_class_map_iter->second << std::endl;
     }
   }
-  if (!max_class.empty()) {
-    //Insert((unsigned char*) text_classes_buffer, text_classes_len,
-    //       (unsigned char*) max_class.c_str(), max_class.length(), text_classes_count);
-    ret_val += 1;
-  }
-*/
+#endif // GM_DEBUG
 
+  lang_class_map.clear();
+
+  if (class_label_freq_map.size() > 1) {
+    unsigned int n = 1;
+    inagist_utils::FindTopN(class_label_freq_map, n,
+                            lang_class_buffer, lang_class_buffer_len,
+                            lang_class_len, lang_class_count);
+  }
+  class_label_freq_map.clear();
+
+  ret_val += lang_class_count;
+#endif // LANG_ENABLED
+
+#ifdef TEXT_CLASSIFICATION_ENABLED
   if (FindClassLabels(text_class_map,
                       m_text_classifier_dictionary,
                       class_label_freq_map) < 0) {
 #ifdef GM_DEBUG
-    std::cerr << "ERROR: could not find class labels\n";
+    std::cerr << "ERROR: could not find class labels in text classifier dictionary\n";
 #endif // GM_DEBUG
   }
+
+#ifdef GM_DEBUG
+  if (m_debug_level > 3) {
+    std::map<std::string, double>::iterator text_class_map_iter;
+    for (text_class_map_iter = text_class_map.begin();
+         text_class_map_iter != text_class_map.end();
+         text_class_map_iter++) {
+        std::cout << text_class_map_iter->first << ":" << text_class_map_iter->second << std::endl;
+    }
+    for (text_class_map_iter = class_label_freq_map.begin();
+         text_class_map_iter != class_label_freq_map.end();
+         text_class_map_iter++) {
+        std::cout << text_class_map_iter->first << ":" << text_class_map_iter->second << std::endl;
+    }
+  }
+#endif // GM_DEBUG
+
   text_class_map.clear();
 
   if (class_label_freq_map.size() > 1) {
@@ -2850,37 +2859,6 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // TEXT_CLASSIFICATION_ENABLED
 
 #ifdef LOCATION_ENABLED
-/*
-  double location_freq = 0;
-  double max_location_freq = 0;
-  std::string max_location_class;
-  unsigned int max_location_duplicate_count = 0;
-  max_location_freq = 0;
-  std::map<std::string, double>::iterator locations_map_iter;
-  for (locations_map_iter = locations_map.begin();
-       locations_map_iter != locations_map.end();
-       locations_map_iter++) {
-#ifdef GM_DEBUG
-    if (m_debug_level > 3) {
-      std::cout << locations_map_iter->first << ":" << locations_map_iter->second << std::endl;
-    }
-#endif // GM_DEBUG
-    location_freq = exp(locations_map_iter->second);
-    if (max_location_freq == freq) {
-      max_location_duplicate_count++;
-    } else if (max_location_freq < location_freq) {
-      max_location_freq = location_freq;
-      max_location_class = locations_map_iter->first;
-      max_location_duplicate_count = 0;
-    }
-  }
-  if (!max_location_class.empty()) {
-    Insert((unsigned char*) locations_buffer, locations_len,
-           (unsigned char*) max_location_class.c_str(), max_location_class.length(), locations_count);
-    ret_val += 1;
-  }
-*/
-
   if (FindClassLabels(locations_map,
                       m_location_dictionary,
                       class_label_freq_map) < 0) {

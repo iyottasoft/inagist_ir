@@ -59,7 +59,7 @@ class GistMaker {
 #endif // LOCATION_ENABLED
            , const char* stemmer_dictionary_file=NULL
          );
-  int DeInit();
+  int Clear();
 
   int MakeGist(char* str
 #ifdef PROFANITY_CHECK_ENABLED
@@ -137,7 +137,7 @@ class GistMaker {
 
   void PrintKeywords(std::set<std::string> &named_entities_set);
   int DetectScript(int code_point, std::string &script);
-  void inline Initialize(double array[], unsigned int size);
+  inline void Initialize(double array[], unsigned int size);
 
   int ProcessLangClassWord(std::string& lang_class_word,
                            std::map<std::string, double>& lang_class_map);

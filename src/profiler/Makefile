@@ -1,7 +1,6 @@
 include ../../Makefile.incl
 PROJECT = profiler
-PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL} -DI18N_ENABLED -DSCRIPT_DETECTION_ENABLED -DPROFANITY_CHECK_ENABLED -DKEYPHRASE_ENABLED -DNAMED_ENTITIES_ENABLED -DKEYWORDS_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DLANG_ENABLED #-DINTENT_ENABLED -DSENTIMENT_ENABLED -DLOCATION_ENABLED
-#PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL} -DNAMED_ENTITIES_ENABLED -DKEYWORDS_ENABLED -DKEYPHRASE_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DCLASS_CONTRIBUTORS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED
+PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL} -DI18N_ENABLED -DSCRIPT_DETECTION_ENABLED -DPROFANITY_CHECK_ENABLED -DKEYPHRASE_ENABLED -DNAMED_ENTITIES_ENABLED -DKEYWORDS_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DLANG_ENABLED -DRECSYS_ENABLED #-DLOCATION_ENABLED
 ARCHIVE = ar -r
 
 INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../../include/json_parser -I../../extern/curl_request_maker -I../../extern/twitter_api -I../../extern/inagist_api -I../utils -I../script_detector -I../gist_maker -I../corpus_manager -I../ngrams_generator
@@ -11,7 +10,8 @@ LIBS = -l${PROJECT} -lcorpusmanager -lngramsgenerator -lutils -lscriptdetector -
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 
-BINS = ${BIN_DIR}/x_profiler
+BINS = ${BIN_DIR}/x_profiler \
+       ${BIN_DIR}/t_profiler
 #${BIN_DIR}/x_dashboard_populater \
 #${BIN_DIR}/t_get_followers
 
@@ -96,6 +96,11 @@ ${lang}:
 ${BIN_DIR}/x_profiler: x_profiler.o ${LIB}
 	@echo "creating binary:" $@
 	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/x_profiler
+	@echo "done!"
+
+${BIN_DIR}/t_profiler: t_profiler.o ${LIB}
+	@echo "creating binary:" $@
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} $< ${LINK_DIR} ${LIBS} -o ${BIN_DIR}/t_profiler
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE

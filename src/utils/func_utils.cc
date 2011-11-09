@@ -76,11 +76,17 @@ int FindTopN(std::map<std::string, double>& string_double_map,
              unsigned int& output_len, unsigned int& output_count
             ) {
 
-  // currently disregarding input n. n is assumed to be 3
-
   if (string_double_map.empty()) {
     return 0;
   }
+
+  if (1 == n) {
+    return FindMax(string_double_map,
+                   buffer, buffer_len,
+                   output_len, output_count);
+  }
+
+  // currently disregarding input n if n != 1. n is assumed to be 3
 
   std::map<std::string, double>::iterator map_iter;
 
@@ -155,6 +161,53 @@ int FindTopN(std::map<std::string, double>& string_double_map,
   }
 
   return output_count;
+}
+
+int FindMax(std::map<std::string, double>& string_double_map,
+            char* buffer, const unsigned int buffer_len,
+            unsigned int& output_len, unsigned int& output_count
+           ) {
+
+  double freq = 0;
+  double prior_freq = 0;
+  double max_freq = 0;
+  std::string max_class;
+  unsigned int max_duplicate_count = 0;
+  double freq_sum = 0;
+  max_freq = 0;
+  std::map<std::string, double>::iterator map_iter;
+  std::map<std::string, double>::iterator prior_freqs_iter;
+  for (map_iter = string_double_map.begin();
+       map_iter != string_double_map.end();
+       map_iter++) {
+#ifdef GM_DEBUG
+    if (m_debug_level > 3) {
+      std::cout << map_iter->first << ":" << map_iter->second << std::endl;
+    }
+#endif // GM_DEBUG
+    freq = map_iter->second;
+    /*
+    if (m_language_prior_freqs.Find((const unsigned char*) map_iter->first.c_str(),
+                                    prior_freq) != 0) {
+      freq += prior_freq;
+    }
+    */
+    freq = exp(freq);
+    freq_sum += freq;
+    if (max_freq == freq) {
+      max_duplicate_count++;
+    } else if (max_freq < freq) {
+      max_freq = freq;
+      max_class = map_iter->first;
+      max_duplicate_count = 0;
+    }
+  }
+
+  InsertIntoBuffer(max_class,
+                   (unsigned char*) buffer, buffer_len,
+                   output_len, output_count);
+
+  return 0;
 }
 
 } // namespace inagist_utils

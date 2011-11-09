@@ -52,7 +52,7 @@ int Classifier::SetDebugLevel(unsigned int debug_level) {
   return 0;
 }
 
-int Classifier::Init(std::string config_file_name, bool ignore_history) {
+int Classifier::Init(std::string config_file_name, bool ignore_history, unsigned int corpus_type) {
 
   // this config file name should have corpus files
   // and the strings with which the corpus contents can be uniquely identified
@@ -74,20 +74,34 @@ int Classifier::Init(std::string config_file_name, bool ignore_history) {
 
   CorpusMapMeta corpus_map_meta_data;
 #ifdef CLASSIFIER_DEBUG
-    if (m_debug_level > 4) {
-      std::cout << "classifier training meta data\n";
-    }
+  if (m_debug_level > 4) {
+    std::cout << "classifier training meta data\n";
+  }
 #endif // CLASSIFIER_DEBUG
+
   for (m_config.iter = m_config.classes.begin();
        m_config.iter != m_config.classes.end();
        m_config.iter++) {
-    corpus_map_meta_data[m_config.iter->name] = m_config.iter->class_data_file;
+    switch (corpus_type) {
+      case 0:
+        corpus_map_meta_data[m_config.iter->name] = m_config.iter->class_data_file;
+        break;
+      case 1:
+        corpus_map_meta_data[m_config.iter->name] = m_config.iter->training_data_file;
+        break;
+      case 2:
+        corpus_map_meta_data[m_config.iter->name] = m_config.iter->training_data_file;
+        break;
+      default:
+        break;
+    }
 #ifdef CLASSIFIER_DEBUG
     if (m_debug_level > 4) {
-      std::cout << m_config.iter->name << " = " << m_config.iter->class_data_file << std::endl;
+      std::cout << m_config.iter->name << " = " << corpus_map_meta_data[m_config.iter->name] << std::endl;
     }
 #endif // CLASSIFIER_DEBUG
   }
+
   if (corpus_map_meta_data.empty()) {
 #ifdef CLASSIFIER_DEBUG
     std::cerr << "ERROR: corpus_map_meta_data cannot be empty\n";
@@ -1105,13 +1119,13 @@ int Classifier::MakeDictionary(const char* classifier_dictionary_file) {
   }
 
   // the next three steps can be merged into a single loop. not doing it for clarity.
+  std::map<std::string, double>::iterator class_map_iter;
 
   // now lets calculate the idf component
 
   // each class is a document, so how does tf-idf work?
-  // tf - number of times a word occurs in a class - already present in the dictionary (albeit as log of tf!)
+  // tf - number of times a word occurs in a class - here instead of td, probability Nc/N will be used
   // idf - is number of classes / number of classes in which this word occurs
-  std::map<std::string, double>::iterator class_map_iter;
 
   double idf = 0;
   double total_documents = corpus_map->size();

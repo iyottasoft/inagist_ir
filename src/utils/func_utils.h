@@ -17,6 +17,15 @@ int Heapify(double& top1, std::string& top1_class,
             double& top2, std::string& top2_class,
             double& top3, std::string& top3_class);
 
+int InsertIntoBuffer(std::string& insert_str,
+                            unsigned char* buffer, const unsigned int& buffer_len,
+                            unsigned int& current_len, unsigned int& content_count);
+
+int FindMax(std::map<std::string, double>& string_double_map,
+            char* buffer, const unsigned int buffer_len,
+            unsigned int& output_len, unsigned int& output_count
+           );
+
 int FindTopN(std::map<std::string, double>& string_double_map,
              unsigned int& n,
              char* buffer, const unsigned int buffer_len,

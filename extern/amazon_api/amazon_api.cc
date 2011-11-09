@@ -10,15 +10,20 @@ http://www.codeproject.com/KB/cpp/embedpython_1.aspx
 
 namespace inagist_api {
 
-AmazonAPI::AmazonAPI() {
+AmazonAPI::AmazonAPI(const char* program_name) {
 
   // initialize the python intrepreter
   char pySearchPath[] = "/usr/lib/python2.6/config/";
   Py_SetPythonHome(pySearchPath);
+
+  Py_SetProgramName((char *) program_name);
+
   Py_Initialize();
+/*
   PyRun_SimpleString("import amazon_api");
   PyRun_SimpleString("a = amazon_api.BottleNoseAPI()");
   PyRun_SimpleString("a.item_search()");
+*/
 
 }
 
@@ -42,12 +47,14 @@ int AmazonAPI::Init(const char* module_name, const char* class_name) {
     return -1;
   }
 
+/*
   PyRun_SimpleString("import sys");
   PyErr_Print();
-  PyRun_SimpleString("sys.path.append(\"~/ir_cpp/src/amazon_api/\")");
+  PyRun_SimpleString("sys.path.append(\"~/ir_cpp/extern/amazon_api/\")");
   PyErr_Print();
   PyRun_SimpleString("import amazon_api");
   PyErr_Print();
+*/
 
   // load the module object
   m_pyModule = PyImport_Import(m_pyModuleName);
@@ -55,6 +62,8 @@ int AmazonAPI::Init(const char* module_name, const char* class_name) {
     std::cerr << "ERROR: could not import python module " << module_name << std::endl;
     PyErr_Print();
     return -1;
+  } else {
+    std::cout << "obtained pyModule " << module_name << ". done." << std::endl;
   }
 
   // pyDict is a borrowed reference

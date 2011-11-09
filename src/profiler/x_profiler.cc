@@ -70,21 +70,35 @@ int main(int argc, char* argv[]) {
   std::set<std::string> others_text_class_contributors;
   std::set<std::string> recommendations;
   if (p.Profile(twitter_handle,
-                locations,
-                self_languages,
-                self_text_classes,
+                locations
+#ifdef LANG_ENABLED
+                , self_languages
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+                , self_text_classes
+#endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-                self_location_classes,
+                , self_location_classes
 #endif // LOCATION_ENABLED
-                self_text_class_contributors,
-                others_languages,
-                others_text_classes,
+#ifdef TEXT_CLASSIFICATION_ENABLED
+                , self_text_class_contributors
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LANG_ENABLED
+                , others_languages
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+                , others_text_classes
+#endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-                others_location_classes,
+                , others_location_classes
 #endif // LOCATION_ENABLED
-                others_text_class_contributors,
-                recommendations,
-                profile_name) < 0) {
+#ifdef TEXT_CLASSIFICATION_ENABLED
+                , others_text_class_contributors
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef RECSYS_ENABLED
+                , recommendations
+#endif // RECSYS_ENABLED
+                , profile_name) < 0) {
     std::cerr << "ERROR: could not generate profile for " \
               << twitter_handle << std::endl;
     return -1;
@@ -107,6 +121,9 @@ int main(int argc, char* argv[]) {
 #ifdef LOCATION_ENABLED
   PrintSet(others_location_classes, "others_location_classes");
 #endif // LOCATION_ENABLED
+#ifdef RECSYS_ENABLED
+  PrintSet(recommendations, "recommendations");
+#endif // RECSYS_ENABLED
 
   return 0;
 }

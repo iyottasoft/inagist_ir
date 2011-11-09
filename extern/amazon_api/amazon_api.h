@@ -13,10 +13,10 @@ namespace inagist_api {
 
 class AmazonAPI {
  public:
-  AmazonAPI();
+  AmazonAPI(const char* program_name);
   ~AmazonAPI();
   int Init(const char* module_name,
-       const char* class_name);
+           const char* class_name);
   int ItemSearch();
   int Clear();
 

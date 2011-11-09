@@ -11,7 +11,7 @@
 int main(int argc, char* argv[]) {
 
   if (argc < 8 || argc > 9) {
-    std::cout << "Usage: " << argv[0] << " \n\t<classifier_config> \n\t<keytuples_config> \n\t<0/1 corpus, 0-training, 1-testing>\n\t<0-3, clean_type, 0-lower case, 2-getcorpus,3-drope leading punct>\n\t<0/1 input_type, 0-corpus_file/1-all_corpus_files>\n\t<0/1 output_type, 0-stdout, 1-output_file> \n\t<corpus_file_name or some dummy name> \n\t[<output_suffix> (\"none\" forces replacement)]\n";
+    std::cout << "Usage: " << argv[0] << " \n\t<classifier_config> \n\t<keytuples_config> \n\t<0/1 corpus, 0-training, 1-testing>\n\t<0-3, clean_type, 0-lower case, 2-getcorpus, 3-drop leading punct>\n\t<0/1 input_type, 0-corpus_file/1-all_corpus_files>\n\t<0/1 output_type, 0-stdout, 1-output_file> \n\t<corpus_file_name or some dummy name> \n\t[<output_suffix> (\"none\" forces replacement)]\n";
     return -1;
   }
 

@@ -226,6 +226,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 #endif
     }
   } else if (strcmp(input_type_buffer, "file") == 0) {
+/*
     if ((ret_value = GetProfileFromFile(input_value_buffer, input_value_len,
                              self_languages_buffer, MAX_LIST_LEN,
                              &self_languages_len, &self_languages_count,
@@ -242,6 +243,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       return enif_make_atom(env, "error_profile_from_file_failed");
 #endif
     }
+*/
   }
 
   unsigned int len = 0;
@@ -284,6 +286,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       start = end + 1;
     }
   }
+  locations_buffer[0] = '\0';
 
   // languages by the user
 
@@ -322,6 +325,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       start = end + 1;
     }
   }
+  self_languages_buffer[0] = '\0';
 
   // text class for the user
 
@@ -360,6 +364,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       start = end + 1;
     }
   }
+  self_text_classes_buffer[0] = '\0';
 
   // sub class for the user
 
@@ -399,6 +404,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       start = end + 1;
     }
   }
+  self_location_classes_buffer[0] = '\0';
 #endif // LOCATION_ENABLED
 
   // text class contributors for the user
@@ -406,9 +412,12 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary self_text_class_contributors_bin;
   ERL_NIF_TERM self_text_class_contributors_list = enif_make_list(env, 0);
 
-  if (self_text_class_contributors_count > 0) {
+  //if (self_text_class_contributors_count > 0) {
+  //}
+  if (recommendations_count > 0) {
 
-    start = self_text_class_contributors_buffer;
+    //start = self_text_class_contributors_buffer;
+    start = recommendations_buffer;
     end = strstr(start, "|");
 
     while (start && end && *end != '\0') {
@@ -438,6 +447,8 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       start = end + 1;
     }
   }
+  self_text_class_contributors_buffer[0] = '\0';
+  recommendations_buffer[0] = '\0';
 
 /*
   char* start_of_element = NULL;
@@ -573,6 +584,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       start = end + 1;
     }
   }
+  others_languages_buffer[0] = '\0';
 
   // text class for the user
 
@@ -611,6 +623,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       start = end + 1;
     }
   }
+  others_text_classes_buffer[0] = '\0';
 
   // sub class for the user
 
@@ -650,6 +663,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       start = end + 1;
     }
   }
+  others_location_classes_buffer[0] = '\0';
 #endif // LOCATION_ENABLED
 
   // text class contributors for others
@@ -658,6 +672,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   ERL_NIF_TERM others_text_class_contributors_list = enif_make_list(env, 0);
 
   if (others_text_class_contributors_count > 0) {
+/*
 
     start = others_text_class_contributors_buffer;
     end = strstr(start, "|");
@@ -688,7 +703,9 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       *end = '|';
       start = end + 1;
     }
+*/
   }
+  others_text_class_contributors_buffer[0] = '\0';
 
   /*
   start_of_element = NULL;

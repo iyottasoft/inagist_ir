@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
   const char* input_value = NULL;
   unsigned int debug_level = 0;
 
-  if (4 == argc) {
+  if (argc >= 4) {
     debug_level = atoi(argv[3]);
   }
 
@@ -207,10 +207,13 @@ int main(int argc, char *argv[]) {
     }
 
     if (!tweets.empty()) {
+      std::cout << "initializing gist_maker ..." << std::endl;
       // initialize keytuples extracter
       if (g_gm.Init(gist_maker_config_file) < 0) {
         std::cerr << "ERROR: couldn't initialize KeyTuplesExtracter\n";
         return -1; 
+      } else {
+        std::cout << "init done." << std::endl;
       }
 
       if (debug_level > 0) {

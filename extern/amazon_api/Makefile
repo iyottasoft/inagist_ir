@@ -36,7 +36,7 @@ ${LIB}: ${OBJS}
 
 ${BIN_DIR}/t_amazon_api: t_amazon_api.o ${LIB}
 	@echo "creating binary:" $@
-	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -fPIC $< -L${LINK_DIR} ${LIBS} -L/usr/lib/python2.6/config -lpython2.6 -lm -o ${BIN_DIR}/t_amazon_api
+	@${CXX} ${CXXFLAGS} ${PROJECTFLAGS} -fPIC $< ${LINK_DIR} ${LIBS} -L/usr/lib/python2.6/config -lpython2.6 -lm -o ${BIN_DIR}/t_amazon_api
 	@echo "done!"
 
 # DO NOT DELETE THIS LINE
