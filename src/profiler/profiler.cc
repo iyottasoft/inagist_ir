@@ -1211,7 +1211,7 @@ int Profiler::GetRecommendations(std::set<std::string>& text_classes_set,
        map_iter != m_recsys_input_map.end();
        map_iter++) {
 #ifdef PROFILE_DEBUG
-      if (m_debug_level > 0) {
+      if (m_debug_level > 3) {
         std::cout << map_iter->first << " : " << map_iter->second << std::endl;
       }
 #endif // PROFILE_DEBUG
@@ -1233,7 +1233,7 @@ int Profiler::GetRecommendations(std::set<std::string>& text_classes_set,
 
   for (set_iter = recommendations_set.begin(); set_iter != recommendations_set.end();
        set_iter++) {
-    std::cout << *set_iter << std::endl;
+    // std::cout << *set_iter << std::endl;
     score_reco_str = *set_iter;
     score_reco_str.erase(0,1); 
     inagist_utils::InsertIntoBuffer(score_reco_str,
