@@ -979,9 +979,10 @@ int NaiveBayesClassifier::GenerateProbabilities(const bool& train_not_test) {
   unsigned int vocabulary_size = vocabulary_set.size();
 
   // TODO (balaji)
-  // the above loop over corpus map is unavoidable becos we need vocabulary size. if needed find this in GetData
+  // the above loop over corpus map is unavoidable becos we need the vocabulary. if needed find this in GetData
 
   std::string data_file;
+  std::string class_number_str;
   for (m_config.iter = m_config.classes.begin();
        m_config.iter != m_config.classes.end();
        m_config.iter++) {
@@ -1052,6 +1053,29 @@ int NaiveBayesClassifier::GenerateProbabilities(Corpus* raw_data_corpus,
   for (corpus_iter = raw_data_corpus->begin(); corpus_iter != raw_data_corpus->end(); corpus_iter++) {
     probabilities_corpus[corpus_iter->first] = log((corpus_iter->second + 1)/ normalizing_denominator);
   }
+  
+
+/*
+  std::set<std::string>::iterator vocabulary_iter;
+  std::string word;
+  double laplace_smoothing = log(1/normalizing_denominator);
+  for (vocabulary_iter = vocabulary_set.begin();
+       vocabulary_iter != vocabulary_set.end();
+       vocabulary_iter++) {
+    word = *vocabulary_iter;
+    if (raw_data_corpus->find(word) == raw_data_corpus->end()) { // only when the word is not found
+      probabilities_corpus[word] = laplace_smoothing;
+    }
+  }
+*/
+
+  // for each word that is not present in this corpus, there needs to be a probability.
+  // thats why we do laplace smoothing.
+  // now, we can run over the vocabulary and assign laplace_smoothing value to all the non-class words (see above)
+  // however, why not just calculate this and store it once with "laplace_smoothing_<class_number>" as key?
+  std::string laplace_smoothing_key = "laplace_smoothing";
+  double laplace_smoothing_value = log(1.0/normalizing_denominator);
+  probabilities_corpus[laplace_smoothing_key] = laplace_smoothing_value;
 
   if (CorpusManager::WriteCorpusToFile(probabilities_corpus, probabilities_file) < 0) {
     probabilities_corpus.clear();

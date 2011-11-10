@@ -2,13 +2,18 @@
 
 int main(int argc, char* argv[]) {
 
-  if (argc != 3) {
-    std::cout << "Usage: " << argv[0] << " <input_config_file> <output_config_file>" << std::endl;
+  if (argc < 2 || argc > 3) {
+    std::cout << "Usage: " << argv[0] << " <input_config_file> [output_config_file]" << std::endl;
     return -1;
   }
 
   const char* input_config_file = argv[1];
-  const char* output_config_file = argv[2];
+  const char* output_config_file = NULL;
+  if (3 == argc) {
+    output_config_file = argv[2];
+  } else {
+    output_config_file = input_config_file;
+  }
 
   inagist_classifiers::Config config;
   if (inagist_classifiers::ClassifierConfig::Read(input_config_file, config) < 0) {

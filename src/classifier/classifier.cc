@@ -1123,6 +1123,7 @@ int Classifier::MakeDictionary(const char* classifier_dictionary_file) {
 
   // now lets calculate the idf component
 
+  /*
   // each class is a document, so how does tf-idf work?
   // tf - number of times a word occurs in a class - here instead of td, probability Nc/N will be used
   // idf - is number of classes / number of classes in which this word occurs
@@ -1143,6 +1144,7 @@ int Classifier::MakeDictionary(const char* classifier_dictionary_file) {
       class_map_iter->second += idf; // tf + idf for this word
     }
   }
+  */
 
   // write the dictionary map to file
   ofs.open(classifier_dictionary_file);

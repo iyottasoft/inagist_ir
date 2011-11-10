@@ -1221,7 +1221,7 @@ int Profiler::GetRecommendations(std::set<std::string>& text_classes_set,
       continue;
     memset(score_reco_array, '\0', 128);
     score = (int) map_iter->second;
-    if (score > 10)
+    if (score > 9)
       score = 9;
     sprintf(score_reco_array, "%d%s", score, reco.c_str());
     score_reco_str = std::string(score_reco_array);

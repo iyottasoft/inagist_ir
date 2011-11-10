@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
   std::string gist_maker_config = std::string(argv[1]);
   unsigned int debug_level = 0;
   if (argc == 3) {
-    debug_level = atoi(argv[3]);
+    debug_level = atoi(argv[2]);
   }
 
   inagist_dashboard::Profiler p;

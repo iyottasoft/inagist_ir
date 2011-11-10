@@ -143,6 +143,7 @@ class GistMaker {
                            std::map<std::string, double>& lang_class_map);
   int ClassifyWord(const std::string& word,
                    inagist_utils::StringToMapDictionary& dictionary,
+                   std::map<std::string, double>& laplace_map,
                    std::map<std::string, double>& class_map);
 
   int FindClassLabels(std::map<std::string, double>& class_name_freq_map, // class_name to freq map
@@ -166,12 +167,15 @@ class GistMaker {
   inagist_classifiers::NgramsGenerator m_ngrams_generator;
   inagist_utils::StringToMapDictionary m_language_dictionary;
   inagist_utils::DoubleDictionaryMap m_language_prior_freqs;
+  std::map<std::string, double> m_language_laplace_map;
 #endif // LANG_ENABLED 
 #ifdef TEXT_CLASSIFICATION_ENABLED
   inagist_utils::StringToMapDictionary m_text_classifier_dictionary;
+  std::map<std::string, double> m_text_laplace_map;
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
   inagist_utils::StringToMapDictionary m_location_dictionary;
+  std::map<std::string, double> m_location_laplace_map;
 #endif // LOCATION_ENABLED
 
   // functions

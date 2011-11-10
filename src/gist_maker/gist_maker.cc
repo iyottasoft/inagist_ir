@@ -191,6 +191,7 @@ int GistMaker::Init(const char *stopwords_file,
   }
 #endif // SENTIMENT_ENABLED
 
+  std::string laplace_smoothing_key = "laplace_smoothing"; 
 #ifdef LANG_ENABLED
   if (language_dictionary_file) {
 #ifdef GM_DEBUG
@@ -210,6 +211,10 @@ int GistMaker::Init(const char *stopwords_file,
                 << language_prior_freqs_file << " into dictionary map\n";
       return -1;
     }
+    if (m_language_dictionary.Find((const unsigned char*) laplace_smoothing_key.c_str(),
+                                   m_language_laplace_map) != 1) {
+      std::cerr << "ERROR: could not find laplace smooting values for language classification" << std::endl;
+    }
   }
 #endif // LANG_ENABLED
 
@@ -226,6 +231,10 @@ int GistMaker::Init(const char *stopwords_file,
                 << classifier_dictionary_file << " into dictionary map\n";
       return -1;
     }
+    if (m_text_classifier_dictionary.Find((const unsigned char*) laplace_smoothing_key.c_str(),
+                                          m_text_laplace_map) != 1) {
+      std::cerr << "ERROR: could not find laplace smooting values for text classification" << std::endl;
+    }
   }
 #endif // TEXT_CLASSIFICATION_ENABLED
 
@@ -241,6 +250,10 @@ int GistMaker::Init(const char *stopwords_file,
       std::cerr << "ERROR: could not load location dictionary file: " \
                 << location_dictionary_file << " into dictionary map\n";
       return -1;
+    }
+    if (m_location_dictionary.Find((const unsigned char*) laplace_smoothing_key.c_str(),
+                                   m_location_laplace_map) != 1) {
+      std::cerr << "ERROR: could not find laplace smooting values for location" << std::endl;
     }
   }
 #endif // LOCATION_ENABLED
@@ -331,7 +344,7 @@ int GistMaker::ProcessLangClassWord(std::string& lang_class_word,
   std::string ngram;
   for (ngrams_iter = ngrams_set.begin(); ngrams_iter != ngrams_set.end(); ngrams_iter++) {
     ngram.assign(*ngrams_iter);
-    if (ClassifyWord(ngram, m_language_dictionary, lang_class_map) < 0) {
+    if (ClassifyWord(ngram, m_language_dictionary, m_language_laplace_map, lang_class_map) < 0) {
 #ifdef GM_DEBUG
       std::cerr << "ERROR: could not classify ngram\n";
 #endif // GM_DEBUG
@@ -345,12 +358,15 @@ int GistMaker::ProcessLangClassWord(std::string& lang_class_word,
 
 int GistMaker::ClassifyWord(const std::string& word,
                             inagist_utils::StringToMapDictionary& dictionary,
+                            std::map<std::string, double>& laplace_map,
                             std::map<std::string, double>& class_map) {
 
 #if defined TEXT_CLASSIFICATION_ENABLED || defined LOCATION_ENABLED || defined LANG_ENABLED
   std::map<std::string, double>::iterator class_map_iter;
   std::map<std::string, double> temp_map;
   std::map<std::string, double>::iterator temp_iter;
+  std::map<std::string, double>::iterator laplace_iter;
+  std::string class_number;
 
   if (dictionary.Find((const unsigned char*) word.c_str(), temp_map) == 1) {
 #ifdef GM_DEBUG
@@ -358,7 +374,11 @@ int GistMaker::ClassifyWord(const std::string& word,
         std::cout << std::endl << word << " = ";
       }
 #endif // GM_DEBUG
-    for (temp_iter = temp_map.begin(); temp_iter != temp_map.end(); temp_iter++) {
+    for (laplace_iter = laplace_map.begin(); laplace_iter != laplace_map.end(); laplace_iter++) {
+      class_number = laplace_iter->first;
+      if ((temp_iter = temp_map.find(class_number)) == temp_map.end()) {
+        temp_iter = laplace_iter;
+      }
 #ifdef GM_DEBUG
       if (m_debug_level > 3) {
         std::cout << temp_iter->first << " : " << temp_iter->second << "; ";
@@ -383,7 +403,7 @@ int GistMaker::ClassifyWord(const std::string& word,
 }
 
 // idea - class_label is stored in the classifier dictionary with class_name as key
-//        returning the class_label to freq map becos more than one class may have the same label in which case
+//      - returning the class_label to freq map becos more than one class may have the same label in which case
 //        the frequencies are added
 //      - ofcourse using a map<string, map> is not efficient to store map<string, string>. but its good for now.
 int GistMaker::FindClassLabels(std::map<std::string, double>& class_name_freq_map,
@@ -1395,13 +1415,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       text_class_word.assign(current_word);
     }
 #ifdef TEXT_CLASSIFICATION_ENABLED
-    if (ClassifyWord(text_class_word, m_text_classifier_dictionary, text_class_map) < 0) {
+    if (ClassifyWord(text_class_word, m_text_classifier_dictionary, m_text_laplace_map, text_class_map) < 0) {
       std::cerr << "Error: could not find text_class_map for word: " \
                 << text_class_word << std::endl;
     }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-    if (ClassifyWord(text_class_word, m_location_dictionary, locations_map) < 0) {
+    if (ClassifyWord(text_class_word, m_location_dictionary, m_location_laplace_map, locations_map) < 0) {
       std::cerr << "Error: could not find entry in locations_map for word: " \
                 << text_class_word << std::endl;
     }
@@ -1735,13 +1755,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
             text_class_word.assign(next_word);
           }
 #ifdef TEXT_CLASSIFICATION_ENABLED
-          if (ClassifyWord(text_class_word, m_text_classifier_dictionary, text_class_map) < 0) {
+          if (ClassifyWord(text_class_word, m_text_classifier_dictionary, m_text_laplace_map, text_class_map) < 0) {
             std::cerr << "Error: could not find text_class_map for word: " \
                       << text_class_word << std::endl;
           }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-          if (ClassifyWord(text_class_word, m_location_dictionary, locations_map) < 0) {
+          if (ClassifyWord(text_class_word, m_location_dictionary, m_location_laplace_map, locations_map) < 0) {
             std::cerr << "Error: could not find entry in locations_map for word: " \
                       << text_class_word << std::endl;
           }
@@ -2099,13 +2119,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #if defined TEXT_CLASSIFICATION_ENABLED || defined LOCATION_ENABLED
             text_class_word.assign((const char*) stopwords_entity_start, temp_len);
 #ifdef TEXT_CLASSIFICATION_ENABLED
-            if (ClassifyWord(text_class_word, m_text_classifier_dictionary, text_class_map) < 0) {
+            if (ClassifyWord(text_class_word, m_text_classifier_dictionary, m_text_laplace_map, text_class_map) < 0) {
               std::cerr << "Error: could not find text_class_map for word: " \
                         << text_class_word << std::endl;
             }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-            if (ClassifyWord(text_class_word, m_location_dictionary, locations_map) < 0) {
+            if (ClassifyWord(text_class_word, m_location_dictionary, m_location_laplace_map, locations_map) < 0) {
               std::cerr << "Error: could not find locations_map for word: " \
                         << text_class_word << std::endl;
             }
@@ -2128,13 +2148,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #if defined TEXT_CLASSIFICATION_ENABLED || defined LOCATION_ENABLED
               text_class_word.assign((const char*) stopwords_entity_start, temp_len);
 #ifdef TEXT_CLASSIFICATION_ENABLED
-              if (ClassifyWord(text_class_word, m_text_classifier_dictionary, text_class_map) < 0) {
+              if (ClassifyWord(text_class_word, m_text_classifier_dictionary, m_text_laplace_map,text_class_map) < 0) {
                 std::cerr << "Error: could not find text_class_map for word: " \
                           << text_class_word << std::endl;
               }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-              if (ClassifyWord(text_class_word, m_location_dictionary, locations_map) < 0) {
+              if (ClassifyWord(text_class_word, m_location_dictionary, m_location_laplace_map, locations_map) < 0) {
                 std::cerr << "Error: could not find locations_map for word: " \
                           << text_class_word << std::endl;
               }
@@ -2151,13 +2171,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #if defined TEXT_CLASSIFICATION_ENABLED || defined LOCATION_ENABLED
               text_class_word.assign((const char*) stopwords_entity_start, temp_len);
 #ifdef TEXT_CLASSIFICATION_ENABLED
-              if (ClassifyWord(text_class_word, m_text_classifier_dictionary, text_class_map) < 0) {
+              if (ClassifyWord(text_class_word, m_text_classifier_dictionary, m_text_laplace_map, text_class_map) < 0) {
                 std::cerr << "Error: could not find text_class_map for word: " \
                           << text_class_word << std::endl;
               }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-              if (ClassifyWord(text_class_word, m_location_dictionary, locations_map) < 0) {
+              if (ClassifyWord(text_class_word, m_location_dictionary, m_location_laplace_map, locations_map) < 0) {
                 std::cerr << "Error: could not find locations_map for word: " \
                           << text_class_word << std::endl;
               }
@@ -2176,13 +2196,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #if defined TEXT_CLASSIFICATION_ENABLED || defined LOCATION_ENABLED
             text_class_word.assign((const char *) stopwords_entity_start, temp_len);
 #ifdef TEXT_CLASSIFICATION_ENABLED
-            if (ClassifyWord(text_class_word, m_text_classifier_dictionary, text_class_map) < 0) {
+            if (ClassifyWord(text_class_word, m_text_classifier_dictionary, m_text_laplace_map, text_class_map) < 0) {
               std::cerr << "Error: could not find text_class_map for word: " \
                         << text_class_word << std::endl;
             }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-            if (ClassifyWord(text_class_word, m_location_dictionary, locations_map) < 0) {
+            if (ClassifyWord(text_class_word, m_location_dictionary, m_location_laplace_map, locations_map) < 0) {
               std::cerr << "Error: could not find text_class_map for word: " \
                         << text_class_word << std::endl;
             }
@@ -2200,13 +2220,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #if defined TEXT_CLASSIFICATION_ENABLED || defined LOCATION_ENABLED
             text_class_word.assign((const char *) stopwords_entity_start, temp_len);
 #ifdef TEXT_CLASSIFICATION_ENABLED
-            if (ClassifyWord(text_class_word, m_text_classifier_dictionary, text_class_map) < 0) {
+            if (ClassifyWord(text_class_word, m_text_classifier_dictionary, m_text_laplace_map, text_class_map) < 0) {
               std::cerr << "Error: could not find text_class_map for word: " \
                         << text_class_word << std::endl;
             }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-            if (ClassifyWord(text_class_word, m_location_dictionary, locations_map) < 0) {
+            if (ClassifyWord(text_class_word, m_location_dictionary, m_location_laplace_map, locations_map) < 0) {
               std::cerr << "Error: could not find locations_map for word: " \
                         << text_class_word << std::endl;
             }
@@ -2242,13 +2262,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #if defined TEXT_CLASSIFICATION_ENABLED || defined LOCATION_ENABLED
             text_class_word.assign((const char*) caps_entity_start, temp_len);
 #ifdef TEXT_CLASSIFICATION_ENABLED
-            if (ClassifyWord(text_class_word, m_text_classifier_dictionary, text_class_map) < 0) {
+            if (ClassifyWord(text_class_word, m_text_classifier_dictionary, m_text_laplace_map, text_class_map) < 0) {
               std::cerr << "Error: could not find text_class_map for word: " \
                         << text_class_word << std::endl;
             }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-            if (ClassifyWord(text_class_word, m_location_dictionary, locations_map) < 0) {
+            if (ClassifyWord(text_class_word, m_location_dictionary, m_location_laplace_map, locations_map) < 0) {
               std::cerr << "Error: could not find locations_map for word: " \
                         << text_class_word << std::endl;
             }
@@ -2271,13 +2291,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #if defined TEXT_CLASSIFICATION_ENABLED || defined LOCATION_ENABLED
               text_class_word.assign((const char*) caps_entity_start, temp_len);
 #ifdef TEXT_CLASSIFICATION_ENABLED
-              if (ClassifyWord(text_class_word, m_text_classifier_dictionary, text_class_map) < 0) {
+              if (ClassifyWord(text_class_word, m_text_classifier_dictionary, m_text_laplace_map,text_class_map) < 0) {
                 std::cerr << "Error: could not find text_class_map for word: " \
                           << text_class_word << std::endl;
               }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-              if (ClassifyWord(text_class_word, m_location_dictionary, locations_map) < 0) {
+              if (ClassifyWord(text_class_word, m_location_dictionary, m_location_laplace_map, locations_map) < 0) {
                 std::cerr << "Error: could not find locations_map for word: " \
                           << text_class_word << std::endl;
               }
@@ -2305,13 +2325,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #if defined TEXT_CLASSIFICATION_ENABLED || defined LOCATION_ENABLED
             text_class_word.assign((const char*) caps_entity_start, temp_len);
 #ifdef TEXT_CLASSIFICATION_ENABLED
-            if (ClassifyWord(text_class_word, m_text_classifier_dictionary, text_class_map) < 0) {
+            if (ClassifyWord(text_class_word, m_text_classifier_dictionary, m_text_laplace_map, text_class_map) < 0) {
               std::cerr << "Error: could not find text_class_map for word: " \
                         << text_class_word << std::endl;
             }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-            if (ClassifyWord(text_class_word, m_location_dictionary, locations_map) < 0) {
+            if (ClassifyWord(text_class_word, m_location_dictionary, m_location_laplace_map, locations_map) < 0) {
               std::cerr << "Error: could not find locations_map for word: " \
                         << text_class_word << std::endl;
             }
@@ -2329,13 +2349,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #if defined TEXT_CLASSIFICATION_ENABLED || defined LOCATION_ENABLED
             text_class_word.assign((const char*) caps_entity_start, temp_len);
 #ifdef TEXT_CLASSIFICATION_ENABLED
-            if (ClassifyWord(text_class_word, m_text_classifier_dictionary, text_class_map) < 0) {
+            if (ClassifyWord(text_class_word, m_text_classifier_dictionary, m_text_laplace_map, text_class_map) < 0) {
               std::cerr << "Error: could not find text_class_map for word: " \
                         << text_class_word << std::endl;
             }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-            if (ClassifyWord(text_class_word, m_location_dictionary, locations_map) < 0) {
+            if (ClassifyWord(text_class_word, m_location_dictionary, m_location_laplace_map, locations_map) < 0) {
               std::cerr << "Error: could not find locations_map for word: " \
                         << text_class_word << std::endl;
             }
@@ -2363,13 +2383,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #if defined TEXT_CLASSIFICATION_ENABLED || defined LOCATION_ENABLED
         text_class_word.assign((const char*) current_word_start, current_word_len);
 #ifdef TEXT_CLASSIFICATION_ENABLED
-        if (ClassifyWord(text_class_word, m_text_classifier_dictionary, text_class_map) < 0) {
+        if (ClassifyWord(text_class_word, m_text_classifier_dictionary, m_text_laplace_map, text_class_map) < 0) {
           std::cerr << "Error: could not find text_class_map for word: " \
                     << text_class_word << std::endl;
         }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-        if (ClassifyWord(text_class_word, m_location_dictionary, locations_map) < 0) {
+        if (ClassifyWord(text_class_word, m_location_dictionary, m_location_laplace_map, locations_map) < 0) {
           std::cerr << "Error: could not find locations_map for word: " \
                     << text_class_word << std::endl;
         }
@@ -2389,13 +2409,13 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #if defined TEXT_CLASSIFICATION_ENABLED || defined LOCATION_ENABLED
         text_class_word.assign((const char*) current_word_start, current_word_len-2);
 #ifdef TEXT_CLASSIFICATION_ENABLED
-        if (ClassifyWord(text_class_word, m_text_classifier_dictionary, text_class_map) < 0) {
+        if (ClassifyWord(text_class_word, m_text_classifier_dictionary, m_text_laplace_map, text_class_map) < 0) {
           std::cerr << "Error: could not find text_class_map for word: " \
                     << text_class_word << std::endl;
         }
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-        if (ClassifyWord(text_class_word, m_location_dictionary, locations_map) < 0) {
+        if (ClassifyWord(text_class_word, m_location_dictionary, m_location_laplace_map, locations_map) < 0) {
           std::cerr << "Error: could not find locations_map for word: " \
                     << text_class_word << std::endl;
         }
