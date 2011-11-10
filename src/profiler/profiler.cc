@@ -525,7 +525,7 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
   }
 
 #ifdef PROFILE_DEBUG
-    if (m_debug_level > 0) {
+    if (m_debug_level > 1) {
       std::cout << "self tweets:" << std::endl;
     }
 #endif // PROFILE_DEBUG
@@ -619,7 +619,7 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
     }
 
 #ifdef PROFILE_DEBUG
-    if (m_debug_level > 0) {
+    if (m_debug_level > 1) {
       std::cout << "other's tweets:" << std::endl;
     }
 #endif // PROFILE_DEBUG
@@ -671,7 +671,7 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
 #endif // RECSYS_ENABLED
 
 #ifdef PROFILE_DEBUG
-  if (m_debug_level > 0) {
+  if (m_debug_level > 1) {
     std::cout << "corpus of size " << corpus_size \
               << " generated from " << self_docs_count \
               << " docs of user: " << twitter_handle \
@@ -815,7 +815,7 @@ int Profiler::CallMakeGist(std::set<std::string>& tweets
     strcpy((char*) text_buffer, tweet.c_str());
     text_len = tweet.length();
 #ifdef PROFILE_DEBUG
-    if (m_debug_level > 0) {
+    if (m_debug_level > 1) {
       std::cout << tweet << std::endl;
     }
 #endif // PROFILE_DEBUG
@@ -1190,7 +1190,7 @@ int Profiler::GetRecommendations(std::set<std::string>& text_classes_set,
     keyword = mmap_iter->second;
     if ((map_iter = m_recsys_input_map.find(keyword)) != m_recsys_input_map.end()) {
 #ifdef PROFILE_DEBUG
-      if (m_debug_level > 0) {
+      if (m_debug_level > 3) {
         std::cout << keyword << " belongs to " << class_name << std::endl;
       }
 #endif // PROFILE_DEBUG
