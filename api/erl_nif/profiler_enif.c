@@ -412,12 +412,9 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   ErlNifBinary self_text_class_contributors_bin;
   ERL_NIF_TERM self_text_class_contributors_list = enif_make_list(env, 0);
 
-  //if (self_text_class_contributors_count > 0) {
-  //}
-  if (recommendations_count > 0) {
+  if (self_text_class_contributors_count > 0) {
 
-    //start = self_text_class_contributors_buffer;
-    start = recommendations_buffer;
+    start = self_text_class_contributors_buffer;
     end = strstr(start, "|");
 
     while (start && end && *end != '\0') {
@@ -672,7 +669,6 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   ERL_NIF_TERM others_text_class_contributors_list = enif_make_list(env, 0);
 
   if (others_text_class_contributors_count > 0) {
-/*
 
     start = others_text_class_contributors_buffer;
     end = strstr(start, "|");
@@ -703,7 +699,6 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       *end = '|';
       start = end + 1;
     }
-*/
   }
   others_text_class_contributors_buffer[0] = '\0';
 

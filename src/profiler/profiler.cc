@@ -322,12 +322,6 @@ int Profiler::Profile(const std::string& twitter_handle,
   recommendations_buffer[0] = '\0';
 #endif // RECSYS_ENABLED
 
-  // unused in this call
-#ifdef TEXT_CLASSIFICATION_ENABLED
-  self_text_class_contributors_buffer[0] = '\0';
-  others_text_class_contributors_buffer[0] = '\0';
-#endif // TEXT_CLASSIFICATION_ENABLED
-
   return 0;
 }
 
@@ -474,6 +468,7 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
   std::set<std::string> tweets;
 #ifdef RECSYS_ENABLED
   std::set<std::string> self_text_classes_set;
+  std::set<std::string> others_text_classes_set;
 #endif // RECSYS_ENABLED
   inagist_api::TwitterAPI twitter_api;
   inagist_api::TwitterSearcher twitter_searcher;
@@ -592,12 +587,28 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
   }
 
   // lets give a boost to the user's tweets over the tweets he/she follows
+/*
 #ifdef RECSYS_ENABLED
   std::map<std::string, double>::iterator map_iter;
   for (map_iter = m_recsys_input_map.begin(); map_iter != m_recsys_input_map.end(); map_iter++) {
     map_iter->second += 1;
   }
 #endif // RECSYS_ENABLED
+*/
+#ifdef RECSYS_ENABLED
+  if (GetRecommendations(self_text_classes_set,
+                         (unsigned char*) self_text_class_contributors_buffer,
+                         self_text_class_contributors_buffer_len,
+                         self_text_class_contributors_len,
+                         self_text_class_contributors_count) < 0) {
+    std::cerr << "ERROR: could not get recommendations\n";
+  }
+  // self_text_classes_set.clear();
+  m_recsys_input_map.clear();
+  m_recsys_input_class_map.clear();
+#endif // RECSYS_ENABLED
+
+  // handling friends info below
 
   // since this is likely the first time profiling this handle,
   // get archieved data from inagist
@@ -652,6 +663,15 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
       }
     }
 
+#ifdef RECSYS_ENABLED
+    if ((count = inagist_utils::PipeListToSet((unsigned char*) others_text_classes_buffer,
+                                              others_text_classes_set)) < 0) {
+#ifdef PROFILE_DEBUG
+      std::cerr << "ERROR: PipeListToMap failed\n";
+#endif
+    }
+#endif // RECSYS_ENABLED
+
     others_docs_count = tweets.size();
     tweets.clear();
 
@@ -660,12 +680,27 @@ int Profiler::Profile(const char* twitter_handle, unsigned int twitter_handle_le
     }
   }
 
+/*
 #ifdef RECSYS_ENABLED
   if (GetRecommendations(self_text_classes_set, recommendations_buffer, recommendations_buffer_len,
                          recommendations_len, recommendations_count) < 0) {
     std::cerr << "ERROR: could not get recommendations\n";
   }
   self_text_classes_set.clear();
+  m_recsys_input_map.clear();
+  m_recsys_input_class_map.clear();
+#endif // RECSYS_ENABLED
+*/
+#ifdef RECSYS_ENABLED
+  if (GetRecommendations(self_text_classes_set,
+                         (unsigned char*) others_text_class_contributors_buffer,
+                         others_text_class_contributors_buffer_len,
+                         others_text_class_contributors_len,
+                         others_text_class_contributors_count) < 0) {
+    std::cerr << "ERROR: could not get recommendations\n";
+  }
+  self_text_classes_set.clear();
+  others_text_classes_set.clear();
   m_recsys_input_map.clear();
   m_recsys_input_class_map.clear();
 #endif // RECSYS_ENABLED
@@ -1194,7 +1229,10 @@ int Profiler::GetRecommendations(std::set<std::string>& text_classes_set,
         std::cout << keyword << " belongs to " << class_name << std::endl;
       }
 #endif // PROFILE_DEBUG
-      map_iter->second += 1;
+      if (class_name.compare("IAB12 News") != 0 &&
+          class_name.compare("IAB0 Uncategorized") != 0) {
+        map_iter->second += 2;
+      }
     }
   }
 
