@@ -5,6 +5,7 @@
 #include <set>
 #include <map>
 #include <iostream>
+#include <cstdlib>
 
 namespace inagist_classifiers {
 
@@ -25,7 +26,20 @@ typedef struct _class_struct {
   std::string training_tweets_file; 
   std::string seed_file;
   friend bool operator<(_class_struct const& a, _class_struct const& b) {
-    return a.name.compare(b.name) < 0;
+    //return a.name.compare(b.name) < 0;
+    if (a.number.length() < 1) {
+      return true;
+    }
+    if (b.number.length() < 1) {
+      return false;
+    }
+    double class_number_a = atof(a.number.c_str());
+    double class_number_b = atof(b.number.c_str());
+    if (class_number_a <= class_number_b) {
+      return true;
+    } else {
+      return false;
+    }
   }
   void Clear() {
     name.clear();

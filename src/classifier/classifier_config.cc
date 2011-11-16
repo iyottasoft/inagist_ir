@@ -1,7 +1,6 @@
 #include "classifier_config.h"
 #include <iostream>
 #include <fstream>
-#include <cstdlib>
 
 namespace inagist_classifiers {
 
