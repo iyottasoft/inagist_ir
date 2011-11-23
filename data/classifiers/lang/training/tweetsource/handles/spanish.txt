@@ -1,0 +1,15 @@
+20m=1
+A3Noticias=1
+AFPTV_es=1
+CNNEE=1
+Madridiario=2
+RTVMadrid=2
+Telemundo=1
+abc_es=1
+bbcmundo=1
+dw_spanish=1
+fifacom_es=1
+peopleenespanol=1
+telecincoes=1
+tve_tve=2
+twitter_es=2

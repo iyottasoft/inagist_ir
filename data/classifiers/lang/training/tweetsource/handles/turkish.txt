@@ -1,0 +1,13 @@
+DWTURKISH=1
+HTGazete=2
+babylonistanbul=2
+bbcturkce=2
+canselpoyraz=2
+cnnturkcom=2
+cumhuriyethaber=2
+medyafaresi=2
+musmulapenguen=2
+ntv=2
+onderaytac=2
+selcukerdem=2
+turkce=2

@@ -1,0 +1,7 @@
+NationalTimesAU
+aus_media
+canberratimes
+news_com_au
+radionational
+smh
+theage

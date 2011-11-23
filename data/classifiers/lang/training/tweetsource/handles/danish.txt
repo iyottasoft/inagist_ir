@@ -1,0 +1,4 @@
+DRUPDATE=1
+Sportenkortdk=1
+politiken=1
+tv2newsdk=1

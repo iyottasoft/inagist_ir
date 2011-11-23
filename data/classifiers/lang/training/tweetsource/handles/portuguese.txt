@@ -1,0 +1,17 @@
+AFPTV_pt=1
+CarlosCoelhoPE=2
+Deeercy=1
+JornalNoticias=1
+TwitPortugal=1
+adnews_com_br=1
+bbcbrasil=1
+bbcparaafrica=1
+cmjornal=1
+dw_portuguese=2
+govpt=2
+leoluz=1
+mairak=1
+microcontoscos=1
+reutersbr=1
+trivelafutebol=1
+tvi24_iol=1

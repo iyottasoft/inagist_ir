@@ -1,0 +1,3 @@
+NRKNordland=1
+norskeaviser=2
+schibstednews=2
