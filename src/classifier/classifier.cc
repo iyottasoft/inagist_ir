@@ -234,7 +234,7 @@ int Classifier::GetData(const bool& train_not_test, const char* config_file_name
     if (handles_file.empty()) {
       continue;
     }
-    if (CorpusManager::LoadCorpus(handles_file, handles_map, 0) < 0) {
+    if (CorpusManager::LoadCorpus(handles_file, handles_map, 1) < 0) {
       std::cerr << "ERROR: could not examine handles file: " << handles_file << std::endl;
       break;
     }
@@ -246,7 +246,7 @@ int Classifier::GetData(const bool& train_not_test, const char* config_file_name
     flag = false;
     for (corpus_iter = handles_map.begin(); corpus_iter != handles_map.end(); corpus_iter++) {
       if (timestamps_map.find(corpus_iter->first) == timestamps_map.end()) {
-        timestamps_map.insert(std::pair<std::string, double>(corpus_iter->first, corpus_iter->second));
+        timestamps_map.insert(std::pair<std::string, double>(corpus_iter->first, 0));
         flag = true;
       }
     }
