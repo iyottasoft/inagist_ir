@@ -1,6 +1,7 @@
 #include "classifier_config.h"
 #include <iostream>
 #include <fstream>
+#include <sys/stat.h>
 
 namespace inagist_classifiers {
 
@@ -73,8 +74,8 @@ int ClassifierConfig::Read(const char* config_file, Config& config) {
           class_struct.class_data_file = value;
         } else if (key.compare(0, 12, "testing_data") == 0) {
           class_struct.testing_data_file = value;
-        } else if (key.compare(0, 15, "testing_handles") == 0) {
-          class_struct.testing_handles_file = value;
+        } else if (key.compare(0, 18, "testing_timestamps") == 0) {
+          class_struct.testing_timestamps_file = value;
         } else if (key.compare(0, 14, "testing_corpus") == 0) {
           class_struct.testing_corpus_file = value;
         } else if (key.compare(0, 14, "testing_tweets") == 0) {
@@ -83,14 +84,19 @@ int ClassifierConfig::Read(const char* config_file, Config& config) {
           class_struct.training_data_file = value;
         } else if (key.compare(0, 16, "training_handles") == 0) {
           class_struct.training_handles_file = value;
+        } else if (key.compare(0, 19, "training_timestamps") == 0) {
+          class_struct.training_timestamps_file = value;
         } else if (key.compare(0, 15, "training_corpus") == 0) {
           class_struct.training_corpus_file = value;
         } else if (key.compare(0, 15, "training_tweets") == 0) {
           class_struct.training_tweets_file = value;
         } else if (key.compare(0, 4, "seed") == 0) {
-          class_struct.seed_file = value;
+          struct stat stat_struct;
+          if (0 == stat(value.c_str(), &stat_struct)) {
+            class_struct.seed_file = value;
+          }
         }
-        if (line_count == 12) {
+        if (line_count == 13) {
           config.classes.insert(class_struct);
           line_count = 0;
           class_struct.Clear();
@@ -148,11 +154,12 @@ int ClassifierConfig::Write(Config& config, const char* config_file_name) {
     ofs << "class_label." << count << "=" << config.iter->label << std::endl;
     ofs << "class_data." << count << "=" << config.iter->class_data_file << std::endl;
     ofs << "testing_data." << count << "=" << config.iter->testing_data_file << std::endl;
-    ofs << "testing_handles." << count << "=" << config.iter->testing_handles_file << std::endl;
+    ofs << "testing_timestamps." << count << "=" << config.iter->testing_timestamps_file << std::endl;
     ofs << "testing_corpus." << count << "=" << config.iter->testing_corpus_file << std::endl;
     ofs << "testing_tweets." << count << "=" << config.iter->testing_tweets_file << std::endl; 
     ofs << "training_data." << count << "=" << config.iter->training_data_file << std::endl;
     ofs << "training_handles." << count << "=" << config.iter->training_handles_file << std::endl;
+    ofs << "training_timestamps." << count << "=" << config.iter->training_timestamps_file << std::endl;
     ofs << "training_corpus." << count << "=" << config.iter->training_corpus_file << std::endl;
     ofs << "training_tweets." << count << "=" << config.iter->training_tweets_file << std::endl; 
     ofs << "seed." << count << "=" << config.iter->seed_file << std::endl;

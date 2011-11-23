@@ -63,6 +63,7 @@ class NaiveBayesClassifier {
   int PrepareNaiveBayes(std::string config_file_name,
                         const bool& train_not_test,
                         bool ignore_history=true);
+  int AddTaxonomy();
   int GenerateProbabilities(const bool& train_not_test);
   int GenerateProbabilities(Corpus* corpus,
                             const char* relative_freq_file,

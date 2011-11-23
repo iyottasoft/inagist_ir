@@ -19,7 +19,7 @@ class CorpusManager {
  public:
   CorpusManager();
   ~CorpusManager();
-  static int LoadCorpus(const std::string corpus_file_name, Corpus& corpus);
+  static int LoadCorpus(const std::string corpus_file_name, Corpus& corpus, double default_value=0);
   static int LookUp(Corpus& corpus, const std::string& entry);
   static int WriteCorpusToFile(Corpus& corpus, const std::string& file_name);
   static int UpdateCorpusFile(Corpus& corpus, const std::string& file_name);

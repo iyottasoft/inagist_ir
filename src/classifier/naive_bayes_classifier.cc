@@ -910,6 +910,78 @@ int NaiveBayesClassifier::PrepareNaiveBayes(std::string config_file_name,
     return -1;
   }
 
+  if (AddTaxonomy() < 0) {
+#ifdef CLASSIFIER_DEBUG
+    std::cout << "ERROR: could not add taxonomy to the corpuses\n";
+#endif // CLASSIFIER_DEBUG
+  }
+
+  return 0;
+}
+
+int NaiveBayesClassifier::AddTaxonomy() {
+
+  Corpus taxon;
+  CorpusIter taxon_iter;
+  std::string taxon_name;
+
+  CorpusMap* corpus_map = &(m_corpus_map);
+  CorpusMapIter corpus_map_iter;
+
+  Corpus* corpus_ptr;
+  CorpusIter corpus_iter;
+
+  std::string class_name;
+  std::string word;
+  double freq = 0;
+
+  // pick the manual seed file for every class that has one
+  for (m_config.iter = m_config.classes.begin();
+       m_config.iter != m_config.classes.end();
+       m_config.iter++) {
+
+    if (m_config.iter->seed_file.empty()) {
+      continue;
+    }
+
+    // load the seeds into a corpus
+    if (CorpusManager::LoadCorpus(m_config.iter->seed_file,
+                                  taxon,
+                                  100) < 0) { // TODO (balaji) no hardcoding please
+      std::cout << "ERROR: could not load seed file: " << m_config.iter->seed_file << " into corpus\n";
+      taxon.clear();
+      continue;
+    }
+    taxon_name = m_config.iter->name;
+
+    if ((corpus_map_iter = corpus_map->find(taxon_name)) != corpus_map->end()) {
+      // for this iteration, what is the class name and corpus?
+      class_name = corpus_map_iter->first;
+      corpus_ptr = &(corpus_map_iter->second);
+      if (corpus_ptr->empty()) {
+#ifdef NBC_DEBUG
+        std::cout << "WARNING: no entries found in corpus for class: " << class_name << std::endl;
+#endif // NBC_DEBUG
+      }
+
+      for (taxon_iter = taxon.begin();
+           taxon_iter != taxon.end();
+           taxon_iter++) {
+        word = taxon_iter->first;
+        if ((corpus_iter = corpus_ptr->find(word)) != corpus_ptr->end()) {
+          freq = corpus_iter->second;
+          if (freq < 100)
+            corpus_iter->second = 100;
+        } else {
+          freq = 100;
+          corpus_ptr->insert(std::pair<std::string, double> (word, freq));
+        }
+      }
+    }
+
+    taxon.clear();
+  }
+
   return 0;
 }
 

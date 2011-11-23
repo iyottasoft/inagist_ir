@@ -173,7 +173,7 @@ int CorpusManager::ClearCorpus(Corpus& corpus) {
   return 0;
 }
 
-int CorpusManager::LoadCorpus(const std::string corpus_file_name, Corpus& corpus) {
+int CorpusManager::LoadCorpus(const std::string corpus_file_name, Corpus& corpus, double default_value) {
 
   if (corpus_file_name.length() < 1) {
     std::cerr << "ERROR - corpus_manager.cc: invalid file name for corpus\n";
@@ -199,18 +199,24 @@ int CorpusManager::LoadCorpus(const std::string corpus_file_name, Corpus& corpus
   double freq = 0;
   int num_docs = 0;
   while (getline(ifs, line)) {
+    if (line.length() < 1)
+      continue;
     num_docs++;
     if ((loc = line.find("=", 0)) != std::string::npos) {
       entry = std::string(line, 0, loc);
       freq_str = std::string(line, loc+1, line.length() - loc); 
       freq = atof(freq_str.c_str());
-      corpus[entry] = freq; 
+      corpus[entry] = freq;
     } else {
-      std::cout << "ERROR - corpus_manager.cc: malformed corpus entry on line number " << num_docs \
-                << " in " << corpus_file_name << std::endl;
-      std::cout << "ERROR - corpus_manager.cc: malformed entry: \"" << line << "\"" << std::endl;
-      ifs.close();
-      return -1;
+      if (default_value != 0) {
+        corpus[line] = default_value;
+      } else {
+        std::cout << "ERROR - corpus_manager.cc: malformed corpus entry on line number " << num_docs \
+                  << " in " << corpus_file_name << std::endl;
+        std::cout << "ERROR - corpus_manager.cc: malformed entry: \"" << line << "\"" << std::endl;
+        ifs.close();
+        return -1;
+      }
     }
   }
   ifs.close();

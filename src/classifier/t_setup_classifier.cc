@@ -84,6 +84,11 @@ int main(int argc, char* argv[]) {
           inagist_classifiers::ClassifierConfig::Clear(config);
           return -1;
         }
+        // training file folder
+        if (CreateDir(config.iter->training_timestamps_file) < 0) {
+          inagist_classifiers::ClassifierConfig::Clear(config);
+          return -1;
+        }
         // training corpus file folder
         if (CreateDir(config.iter->training_corpus_file) < 0) {
           inagist_classifiers::ClassifierConfig::Clear(config);
@@ -99,8 +104,8 @@ int main(int argc, char* argv[]) {
           inagist_classifiers::ClassifierConfig::Clear(config);
           return -1;
         }
-        // testing handles file folder
-        if (CreateDir(config.iter->testing_handles_file) < 0) {
+        // testing timestamps file folder
+        if (CreateDir(config.iter->testing_timestamps_file) < 0) {
           inagist_classifiers::ClassifierConfig::Clear(config);
           return -1;
         }
@@ -115,13 +120,13 @@ int main(int argc, char* argv[]) {
           return -1;
         }
       }
-      cmd = "touch " + config.iter->training_handles_file;
+      cmd = "touch " + config.iter->training_timestamps_file;
       std::cout << cmd << std::endl;
       sys_out = system(cmd.c_str());
       if (class_name_is_handle) {
-        std::ofstream ofs(config.iter->training_handles_file.c_str(), std::ios::app);
+        std::ofstream ofs(config.iter->training_timestamps_file.c_str(), std::ios::app);
         if (!ofs.is_open()) {
-          std::cout << "ERROR: could not open handles file: " << config.iter->training_handles_file << std::endl;
+          std::cout << "ERROR: could not open timestamps file: " << config.iter->training_timestamps_file << std::endl;
           break;
         } else {
           ofs << config.iter->name << std::endl;
@@ -136,7 +141,7 @@ int main(int argc, char* argv[]) {
       sys_out = system(cmd.c_str());
 
       // testing
-      cmd = "touch " + config.iter->testing_handles_file;
+      cmd = "touch " + config.iter->testing_timestamps_file;
       std::cout << cmd << std::endl;
       sys_out = system(cmd.c_str());
       cmd = "touch " + config.iter->testing_corpus_file;

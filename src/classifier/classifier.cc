@@ -220,6 +220,45 @@ int Classifier::GetData(const bool& train_not_test, const char* config_file_name
     return -1;
   }
 
+  // this piece of code can be spun off into a separate batch program
+  // this reads the handles file and if there are new entries, updates the timestamps file
+  // handles file is checked into git repos while the timestamps aren't
+  std::string timestamps_file;
+  Corpus timestamps_map;
+  std::string handles_file;
+  Corpus handles_map;
+  CorpusIter corpus_iter;
+  bool flag = false;
+  for (config.iter = config.classes.begin(); config.iter != config.classes.end(); config.iter++) {
+    handles_file = config.iter->training_handles_file;
+    if (handles_file.empty()) {
+      continue;
+    }
+    if (CorpusManager::LoadCorpus(handles_file, handles_map, 0) < 0) {
+      std::cerr << "ERROR: could not examine handles file: " << handles_file << std::endl;
+      break;
+    }
+    timestamps_file = config.iter->training_timestamps_file;
+    if (CorpusManager::LoadCorpus(timestamps_file, timestamps_map) < 0) {
+      std::cerr << "ERROR: could not examine timestamps file: " << timestamps_file << std::endl;
+      break;
+    }
+    flag = false;
+    for (corpus_iter = handles_map.begin(); corpus_iter != handles_map.end(); corpus_iter++) {
+      if (timestamps_map.find(corpus_iter->first) == timestamps_map.end()) {
+        timestamps_map.insert(std::pair<std::string, double>(corpus_iter->first, corpus_iter->second));
+        flag = true;
+      }
+    }
+    if (flag) {
+      CorpusManager::WriteCorpusToFile(timestamps_map, timestamps_file);
+    }
+    timestamps_map.clear();
+    handles_map.clear();
+  }
+  timestamps_map.clear();
+  handles_map.clear();
+
   // the following code, gets a random starting point.
   // though all the sources are pinged, this randomization is to save from biases
   int i = rand() % config.classes.size();
@@ -236,7 +275,6 @@ int Classifier::GetData(const bool& train_not_test, const char* config_file_name
   unsigned int corpus_size = 0;
   std::string data_file;
   std::string corpus_file;
-  std::string handles_file;
   std::string tweets_file;
   for (; config.iter != config.classes.end(); config.iter++) {
     num_docs = 0;
@@ -245,23 +283,23 @@ int Classifier::GetData(const bool& train_not_test, const char* config_file_name
       corpus_file = config.iter->training_corpus_file;
       data_file = config.iter->training_data_file;
       tweets_file = config.iter->training_tweets_file;
-      handles_file = config.iter->training_handles_file;
+      timestamps_file = config.iter->training_timestamps_file;
     } else {
       corpus_file = config.iter->testing_corpus_file;
       data_file = config.iter->testing_data_file;
       tweets_file = config.iter->testing_tweets_file;
-      handles_file = config.iter->testing_handles_file;
+      timestamps_file = config.iter->testing_timestamps_file;
     }
     if ((count_temp = GetData(train_not_test,
                               config.iter->name,
-                              handles_file,
+                              timestamps_file,
                               tweets_file,
                               num_docs,
                               corpus_file,
                               corpus_size)) < 0) {
 #ifdef CLASSIFIER_DEBUG
       std::cerr << "ERROR: could not get training data for handles in file: " \
-                << handles_file << std::endl; 
+                << timestamps_file << std::endl; 
 #endif // CLASSIFIER_DEBUG
     } else {
 #ifdef CLASSIFIER_DEBUG
@@ -284,24 +322,24 @@ int Classifier::GetData(const bool& train_not_test, const char* config_file_name
       corpus_file = config.iter->training_corpus_file;
       data_file = config.iter->training_data_file;
       tweets_file = config.iter->training_tweets_file;
-      handles_file = config.iter->training_handles_file;
+      timestamps_file = config.iter->training_timestamps_file;
     } else {
       corpus_file = config.iter->testing_corpus_file;
       data_file = config.iter->testing_data_file;
       tweets_file = config.iter->testing_tweets_file;
-      handles_file = config.iter->testing_handles_file;
+      timestamps_file = config.iter->testing_timestamps_file;
     }
  
     if ((count_temp = GetData(train_not_test,
                               config.iter->name,
-                              handles_file,
+                              timestamps_file,
                               tweets_file,
                               num_docs,
                               corpus_file,
                               corpus_size)) < 0) {
 #ifdef CLASSIFIER_DEBUG
       std::cerr << "ERROR: could not get training data for handles in file: " \
-                << handles_file << std::endl; 
+                << timestamps_file << std::endl; 
 #endif // CLASSIFIER_DEBUG
     } else {
 #ifdef CLASSIFIER_DEBUG
@@ -322,23 +360,23 @@ int Classifier::GetData(const bool& train_not_test, const char* config_file_name
 
 int Classifier::GetData(const bool& train_not_test,
                         const std::string& class_name,
-                        const std::string& twitter_handles_file_name,
+                        const std::string& twitter_timestamps_file_name,
                         const std::string& output_tweets_file_name,
                         unsigned int& output_num_docs,
                         const std::string& output_corpus_file_name,
                         unsigned int& output_corpus_size) {
 
-  std::ifstream ifs(twitter_handles_file_name.c_str());
+  std::ifstream ifs(twitter_timestamps_file_name.c_str());
   if (!ifs.is_open()) {
 #ifdef CLASSIFIER_DEBUG
-    std::cerr << "ERROR: could not open twitter handles file: " << twitter_handles_file_name << std::endl;
+    std::cerr << "ERROR: could not open twitter timestamps file: " << twitter_timestamps_file_name << std::endl;
 #endif // CLASSIFIER_DEBUG
     return -1;
   }
 
 #ifdef CLASSIFIER_DEBUG
   if (m_debug_level > 3) {
-    std::cout << "INFO: training data from handles file: " << twitter_handles_file_name << std::endl;
+    std::cout << "INFO: training data from timestamps file: " << twitter_timestamps_file_name << std::endl;
   }
 #endif // CLASSIFIER_DEBUG
 
@@ -351,7 +389,7 @@ int Classifier::GetData(const bool& train_not_test,
   unsigned int flag = 0;
   unsigned int exe_count = 0;
   std::string exe_count_str;
-  std::map<std::string, unsigned int> handles;
+  std::map<std::string, unsigned int> timestamps;
   std::map<std::string, unsigned int>::iterator handle_iter;
 
   while(getline(ifs, line)) {
@@ -367,13 +405,13 @@ int Classifier::GetData(const bool& train_not_test,
       exe_count_str.assign(line, loc+1, line.length()-loc-1);
       exe_count = atoi((char *) exe_count_str.c_str());
     }
-    handles[handle] = exe_count;
+    timestamps[handle] = exe_count;
   }
   ifs.close();
 
-  if (handles.size() < 1) {
+  if (timestamps.size() < 1) {
 #ifdef CLASSIFIER_DEBUG
-    std::cerr << "ERROR: no handles found in file " << twitter_handles_file_name << std::endl;
+    std::cerr << "ERROR: no handles found in file " << twitter_timestamps_file_name << std::endl;
 #endif // CLASSIFIER_DEBUG
     ofs.close();
     return 0;
@@ -388,9 +426,9 @@ int Classifier::GetData(const bool& train_not_test,
   Corpus class_freq_map;
 
   // the following code is to randomly pick one handle and get tweets from it
-  int i = rand() % handles.size();
+  int i = rand() % timestamps.size();
   int j = 0;
-  for (handle_iter = handles.begin(); handle_iter != handles.end(); handle_iter++) {
+  for (handle_iter = timestamps.begin(); handle_iter != timestamps.end(); handle_iter++) {
     if (i==j)
       break;
     j++;
@@ -402,7 +440,7 @@ int Classifier::GetData(const bool& train_not_test,
   bool get_user_info = false;
   unsigned int num_docs_found_for_handle = 0;
   unsigned int corpus_size_from_handle = 0;
-  for (; handle_iter != handles.end(); handle_iter++) {
+  for (; handle_iter != timestamps.end(); handle_iter++) {
     if (handle_iter->second == 1)
       continue;
     no_fresh_handle = false;
@@ -436,8 +474,8 @@ int Classifier::GetData(const bool& train_not_test,
       std::cerr << "ERROR: could not get training data for handle: " << handle \
                 << " for class: " << class_name << std::endl;
     } else {
-      handles[handle] += 1;
-      handles[handle] %= 2;
+      timestamps[handle] += 1;
+      timestamps[handle] %= 2;
       flag = 1;
     }
     if (0 == count_temp) {
@@ -461,7 +499,7 @@ int Classifier::GetData(const bool& train_not_test,
     j = 0;
     num_docs_found_for_handle = 0;
     corpus_size_from_handle = 0;
-    for (handle_iter = handles.begin(); handle_iter != handles.end(); handle_iter++) {
+    for (handle_iter = timestamps.begin(); handle_iter != timestamps.end(); handle_iter++) {
 
       if (i==j) // i is the random location
         break;
@@ -499,8 +537,8 @@ int Classifier::GetData(const bool& train_not_test,
       if (count_temp < 0) {
         std::cerr << "ERROR: could not get training data for handle: " << handle << std::endl;
       } else {
-        handles[handle] += 1;
-        handles[handle] %= 2;
+        timestamps[handle] += 1;
+        timestamps[handle] %= 2;
         flag = 1;
       }
 
@@ -530,54 +568,54 @@ int Classifier::GetData(const bool& train_not_test,
       std::cout << "INFO: flipping all the handle entries to zero" << std::endl;
     }
 #endif // CLASSIFIER_DEBUG
-    for (handle_iter = handles.begin(); handle_iter != handles.end(); handle_iter++) {
+    for (handle_iter = timestamps.begin(); handle_iter != timestamps.end(); handle_iter++) {
       if (handle_iter->second == 0) {
         std::cerr << "ERROR: a fresh handle found while flipping. logical error\n";
-        handles.clear();
+        timestamps.clear();
         return -1;
       } else if (handle_iter->second == 1) {
         handle = handle_iter->first;
-        handles[handle] = 2;
+        timestamps[handle] = 2;
         flag = 1;
       } else {
         std::cerr << "ERROR: ill-maintained traning data state or unexplained error\n";
-        handles.clear();
+        timestamps.clear();
         return -1;
       }
     }
   }
 
   if (1 == flag) {
-    std::ofstream ofs(twitter_handles_file_name.c_str());
+    std::ofstream ofs(twitter_timestamps_file_name.c_str());
     if (!ofs.is_open()) {
-      std::cerr << "ERROR: handles file: " << twitter_handles_file_name << " could not be opened for write.\n";
+      std::cerr << "ERROR: timestamps file: " << twitter_timestamps_file_name << " could not be opened for write.\n";
       return -1;
     } else {
 #ifdef CLASSIFIER_DEBUG
     if (CLASSIFIER_DEBUG > 3) {
-      std::cout << "INFO: updating the handles file after current round\n";
+      std::cout << "INFO: updating the timestamps file after current round\n";
     }
 #endif // CLASSIFIER_DEBUG
-      for (handle_iter = handles.begin(); handle_iter != handles.end(); handle_iter++) {
+      for (handle_iter = timestamps.begin(); handle_iter != timestamps.end(); handle_iter++) {
          ofs << handle_iter->first << "=" << handle_iter->second << std::endl;
       }
       ofs.close();
     }
   }
 
-  handles.clear();
+  timestamps.clear();
 
   if (no_fresh_handle) {
 #ifdef CLASSIFIER_DEBUG
     if (m_debug_level > 2) {
-      std::cout << "INFO: no fresh handle found. hence all handles were flipped." \
+      std::cout << "INFO: no fresh handle found. hence all timestamps were flipped." \
                 << " now making recursive call\n";
     }
 #endif // CLASSIFIER_DEBUG
     // recursive call
     return GetData(train_not_test,
                    class_name,
-                   twitter_handles_file_name,
+                   twitter_timestamps_file_name,
                    output_tweets_file_name,
                    output_num_docs,
                    output_corpus_file_name,
@@ -585,7 +623,7 @@ int Classifier::GetData(const bool& train_not_test,
   }
 
   if (count == 0) {
-    std::cout << "WARNING: No tweets found for handles in file " << twitter_handles_file_name << std::endl;
+    std::cout << "WARNING: No tweets found for handles in file " << twitter_timestamps_file_name << std::endl;
     return 0;
   } else {
 #ifdef CLASSIFIER_DEBUG
