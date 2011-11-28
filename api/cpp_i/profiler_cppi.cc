@@ -10,6 +10,7 @@
 #include "profiler.h"
 
 inagist_dashboard::Profiler g_profiler;
+inagist_dashboard::Profile* g_profile;
 
 #ifdef _CPLUSPLUS
 extern "C"
@@ -26,6 +27,8 @@ int InitProfiler(const char* gist_maker_config) {
     return -1;
   }
 
+  g_profile = (inagist_dashboard::Profile*) NULL;
+
   return 0;
 }
 
@@ -41,7 +44,7 @@ int SetProfilerDebugLevel(unsigned int debug_level) {
 #ifdef _CPLUSPLUS
 extern "C"
 #endif
-int GetProfile(const char* twitter_handle, unsigned int twitter_handle_len,
+int CallGetProfileForHandle(const char* twitter_handle, unsigned int twitter_handle_len,
       unsigned char* locations_buffer, unsigned int locations_buffer_len,
       unsigned int* locations_len_ptr, unsigned int* locations_count_ptr
 #ifdef LANG_ENABLED
@@ -194,7 +197,7 @@ int GetProfile(const char* twitter_handle, unsigned int twitter_handle_len,
 #endif // RECSYS_ENABLED
 
   int ret_value = 0;
-  if ((ret_value = g_profiler.Profile(twitter_handle, twitter_handle_len,
+  if ((ret_value = g_profiler.GetProfile(twitter_handle, twitter_handle_len,
                      locations_buffer, locations_buffer_len,
                      locations_len, locations_count
 #ifdef LANG_ENABLED
@@ -280,3 +283,169 @@ int GetProfile(const char* twitter_handle, unsigned int twitter_handle_len,
 
   return ret_value;
 }
+
+#ifdef _CPLUSPLUS
+extern "C"
+#endif
+int CallCreateProfile() {
+  if (g_profiler.CreateProfile(g_profile) < 0) {
+    std::cerr << "ERROR: could not create profile" << std::endl;
+    return -1;
+  }
+
+  return 0;
+}
+
+#ifdef _CPLUSPLUS
+extern "C"
+#endif
+int CallAddTextToProfile(const char* text_buffer,
+                         const unsigned int text_buffer_len,
+                         const unsigned int text_len,
+                         const double dynamic_score) {
+
+  if (!text_buffer || text_len < 1) {
+    std::cerr << "ERROR: invalid buffer\n";
+    return -1;
+  }
+
+  if (!g_profile) {
+    return -1;
+  }
+
+  if (g_profiler.AddTextToProfile((const unsigned char*) text_buffer, text_buffer_len, text_len, g_profile, dynamic_score) < 0) {
+    std::cerr << "ERROR: could not delete profile" << std::endl;
+    return -1;
+  }
+
+  return 0;
+}
+
+// text_classes are returned
+#ifdef _CPLUSPLUS
+extern "C"
+#endif
+int CallGetProfile(
+#ifdef LANG_ENABLED
+      char* self_languages_buffer, unsigned int self_languages_buffer_len,
+      unsigned int* self_languages_len_ptr, unsigned int* self_languages_count_ptr
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+      , char* self_text_classes_buffer, unsigned int self_text_classes_buffer_len,
+      unsigned int* self_text_classes_len_ptr, unsigned int* self_text_classes_count_ptr
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+      , char* self_location_classes_buffer, unsigned int self_location_classes_buffer_len,
+      unsigned int* self_location_classes_len_ptr, unsigned int* self_location_classes_count_ptr
+#endif // LOCATION_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+      , unsigned char* self_text_class_contributors_buffer, unsigned int self_text_class_contributors_buffer_len,
+      unsigned int* self_text_class_contributors_len_ptr, unsigned int* self_text_class_contributors_count_ptr
+#endif // TEXT_CLASSIFICATION_ENABLED
+     )  {
+
+  if (!g_profile
+#ifdef LANG_ENABLED
+      || !self_languages_buffer
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+      || !self_text_classes_buffer
+      || !self_text_class_contributors_buffer
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+      || !self_location_classes_buffer
+#endif // LOCATION_ENABLED
+     ) {
+#ifdef PROFILE_DEBUG
+    std::cerr << "ERROR: invalid output buffer(s) for profiling\n";
+#endif
+    return -1;
+  }
+
+#ifdef LANG_ENABLED
+  *self_languages_len_ptr = 0;
+  *self_languages_count_ptr = 0;
+  self_languages_buffer[0] = '\0';
+  unsigned int self_languages_len = 0;
+  unsigned int self_languages_count = 0;
+#endif // LANG_ENABLED
+
+#ifdef TEXT_CLASSIFICATION_ENABLED
+  *self_text_classes_len_ptr = 0;
+  *self_text_classes_count_ptr = 0;
+  self_text_classes_buffer[0] = '\0';
+  unsigned int self_text_classes_len = 0;
+  unsigned int self_text_classes_count = 0;
+#endif // TEXT_CLASSIFICATION_ENABLED
+
+#ifdef LOCATION_ENABLED
+  *self_location_classes_len_ptr = 0;
+  *self_location_classes_count_ptr = 0;
+  self_location_classes_buffer[0] = '\0';
+  unsigned int self_location_classes_len = 0;
+  unsigned int self_location_classes_count = 0;
+#endif // LOCATION_ENABLED
+
+#ifdef TEXT_CLASSIFICATION_ENABLED
+  *self_text_class_contributors_len_ptr = 0;
+  *self_text_class_contributors_count_ptr = 0;
+  self_text_class_contributors_buffer[0] = '\0';
+  unsigned int self_text_class_contributors_len = 0;
+  unsigned int self_text_class_contributors_count = 0;
+#endif // TEXT_CLASSIFICATION_ENABLED
+
+  int ret_value = 0;
+  if (g_profiler.GetProfile(g_profile
+#ifdef LANG_ENABLED
+                         , self_languages_buffer, self_languages_buffer_len,
+                         self_languages_len, self_languages_count
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+                         , self_text_classes_buffer, self_text_classes_buffer_len,
+                         self_text_classes_len, self_text_classes_count
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+                         , self_location_classes_buffer, self_location_classes_buffer_len,
+                         self_location_classes_len, self_location_classes_count
+#endif // LOCATION_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+                         , self_text_class_contributors_buffer, self_text_class_contributors_buffer_len,
+                         self_text_class_contributors_len, self_text_class_contributors_count
+#endif // TEXT_CLASSIFICATION_ENABLED
+                       ) < 0) {
+    return -1;
+  }
+
+#ifdef LANG_ENABLED
+  *self_languages_len_ptr = self_languages_len;
+  *self_languages_count_ptr = self_languages_count;
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+  *self_text_classes_len_ptr = self_text_classes_len;
+  *self_text_classes_count_ptr = self_text_classes_count;
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+  *self_location_classes_len_ptr = self_location_classes_len;
+  *self_location_classes_count_ptr = self_location_classes_count;
+#endif // LOCATION_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+  *self_text_class_contributors_len_ptr = self_text_class_contributors_len;
+  *self_text_class_contributors_count_ptr = self_text_class_contributors_count;
+#endif // TEXT_CLASSIFICATION_ENABLED
+
+  return ret_value;
+}
+
+#ifdef _CPLUSPLUS
+extern "C"
+#endif
+int CallDeleteProfile() {
+  if (g_profiler.DeleteProfile(g_profile) < 0) {
+    std::cerr << "ERROR: could not delete profile" << std::endl;
+    return -1;
+  }
+  g_profile = (inagist_dashboard::Profile *) NULL;
+
+  return 0;
+}
+

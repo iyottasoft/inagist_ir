@@ -1,17 +1,155 @@
 #ifndef _INAGIST_DASHBOARD_PROFILER_H_
 #define _INAGIST_DASHBOARD_PROFILER_H_
-
+/*
 #ifndef DISALLOW_COPY_AND_ASSIGN
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
   TypeName(const TypeName&);               \
   void operator=(const TypeName&)
 #endif
+*/
 
 #include <string>
 #include <set>
 #include "gist_maker.h"
 
+#define MAX_CLASS_LIST_LEN 320
+
+#ifndef MAX_BUFFER_LEN
+#define MAX_BUFFER_LEN 1024
+#endif // MAX_BUFFER_LEN
+
 namespace inagist_dashboard {
+
+typedef struct _profile {
+
+  unsigned int id;
+  std::string profanity_status;
+  std::map<std::string, double> lang_classes_map;
+  std::map<std::string, double> scripts_map;
+  std::map<std::string, double> locations_map;
+  std::map<std::string, double> text_classes_map;
+  std::map<std::string, double> features_map;
+  std::map<std::string, double>::iterator map_iter;
+  std::multimap<std::string, std::string> features_to_classes_map;
+  std::multimap<std::string, std::string>::iterator mmap_iter;
+  std::pair<std::multimap<std::string, std::string>::iterator,
+            std::multimap<std::string, std::string>::iterator> range;
+  void Clear() {
+    if (!lang_classes_map.empty()) {
+      lang_classes_map.clear();
+    }
+    if (!text_classes_map.empty()) {
+      text_classes_map.clear();
+    }
+    if (!features_map.empty()) {
+      features_map.clear();
+    }
+    if (!features_to_classes_map.empty()) {
+      features_to_classes_map.clear();
+    }
+  }
+/*
+  friend bool operator<(Profile const& p1, Profile const& p2) {
+    return (p1.id < p2.id);
+  }
+*/
+} Profile;
+
+typedef struct _gist {
+ public:
+  char profanity_status_buffer[10];
+  unsigned int profanity_status_buffer_len;
+
+  char scripts_buffer[10];
+  unsigned int scripts_buffer_len;
+
+  unsigned char named_entities_buffer[MAX_BUFFER_LEN];
+  unsigned int named_entities_buffer_len;
+  unsigned int named_entities_len;
+  unsigned int named_entities_count;
+
+  unsigned char keywords_buffer[MAX_BUFFER_LEN];
+  unsigned int keywords_buffer_len;
+  unsigned int keywords_len;
+  unsigned int keywords_count;
+
+  unsigned char keyphrases_buffer[MAX_BUFFER_LEN];
+  unsigned int keyphrases_buffer_len;
+  unsigned int keyphrases_len;
+  unsigned int keyphrases_count;
+
+#ifdef LANG_ENABLED
+  char* lang_classes_buffer[MAX_CLASS_LIST_LEN];
+  unsigned int lang_classes_buffer_len;
+  unsigned int lang_classes_len;
+  unsigned int lang_classes_count;
+#endif // LANG_ENABLED
+
+#ifdef TEXT_CLASSIFICATION_ENABLED
+  char* text_classes_buffer[MAX_CLASS_LIST_LEN];
+  unsigned int text_classes_buffer_len;
+  unsigned int text_classes_len;
+  unsigned int text_classes_count;
+#endif // TEXT_CLASSIFICATION_ENABLED
+
+#ifdef LOCATION_ENABLED
+  char* location_classes_buffer[MAX_CLASS_LIST_LEN];
+  unsigned int location_classes_buffer_len;
+  unsigned int location_classes_len;
+  unsigned int location_classes_count;
+#endif // LOCATION_ENABLED
+
+  int intent_valence;
+  int sentiment_valence;
+
+  _gist() {
+    profanity_status_buffer_len = 10;
+    scripts_buffer_len = 10;
+    named_entities_buffer_len = MAX_BUFFER_LEN;
+    keywords_buffer_len = MAX_BUFFER_LEN;
+    keyphrases_buffer_len = MAX_BUFFER_LEN;
+#ifdef LANG_ENABLED
+    lang_classes_buffer_len = MAX_CLASS_LIST_LEN;
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+    text_classes_buffer_len = MAX_CLASS_LIST_LEN;
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef LOCATION_ENABLED
+    location_classes_buffer_len = MAX_CLASS_LIST_LEN;
+#endif // LOCATION_ENABLED
+  }
+
+  void Clear() {
+    profanity_status_buffer[0] = '\0';
+    scripts_buffer[0] = '\0';
+    named_entities_buffer[0] = '\0';
+    named_entities_len = 0;
+    named_entities_count = 0;
+    keywords_buffer[0] = '\0';
+    keywords_len = 0;
+    keywords_count = 0;
+    keyphrases_buffer[0] = '\0';
+    keyphrases_len = 0;
+    keyphrases_count = 0;
+#ifdef LANG_ENABLED
+    lang_classes_buffer[0] = '\0';
+    lang_classes_len = 0;
+    lang_classes_count = 0;
+#endif // LANG_ENABLED
+#ifdef TEXT_CLASSIFICATION_ENABLED
+    text_classes_buffer[0] = '\0';
+    text_classes_len = 0;
+    text_classes_count = 0;
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef  LOCATION_ENABLED
+    location_classes_buffer[0] = '\0';
+    location_classes_len = 0;
+    location_classes_count = 0;
+#endif // LOCATION_ENABLED
+    intent_valence = 0;
+    sentiment_valence = 0;
+  }
+} Gist;
 
 class Profiler {
 
@@ -24,7 +162,7 @@ class Profiler {
 
   int SetDebugLevel(unsigned int debug_level);
 
-  int Profile(const std::string& twitter_handle,
+  int GetProfile(const std::string& twitter_handle,
               std::set<std::string>& locations
 #ifdef LANG_ENABLED
               , std::set<std::string>& self_languages
@@ -52,17 +190,15 @@ class Profiler {
               // std::map<std::string, std::string>& others_text_class_contributors_map,
               , std::set<std::string>& others_text_class_contributors
 #endif // TEXT_CLASSIFICATION_ENABLED
-#ifdef RECSYS_ENABLED
-              , std::set<std::string>& recommendations
-#endif // RECSYS_ENABLED
+              , std::set<std::string>& features
               , const std::string& profile_name);
 
-  int Profile(const char* twitter_handle, unsigned int twitter_handle_len,
+  int GetProfile(const char* twitter_handle, unsigned int twitter_handle_len,
               unsigned char* locations_buffer, const unsigned int locations_buffer_len,
               unsigned int& locations_len, unsigned int& locations_count
 #ifdef LANG_ENABLED
-              , char* self_languages_buffer, const unsigned int self_languages_buffer_len,
-              unsigned int& self_languages_len, unsigned int& self_languages_count
+              , char* self_lang_classes_buffer, const unsigned int self_lang_classes_buffer_len,
+              unsigned int& self_lang_classes_len, unsigned int& self_lang_classes_count
 #endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
               , char* self_text_classes_buffer, const unsigned int self_text_classes_buffer_len,
@@ -79,8 +215,8 @@ class Profiler {
               unsigned int& self_text_class_contributors_count
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LANG_ENABLED
-              , char* others_languages_buffer, const unsigned int others_languages_buffer_len,
-              unsigned int& others_languages_len, unsigned int& others_languages_count
+              , char* others_lang_classes_buffer, const unsigned int others_lang_classes_buffer_len,
+              unsigned int& others_lang_classes_len, unsigned int& others_lang_classes_count
 #endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
               , char* others_text_classes_buffer, const unsigned int others_text_classes_buffer_len,
@@ -96,63 +232,56 @@ class Profiler {
               unsigned int& others_text_class_contributors_len,
               unsigned int& others_text_class_contributors_count
 #endif // TEXT_CLASSIFICATION_ENABLED
-#ifdef RECSYS_ENABLED
-              , unsigned char* recommendations_buffer, const unsigned int recommendations_buffer_len,
-              unsigned int& recommendations_len, unsigned int& recommendations_count
-#endif // RECSYS_ENABLED
+              , unsigned char* features_buffer, const unsigned int features_buffer_len,
+              unsigned int& features_len, unsigned int& features_count
               , const char* profile_name);
 
-  int CallMakeGist(std::set<std::string>& tweets
+  int CreateProfile(Profile* &profile); // this merely creates an instance of Profile class object
+
+  int AddTextsToProfile(std::set<std::string>& texts, Profile* &profile);
+
+  int AddTextToProfile(const unsigned char* text_buffer,
+                       const unsigned int text_buffer_len,
+                       const unsigned int text_len,
+                       Profile* &profile,
+                       const double& dynamic_score=0);
+
+  int GetProfile(Profile* &profile
 #ifdef LANG_ENABLED
-            , char* lang_class_buffer, const unsigned int lang_class_buffer_len,
-            unsigned int& lang_class_len, unsigned int& lang_class_count
+                 , char* lang_classes_buffer,
+                 const unsigned int& lang_classes_buffer_len,
+                 unsigned int& lang_classes_len,
+                 unsigned int& lang_classes_count
 #endif // LANG_ENABLED
 #ifdef TEXT_CLASSIFICATION_ENABLED
-            , char* text_class_buffer, const unsigned int text_class_buffer_len,
-            unsigned int& text_class_len, unsigned int& text_class_count
+                 , char* text_classes_buffer,
+                 const unsigned int& text_classes_buffer_len,
+                 unsigned int& text_classes_len,
+                 unsigned int& text_classes_count
 #endif // TEXT_CLASSIFICATION_ENABLED
 #ifdef LOCATION_ENABLED
-            , char* location_classes_buffer, const unsigned int location_classes_buffer_len,
-            unsigned int& location_classes_len, unsigned int& location_classes_count
+                 , char* location_classes_buffer,
+                 const unsigned int& location_classes_buffer_len,
+                 unsigned int& location_classes_len,
+                 unsigned int& location_classes_count
 #endif // LOCATION_ENABLED
-#ifdef TEXT_CLASSIFICATION_ENABLED
-            , unsigned char* text_class_contributors_buffer,
-            const unsigned int text_class_contributors_buffer_len,
-            unsigned int& text_class_contributors_len,
-            unsigned int& text_class_contributors_count
-#endif // TEXT_CLASSIFICATION_ENABLED
-            , inagist_classifiers::Corpus& corpus, unsigned int& corpus_size);
+                 , unsigned char* features_buffer,
+                 const unsigned int& features_buffer_len,
+                 unsigned int& features_len,
+                 unsigned int& features_count);
 
-#ifdef RECSYS_ENABLED
-  int TrainRecSys(std::string& tweet,
-                  std::set<std::string>& named_entities_set,
-                  std::set<std::string>& keywords_set,
-                  std::set<std::string>& text_class_set,
-                  int intent_valence,
-                  int sentiment_valence);
-
-  int GetRecommendations(std::set<std::string>& text_classes_set,
-                         unsigned char* recommendations_buffer,
-                         const unsigned int& recommendations_buffer_len,
-                         unsigned int& recommendations_len,
-                         unsigned int& recommendations_count);
-#endif // RECSYS_ENABLED
+  int DeleteProfile(Profile* &profile);
 
   int MultiMapToPipeList(std::multimap<double, std::string>& map,
                   unsigned char* buffer, unsigned int buffer_len,
                   unsigned int& list_len, unsigned int& list_count);
-  bool SortFunction(std::string i, std::string j);
-
 
  private:
   inagist::GistMaker m_gist_maker;
+  Gist m_gist;
   unsigned int m_debug_level;
-#ifdef RECSYS_ENABLED
-  std::multimap<std::string, std::string> m_recsys_input_class_map;
-  std::map<std::string, double> m_recsys_input_map;
-#endif // RECSYS_ENABLED
 
-  DISALLOW_COPY_AND_ASSIGN(Profiler); 
+  // DISALLOW_COPY_AND_ASSIGN(Profiler); 
 };
 
 } // inagist_dashboard

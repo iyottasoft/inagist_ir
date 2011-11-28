@@ -10,7 +10,7 @@ CPP_LINK_DIR = ../cpp_i/lib
 LOCAL_LIB_DIR = ./lib
 LOCAL_BIN_DIR = ./bin
 
-all: gist_collector_multi gist_collector gist_maker profiler
+all: gist_collector_multi gist_collector gist_maker
 	@echo "build done!"
 
 clean:

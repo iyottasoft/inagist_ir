@@ -230,7 +230,9 @@ int ToLower(const char* input, char* output) {
   return 0;
 }
 
-int PipeListToMap(unsigned char* buffer, std::map<std::string, double>& map) {
+int PipeListToMap(unsigned char* buffer,
+                  std::map<std::string, double>& map,
+                  double value) { // value - default set to 1
 
   if (!buffer) {
     std::cerr << "ERROR: invalid input\n";
@@ -248,12 +250,16 @@ int PipeListToMap(unsigned char* buffer, std::map<std::string, double>& map) {
   std::string word;
   while (start && end && *start != '\0') {
     word_len = end - start; 
+    if (word_len < 1) {
+      std::cerr << "ERROR: invalid buffer input. cannot convert PipeListToMap\n";
+      break;
+    }
     word.clear();
     word.assign((char *) start, word_len);
     if (map.find(word) != map.end()) {
-      map[word] += 1;
+      map[word] += value;
     } else {
-      map[word] = 1;
+      map[word] = value;
     }
     count++;
     start = end + 1;

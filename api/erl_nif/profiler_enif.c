@@ -193,7 +193,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   if ((strcmp(input_type_buffer, "handle") == 0) ||
       (strcmp(input_type_buffer, "handle+") == 0)) {
-    if ((ret_value = GetProfile(input_value_buffer, input_value_len,
+    if ((ret_value = CallGetProfileForHandle(input_value_buffer, input_value_len,
                        locations_buffer, MAX_LIST_LEN,
                        &locations_len, &locations_count,
                        self_languages_buffer, MAX_LIST_LEN,
@@ -368,7 +368,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       for (i=0; i<len; i++) {
         self_text_class_label_bin.data[i] = *(start + i);
       }
-      self_text_class_labels_list = enif_make_list_cell(env, enif_make_binary(env, &self_text_class_label_bin), self_text_class_labels_list);
+      // self_text_class_labels_list = enif_make_list_cell(env, enif_make_binary(env, &self_text_class_label_bin), self_text_class_labels_list);
       *middle = ' ';
       start = middle + 1;
 
@@ -388,7 +388,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       for (i=0; i<len; i++) {
         self_text_class_bin.data[i] = *(start + i);
       }
-      self_text_classes_list = enif_make_list_cell(env, enif_make_binary(env, &self_text_class_bin), self_text_classes_list);
+      self_text_classes_list = enif_make_list_cell(env, enif_make_tuple2(env, enif_make_binary(env, &self_text_class_label_bin), enif_make_binary(env, &self_text_class_bin)), self_text_classes_list);
 
       *end = '|';
       start = end + 1;
@@ -396,7 +396,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   }
   self_text_classes_buffer[0] = '\0';
 
-  // sub class for the user
+  // location class for the user
 
   ErlNifBinary self_location_classes_bin;
   ERL_NIF_TERM self_location_classes_list = enif_make_list(env, 0);
@@ -441,6 +441,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
   ErlNifBinary self_text_class_contributors_bin;
   ERL_NIF_TERM self_text_class_contributors_list = enif_make_list(env, 0);
+  int score = 0;
 
   if (self_text_class_contributors_count > 0) {
 
@@ -452,6 +453,16 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       if (!end)
         break;
       *end = '\0';
+
+      middle = strstr(start, " ");
+      if (!middle)
+        break;
+      *middle = '\0';
+      len = middle - start;
+      score = atoi(start);
+      *middle = ' ';
+      start = middle + 1;
+
       len = end - start;
 #ifdef ERLANG_R14B02 
       ret_value = enif_alloc_binary(len, &self_text_class_contributors_bin);
@@ -468,7 +479,8 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       for (i=0; i<len; i++) {
         self_text_class_contributors_bin.data[i] = *(start + i);
       }
-      self_text_class_contributors_list = enif_make_list_cell(env, enif_make_binary(env, &self_text_class_contributors_bin), self_text_class_contributors_list);
+      // self_text_class_contributors_list = enif_make_list_cell(env, enif_make_binary(env, &self_text_class_contributors_bin), self_text_class_contributors_list);
+      self_text_class_contributors_list = enif_make_list_cell(env, enif_make_tuple2(env, enif_make_binary(env, &self_text_class_contributors_bin), enif_make_int(env, score)), self_text_class_contributors_list);
 
       *end = '|';
       start = end + 1;
@@ -653,7 +665,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       for (i=0; i<len; i++) {
         others_text_class_label_bin.data[i] = *(start + i);
       }
-      others_text_class_labels_list = enif_make_list_cell(env, enif_make_binary(env, &others_text_class_label_bin), others_text_class_labels_list);
+      // others_text_class_labels_list = enif_make_list_cell(env, enif_make_binary(env, &others_text_class_label_bin), others_text_class_labels_list);
       *middle = ' ';
       start = middle + 1;
 
@@ -673,7 +685,8 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       for (i=0; i<len; i++) {
         others_text_class_bin.data[i] = *(start + i);
       }
-      others_text_classes_list = enif_make_list_cell(env, enif_make_binary(env, &others_text_class_bin), others_text_classes_list);
+      //others_text_classes_list = enif_make_list_cell(env, enif_make_binary(env, &others_text_class_bin), others_text_classes_list);
+      others_text_classes_list = enif_make_list_cell(env, enif_make_tuple2(env, enif_make_binary(env, &others_text_class_label_bin), enif_make_binary(env, &others_text_class_bin)), others_text_classes_list);
 
       *end = '|';
       start = end + 1;
@@ -681,7 +694,7 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
   }
   others_text_classes_buffer[0] = '\0';
 
-  // sub class for the user
+  // location class for the user
 
   ErlNifBinary others_location_classes_bin;
   ERL_NIF_TERM others_location_classes_list = enif_make_list(env, 0);
@@ -737,6 +750,16 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       if (!end)
         break;
       *end = '\0';
+
+      middle = strstr(start, " ");
+      if (!middle)
+        break;
+      *middle = '\0';
+      len = middle - start;
+      score = atoi(start);
+      *middle = ' ';
+      start = middle + 1;
+
       len = end - start;
 #ifdef ERLANG_R14B02 
       ret_value = enif_alloc_binary(len, &others_text_class_contributors_bin);
@@ -753,7 +776,8 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
       for (i=0; i<len; i++) {
         others_text_class_contributors_bin.data[i] = *(start + i);
       }
-      others_text_class_contributors_list = enif_make_list_cell(env, enif_make_binary(env, &others_text_class_contributors_bin), others_text_class_contributors_list);
+      // others_text_class_contributors_list = enif_make_list_cell(env, enif_make_binary(env, &others_text_class_contributors_bin), others_text_class_contributors_list);
+      others_text_class_contributors_list = enif_make_list_cell(env, enif_make_tuple2(env, enif_make_binary(env, &others_text_class_contributors_bin), enif_make_int(env, score)), others_text_class_contributors_list);
 
       *end = '|';
       start = end + 1;
@@ -864,18 +888,429 @@ ERL_NIF_TERM nif_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 
 }
 
-ERL_NIF_TERM nif_profile_handles_list(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-  return enif_make_atom(env, "bleh!");
+ERL_NIF_TERM nif_new_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+  if (CallCreateProfile() < 0) {
+    return enif_make_atom(env, "error");
+  }
+  return enif_make_atom(env, "ok");
 }
 
-ERL_NIF_TERM nif_profile_docs_list(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-  return enif_make_atom(env, "bleh!");
+ERL_NIF_TERM nif_add_to_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+
+  if (argc != 1) {
+#ifndef GIST_DEBUG
+    return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_invalid_argc");
+#endif // GIST_DEBUG
+  }
+
+  ErlNifBinary text_bin;
+  unsigned char text_buffer[MAX_BUFFER_LEN];
+  unsigned int text_buffer_len = MAX_BUFFER_LEN;
+  memset((char *) text_buffer, '\0', MAX_BUFFER_LEN);
+
+  bool success = enif_inspect_binary(env, argv[0], &text_bin);
+  unsigned int text_len = text_bin.size;
+  if (success && text_len > 1 && text_len < text_buffer_len) {
+    memcpy(text_buffer, text_bin.data, text_len);
+    text_buffer[text_len] = '\0';
+#ifdef ERLANG_R14B02 
+    enif_release_binary(&text_bin);
+#else
+    enif_release_binary(env, &text_bin);
+#endif // ERLANG_R14B02
+  } else {
+#ifdef ERLANG_R14B02 
+    enif_release_binary(&text_bin);
+#else
+    enif_release_binary(env, &text_bin);
+#endif // ERLANG_R14B02
+#ifndef GIST_DEBUG
+    return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_invalid_text_len");
+#endif // GIST_DEBUG
+  }
+
+  if (CallAddTextToProfile(text_buffer, text_buffer_len, text_len) < 0) {
+    text_buffer[0] = '\0';
+    return enif_make_atom(env, "error");
+  }
+
+  text_buffer[0] = '\0';
+  return enif_make_atom(env, "ok");
+}
+
+ERL_NIF_TERM nif_add_docs_list_to_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+
+  if (argc != 1)
+    return enif_make_atom(env, "error");
+
+  if (!enif_is_list(env, argv[0]))
+    return enif_make_atom(env, "error");
+
+  ERL_NIF_TERM head, tail;
+  ERL_NIF_TERM list = argv[0];
+
+  ErlNifBinary text_bin;
+  unsigned char text_buffer[MAX_BUFFER_LEN];
+  unsigned int text_buffer_len = MAX_BUFFER_LEN;
+  memset((char *) text_buffer, '\0', MAX_BUFFER_LEN);
+
+  bool success = true;
+  unsigned int text_len = 0;
+
+  while (enif_get_list_cell(env, list, &head, &tail)) {
+    if (!enif_is_binary(env, head)) {
+      continue;
+    }
+    success = enif_inspect_binary(env, head, &text_bin);
+    text_len = text_bin.size;
+    if (success && text_len > 1 && text_len < text_buffer_len) {
+      memcpy(text_buffer, text_bin.data, text_len);
+      text_buffer[text_len] = '\0';
+#ifdef ERLANG_R14B02 
+      enif_release_binary(&text_bin);
+#else
+      enif_release_binary(env, &text_bin);
+#endif // ERLANG_R14B02
+    } else {
+#ifdef ERLANG_R14B02 
+      enif_release_binary(&text_bin);
+#else
+      enif_release_binary(env, &text_bin);
+#endif // ERLANG_R14B02
+#ifndef GIST_DEBUG
+      return enif_make_atom(env, "error");
+#else
+      return enif_make_atom(env, "error_invalid_text_len");
+#endif // GIST_DEBUG
+    }
+
+    if (CallAddTextToProfile(text_buffer, text_buffer_len, text_len) < 0) {
+      text_buffer[0] = '\0';
+      return enif_make_atom(env, "error");
+    }
+
+    text_buffer[0] = '\0';
+    list = tail;
+  }
+  return enif_make_atom(env, "ok");
+}
+
+ERL_NIF_TERM nif_get_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+
+  char safe_status_buffer[10];
+  safe_status_buffer[0] = '\0';
+
+  char self_languages_buffer[MAX_LIST_LEN];
+  self_languages_buffer[0] = '\0';
+  unsigned int self_languages_len = 0;
+  unsigned int self_languages_count = 0;
+
+  char self_text_classes_buffer[MAX_BUFFER_LEN];
+  self_text_classes_buffer[0] = '\0';
+  unsigned int self_text_classes_len = 0;
+  unsigned int self_text_classes_count = 0;
+
+#ifdef LOCATION_ENABLED
+  char self_location_classes_buffer[MAX_BUFFER_LEN];
+  self_location_classes_buffer[0] = '\0';
+  unsigned int self_location_classes_len = 0;
+  unsigned int self_location_classes_count = 0;
+#endif // LOCATION_ENABLED
+
+  char self_text_class_contributors_buffer[ULTIMATE_BUFFER_LEN];
+  self_text_class_contributors_buffer[0] = '\0';
+  unsigned int self_text_class_contributors_len = 0;
+  unsigned int self_text_class_contributors_count = 0;
+
+  if (CallGetProfile(self_languages_buffer, MAX_LIST_LEN,
+                 &self_languages_len, &self_languages_count,
+                 self_text_classes_buffer, MAX_BUFFER_LEN,
+                 &self_text_classes_len, &self_text_classes_count,
+#ifdef LOCATION_ENABLED
+                 self_location_classes_buffer, MAX_BUFFER_LEN,
+                 &self_location_classes_len, &self_location_classes_count,
+#endif // LOCATION_ENABLED
+                 self_text_class_contributors_buffer, ULTIMATE_BUFFER_LEN,
+                 &self_text_class_contributors_len, &self_text_class_contributors_count
+                ) < 0) {
+#ifndef PROFILE_DEBUG
+    return enif_make_atom(env, "error");
+#else
+    return enif_make_atom(env, "error_profile_failed");
+#endif
+  }
+
+  unsigned int len = 0;
+  unsigned int i = 0;
+  char *start = NULL;
+  char *end = NULL; 
+  int ret_value = 0;
+
+  // languages by the user
+
+  ErlNifBinary self_languages_bin;
+  ERL_NIF_TERM self_languages_list = enif_make_list(env, 0);
+
+  if (self_languages_count > 0) {
+
+    start = self_languages_buffer;
+    end = strstr(start, "|");
+
+    while (start && end && *end != '\0') {
+      end = strstr(start, "|");
+      if (!end)
+        break;
+      *end = '\0';
+      len = end - start;
+#ifdef ERLANG_R14B02 
+      ret_value = enif_alloc_binary(len, &self_languages_bin);
+#else
+      ret_value = enif_alloc_binary(env, len, &self_languages_bin);
+#endif
+      if (ret_value < 0) {
+#ifndef PROFILE_DEBUG
+        return enif_make_atom(env, "error");
+#else
+        return enif_make_atom(env, "error_self_languages_bin_alloc");
+#endif
+      }
+      for (i=0; i<len; i++) {
+        self_languages_bin.data[i] = *(start + i);
+      }
+      self_languages_list = enif_make_list_cell(env, enif_make_binary(env, &self_languages_bin), self_languages_list);
+
+      *end = '|';
+      start = end + 1;
+    }
+  }
+  self_languages_buffer[0] = '\0';
+
+  // text class for the user
+
+  ErlNifBinary self_text_class_bin;
+  ERL_NIF_TERM self_text_classes_list = enif_make_list(env, 0);
+
+  ErlNifBinary self_text_class_label_bin;
+  // ERL_NIF_TERM self_text_class_labels_list = enif_make_list(env, 0);
+
+  char* middle = NULL;
+  if (self_text_classes_count > 0) {
+
+    start = self_text_classes_buffer;
+    end = strstr(start, "|");
+
+    while (start && end && *end != '\0') {
+      end = strstr(start, "|");
+      if (!end)
+        break;
+      *end = '\0';
+
+      middle = strstr(start, " ");
+      if (!middle)
+        break;
+      *middle = '\0';
+      len = middle - start;
+
+#ifdef ERLANG_R14B02 
+      ret_value = enif_alloc_binary(len, &self_text_class_label_bin);
+#else
+      ret_value = enif_alloc_binary(env, len, &self_text_class_label_bin);
+#endif
+      if (ret_value < 0) {
+#ifndef PROFILE_DEBUG
+        return enif_make_atom(env, "error");
+#else
+        return enif_make_atom(env, "error_self_text_class_label_bin_alloc");
+#endif
+      }
+      for (i=0; i<len; i++) {
+        self_text_class_label_bin.data[i] = *(start + i);
+      }
+      // self_text_class_labels_list = enif_make_list_cell(env, enif_make_binary(env, &self_text_class_label_bin), self_text_class_labels_list);
+      *middle = ' ';
+      start = middle + 1;
+
+      len = end - start;
+#ifdef ERLANG_R14B02 
+      ret_value = enif_alloc_binary(len, &self_text_class_bin);
+#else
+      ret_value = enif_alloc_binary(env, len, &self_text_class_bin);
+#endif
+      if (ret_value < 0) {
+#ifndef PROFILE_DEBUG
+        return enif_make_atom(env, "error");
+#else
+        return enif_make_atom(env, "error_self_text_class_bin_alloc");
+#endif
+      }
+      for (i=0; i<len; i++) {
+        self_text_class_bin.data[i] = *(start + i);
+      }
+      self_text_classes_list = enif_make_list_cell(env, enif_make_tuple2(env, enif_make_binary(env, &self_text_class_label_bin), enif_make_binary(env, &self_text_class_bin)), self_text_classes_list);
+      *end = '|';
+      start = end + 1;
+    }
+  }
+  self_text_classes_buffer[0] = '\0';
+
+  // location class for the user
+
+  ErlNifBinary self_location_classes_bin;
+  ERL_NIF_TERM self_location_classes_list = enif_make_list(env, 0);
+
+#ifdef LOCATION_ENABLED
+  if (self_location_classes_count > 0) {
+
+    start = self_location_classes_buffer;
+    end = strstr(start, "|");
+
+    while (start && end && *end != '\0') {
+      end = strstr(start, "|");
+      if (!end)
+        break;
+      *end = '\0';
+      len = end - start;
+#ifdef ERLANG_R14B02 
+      ret_value = enif_alloc_binary(len, &self_location_classes_bin);
+#else
+      ret_value = enif_alloc_binary(env, len, &self_location_classes_bin);
+#endif
+      if (ret_value < 0) {
+#ifndef PROFILE_DEBUG
+        return enif_make_atom(env, "error");
+#else
+        return enif_make_atom(env, "error_self_location_classes_bin_alloc");
+#endif
+      }
+      for (i=0; i<len; i++) {
+        self_location_classes_bin.data[i] = *(start + i);
+      }
+      self_location_classes_list = enif_make_list_cell(env, enif_make_binary(env, &self_location_classes_bin), self_location_classes_list);
+
+      *end = '|';
+      start = end + 1;
+    }
+  }
+  self_location_classes_buffer[0] = '\0';
+#endif // LOCATION_ENABLED
+
+  // text class contributors for the user
+
+  ErlNifBinary self_text_class_contributors_bin;
+  ERL_NIF_TERM self_text_class_contributors_list = enif_make_list(env, 0);
+  int score = 0;
+
+  if (self_text_class_contributors_count > 0) {
+
+    start = self_text_class_contributors_buffer;
+    end = strstr(start, "|");
+
+    while (start && end && *end != '\0') {
+      end = strstr(start, "|");
+      if (!end)
+        break;
+      *end = '\0';
+
+      middle = strstr(start, " ");
+      if (!middle)
+        break;
+      *middle = '\0';
+      len = middle - start;
+      score = atoi(start);
+      *middle = ' ';
+      start = middle + 1;
+
+      len = end - start;
+#ifdef ERLANG_R14B02 
+      ret_value = enif_alloc_binary(len, &self_text_class_contributors_bin);
+#else
+      ret_value = enif_alloc_binary(env, len, &self_text_class_contributors_bin);
+#endif
+      if (ret_value < 0) {
+#ifndef PROFILE_DEBUG
+        return enif_make_atom(env, "error");
+#else
+        return enif_make_atom(env, "error_self_text_class_contributors_bin_alloc");
+#endif
+      }
+      for (i=0; i<len; i++) {
+        self_text_class_contributors_bin.data[i] = *(start + i);
+      }
+      self_text_class_contributors_list = enif_make_list_cell(env, enif_make_tuple2(env, enif_make_binary(env, &self_text_class_contributors_bin), enif_make_int(env, score)), self_text_class_contributors_list);
+
+      *end = '|';
+      start = end + 1;
+    }
+  }
+  self_text_class_contributors_buffer[0] = '\0';
+
+  start = NULL;
+  end = NULL;
+
+  return enif_make_tuple3(env,
+                          self_languages_list,
+//                          self_text_class_labels_list,
+                          self_text_classes_list,
+//                        self_location_classes_list,
+                          self_text_class_contributors_list);
+
+}
+
+ERL_NIF_TERM nif_delete_profile(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+  if (CallDeleteProfile() < 0) {
+    return enif_make_atom(env, "error");
+  }
+  return enif_make_atom(env, "ok");
+}
+
+ERL_NIF_TERM nif_profile_handles_list(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+
+  if (argc != 1)
+    return enif_make_atom(env, "error");
+
+  if (!enif_is_list(env, argv[0]))
+    return enif_make_atom(env, "error");
+
+  ERL_NIF_TERM head, tail;
+  ERL_NIF_TERM list = argv[0];
+  int my_argc = 2;
+  ERL_NIF_TERM my_argv[2];
+
+  ErlNifBinary input_type_bin;
+  char input_type_buffer[] = "handle";
+  int input_type_len = strlen(input_type_buffer);
+  enif_alloc_binary(input_type_len, &input_type_bin);
+  int i = 0;
+  for (i=0; i<input_type_len; i++) {
+    input_type_bin.data[i] = *(input_type_buffer + i);
+  }
+  my_argv[0] = enif_make_binary(env, &input_type_bin);
+
+  while (enif_get_list_cell(env, list, &head, &tail)) {
+    if (enif_is_binary(env, head)) {
+      my_argv[1] = head;
+      nif_profile(env, my_argc, my_argv);
+    }
+    list = tail;
+  }
+
+  return enif_make_atom(env, "ok");
 }
 
 static ErlNifFunc nif_funcs[] =
 {
   {"init_c", 1, nif_init_c},
-  {"profile", 2, nif_profile},
+  {"profile", 2, nif_profile}, // legacy - profile twitter handle with type
+  {"new_profile", 0, nif_new_profile},
+  {"add_to_profile", 1, nif_add_to_profile},
+  {"add_docs_list_to_profile", 1, nif_add_docs_list_to_profile},
+  {"get_profile", 0, nif_get_profile},
+  {"delete_profile", 0, nif_delete_profile},
+  {"profile_handles_list", 1, nif_profile_handles_list},
 };
 ERL_NIF_INIT(profiler, nif_funcs, NULL, NULL, NULL, NULL)
 

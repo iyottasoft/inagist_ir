@@ -1778,7 +1778,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       if (current_word_ascii) {
 #endif // I18N_ENABLED
 
-      if (!current_word_stop && !current_word_dict && !current_word_caps &&
+      if (!current_word_stop && /* !current_word_dict && */ !current_word_caps &&
           !current_word_starts_num && !current_word_has_mixed_case &&
           (current_word_len > 1) && !current_word_hashtag) {
 #ifdef GM_DEBUG

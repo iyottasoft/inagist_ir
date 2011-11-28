@@ -7,7 +7,7 @@
 
 namespace inagist_api {
 
-#define MAX_BUFFER_LEN 540
+#define MAX_BUFFER_LEN 1024
 
 class TwitterSearcher {
  public:

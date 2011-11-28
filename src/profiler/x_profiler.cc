@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
   //std::map<std::string, std::string> others_text_class_contributors_map;
   std::set<std::string> others_text_class_contributors;
   std::set<std::string> recommendations;
-  if (p.Profile(twitter_handle,
+  if (p.GetProfile(twitter_handle,
                 locations
 #ifdef LANG_ENABLED
                 , self_languages
