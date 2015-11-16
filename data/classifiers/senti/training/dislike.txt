@@ -1,0 +1,9 @@
+sucks=2
+awful=2
+pathetic=2
+disgusting=2
+crap=2
+shit=2
+sh*t=2
+disappointing=2
+disappointed=2

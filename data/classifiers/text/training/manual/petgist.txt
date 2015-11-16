@@ -1,0 +1,11 @@
+pets
+pet
+aquarium
+aquariums
+bird
+birds
+cat
+cats
+dog
+dogs
+veterinary

@@ -1,0 +1,16 @@
+sad=1
+RIP=1
+demise=1
+:(=1
+:-(=1
+sucks=1
+awful=1
+pathetic=1
+disgusting=1
+crap=1
+shit=1
+sh*t=1
+disappointing=1
+disappointed=1
+bad=1
+worst=1

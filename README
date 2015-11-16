@@ -1,0 +1,62 @@
+README
+------
+
+*** BEGIN QUICKIE ***
+
+1. change Makefile.incl to specify directory paths.
+2. go to ./apis directory and choose your language. compile from the corresponding folder.
+3. grap the libraries you need from ./lib directory.
+
+*** END QUICKIE ***
+
+This project is called ir_cpp becos, its supposed to have code for Information Retrieval
+and most of the code is written in cpp. There are some python scripts here and there,
+which are used in lieu of pseudo code.
+
+/apis    - this directory provides apis to access ir_cpp. currently erlang alone is supported
+/lib     - libraries that are exported. compiling code in apis/* will copy libraries to this directory by default
+/include - all third party code must be checked in here and nowhere else
+/src     - all modules of this project are checked in here
+/test    - misc test code can be checked in here. however do not check in unit tests of
+           code in /src or /include. they should be in checked along with class files
+/local/lib     - each Makefile in each directory of each module must copy its library
+           (if present) here and nowhere else. copy the libraries from third party code
+           also to this directory
+/bin     - all binaries from projects in src and include are copied here
+/doc     - provide .txt or .html documentation here. its not necessay to check in papers
+/data    - check in static data in the /static_data folder.
+
+The following folders are suggested scaffolds for a running environment. Compilation
+should be agnostic to their existence.
+
+/configs
+/scripts
+/log
+
+Git Repo
+---------
+
+The following content is not checked into git
+
+/bin
+/lib
+/log/*.log
+/data/*.* (this only ignores files and not the static_data subfolder)
+
+Guidelines:
+
+1. Makefile     - provide a makefile in every code you check in and update the upper level
+                  makefiles to pick them up too.
+2. Coding Style - for consistency, use the following style guide for cpp code.
+                  http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml
+3. Additional file naming conventions
+   a. x_ means execute_binary. all production binaries should begin with x_
+   b. t_ means test_binary. provide a t_ for all x_.
+
+4. DEBUG conventions
+   a. provide a class_acronym_DEBUG macro in all your classes, which itself will be predicated upon DEBUG being > 0
+   b. provide m_debug_level member function in classes. set it with macro value or command line value. unless m_debug_level is > 0, don't print any error message.
+   c. if DEBUG is set to 1, provide basic and fatal error message. this typically accompany return -1
+   d. other error messages and warnings can be sent at debug levels 2 and 3.
+   e. use debug levels above 3 for info messages.
+   Note: use of macros is to reduce lib/binary sizes.

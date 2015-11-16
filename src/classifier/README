@@ -1,0 +1,15 @@
+Classifier class uses the following
+
+  1. ClassifierConfig
+  2. CorpusManager
+  3. NaiveBayesClassifier
+
+A specialized Class is expected to inherit the Classifier class by providing the following functions:
+
+  1. GetCorpus
+
+The following are some of the functions which are agnostic to the super class and are hence written in NaiveBayesClassifier.
+
+  1. MakeDictionary - some naive bayes code is rewritten within gist_maker. this MakeDictionary function converts the corpus files into a map to be used by gist_maker.
+  2. GenerateProbabilities - this converts raw frequency counts into Naive Bayes Probabilities.
+  3. MakePriorProbabilitiesFile - prior probabilites used in NBC. this can be ignored while training.

@@ -1,0 +1,11 @@
+like=2
+love=2
+nice=2
+excellent=2
+awesome=2
+amazing=2
+recommend=2
+woot=2
+w00t=2
+beautiful=2
+whatay=2

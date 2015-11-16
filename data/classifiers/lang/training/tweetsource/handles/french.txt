@@ -1,0 +1,17 @@
+AFPTV_fr=2
+France24_fr=1
+JoJoFranceParis=2
+Le_Figaro=2
+PSGNEWS=2
+RFI_Francais=2
+SarkozyActu=1
+Slatefr=1
+TCFR=2
+bbcafrique=2
+lci=2
+le_Parisien_PSG=1
+le_Parisien_fr=2
+lemondfr=1
+nordeclair=1
+ouestfrancefr=1
+rue89=1

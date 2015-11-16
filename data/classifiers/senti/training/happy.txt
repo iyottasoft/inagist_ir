@@ -1,0 +1,11 @@
+lol=2
+LOL=2
+wow=2
+haha=2
+hahaha=2
+hahahaha=2
+happy=2
+hehe=2
+hehehe=2
+hehehehe=2
+pleased=2

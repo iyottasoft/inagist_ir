@@ -1,0 +1,9 @@
+A_Wennerberg=2
+DagensKvack=1
+Folkbladet=1
+Nyheter24=2
+SCB_nyheter=2
+SVPolitik=1
+hdhbg=1
+peterhogberg=1
+sydsvenskan=1

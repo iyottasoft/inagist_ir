@@ -1,0 +1,12 @@
+pisces
+aquarius
+capricorn
+sagittarius
+scorpio
+libra
+virgo
+leo
+cancer
+gemini
+taurus
+aries

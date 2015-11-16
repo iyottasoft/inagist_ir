@@ -1,0 +1,14 @@
+business
+advertising
+ads
+agriculture
+biotech
+biomedical
+construction
+forestry
+government
+greensolution
+humanresource
+logistics
+marketing
+metals

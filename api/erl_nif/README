@@ -1,0 +1,11 @@
+Project Name: ERL_NIF
+
+1. This folder contains erlang, c and cpp code pieces to make your erlang modules talk to ir_cpp libraries.
+
+2. ir_cpp libraries are all written in cpp. c is merely used as an intermediary to make erlang talk to cpp.
+
+3. Makefile provided in this folder can be used to produce shared libraries and used as nifs in your erlang code.
+
+4. 'make clean; make all' will produce all the libraries, but will take some time to compile.
+
+5. 'make clean; make gist' for example will produce libgist_collector.so library file in the specified directory. (default export lib directory is ../../lib/. you can change this by modifying ../Makefile.incl)

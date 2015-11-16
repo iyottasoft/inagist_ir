@@ -1,0 +1,10 @@
+Demarit=1
+KauppalehtiFi=1
+SuomenKuvalehti=2
+aleksieskelinen=2
+ksmlfi=2
+pauliinaviitami=2
+taloussanomat=1
+uusisuomi=1
+vaalikeskustelu=2
+yleolotila=2
