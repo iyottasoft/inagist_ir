@@ -18,10 +18,10 @@
 
 #ifdef DEBUG
 #if DEBUG>0
-#define KE_DEBUG DEBUG
+#define GM_DEBUG DEBUG
 #endif
 #endif
-//#define KE_DEBUG 6
+//#define GM_DEBUG 6
 
 #define I18N_ENABLED 1
 #define PROFANITY_CHECK_ENABLED 1
@@ -47,7 +47,7 @@ class KeyTuplesExtracter {
            , const char* sentiment_words_file=NULL
 #endif // SENTIMENT_ENABLED
           );
-  int DeInit();
+  int Clear();
   int SetDebugLevel(unsigned int& debug_level);
   int LoadClassifierDictionary(const char* classifier_dictionary_file);
 
@@ -127,6 +127,13 @@ class KeyTuplesExtracter {
 #endif // SENTIMENT_ENABLED
                 );
 
+  int GetURLwords(unsigned char* url_buffer, const unsigned int& url_buffer_len,
+                  const unsigned int& url_len,
+                  unsigned char* url_words_buffer,
+                  const unsigned int& url_words_buffer_len,
+                  unsigned int& url_words_len,
+                  unsigned int& url_words_count);
+
  private:
   // variables
   unsigned int m_debug_level;
@@ -141,12 +148,14 @@ class KeyTuplesExtracter {
 #endif // SENTIMENT_ENABLED
 
   // functions
-  bool IsIgnore(char*& ptr);
+  bool IsIgnore(char*& ptr, int& ignore_intent);
   inline void Insert(unsigned char* buffer, unsigned int& current_len,
                      unsigned char* str_to_add, const unsigned int& str_len,
                      unsigned int& buffer_content_count);
   inline void Insert(unsigned char* buffer, unsigned int& current_len,
                      std::string& str, unsigned int& buffer_content_count);
+  inline void CopyMapInto(std::map<std::string, int>& sentence_intent_words,
+                          std::map<std::string, int>& intent_words);
   DISALLOW_COPY_AND_ASSIGN(KeyTuplesExtracter);
 };
 

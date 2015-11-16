@@ -2,7 +2,6 @@
 #include <iostream>
 #include <fstream>
 #include <set>
-#include <cassert>
 #include <cstring>
 #include <cstdlib>
 #include "twitter_api.h"
@@ -91,6 +90,7 @@ int GetInputText(const unsigned int &input_type,
           return -1;
         }
       }
+      break;
     case 7:
       if (!input_value) {
         std::cerr << "ERROR: user handle needed" << std::endl;
@@ -102,11 +102,26 @@ int GetInputText(const unsigned int &input_type,
           return -1;
         }
       }
+      break;
+    case 8: // tweets with expanded urls
+      {
+        inagist_api::TwitterAPI ta;
+        bool expand_urls = true;
+        std::string user_name;
+        if (input_value && strlen(input_value) > 0) {
+          user_name = std::string(input_value);
+        }
+        if (ta.GetTweets(user_name, docs, expand_urls=true) < 0) {
+          std::cerr << "ERROR: could not get urls\n";
+          return -1;
+        }
+      }
+      break;
     default:
       break;
   }
 
-  return 0;
+  return docs.size();
 }
 
 } // namespace inagist_utils

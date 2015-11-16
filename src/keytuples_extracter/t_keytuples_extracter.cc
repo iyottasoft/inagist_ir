@@ -62,7 +62,7 @@ int GetKeyTuples(std::string text) {
 
   memset(buffer, 0, 1024);
 
-#ifndef KE_DEBUG
+#if KE_DEBUG <= 1
   if (!safe_status.empty()) {
     std::cout << "safe_status: " << safe_status << std::endl;
   }

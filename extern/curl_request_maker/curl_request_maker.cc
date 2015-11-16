@@ -1,4 +1,5 @@
 #include "curl_request_maker.h"
+#include <iostream>
 
 namespace inagist_api {
 
@@ -116,5 +117,43 @@ bool CurlRequestMaker::PerformGet(const std::string& get_url) {
 
   return false;
 }
+
+int CurlRequestMaker::GetLongURL(const std::string& url, std::string& long_url) {
+  PrepareStandardParams();
+
+  curl_easy_setopt(m_curl_handle, CURLOPT_URL, url.c_str());
+  curl_easy_setopt(m_curl_handle, CURLOPT_HEADER, 1);
+  curl_easy_setopt(m_curl_handle, CURLOPT_NOBODY, 1);
+  curl_easy_setopt(m_curl_handle, CURLOPT_TIMEOUT, 10);
+
+  // send http request
+  if (CURLE_OK != curl_easy_perform(m_curl_handle))
+    return -1;
+
+  std::string web_response;
+  if (m_call_back_data.length())
+    web_response = m_call_back_data;
+
+  size_t pos1 = 0;
+  size_t pos2 = 0;
+
+  if ((pos1 = web_response.find("Location: ")) != std::string::npos) {
+    pos1 += 10;
+    pos2 = web_response.find("\r", pos1);
+    if (pos2 == std::string::npos) {
+      pos2 = web_response.find("\n", pos1);
+    }
+    if (pos2 != std::string::npos) {
+      long_url.assign(web_response, pos1, pos2-pos1);
+    }
+    return 1;
+  } else {
+    long_url = url;
+    return 0;
+  }
+
+  return 0;
+}
+
 
 }

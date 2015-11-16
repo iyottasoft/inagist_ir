@@ -23,10 +23,6 @@ namespace inagist {
   // unless otherwise specified functions return 0 or NULL or false as default
   // return values less than 0 are likely error codes
 
-using std::cout;
-using std::endl;
-using std::string;
-
 GistMaker::GistMaker() {
   m_debug_level = 0;
 #ifdef GM_DEBUG
@@ -37,11 +33,6 @@ GistMaker::GistMaker() {
 }
 
 GistMaker::~GistMaker() {
-#ifdef GM_DEBUG
-  if (m_debug_level > 3) {
-    std::cout << "GistMaker destructor\n";
-  }
-#endif // GM_DEBUG
   if (Clear() < 0)
     std::cerr << "ERROR: Clear() failed\n";
 }
@@ -570,21 +561,21 @@ int GistMaker::MakeGist(char* str
 
   if ((count = MakeGist(text_buffer, text_buffer_len, text_len
 #ifdef PROFANITY_CHECK_ENABLED
-                  , profanity_status_buffer, profanity_status_buffer_len
+                  , (char *) profanity_status_buffer, profanity_status_buffer_len
 #endif // PROFANITY_CHECK_ENABLED
 #ifdef SCRIPT_DETECTION_ENABLED
-                  , script_buffer, script_buffer_len
+                  , (char *) script_buffer, script_buffer_len
 #endif // SCRIPT_DETECTION_ENABLED
 #ifdef NAMED_ENTITIES_ENABLED
-                  , named_entities_buffer, named_entities_buffer_len,
+                  , (unsigned char*) named_entities_buffer, named_entities_buffer_len,
                   named_entities_len, named_entities_count
 #endif // NAMED_ENTITIES_ENABLED
 #ifdef KEYWORDS_ENABLED
-                  , keywords_buffer, keywords_buffer_len,
+                  , (unsigned char*) keywords_buffer, keywords_buffer_len,
                   keywords_len, keywords_count
 #endif // KEYWORDS_ENABLED
 #ifdef KEYPHRASE_ENABLED
-                  , keyphrases_buffer, keyphrases_buffer_len,
+                  , (unsigned char*) keyphrases_buffer, keyphrases_buffer_len,
                   keyphrases_len, keyphrases_count
 #endif // KEYPHRASE_ENABLED
 #ifdef LANG_ENABLED
@@ -872,7 +863,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   *script_buffer = '\0';
   std::string script = "UU";
   strcpy(script_buffer, "UU");
-  string script_temp;
+  std::string script_temp;
   unsigned int script_count = 0;
   unsigned int english_count = 0;
 
@@ -906,9 +897,9 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef GM_DEBUG
       if (m_debug_level > 0) {
         std::cout << "EXCEPTION 1: utf8 returned exception" << std::endl;
-        cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+        std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
       }
-#endif // GM_DEBUG
+#endif // KE_DEBUG
       return -1;
     }
 #else // I18N_ENABLED
@@ -1021,6 +1012,14 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   locations_len = 0;
   locations_count = 0;
 #endif // LOCATION_ENABLED
+
+#ifdef SENTIMENT_ENABLED
+  sentiment_valence = 0;
+#endif // SENTIMENT_ENABLED
+
+#ifdef INTENT_ENABLED
+  intent_valence = 0;
+#endif // INTENT_ENABLED
 
   unsigned char *probe = NULL;
   unsigned char current_word_delimiter;
@@ -1153,7 +1152,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
 #ifdef GM_DEBUG
   if (m_debug_level > 5)
-    cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+    std::cout << std::endl << "INFO: original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
 #endif // GM_DEBUG
 
   // go to the first word, ignoring handles and punctuations
@@ -1166,7 +1165,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   if (!ptr || '\0' == *ptr) {
 #ifdef GM_DEBUG
     if (m_debug_level > 2)
-      cout << "INFO: either the input is empty or has ignore words only" << endl;
+      std::cout << "INFO: either the input is empty or has ignore words only" << std::endl;
 #endif // GM_DEBUG
     return 0;
   }
@@ -1221,7 +1220,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef GM_DEBUG
     if (m_debug_level > 1) {
       std::cout << "EXCEPTION 1: utf8 returned exception" << std::endl;
-      cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+      std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
     }
 #endif // GM_DEBUG
     return -1;
@@ -1231,12 +1230,12 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // I18N_ENABLED
 
   while (ptr && ' ' != *ptr && '\0' != *ptr &&
-         !(is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &sentence_punct_intent, &punct_senti))) {
+         !(is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))) {
 
     if (!ptr || '\0' == *ptr) {
 #ifdef GM_DEBUG
       if (m_debug_level > 2) {
-        cout << "INFO: either the input is empty or has ignore words only" << endl;
+        std::cout << "INFO: either the input is empty or has ignore words only" << std::endl;
       }
 #endif // GM_DEBUG
       return 0;
@@ -1280,7 +1279,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef GM_DEBUG
       if (m_debug_level > 1) {
         std::cout << "EXCEPTION 2: utf8 returned exception" << std::endl;
-        cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+        std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
       }
 #endif // GM_DEBUG
       return -1;
@@ -1293,7 +1292,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   if (!ptr) {
 #ifdef GM_DEBUG
     if (m_debug_level > 2) {
-      cout << "INFO: either the input is corrupt or the only word is ignore word" << endl;
+      std::cout << "INFO: either the input is corrupt or the only word is ignore word" << std::endl;
     }
 #endif // GM_DEBUG
     return 0;
@@ -1330,7 +1329,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       num_stop_words++;
 #ifdef GM_DEBUG
       if (m_debug_level > 5) {
-        cout << "current word: " << current_word << " :stopword" << endl;
+        std::cout << "current word: " << current_word << " :stopword" << std::endl;
       }
 #endif // GM_DEBUG
     } else {
@@ -1343,7 +1342,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       num_dict_words++;
 #ifdef GM_DEBUG
       if (m_debug_level > 5) {
-        cout << "current word: " << current_word << " :dictionary word" << endl;
+        std::cout << "current word: " << current_word << " :dictionary word" << std::endl;
       }
 #endif // GM_DEBUG
     } else {
@@ -1459,7 +1458,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef GM_DEBUG
     if (m_debug_level > 1) {
       std::cout << "EXCEPTION 3: utf8 returned exception" << std::endl;
-      cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+      std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
     }
 #endif // GM_DEBUG
     return -1;
@@ -1562,7 +1561,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef GM_DEBUG
     if (m_debug_level > 1) {
       std::cout << "EXCEPTION 4: utf8 returned exception" << std::endl;
-      cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+      std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
     }
 #endif // GM_DEBUG
     return -1;
@@ -1596,30 +1595,30 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
 #ifdef GM_DEBUG
       if (m_debug_level > 5) {
-        cout << endl;
-        cout << "prev word: " << prev_word << endl;
-        cout << "current word: " << current_word << endl;
-        cout << "next word: " << next_word << endl;
-        cout << endl;
+        std::cout << std::endl;
+        std::cout << "prev word: " << prev_word << std::endl;
+        std::cout << "current word: " << current_word << std::endl;
+        std::cout << "next word: " << next_word << std::endl;
+        std::cout << std::endl;
       }
 #endif // GM_DEBUG
 
 #ifdef GM_DEBUG
       if (m_debug_level > 5) {
-        cout << "prev word: " << prev_word << " :starts with caps" << endl;
+        std::cout << "prev word: " << prev_word << " :starts with caps" << std::endl;
         if (current_word_all_caps) {
           if (current_word_len > 1 && current_word_len < 6) {
-            cout << "current word: " << current_word << " :all caps" << endl;
+            std::cout << "current word: " << current_word << " :all caps" << std::endl;
           } else {
-            cout << "current word: " << current_word << " :all caps but bad length" << endl;
+            std::cout << "current word: " << current_word << " :all caps but bad length" << std::endl;
           }
         } else if (current_word_has_mixed_case) {
-          cout << "current word: " << current_word << " :mixed case" << endl;
+          std::cout << "current word: " << current_word << " :mixed case" << std::endl;
         } else if (current_word_caps) {
-          cout << "current word: " << current_word << " :starts with caps" << endl;
+          std::cout << "current word: " << current_word << " :starts with caps" << std::endl;
         }
         if (next_word_caps)
-          cout << "next word: " << next_word << " :starts with caps" << endl;
+          std::cout << "next word: " << next_word << " :starts with caps" << std::endl;
       }
 #endif // GM_DEBUG
 
@@ -1644,7 +1643,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
           num_stop_words++;
 #ifdef GM_DEBUG
           if (m_debug_level > 5) {
-            cout << "next word: " << next_word << " :stopword" << endl;
+            std::cout << "next word: " << next_word << " :stopword" << std::endl;
           }
 #endif // GM_DEBUG
         } else {
@@ -1657,7 +1656,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
           num_dict_words++;
 #ifdef GM_DEBUG
           if (m_debug_level > 5) {
-            cout << "next word: " << next_word << " :dictionary word" << endl;
+            std::cout << "next word: " << next_word << " :dictionary word" << std::endl;
           }
 #endif // GM_DEBUG
         } else {
@@ -1783,7 +1782,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
           (current_word_len > 1) && !current_word_hashtag) {
 #ifdef GM_DEBUG
         if (m_debug_level > 5) {
-          cout << current_word_start << ": normal word" << endl;
+          std::cout << current_word_start << ": normal word" << std::endl;
         }
 #endif // GM_DEBUG
         num_normal_words++;
@@ -1882,7 +1881,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       } else {
 #ifdef GM_DEBUG
         if (m_debug_level > 5) {
-          cout << "stopword entity candidate: " << stopwords_entity_start << endl;
+          std::cout << "stopword entity candidate: " << stopwords_entity_start << std::endl;
         }
 #endif // GM_DEBUG
 
@@ -2001,7 +2000,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       } else {
 #ifdef GM_DEBUG
         if (m_debug_level > 5) {
-          cout << "caps entity candidate: " << caps_entity_start << endl;
+          std::cout << "caps entity candidate: " << caps_entity_start << std::endl;
         }
 #endif // GM_DEBUG
 
@@ -2047,7 +2046,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef GM_DEBUG
           if (m_debug_level > 1) {
             temp_len = stopwords_keyphrase_end - stopwords_keyphrase_start;
-            cout << endl << string((char *) stopwords_keyphrase_start, temp_len) << " :keyphrase";
+            std::cout << std::endl << std::string((char *) stopwords_keyphrase_start, temp_len) << " :keyphrase";
           }
 #endif // GM_DEBUG
 
@@ -2088,7 +2087,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef NAMED_ENTITIES_ENABLED
         } else {
           if (stopwords_keyphrase_start > stopwords_keyphrase_end)
-            cout << "ERROR: keyphrase markers are wrong\n";
+            std::cout << "ERROR: keyphrase markers are wrong\n";
         }
 #endif // NAMED_ENTITIES_ENABLED
         stopwords_keyphrase_start = NULL;
@@ -2102,8 +2101,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         if (stopwords_entity_start < stopwords_entity_end) {
 #ifdef GM_DEBUG
           if (m_debug_level > 1) {
-            cout << endl
-                 << string((char *) stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) \
+            std::cout << std::endl
+                 << std::string((char *) stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) \
                  << " :entity by stopword";
           }
 #endif // GM_DEBUG
@@ -2234,7 +2233,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // TEXT_CLASSIFICATION_ENABLED || LOCATION_ENABLED
           }
         } else {
-          cout << "ERROR: stopwords entity markers are wrong\n";
+          std::cout << "ERROR: stopwords entity markers are wrong\n";
         }
         stopwords_entity_start = NULL;
         stopwords_entity_end = NULL;
@@ -2245,8 +2244,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
         if (caps_entity_start < caps_entity_end) {
 #ifdef GM_DEBUG
           if (m_debug_level > 4) {
-            cout << endl \
-                 << string((char *) caps_entity_start, (caps_entity_end - caps_entity_start)) \
+            std::cout << std::endl \
+                 << std::string((char *) caps_entity_start, (caps_entity_end - caps_entity_start)) \
                  << " :entity by caps";
           }
 #endif // GM_DEBUG
@@ -2363,7 +2362,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #endif // TEXT_CLASSIFICATION_ENABLED || LOCATION_ENABLED
           }
         } else {
-          cout << "ERROR: caps entity markers are wrong\n";
+          std::cout << "ERROR: caps entity markers are wrong\n";
         }
         caps_entity_start = NULL;
         caps_entity_end = NULL;
@@ -2400,7 +2399,8 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
       // aposhtropheS
       if (!current_word_stop && !current_word_dict && current_word_has_apostropheS) {
 #ifdef KEYWORDS_ENABLED
-        if ((keywords_len + current_word_len + 1) < keywords_buffer_len) {
+        // we are checking if there is enough space for the word without "'s" in keywords_buffer
+        if ((keywords_len + current_word_len - 1) < keywords_buffer_len) {
           Insert(keywords_buffer, keywords_len,
                  current_word_start, current_word_len-2,
                  keywords_count); 
@@ -2457,9 +2457,9 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
 #ifdef GM_DEBUG
       if (m_debug_level > 5) {
-        cout << endl;
+        std::cout << std::endl;
       }
-#endif // GM_DEBUG
+#endif // KE_DEBUG
 
       // exit conditions
       if ('\0' == current_word_delimiter || !next_word_start || '\0' == *next_word_start) {
@@ -2739,7 +2739,7 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 #ifdef GM_DEBUG
           if (m_debug_level > 0) {
             std::cout << "Exception 5: " << code_point << " " << probe << std::endl;
-            cout << endl << "original query: " << std::string((char *) text_buffer) << endl << endl;
+            std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
           }
 #endif // GM_DEBUG
           return -1;
@@ -2756,14 +2756,14 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
 
 #ifdef GM_DEBUG
   if (m_debug_level > 5) {
-    cout << endl << "\norginal query: " << std::string((char *) text_buffer) << endl;
-    cout << "num words: " << num_words << endl;
-    cout << "num caps words: " << num_caps_words << endl;
-    cout << "num stop words: " << num_stop_words << endl;
-    cout << "num dict words: " << num_dict_words << endl;
-    cout << "num numeric words: " << num_numeric_words << endl;
-    cout << "num mixed words: " << num_mixed_words << endl;
-    cout << "num normal words: " << num_normal_words << endl;
+    std::cout << std::endl << "\norginal query: " << std::string((char *) text_buffer) << std::endl;
+    std::cout << "num words: " << num_words << std::endl;
+    std::cout << "num caps words: " << num_caps_words << std::endl;
+    std::cout << "num stop words: " << num_stop_words << std::endl;
+    std::cout << "num dict words: " << num_dict_words << std::endl;
+    std::cout << "num numeric words: " << num_numeric_words << std::endl;
+    std::cout << "num mixed words: " << num_mixed_words << std::endl;
+    std::cout << "num normal words: " << num_normal_words << std::endl;
   }
 #endif // GM_DEBUG
 
@@ -2779,12 +2779,12 @@ int GistMaker::MakeGist(unsigned char* text_buffer, const unsigned int& text_buf
   if ((num_normal_words == 0) && (num_dict_words != 0 || num_words > 5)) {
 #ifdef GM_DEBUG
     if (m_debug_level > 1) {
-      cout << "INFO: no normal words. ignoring named_entities." << endl;
+      std::cout << "INFO: no normal words. ignoring named_entities." << std::endl;
     }
     if (m_debug_level > 3) {
-      cout << "num normal words: " << num_normal_words << endl;
-      cout << "num words: " << num_words << endl;
-      cout << "num dict words: " << num_dict_words << endl;
+      std::cout << "num normal words: " << num_normal_words << std::endl;
+      std::cout << "num words: " << num_words << std::endl;
+      std::cout << "num dict words: " << num_dict_words << std::endl;
     }
 #endif // GM_DEBUG
     *named_entities_buffer = '\0';

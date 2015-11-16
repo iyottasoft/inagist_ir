@@ -51,6 +51,8 @@ class TwitterAPI {
   static int GetFollowerTweets(const std::string& handle,
                         std::set<std::string>& tweets,
                         const unsigned int required_count=15);
+
+  static int GetTweets(std::string& user_name, std::set<std::string>& tweets, bool expand_urls=false);
 };
 
 }

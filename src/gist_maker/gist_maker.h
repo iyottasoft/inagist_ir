@@ -24,7 +24,7 @@
 #define GM_DEBUG DEBUG
 #endif
 #endif
-//#define GM_DEBUG 3
+//#define GM_DEBUG 5
 
 namespace inagist {
 

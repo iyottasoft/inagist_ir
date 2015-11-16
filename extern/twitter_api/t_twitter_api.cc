@@ -10,14 +10,14 @@ int main(int argc, char* argv[]) {
 
   if (argc < 2 || argc > 4) {
     std::cerr << "Usage: " << argv[0] \
-              << "\n\t<0-7, 0-tweets, 1-lists, 2-list_statuses, 3-list_members, 4-usersummary, 5-userdetails, 6-followers, 7-followertweets>" \
+              << "\n\t<0-7, 0-tweets, 1-lists, 2-list_statuses, 3-list_members, 4-usersummary, 5-userdetails, 6-followers, 7-followertweets, 8-urls>" \
               << "\n\t[<user_name>]" \
               << "\n\t[<output_file>]\n";
     return -1;
   }
 
   int request_type = atoi(argv[1]);
-  assert((request_type >= 0) && (request_type <= 7) && (request_type == 0 || argc > 2));
+  assert((request_type >= 0) && (request_type <= 8) && (request_type == 0 || request_type == 8 || argc > 2));
 
   inagist_api::TwitterAPI tapi;
   std::string user_name;
@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
         } else {
           std::set<std::string>::iterator set_iter;
           for (set_iter = tweets.begin(); set_iter != tweets.end(); set_iter++) {
-            if (ofs.is_open()) {
+            if (!ofs.is_open()) {
               std::cout << *set_iter << std::endl;
             } else {
               ofs << *set_iter << std::endl;
@@ -201,6 +201,19 @@ int main(int argc, char* argv[]) {
         tweets.clear();
       }
       break;
+    case 8:
+      {
+        std::set<std::string> urls;
+        bool expand_urls = true;
+        if (tapi.GetTweets(user_name, urls, expand_urls=true) < 0) { // user_name can be empty
+          std::cerr << "ERROR: GetUrls failed\n";
+        }
+        std::set<std::string>::iterator set_iter;
+        for (set_iter = urls.begin(); set_iter != urls.end(); set_iter++) {
+          std::cout << *set_iter << std::endl;
+        }
+        urls.clear();
+      }
     default:
       break;
   }

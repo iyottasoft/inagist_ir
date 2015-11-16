@@ -23,10 +23,10 @@ int TwitterAPI::GetPublicTimeLine(std::set<std::string>& tweets) {
 
   int num_docs = 0;
 
-  std::string url = "http://api.twitter.com/1/statuses/public_timeline.json";
+  std::string curl = "http://api.twitter.com/1/statuses/public_timeline.json?include_entities=1";
   std::string reply_message;
   // get top tweets from inagist api
-  if (curl_request_maker.GetTweets(url.c_str()) < 0) {
+  if (curl_request_maker.GetTweets(curl.c_str()) < 0) {
     std::cout << "ERROR: couldn't get top tweets" << std::endl;
   } else {
     curl_request_maker.GetLastWebResponse(reply_message);
@@ -46,18 +46,150 @@ int TwitterAPI::GetPublicTimeLine(std::set<std::string>& tweets) {
       // to be specific, the response is a json array
       JSONArray tweet_array = json_value->AsArray();
       JSONValue *tweet_value;
+      std::string tweet;
+      std::string url;
+      std::string expanded_url;
+      size_t pos = 0;
 
       for (unsigned int i=0; i < tweet_array.size(); i++) {
         // don't know if array element shud again be treated as json value
         // but, what the heck. lets put it as value and then get the object
         tweet_value = tweet_array[i];
-        if (false == tweet_value->IsObject())
+        if (false == tweet_value->IsObject()) {
           std::cout << "ERROR: tweet_value is not an object" << std::endl;
+          continue;
+        }
         JSONObject tweet_object = tweet_value->AsObject();
 
         // now lets work on the json object thus obtained
         if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
-          tweets.insert(tweet_object["text"]->AsString());
+          // this was easy, found the text of the tweet
+          tweet = tweet_object["text"]->AsString();
+
+          // now lets find the urls in the tweet, if any - to replace shortened urls with expanded ones
+          if ((tweet_object.find("entities") != tweet_object.end()) && tweet_object["entities"]->IsObject()) {
+            JSONObject entities_object = tweet_object["entities"]->AsObject();
+            if ((entities_object.find("urls") != entities_object.end()) && entities_object["urls"]->IsArray()) {
+              JSONArray url_array = entities_object["urls"]->AsArray();
+              for (unsigned int j=0; j < url_array.size(); j++) {
+                JSONObject url_object = url_array[j]->AsObject();
+                if ((url_object.find("url") != url_object.end()) && url_object["url"]->IsString()) {
+                  url = url_object["url"]->AsString();
+                }
+                if (!url.empty()) {
+                  if (url_object.find("expanded_url") != url_object.end() &&
+                      url_object["expanded_url"]->IsString()) {
+                    expanded_url = url_object["expanded_url"]->AsString();
+                  }
+                  if ((pos = tweet.find(url)) != std::string::npos) {
+                    tweet.replace(pos, url.length(), expanded_url.c_str(), expanded_url.length());
+                  }
+                }
+              }
+            }
+          }
+
+          tweets.insert(tweet);
+          num_docs++;
+        }
+        //delete tweet_value;
+      }
+    }
+    delete json_value;
+  }
+
+  return num_docs;
+}
+
+int TwitterAPI::GetTweets(std::string& user_name, std::set<std::string>& tweets, bool expand_urls) {
+
+  if (!expand_urls) {
+    return GetUserTimeLine(user_name, tweets);
+  }
+
+  inagist_api::CurlRequestMaker curl_request_maker;
+
+  int num_docs = 0;
+
+  std::string curl;
+  if (!user_name.empty()) {
+    curl = "http://api.twitter.com/1/statuses/user_timeline.json?include_entities=1";
+    curl += "&screen_name=" + user_name;
+  } else {
+    curl = "http://api.twitter.com/1/statuses/public_timeline.json?include_entities=1";
+  }
+
+  std::string reply_message;
+  std::string url;
+  std::string expanded_url;
+  std::string real_url;
+
+  // get top tweets from inagist api
+  if (curl_request_maker.GetTweets(curl.c_str()) < 0) {
+    std::cout << "ERROR: couldn't get top tweets" << std::endl;
+  } else {
+    curl_request_maker.GetLastWebResponse(reply_message);
+    // the response is in json format
+    JSONValue *json_value = JSON::Parse(reply_message.c_str());
+    if (!json_value) {
+      std::cout << "ERROR: JSON::Parse failed\n";
+    } else {
+      JSONObject json_obj = json_value->AsObject();
+      if (json_obj.find("error") != json_obj.end() && json_obj["error"]->IsString()) {
+        std::string error = json_obj["error"]->AsString();
+        std::cout << "Twitter Error: " << error << std::endl;
+        delete json_value;
+        return -1;
+      }
+
+      // to be specific, the response is a json array
+      JSONArray tweet_array = json_value->AsArray();
+      JSONValue *tweet_value;
+      std::string tweet;
+      size_t pos = 0;
+
+      for (unsigned int i=0; i < tweet_array.size(); i++) {
+        // don't know if array element shud again be treated as json value
+        // but, what the heck. lets put it as value and then get the object
+        tweet_value = tweet_array[i];
+        if (false == tweet_value->IsObject()) {
+          std::cout << "ERROR: tweet_value is not an object" << std::endl;
+          continue;
+        }
+        JSONObject tweet_object = tweet_value->AsObject();
+
+        // now lets work on the json object thus obtained
+        if (tweet_object.find("text") != tweet_object.end() && tweet_object["text"]->IsString()) {
+          // this was easy, found the text of the tweet
+          tweet = tweet_object["text"]->AsString();
+
+          // now lets find the urls in the tweet, if any - to replace shortened urls with expanded ones
+          if ((tweet_object.find("entities") != tweet_object.end()) && tweet_object["entities"]->IsObject()) {
+            JSONObject entities_object = tweet_object["entities"]->AsObject();
+            if ((entities_object.find("urls") != entities_object.end()) && entities_object["urls"]->IsArray()) {
+              JSONArray url_array = entities_object["urls"]->AsArray();
+              for (unsigned int j=0; j < url_array.size(); j++) {
+                JSONObject url_object = url_array[j]->AsObject();
+                if ((url_object.find("url") != url_object.end()) && url_object["url"]->IsString()) {
+                  url = url_object["url"]->AsString();
+                }
+                if (!url.empty()) {
+                  if (url_object.find("expanded_url") != url_object.end() &&
+                      url_object["expanded_url"]->IsString()) {
+                    expanded_url = url_object["expanded_url"]->AsString();
+                    if (curl_request_maker.GetLongURL(expanded_url, real_url) < 0) {
+                      std::cout << "ERROR: couldn't get top tweets" << std::endl;
+                    }
+                  }
+                  if ((pos = tweet.find(url)) != std::string::npos) {
+                    tweet.replace(pos, url.length(), real_url.c_str(), real_url.length());
+                  }
+                }
+              }
+            }
+          }
+
+          tweets.insert(tweet);
           num_docs++;
         }
         //delete tweet_value;
@@ -70,6 +202,11 @@ int TwitterAPI::GetPublicTimeLine(std::set<std::string>& tweets) {
 }
 
 int TwitterAPI::GetUserTimeLine(const std::string& user_name, std::set<std::string>& tweets) {
+
+  if (user_name.empty()) {
+    return GetPublicTimeLine(tweets);
+  }
+
   inagist_api::CurlRequestMaker curl_request_maker;
 
   int num_docs = 0;

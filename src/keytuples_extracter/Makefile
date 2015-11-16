@@ -1,11 +1,11 @@
 include ../../Makefile.incl
 PROJECT = keytuplesextracter
-PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL} -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED
+PROJECTFLAGS = -DDEBUG=${DEBUG_LEVEL} -DI18N_ENABLED -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DTEXT_CLASSIFICATION_ENABLED #-DSCRIPT_DETECTION_ENABLED -DPROFANITY_CHECK_ENABLED -DNAMED_ENTITIES_ENABLED -DKEYPHRASE_ENABLED -DKEYWORDS_ENABLED -DLANG_ENABLED -DTEXT_CLASSIFICATION_ENABLED -DINTENT_ENABLED -DSENTIMENT_ENABLED
 ARCHIVE = ar -r
 
-INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../../extern/curl_request_maker -I../../extern/inagist_api -I../../extern/twitter_api -I../utils -I../script_detector
+INCLUDE_DIR = -I. -I/usr/include/c++/4.4/ -I../../include/utfcpp -I../../extern/curl_request_maker -I../../extern/inagist_api -I../../extern/twitter_api -I../utils -I../script_detector -I../url_words_extracter
 
-LIBS = -l${PROJECT} -lscriptdetector -lutils -ltwitterapi -linagistapi -lcurlrequestmaker -ljsonparser -lcurl
+LIBS = -l${PROJECT} -lurlwordsextracter -lscriptdetector -lutils -ltwitterapi -linagistapi -lcurlrequestmaker -ljsonparser -lcurl
 
 LIB = ${LIB_DIR}/lib${PROJECT}.so
 

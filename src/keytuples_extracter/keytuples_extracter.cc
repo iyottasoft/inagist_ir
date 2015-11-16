@@ -4,6 +4,7 @@
 #include "keytuples_config.h"
 #include "script_detector_utils.h"
 #include "string_utils.h"
+#include "url_words_extracter.h"
 
 #ifdef I18N_ENABLED
 #include "utf8.h"
@@ -23,16 +24,16 @@ namespace inagist_trends {
 
 KeyTuplesExtracter::KeyTuplesExtracter() {
   m_debug_level = 0;
-#ifdef KE_DEBUG
-  if (KE_DEBUG > 0) {
-    m_debug_level = KE_DEBUG;
+#ifdef GM_DEBUG
+  if (GM_DEBUG > 0) {
+    m_debug_level = GM_DEBUG;
   }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
 }
 
 KeyTuplesExtracter::~KeyTuplesExtracter() {
-  if (DeInit() < 0)
-    std::cerr << "ERROR: DeInit() failed\n";
+  if (Clear() < 0)
+    std::cerr << "ERROR: Clear() failed\n";
 }
 
 int KeyTuplesExtracter::SetDebugLevel(unsigned int& debug_level) {
@@ -86,11 +87,11 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
 
   // load dictionaries
   if (stopwords_file) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     if (m_debug_level > 3) {
       std::cout << "Info: loading stopwords file - " << stopwords_file << std::endl;
     }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     int ret = m_stopwords_dictionary.Load(stopwords_file);
     if (ret < 0) {
       std::cerr << "ERROR: could not load stopwords file " \
@@ -100,11 +101,11 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
   }
 
   if (dictionary_file) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     if (m_debug_level > 3) {
       std::cout << "Info: loading dictionary file - " << dictionary_file << std::endl;
     }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     int ret = m_dictionary.Load(dictionary_file);
     if (ret < 0) {
       std::cerr << "ERROR: could not load dictionary file " \
@@ -114,11 +115,11 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
   }
 
   if (unsafe_dictionary_file) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     if (m_debug_level > 3) {
       std::cout << "Info: loading unsafe dictionary file - " << unsafe_dictionary_file << std::endl;
     }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     int ret = m_unsafe_dictionary.Load(unsafe_dictionary_file);
     if (ret < 0) {
       std::cerr << "ERROR: could not load unsafe file " \
@@ -129,11 +130,11 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
 
 #ifdef INTENT_ENABLED
   if (intent_words_file) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     if (m_debug_level > 3) {
       std::cout << "Info: loading intent words file - " << intent_words_file << std::endl;
     }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     int ret = m_intent_words_dictionary.Load(intent_words_file);
     if (ret < 0) {
       std::cerr << "ERROR: could not load intent words file " \
@@ -145,11 +146,11 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
 
 #ifdef SENTIMENT_ENABLED
   if (sentiment_words_file) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     if (m_debug_level > 3) {
       std::cout << "Info: loading sentiment words file - " << sentiment_words_file << std::endl;
     }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     int ret = m_sentiment_words_dictionary.Load(sentiment_words_file);
     if (ret < 0) {
       std::cerr << "ERROR: could not load sentiment words file: " \
@@ -157,6 +158,21 @@ int KeyTuplesExtracter::Init(const char *stopwords_file,
       return -1;
     }
   }
+#endif // SENTIMENT_ENABLED
+
+  return 0;
+}
+
+int KeyTuplesExtracter::Clear() {
+
+  m_stopwords_dictionary.Clear();
+  m_dictionary.Clear();
+  m_unsafe_dictionary.Clear();
+#ifdef INTENT_ENABLED
+  m_intent_words_dictionary.Clear();
+#endif // INTENT_ENABLED
+#ifdef SENTIMENT_ENABLED
+  m_sentiment_words_dictionary.Clear();
 #endif // SENTIMENT_ENABLED
 
   return 0;
@@ -172,56 +188,33 @@ int KeyTuplesExtracter::LoadClassifierDictionary(const char* classifier_dictiona
   return 0;
 }
 
-int KeyTuplesExtracter::DeInit() {
-  //std::cout << "deinit done\n";
-  return 0;
-}
-
-bool KeyTuplesExtracter::IsIgnore(char *&ptr) {
+bool KeyTuplesExtracter::IsIgnore(char *&ptr, int& ignore_intent) {
   if (!ptr || '\0' == *ptr)
     return false;
-  // anyword with starts with punct (except #) is ignore word
+  // anyword which starts with punct (except #) is ignore word
   if ((ispunct(*ptr) && '#' != *ptr && ' ' != *(ptr+1)) ||
       !strncmp(ptr, "#fb", 3) ||
       !strncmp(ptr, "#FB", 3) ||
       !strncmp(ptr, "FB ", 3) ||
-      !strncmp(ptr, "fb ", 3) ||
-      !strncmp(ptr, "http://", 7) ||
-      !strncmp(ptr, "www.", 4) ||
-      !strncmp(ptr, "RT ", 3)) {
+      !strncmp(ptr, "fb ", 3)
+     ) {
     while (' ' != *(ptr+1) && '\0' != *(ptr+1)) {
       ptr++;
     }
     return true;
+  } else if (!strncmp(ptr, "http://", 7) ||
+             !strncmp(ptr, "www.", 4) ||
+             !strncmp(ptr, "t.co/", 5) ||
+             !strncmp(ptr, "lx.im/", 6) ||
+             !strncmp(ptr, "RT ", 3)
+            ) {
+    while (' ' != *(ptr+1) && '\0' != *(ptr+1)) {
+      ptr++;
+    }
+    ignore_intent = -1;
+    return true;
   }
   return false;
-}
-
-// this is an helper function used to make a|b|c| kind of strings given a, b, c in consecutive calls
-inline void KeyTuplesExtracter::Insert(unsigned char* buffer, unsigned int& current_len,
-                   unsigned char* str_to_add, const unsigned int& str_len,
-                   unsigned int& buffer_content_count) { 
-  if (strstr((char *) buffer, (char *) str_to_add) == NULL) {
-    strncpy((char *) buffer + current_len, (char *) str_to_add, str_len);
-    current_len += str_len;
-    strcpy((char *) buffer + current_len, "|");
-    current_len += 1;
-    buffer_content_count++;
-  }
-}
-
-inline void KeyTuplesExtracter::Insert(unsigned char* buffer, unsigned int& current_len,
-                                    std::string& str, unsigned int& buffer_content_count) { 
-  unsigned int len = str.length();
-  if (len > 0) {
-    if (strstr((char *) buffer, str.c_str()) == NULL) {
-      strncpy((char *) buffer + current_len, str.c_str(), len);
-      current_len += len;
-      strcpy((char *) buffer + current_len, "|");
-      current_len += 1;
-      buffer_content_count++;
-    }
-  }
 }
 
 int KeyTuplesExtracter::GetKeyTuples(char* str
@@ -265,13 +258,17 @@ int KeyTuplesExtracter::GetKeyTuples(char* str
   memset(text_buffer, '\0', MAX_DEBUG_BUFFER_LEN);
   strcpy((char *) text_buffer, str);
 
+#ifdef PROFANITY_CHECK_ENABLED
   char profanity_status_buffer[10];
   memset(profanity_status_buffer, '\0', 10);
   unsigned int profanity_status_buffer_len = 10;
+#endif // PROFANITY_CHECK_ENABLED
 
+#ifdef SCRIPT_DETECTION_ENABLED
   char script_buffer[4];
   unsigned int script_buffer_len = 4;
   memset(script_buffer, '\0', 4);
+#endif // SCRIPT_DETECTION_ENABLED
 
 #ifdef NAMED_ENTITIES_ENABLED
   unsigned char named_entities_buffer[MAX_DEBUG_BUFFER_LEN];
@@ -377,18 +374,22 @@ int KeyTuplesExtracter::GetKeyTuples(char* str
 
   text_buffer[0] = '\0';
 
-#ifdef PROFANITY_CHECK_ENABLED
-  profanity_status.assign(profanity_status_buffer, profanity_status_buffer_len);
-#endif // PROFANITY_CHECK_ENABLED
-
 #ifdef SCRIPT_DETECTION_ENABLED
-  script.assign(script_buffer, script_buffer_len);
+  if (strlen(script_buffer) > 0) {
+    script.assign(script_buffer);
+  }
 #endif // SCRIPT_DETECTION_ENABLED
+
+#ifdef PROFANITY_CHECK_ENABLED
+  if (strlen(profanity_status_buffer) > 0) {
+    profanity_status.assign(profanity_status_buffer);
+  }
+#endif // PROFANITY_CHECK_ENABLED
 
 #if defined NAMED_ENTITIES_ENABLED || defined KEYWORDS_ENABLED || defined KEYPHRASE_ENABLED || defined TEXT_CLASSIFICATION_ENABLED || defined LANG_ENABLED
   unsigned char* pch1 = NULL;
   unsigned char* pch2 = NULL;
-  unsigned char ch;
+  unsigned char uch;
 #endif
 
 #ifdef NAMED_ENTITIES_ENABLED
@@ -397,10 +398,10 @@ int KeyTuplesExtracter::GetKeyTuples(char* str
     pch2 = pch1;
     pch1 = (unsigned char*) strchr((char *) pch2, '|');
     while (pch1 && pch1 != '\0') {
-      ch = *pch1;
+      uch = *pch1;
       *pch1 = '\0';
       named_entities_set.insert((char *) pch2);
-      *pch1 = ch;
+      *pch1 = uch;
       pch2 = pch1 + 1;
       pch1 = (unsigned char*) strchr((char *) pch2, '|');
     }
@@ -414,10 +415,10 @@ int KeyTuplesExtracter::GetKeyTuples(char* str
     pch2 = pch1;
     pch1 = (unsigned char*) strchr((char *) pch2, '|');
     while (pch1 && pch1 != '\0') {
-      ch = *pch1;
+      uch = *pch1;
       *pch1 = '\0';
       keywords_set.insert((char *) pch2);
-      *pch1 = ch;
+      *pch1 = uch;
       pch2 = pch1 + 1;
       pch1 = (unsigned char*) strchr((char *) pch2, '|');
     }
@@ -431,10 +432,10 @@ int KeyTuplesExtracter::GetKeyTuples(char* str
     pch2 = pch1;
     pch1 = (unsigned char*) strchr((char *) pch2, '|');
     while (pch1 && pch1 != '\0') {
-      ch = *pch1;
+      uch = *pch1;
       *pch1 = '\0';
       keyphrases_set.insert((char *) pch2);
-      *pch1 = ch;
+      *pch1 = uch;
       pch2 = pch1 + 1;
       pch1 = (unsigned char*) strchr((char *) pch2, '|');
     }
@@ -448,10 +449,10 @@ int KeyTuplesExtracter::GetKeyTuples(char* str
     pch2 = pch1;
     pch1 = (unsigned char*) strchr((char *) pch2, '|');
     while (pch1 && pch1 != '\0') {
-      ch = *pch1;
+      uch = *pch1;
       *pch1 = '\0';
       lang_words_set.insert((char *) pch2);
-      *pch1 = ch;
+      *pch1 = uch;
       pch2 = pch1 + 1;
       pch1 = (unsigned char*) strchr((char *) pch2, '|');
     }
@@ -459,24 +460,83 @@ int KeyTuplesExtracter::GetKeyTuples(char* str
   lang_words_buffer[0] = '\0';
 #endif // LANG_ENABLED
 
+  unsigned char* pch3 = NULL;
+  unsigned char* pch4 = NULL;
+  unsigned char ch;
+
 #ifdef TEXT_CLASSIFICATION_ENABLED
   if (text_class_words_len > 0) {
-    pch1 = text_class_words_buffer;
-    pch2 = pch1;
-    pch1 = (unsigned char*) strchr((char *) pch2, '|');
-    while (pch1 && pch1 != '\0') {
-      ch = *pch1;
-      *pch1 = '\0';
-      text_class_words_set.insert((char *) pch2);
-      *pch1 = ch;
-      pch2 = pch1 + 1;
-      pch1 = (unsigned char*) strchr((char *) pch2, '|');
+    pch3 = text_class_words_buffer;
+    pch4 = pch3;
+    pch3 = (unsigned char*) strchr((char *) pch4, '|');
+    while (pch3 && pch3 != '\0') {
+      ch = *pch3;
+      *pch3 = '\0';
+      text_class_words_set.insert((char *) pch4);
+      *pch3 = ch;
+      pch4 = pch3 + 1;
+      pch3 = (unsigned char*) strchr((char *) pch4, '|');
     }
   }
   text_class_words_buffer[0] = '\0';
 #endif // TEXT_CLASSIFICATION_ENABLED
 
   return count;
+}
+
+// this is an helper function used to make a|b|c| kind of strings given a, b, c in consecutive calls
+inline void KeyTuplesExtracter::Insert(unsigned char* buffer, unsigned int& current_len,
+                   unsigned char* str_to_add, const unsigned int& str_len,
+                   unsigned int& buffer_content_count) { 
+  if (strstr((char *) buffer, (char *) str_to_add) == NULL) {
+    strncpy((char *) buffer + current_len, (char *) str_to_add, str_len);
+    current_len += str_len;
+    strcpy((char *) buffer + current_len, "|");
+    current_len += 1;
+    buffer_content_count++;
+  }
+}
+
+inline void KeyTuplesExtracter::Insert(unsigned char* buffer, unsigned int& current_len,
+                                    std::string& str, unsigned int& buffer_content_count) { 
+  unsigned int len = str.length();
+  if (len > 0) {
+    if (strstr((char *) buffer, str.c_str()) == NULL) {
+      strncpy((char *) buffer + current_len, str.c_str(), len);
+      current_len += len;
+      strcpy((char *) buffer + current_len, "|");
+      current_len += 1;
+      buffer_content_count++;
+    }
+  }
+}
+
+inline void KeyTuplesExtracter::CopyMapInto(std::map<std::string, int>& sentence_intent_words,
+                                   std::map<std::string, int>& intent_words) {
+   if (sentence_intent_words.empty())
+     return;
+
+   std::map<std::string, int>::iterator map_iter;
+   for (map_iter = sentence_intent_words.begin(); map_iter != sentence_intent_words.end(); map_iter++) {
+     intent_words.insert(std::pair<std::string, int> (map_iter->first, map_iter->second));
+   }
+}
+
+int KeyTuplesExtracter::GetURLwords(unsigned char* text_buffer, const unsigned int& text_buffer_len,
+                         const unsigned int& text_len,
+                         unsigned char* url_words_buffer,
+                         const unsigned int& url_words_buffer_len,
+                         unsigned int& url_words_len,
+                         unsigned int& url_words_count
+                        ) {
+  return URLwordsExtracter::GetURLwords(text_buffer, text_buffer_len, text_len,
+                     m_dictionary,
+                     m_stopwords_dictionary,
+                     m_unsafe_dictionary,
+                     url_words_buffer, url_words_buffer_len,
+                     url_words_len, url_words_count,
+                     m_debug_level
+                    );
 }
 
 int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned int& text_buffer_len,
@@ -584,12 +644,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
       }
 #endif // SCRIPT_DETECTION_ENABLED
     } catch (...) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
       if (m_debug_level > 0) {
         std::cout << "EXCEPTION 1: utf8 returned exception" << std::endl;
         std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
       }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
       return -1;
     }
 #else // I18N_ENABLED
@@ -621,9 +681,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
   // initialize parameters for other outputs
 #ifdef PROFANITY_CHECK_ENABLED
   if (!profanity_status_buffer) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     std::cerr << "ERROR: invalid profanity_status_buffer\n";
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     return -1;
   }
   *profanity_status_buffer = '\0';
@@ -631,9 +691,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
 #ifdef NAMED_ENTITIES_ENABLED
   if (!named_entities_buffer) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     std::cerr << "ERROR: invalid named_entities buffer\n";
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     return -1;
   }
   *named_entities_buffer = '\0';
@@ -643,9 +703,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
 #ifdef KEYWORDS_ENABLED
   if (!keywords_buffer) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     std::cerr << "ERROR: invalid keywords buffer\n";
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     return -1;
   }
   *keywords_buffer = '\0';
@@ -655,9 +715,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
 #ifdef KEYPHRASE_ENABLED
   if (!keyphrases_buffer) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     std::cerr << "ERROR: invalid keyphrases buffer\n";
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     return -1;
   }
   *keyphrases_buffer = '\0';
@@ -667,9 +727,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
 #ifdef LANG_ENABLED
   if (!lang_words_buffer) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     std::cerr << "ERROR: invalid lang_words buffer\n";
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     return -1;
   }
   *lang_words_buffer = '\0';
@@ -680,9 +740,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
 #ifdef TEXT_CLASSIFICATION_ENABLED
   if (!text_class_words_buffer) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     std::cerr << "ERROR: invalid text_class_words buffer\n";
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     return -1;
   }
   *text_class_words_buffer = '\0';
@@ -691,6 +751,14 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
   std::set<std::string> text_class_words_set;
   std::string text_class_word;
 #endif // TEXT_CLASSIFICATION_ENABLED
+
+#ifdef SENTIMENT_ENABLED
+  sentiment_valence = 0;
+#endif // SENTIMENT_ENABLED
+
+#ifdef INTENT_ENABLED
+  intent_valence = 0;
+#endif // INTENT_ENABLED
 
   unsigned char *probe = NULL;
   unsigned char current_word_delimiter;
@@ -730,16 +798,19 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #endif // KEYPHRASE_ENABLED
 
   unsigned char *sentence_start = NULL;
+  bool sentence_is_question = false;
 
 #ifdef INTENT_ENABLED
   unsigned char *intent_start = NULL;
   unsigned char *intent_end = NULL;
   std::string intent_phrase;
-  std::map<std::string, int> intent_words;
+  std::map<std::string, int> sentence_intent_words;
+  std::map<std::string, int> all_intent_words;
   bool prev_word_negation = false;
   bool current_word_negation = false;
   bool next_word_negation = false;
   int intent_value = 0;
+  int sentence_intent_value = 0;
 #endif // INTENT_ENABLED
 
   // TODO (balaji) use bit map and masks to reduce comparisons
@@ -791,33 +862,41 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
 #ifdef INTENT_ENABLED
   int first_person_valence = 0;
+  int class_word_valence = 0;
 #endif // INTENT_ENABLED
   int punct_intent = 0;
+  int ignore_intent = 0;
+  int sentence_punct_intent = 0;
 
 #ifdef PROFANITY_CHECK_ENABLED
   bool text_has_unsafe_words = false;
 #endif // PROFANITY_CHECK_ENABLED
 
+  unsigned char* hashword_start = NULL;
+  std::string hashtag_phrase;
+  std::string hashword;
+
   // the whole thing starts here again!
   ptr = text_buffer;
+  end = ptr + text_len;
 
-#ifdef KE_DEBUG
-  if (m_debug_level > 3)
+#ifdef GM_DEBUG
+  if (m_debug_level > 5)
     std::cout << std::endl << "INFO: original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
-#endif // KE_DEBUG
+#endif // GM_DEBUG
 
   // go to the first word, ignoring handles and punctuations
   unsigned char *prev = NULL;
-  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && inagist_utils::IsPunct((char *&) ptr, (char *) prev, (char *) ptr+1, &punct_intent, &punct_senti)) || IsIgnore((char *&) ptr))) {
+  while (ptr && '\0' != *ptr && (' ' == *ptr || (ispunct(*ptr) && inagist_utils::IsPunct((char *&) ptr, (char *) prev, (char *) ptr+1, &sentence_punct_intent, &punct_senti)) || IsIgnore((char *&) ptr, ignore_intent))) {
     prev = ptr;
     ptr++;
   }
 
   if (!ptr || '\0' == *ptr) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     if (m_debug_level > 2)
       std::cout << "INFO: either the input is empty or has ignore words only" << std::endl;
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     return 0;
   }
 
@@ -828,12 +907,10 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
   current_word_start = ptr;
   sentence_start = ptr;
-
-#ifdef KE_DEBUG
-  if (m_debug_level > 3) {
-    std::cout << "sentence start: " << sentence_start << std::endl;
-  }
-#endif // KE_DEBUG
+  sentence_punct_intent = 0;
+#ifdef INTENT_ENABLED
+  sentence_is_question = false;
+#endif // INTENT_ENABLED
 
   if (isupper(*ptr)) {
     current_word_caps = true;
@@ -870,12 +947,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
     }
 #endif // SCRIPT_DETECTION_ENABLED
   } catch (...) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     if (m_debug_level > 1) {
       std::cout << "EXCEPTION 1: utf8 returned exception" << std::endl;
       std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
     }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     return -1;
   }
 #else // I18N_ENABLED
@@ -886,11 +963,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
          !(is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))) {
 
     if (!ptr || '\0' == *ptr) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
       if (m_debug_level > 2) {
         std::cout << "INFO: either the input is empty or has ignore words only" << std::endl;
       }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
       return 0;
     }
 
@@ -898,6 +975,20 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
     if (isupper(*ptr)) {
       if (!current_word_all_caps) {
         current_word_has_mixed_case = true;
+        if (current_word_hashtag) {
+          if (!hashword_start) {
+            hashword_start = current_word_start;
+          }
+          hashword = std::string((const char*) hashword_start, 0, (ptr-hashword_start));
+          if (!hashtag_phrase.empty()) {
+            hashtag_phrase += " ";
+          }
+          hashtag_phrase += hashword; 
+#ifdef TEXT_CLASSIFICATION_ENABLED
+          text_class_words_set.insert(hashword);
+#endif // TEXT_CLASSIFICATION_ENABLED
+          hashword_start = ptr;
+        }
       }
       *ptr += 32;
     } else if (islower(*ptr)) {
@@ -929,12 +1020,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
       }
 #endif // SCRIPT_DETECTION_ENABLED
     } catch (...) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
       if (m_debug_level > 1) {
         std::cout << "EXCEPTION 2: utf8 returned exception" << std::endl;
         std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
       }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
       return -1;
     }
 #else // I18N_ENABLED
@@ -943,11 +1034,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
   } // while loop
 
   if (!ptr) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     if (m_debug_level > 2) {
       std::cout << "INFO: either the input is corrupt or the only word is ignore word" << std::endl;
     }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     return 0;
   }
 
@@ -960,6 +1051,24 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
     current_word_has_apostropheS = current_word_end-2;
   }
   current_word_precedes_punct = is_punct;
+  if (current_word_hashtag) {
+    if (hashword_start) {
+      hashword = std::string((const char*) hashword_start, 0, (current_word_end - hashword_start));
+      if (!hashtag_phrase.empty()) {
+        hashtag_phrase += " ";
+      }
+      hashtag_phrase += hashword; 
+#ifdef TEXT_CLASSIFICATION_ENABLED
+      text_class_words_set.insert(hashword);
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
+      Insert(named_entities_buffer, named_entities_len,
+             (unsigned char*) hashtag_phrase.c_str(), hashtag_phrase.length(),
+             named_entities_count);
+#endif // NAMED_ENTITIES_ENABLED
+      hashword_start = NULL;
+    }
+  }
   num_words++;
 
 #ifdef I18N_ENABLED
@@ -980,11 +1089,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
     if (m_stopwords_dictionary.Find(current_word) == 1) {
       current_word_stop = true;
       num_stop_words++;
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
       if (m_debug_level > 5) {
         std::cout << "current word: " << current_word << " :stopword" << std::endl;
       }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     } else {
       current_word_stop = false;
     }
@@ -993,11 +1102,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
     if (m_dictionary.Find(current_word) == 1) {
       current_word_dict = true;
       num_dict_words++;
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
       if (m_debug_level > 5) {
         std::cout << "current word: " << current_word << " :dictionary word" << std::endl;
       }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     } else {
       current_word_dict = false;
     }
@@ -1011,12 +1120,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #ifdef SENTIMENT_ENABLED
     if (m_sentiment_words_dictionary.Find(current_word, dict_value) == 1) {
       sentiment_valence += dict_value;
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
       if (m_debug_level > 3) {
         std::cout << "word:" << current_word \
                   << " sentiment_dict_value: " << dict_value << std::endl;
       }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     }
 #endif // SENTIMENT_ENABLED
 
@@ -1026,9 +1135,15 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
         first_person_valence = 1;
       } else if (dict_value == 20) {
         current_word_negation = true;
+      } else if (dict_value == 30) {
+        class_word_valence = 1;
       } else {
+        if (dict_value == 40) {
+          dict_value = 0;
+          sentence_is_question = true;
+        }
         intent_start = current_word_start;
-        intent_value = dict_value;
+        sentence_intent_value = dict_value;
       }
     }
 #endif
@@ -1089,12 +1204,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
     }
 #endif // SCRIPT_DETECTION_ENABLED
   } catch (...) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     if (m_debug_level > 1) {
       std::cout << "EXCEPTION 3: utf8 returned exception" << std::endl;
       std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
     }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     return -1;
   }
 #else // I18N_ENABLED
@@ -1106,8 +1221,8 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
   while ('\0' != *ptr &&
          (' ' == *ptr ||
           (ispunct(*ptr) &&
-           (is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))) ||
-          (is_ignore_word = IsIgnore((char *&) ptr))
+           (is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &sentence_punct_intent, &punct_senti))) ||
+          (is_ignore_word = IsIgnore((char *&) ptr, ignore_intent))
          )
         ) {
     current_word_precedes_ignore_word |= is_ignore_word;
@@ -1117,11 +1232,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
   if (!ptr || '\0' == *ptr) {
     next_word_start = NULL;
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     if (m_debug_level > 2) {
       std::cout << "INFO: only one word found\n";
     }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     return 0;
   } else {
     if ('#' == *ptr) {
@@ -1131,12 +1246,34 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
     next_word_start = ptr;
     num_words++;
     if (current_word_precedes_ignore_word || current_word_precedes_punct) {
-      sentence_start = next_word_start;
-#ifdef KE_DEBUG
-      if (m_debug_level > 5) {
-        std::cout << "sentence start: " << sentence_start << std::endl;
+#ifdef GM_DEBUG
+      if (m_debug_level > 3) {
+        std::cout << "sentence: " \
+                  << std::string((char *) sentence_start, current_word_end-sentence_start) \
+                  << std::endl; 
+#ifdef INTENT_ENABLED
+        if (sentence_is_question) {
+           std::cout << "sentence is question" << std::endl;
+        }
+#endif // INTENT_ENABLED
       }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
+
+#ifdef INTENT_ENABLED
+      if (sentence_punct_intent > 0) {
+        if (sentence_is_question) {
+          punct_intent = 1;
+        } else {
+          sentence_intent_words.clear();
+        }
+      }
+      CopyMapInto(sentence_intent_words, all_intent_words);
+      sentence_intent_words.clear();
+#endif // INTENT_ENABLED
+
+      sentence_start = next_word_start;
+      sentence_is_question = false;
+      sentence_punct_intent = 0;
     }
 
     // remember - this is start of word
@@ -1162,20 +1299,20 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
     if (probe < end) {
       code_point = utf8::next(probe, end);
     } else {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
       if (m_debug_level > 0) {
         std::cout << "ERROR: invalid pointers?" << std::endl;
       }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
       return 0;
     }
   } catch (...) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
     if (m_debug_level > 1) {
       std::cout << "EXCEPTION 4: utf8 returned exception" << std::endl;
       std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
     }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
     return -1;
   }
 #else // I18N_ENABLED
@@ -1187,7 +1324,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
     is_punct = false;
     if (' ' == *probe || '\0' == *probe ||
         (ispunct(*probe) &&
-         (is_punct = inagist_utils::IsPunct((char *&) probe, (char *) probe-1, (char *) probe+1, &punct_intent, &punct_senti))
+         (is_punct = inagist_utils::IsPunct((char *&) probe, (char *) probe-1, (char *) probe+1, &sentence_punct_intent, &punct_senti))
         )
        ) {
 
@@ -1203,9 +1340,27 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
         if (next_word_len > 2 && memcmp((char *) next_word_end - 2, "'s", 2) == 0) {
           next_word_has_apostropheS = next_word_end-2;
         }
+        if (next_word_hashtag) {
+          if (hashword_start) {
+            hashword = std::string((const char*) hashword_start, 0, (next_word_end - hashword_start));
+            if (!hashtag_phrase.empty()) {
+              hashtag_phrase += " ";
+            }
+            hashtag_phrase += hashword; 
+#ifdef TEXT_CLASSIFICATION_ENABLED
+            text_class_words_set.insert(hashword);
+#endif // TEXT_CLASSIFICATION_ENABLED
+#ifdef NAMED_ENTITIES_ENABLED
+            Insert(named_entities_buffer, named_entities_len,
+                   (unsigned char*) hashtag_phrase.c_str(), hashtag_phrase.length(),
+                   named_entities_count);
+#endif // NAMED_ENTITIES_ENABLED
+            hashword_start = NULL;
+          }
+        }
       }
 
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
       if (m_debug_level > 5) {
         std::cout << std::endl;
         std::cout << "prev word: " << prev_word << std::endl;
@@ -1213,9 +1368,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
         std::cout << "next word: " << next_word << std::endl;
         std::cout << std::endl;
       }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
 
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
       if (m_debug_level > 5) {
         std::cout << "prev word: " << prev_word << " :starts with caps" << std::endl;
         if (current_word_all_caps) {
@@ -1232,7 +1387,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
         if (next_word_caps)
           std::cout << "next word: " << next_word << " :starts with caps" << std::endl;
       }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
 
       if (next_word_start) {
 #ifdef I18N_ENABLED
@@ -1253,11 +1408,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
         if (m_stopwords_dictionary.Find(next_word) == 1) {
           next_word_stop = true;
           num_stop_words++;
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
           if (m_debug_level > 5) {
             std::cout << "next word: " << next_word << " :stopword" << std::endl;
           }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
         } else {
           next_word_stop = false;
         }
@@ -1266,11 +1421,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
         if (m_dictionary.Find(next_word) == 1) {
           next_word_dict = true;
           num_dict_words++;
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
           if (m_debug_level > 5) {
             std::cout << "next word: " << next_word << " :dictionary word" << std::endl;
           }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
         } else {
           next_word_dict = false;
         }
@@ -1284,11 +1439,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #ifdef SENTIMENT_ENABLED
         if (m_sentiment_words_dictionary.Find(next_word, dict_value) == 1) {
           sentiment_valence += dict_value;
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
           if (m_debug_level > 3) {
             std::cout << "word:" << next_word << " dict_value: " << dict_value << std::endl;
           }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
         }
 #endif // SENTIMENT_ENABLED
 
@@ -1302,15 +1457,21 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
               first_person_valence = 1;
             } else if (dict_value == 20) {
               next_word_negation = true;
+            } else if (dict_value == 30) {
+              class_word_valence = 1;
             } else {
+              if (dict_value == 40) {
+                dict_value = 0;
+                sentence_is_question = true;
+              }
               flag = true;
-              intent_value = dict_value;
+              sentence_intent_value = dict_value;
             }
           }
           if (!flag) {
             intent_end = current_word_end;
             intent_phrase.assign((const char*) intent_start, 0, intent_end-intent_start);
-            intent_words[intent_phrase] = intent_value;
+            sentence_intent_words[intent_phrase] = sentence_intent_value;
           }
         }
         if (!flag) {
@@ -1319,11 +1480,17 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
               first_person_valence = 1;
             } else if (dict_value == 20) {
               next_word_negation = true;
+            } else if (dict_value == 30) {
+              class_word_valence = 1;
             } else {
+              if (dict_value == 40) {
+                dict_value = 0;
+                sentence_is_question = true;
+              }
               if (!current_word_negation) {
                 flag = true;
                 intent_start = next_word_start;
-                intent_value = dict_value;
+                sentence_intent_value = dict_value;
               }
             }
           }
@@ -1363,23 +1530,16 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
       if (current_word_ascii) {
 #endif // I18N_ENABLED
 
-      if (!current_word_stop && !current_word_dict && !current_word_caps &&
+      if (!current_word_stop && /* !current_word_dict && */ !current_word_caps &&
           !current_word_starts_num && !current_word_has_mixed_case &&
           (current_word_len > 1) && !current_word_hashtag) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
         if (m_debug_level > 5) {
           std::cout << current_word_start << ": normal word" << std::endl;
         }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
         num_normal_words++;
       }
-
-#ifdef LANG_ENABLED
-      if (!current_word_starts_num && !current_word_has_mixed_case &&
-          (current_word_len > 1) && !current_word_hashtag) {
-        lang_words_set.insert(std::string((char *) current_word_start));
-      }
-#endif // LANG_ENABLED
 
       if (current_word_has_mixed_case)
         num_mixed_words++;
@@ -1472,11 +1632,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
           }
         }
       } else {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
         if (m_debug_level > 5) {
           std::cout << "stopword entity candidate: " << stopwords_entity_start << std::endl;
         }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
 
         if (!current_word_caps || current_word_stop || current_word_dict || current_word_starts_num) {
           if (stopwords_entity_start != prev_word_start) {
@@ -1591,11 +1751,11 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
           }
         }
       } else {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
         if (m_debug_level > 5) {
           std::cout << "caps entity candidate: " << caps_entity_start << std::endl;
         }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
 
         if (current_word_stop ||
             !current_word_caps ||
@@ -1636,12 +1796,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
         if (stopwords_keyphrase_start != caps_entity_start || stopwords_keyphrase_end != caps_entity_end) {
 #endif // NAMED_ENTITIES_ENABLED
 
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
           if (m_debug_level > 1) {
             temp_len = stopwords_keyphrase_end - stopwords_keyphrase_start;
             std::cout << std::endl << std::string((char *) stopwords_keyphrase_start, temp_len) << " :keyphrase";
           }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
 
           if (strncmp((char *) stopwords_keyphrase_end-2, "\'s", 2) == 0) {
             temp_len = ((stopwords_keyphrase_end-2) - stopwords_keyphrase_start);
@@ -1692,13 +1852,13 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
       // write entities
       if (NULL != stopwords_entity_start && NULL != stopwords_entity_end) {
         if (stopwords_entity_start < stopwords_entity_end) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
           if (m_debug_level > 1) {
             std::cout << std::endl
                  << std::string((char *) stopwords_entity_start, (stopwords_entity_end - stopwords_entity_start)) \
                  << " :entity by stopword";
           }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
           if (strncmp((char *) stopwords_entity_end-2, "\'s", 2) == 0) {
             temp_len = (stopwords_entity_end-2) - stopwords_entity_start;
 #ifdef NAMED_ENTITIES_ENABLED
@@ -1789,13 +1949,13 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
       //  note, keyphrase code above refers to start of caps_entity_start; any change here, will also affect that
       if (NULL != caps_entity_start && NULL != caps_entity_end) {
         if (caps_entity_start < caps_entity_end) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
           if (m_debug_level > 4) {
             std::cout << std::endl \
                  << std::string((char *) caps_entity_start, (caps_entity_end - caps_entity_start)) \
                  << " :entity by caps\n";
           }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
           if (strncmp((char *) caps_entity_end-2, "\'s", 2) == 0) {
             temp_len = (caps_entity_end-2) - caps_entity_start;
 #ifdef NAMED_ENTITIES_ENABLED
@@ -1890,6 +2050,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
         }
       }
       if (!current_word_stop && !current_word_dict && current_word_has_apostropheS) {
+        // we are checking if there is enough space for the word without "'s" in keywords_buffer
         if ((keywords_len + current_word_len - 1) < keywords_buffer_len) {
           Insert(keywords_buffer, keywords_len,
                  current_word_start, current_word_len-2,
@@ -1905,6 +2066,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
         }
       }
       if (!current_word_stop && !current_word_dict && current_word_has_apostropheS) {
+        // we are checking if there is enough space for the word without "'s" in text_class_words_buffer
         if ((text_class_words_len + current_word_len - 1) < text_class_words_buffer_len) {
           Insert(text_class_words_buffer, text_class_words_len,
                  current_word_start, current_word_len-2,
@@ -1913,15 +2075,42 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
       }
 #endif // KEYWORDS_ENABLED elif TEXT_CLASSIFICATION_ENABLED
 
+      // intent
+      if ('\0' == current_word_delimiter || !next_word_start || '\0' == *next_word_start) {
+#ifdef GM_DEBUG
+        if (m_debug_level > 3) {
+          std::cout << "sentence: " \
+                    << std::string((char *) sentence_start, end-sentence_start) \
+                    << std::endl; 
+#ifdef INTENT_ENABLED
+          if (sentence_is_question) {
+             std::cout << "sentence is question" << std::endl;
+          }
+#endif // INTENT_ENABLED
+        }
+#endif // GM_DEBUG
+#ifdef INTENT_ENABLED
+        if (sentence_punct_intent > 0) {
+          if (sentence_is_question) {
+            punct_intent = 1;
+          } else {
+            sentence_intent_words.clear();
+          }
+        }
+        CopyMapInto(sentence_intent_words, all_intent_words);
+        sentence_intent_words.clear();
+#endif // INTENT_ENABLED
+      }
+
 #ifdef I18N_ENABLED
       }
 #endif // I18N_ENABLED
 
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
       if (m_debug_level > 5) {
         std::cout << std::endl;
       }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
 
       // exit conditions
       if ('\0' == current_word_delimiter || !next_word_start || '\0' == *next_word_start) {
@@ -2010,9 +2199,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
         while (('\0' != *ptr)
                && (' ' == *ptr
                    || (ispunct(*ptr) &&
-                      (is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &punct_intent, &punct_senti))
+                      (is_punct = inagist_utils::IsPunct((char *&) ptr, (char *) ptr-1, (char *) ptr+1, &sentence_punct_intent, &punct_senti))
                       )
-                   || (is_ignore_word = IsIgnore((char *&) ptr))
+                   || (is_ignore_word = IsIgnore((char *&) ptr, ignore_intent))
                   )
               ) {
           current_word_precedes_ignore_word |= is_ignore_word;
@@ -2028,22 +2217,69 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
           next_word_start = ptr;
           num_words++;
           if (current_word_precedes_ignore_word) {
-            sentence_start = next_word_start;
-#ifdef KE_DEBUG
-            if (m_debug_level > 5) {
-              std::cout << "sentence start: " << sentence_start << std::endl;
+#ifdef GM_DEBUG
+            if (m_debug_level > 3) {
+              std::cout << "sentence: " \
+                        << std::string((char *) sentence_start, next_word_start-sentence_start) \
+                        << std::endl; 
+              if (sentence_is_question) {
+                 std::cout << "sentence is question" << std::endl;
+              }
             }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
+#ifdef INTENT_ENABLED
+            if (sentence_punct_intent > 0) {
+              if (sentence_is_question) {
+                punct_intent = 1;
+              } else {
+                sentence_intent_words.clear();
+              }
+            }
+            CopyMapInto(sentence_intent_words, all_intent_words);
+            sentence_intent_words.clear();
+            sentence_punct_intent = 0;
+#endif // INTENT_ENABLED
+
+            sentence_start = next_word_start;
+            sentence_is_question = false;
           }
 
           // this code is to ignore publisher name in "CNN Breaking News : blah blah" and take only the blah blah part
+          // this also sets the sentence_start - pay close attention. bad piece of coding here!
           if (current_word_precedes_punct) {
-            sentence_start = next_word_start;
-#ifdef KE_DEBUG
-            if (m_debug_level > 5) {
-              std::cout << "sentence start: " << sentence_start << std::endl;
+            if (',' != current_word_delimiter &&
+                '*' != current_word_delimiter &&
+                '/' != current_word_delimiter &&
+                '\'' != current_word_delimiter &&
+                '\"' != current_word_delimiter &&
+                '$' != current_word_delimiter
+               ) {
+#ifdef GM_DEBUG
+                if (m_debug_level > 3) {
+                  std::cout << "sentence: " \
+                            << std::string((char *) sentence_start, next_word_start-sentence_start) \
+                            << std::endl; 
+                  if (sentence_is_question) {
+                     std::cout << "sentence is question" << std::endl;
+                  }
+                }
+#endif // GM_DEBUG
+#ifdef INTENT_ENABLED
+              if (sentence_punct_intent > 0) {
+                if (sentence_is_question) {
+                  punct_intent = 1;
+                } else {
+                  sentence_intent_words.clear();
+                }
+              }
+              CopyMapInto(sentence_intent_words, all_intent_words);
+              sentence_intent_words.clear();
+              sentence_punct_intent = 0;
+#endif // INTENT_ENABLED
+
+              sentence_start = next_word_start;
+              sentence_is_question = false;
             }
-#endif // KE_DEBUG
             if (':' == current_word_delimiter ||
                 '>' == current_word_delimiter ||
                 '-' == current_word_delimiter ||
@@ -2117,6 +2353,20 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
       if (isupper(*probe)) {
         if (!next_word_all_caps) {
           next_word_has_mixed_case = true;
+          if (next_word_hashtag) {
+            if (!hashword_start) {
+              hashword_start = next_word_start;
+            }
+            hashword = std::string((const char*) hashword_start, 0, (probe - hashword_start));
+            if (!hashtag_phrase.empty()) {
+              hashtag_phrase += " ";
+            }
+            hashtag_phrase += hashword; 
+#ifdef TEXT_CLASSIFICATION_ENABLED
+            text_class_words_set.insert(hashword);
+#endif // TEXT_CLASSIFICATION_ENABLED
+            hashword_start = probe;
+          }
         }
         *probe += 32;
       } else if (islower(*probe)) {
@@ -2151,12 +2401,12 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
           }
 #endif // SCRIPT_DETECTION_ENABLED
         } catch (...) {
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
           if (m_debug_level > 0) {
             std::cout << "Exception 5: " << code_point << " " << probe << std::endl;
             std::cout << std::endl << "original query: " << std::string((char *) text_buffer) << std::endl << std::endl;
           }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
           return -1;
         }
 #else // I18N_ENABLED
@@ -2167,9 +2417,9 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
   } // end of gigantic if
   probe = NULL;
   ptr = NULL;
+  end = NULL;
 
-
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
   if (m_debug_level > 5) {
     std::cout << std::endl << "\norginal query: " << std::string((char *) text_buffer) << std::endl;
     std::cout << "num words: " << num_words << std::endl;
@@ -2180,25 +2430,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
     std::cout << "num mixed words: " << num_mixed_words << std::endl;
     std::cout << "num normal words: " << num_normal_words << std::endl;
   }
-#endif // KE_DEBUG
-
-#ifdef NAMED_ENTITIES_ENABLED
-  if ((num_normal_words == 0) && (num_dict_words != 0 || num_words > 5)) {
-#ifdef KE_DEBUG
-    if (m_debug_level > 1) {
-      std::cout << "INFO: no normal words. ignoring named_entities." << std::endl;
-    }
-    if (m_debug_level > 3) {
-      std::cout << "num normal words: " << num_normal_words << std::endl;
-      std::cout << "num words: " << num_words << std::endl;
-      std::cout << "num dict words: " << num_dict_words << std::endl;
-    }
-#endif // KE_DEBUG
-    *named_entities_buffer = '\0';
-    named_entities_len = 0;
-    named_entities_count = 0;
-  }
-#endif // NAMED_ENTITIES_ENABLED
+#endif // GM_DEBUG
 
 #ifdef PROFANITY_CHECK_ENABLED
   if (text_has_unsafe_words)
@@ -2209,6 +2441,22 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #endif // PROFANITY_CHECK_ENABLED
 
 #ifdef NAMED_ENTITIES_ENABLED
+  if ((num_normal_words == 0) && (num_dict_words != 0 || num_words > 5)) {
+#ifdef GM_DEBUG
+    if (m_debug_level > 1) {
+      std::cout << "INFO: no normal words. ignoring named_entities." << std::endl;
+    }
+    if (m_debug_level > 3) {
+      std::cout << "num normal words: " << num_normal_words << std::endl;
+      std::cout << "num words: " << num_words << std::endl;
+      std::cout << "num dict words: " << num_dict_words << std::endl;
+    }
+#endif // GM_DEBUG
+    *named_entities_buffer = '\0';
+    named_entities_len = 0;
+    named_entities_count = 0;
+  }
+
   ret_val += named_entities_count;
 #endif // NAMED_ENTITIES_ENABLED
 
@@ -2278,35 +2526,47 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 
 #ifdef INTENT_ENABLED
   std::map<std::string, int>::iterator intent_iter;
-  for (intent_iter = intent_words.begin(); intent_iter != intent_words.end(); intent_iter++) {
-#ifdef KE_DEBUG
-  if (m_debug_level > 2) {
-    std::cout << "intent= " << intent_iter->first << ":" << intent_iter->second << std::endl;
-  }
-#endif // KE_DEBUG
+  for (intent_iter = all_intent_words.begin(); intent_iter != all_intent_words.end(); intent_iter++) {
+#ifdef GM_DEBUG
+    if (m_debug_level > 2) {
+      std::cout << "intent= " << intent_iter->first << ":" << intent_iter->second << std::endl;
+    }
+#endif // GM_DEBUG
     intent_valence += intent_iter->second;
   }
-#ifdef KE_DEBUG
-  if (m_debug_level > 2) {
-    std::cout << "init intent_valence: " << intent_valence << std::endl;
+  all_intent_words.clear();
+
+  // if no intent word is present, don't consider additional indicators
+  if (intent_valence > 0) {
+    intent_valence += first_person_valence;
+    intent_valence += punct_intent;
+    intent_valence += ignore_intent;
+    intent_valence += class_word_valence;
   }
-#endif // KE_DEBUG
-  intent_valence += first_person_valence;
-  intent_valence += punct_intent;
-#ifdef KE_DEBUG
+
+#ifdef GM_DEBUG
   if (m_debug_level > 2) {
+    std::cout << "first_person_valence:" << first_person_valence << std::endl;
     std::cout << "punct_intent:" << punct_intent << std::endl;
+    std::cout << "ignore_intent:" << ignore_intent << std::endl;
+    std::cout << "class_word_valence:" << class_word_valence << std::endl;
     std::cout << "intent_valence: " << intent_valence << std::endl;
   }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
+
+  ret_val += 1;
 #endif // INTENT_ENABELD
 
-#ifdef KE_DEBUG
+#ifdef GM_DEBUG
   if (m_debug_level > 2) {
     std::cout << "keytuples_extracter summary:" << std::endl;
     std::cout << "input: " << text_buffer << std::endl;
+#ifdef SCRIPT_DETECTION_ENABLED
     std::cout << "script: " << script_buffer << std::endl;
+#endif // SCRIPT_DETECTION_ENABLED
+#ifdef PROFANITY_CHECK_ENABLED
     std::cout << "profanity_status: " << profanity_status_buffer << std::endl;
+#endif // PROFANITY_CHECK_ENABLED
 #ifdef NAMED_ENTITIES_ENABLED
     std::cout << "named_entities (" << named_entities_count << "): " << named_entities_buffer << std::endl;
 #endif // NAMED_ENTITIES_ENABLED
@@ -2330,7 +2590,7 @@ int KeyTuplesExtracter::GetKeyTuples(unsigned char* text_buffer, const unsigned 
 #endif // SENTIMENT_ENABLED
     std::cout << "ret_val: " << ret_val << std::endl;
   }
-#endif // KE_DEBUG
+#endif // GM_DEBUG
 
   return ret_val;
 

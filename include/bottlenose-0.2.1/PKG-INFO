@@ -1,0 +1,21 @@
+Metadata-Version: 1.0
+Name: bottlenose
+Version: 0.2.1
+Summary: A Python hook into the Amazon.com Product Advertising API
+Home-page: http://github.com/dlo/bottlenose
+Author: Dan Loewenherz
+Author-email: dloewenherz+bottlenose@gmail.com
+License: MIT License
+Description: UNKNOWN
+Keywords: amazon,product advertising,api
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content :: CGI Tools/Libraries
+Classifier: Topic :: Utilities
+Classifier: License :: OSI Approved :: MIT License

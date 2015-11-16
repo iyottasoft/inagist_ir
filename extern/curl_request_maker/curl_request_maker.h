@@ -30,6 +30,7 @@ class CurlRequestMaker {
   bool GetTopTweets();
   bool GetArchievedTweets();
   bool GetTweets(const char* url);
+  int GetLongURL(const std::string& url, std::string& long_url);
 
  private:
   CURL *m_curl_handle;
